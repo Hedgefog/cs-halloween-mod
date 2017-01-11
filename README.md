@@ -2,18 +2,18 @@
 __Version:__ 2.2.1
 
 
-### Gamemodes
+#### Gamemodes
 - __Collector (hwnc_*)__
 
 > In this gamemode you need collect pumpkins with candies and carry it to your bucket around base.
 The team, which collect required amount of pumpkin earlier win in the round.
 You can get pumpkins by holding pumkin spawner of map or by killing npc.
 
-### Control
+#### Control
 - __Open mod menu__ - Choose team key ('M' by default).
 - __Cast spell__ - Flashlight key('F' by default).
 
-### Cvars
+#### Cvars
 - __hwn_gamemode_spell_on_spawn__ - Enable/Disable spell on spawn in default gamemode
 - __hwn_gamemode_random_events__ - Enable/Disable spawn npc/items in default gamemode
 - __hwn_gamemode_change_lighting__ - Enable/Disable custom light in default gamemode
@@ -31,12 +31,12 @@ You can get pumpkins by holding pumkin spawner of map or by killing npc.
 - __hwn_npc_fps__ - FPS for NPC
 - __hwn_enable_particles__ - Enable/Disable custom particles
 
-### Requirements
+#### Requirements
 - Counter-Strike 1.6
 - AMX Mod X 1.8.2 or higher.
 - RoundControl 2.2 or higher.
 
-### Special Thanks
+#### Special Thanks
 - __Team Fortress 2__ - content
 - __[POD]ILLbot0__ - hwnc_city_night
 - __ConnorMcLeod__ - usefull posts, screenfade_util
