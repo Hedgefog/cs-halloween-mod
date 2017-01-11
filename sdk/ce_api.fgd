@@ -1,0 +1,9 @@
+@PointClass color(192 220 32) = ce_spawner : ""
+[
+	ce_name(string) : "" : ""
+	delay(string) : "" : "0.0"
+	impulse(string) : "" : "0.0"
+	spawnflags(flags) = [
+		1 : "Don't check for stucks" : 0
+	]
+]

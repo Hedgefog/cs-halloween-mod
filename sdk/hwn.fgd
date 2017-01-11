@@ -1,0 +1,39 @@
+@PointClass 
+    color(90 27 122)
+= hwn_ambient
+
+@PointClass
+    color(90 27 122)
+    size(-48 -48 -48, 48 48 48) 
+= hwn_boss_target
+
+@PointClass
+    color(90 27 122) 
+    size(28 28 0, 28 28 56) 
+    Studio("models/hwn/props/pumpkin_bucket.mdl")
+= hwn_bucket
+[
+    team(choices) : "": 1 : "Team" = 
+    [
+        1: "Terrorists",
+        2: "Counter-Terrorists"
+    ]
+]
+
+@PointClass
+    color(90 27 122) 
+    size(16 16 0, 16 16 32) 
+= hwn_gift_target
+
+
+@PointClass
+    color(90 27 122)
+    size(12 12 0, 12 12 24)
+    Studio("models/hwn/items/pumpkin_loot_v2.mdl")
+= hwn_item_pumpkin
+
+@PointClass
+    color(90 27 122)
+    size(16 12 0 , 16 12 24)
+    Studio("models/hwn/items/spellbook.mdl") 
+= hwn_item_spellbook
