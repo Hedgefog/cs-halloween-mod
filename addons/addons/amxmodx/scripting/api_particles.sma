@@ -26,12 +26,15 @@ new g_particleCount = 0;
 new g_ptrTargetClassname;
 new g_ptrParticleClassname;
 
+public plugin_precache()
+{
+	g_ptrTargetClassname = engfunc(EngFunc_AllocString, "info_target");
+	g_ptrParticleClassname = engfunc(EngFunc_AllocString, "env_sprite");	
+}
+
 public plugin_init()
 {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
-
-	g_ptrTargetClassname = engfunc(EngFunc_AllocString, "info_target");
-	g_ptrParticleClassname = engfunc(EngFunc_AllocString, "env_sprite");
 }
 
 public plugin_end()
@@ -129,7 +132,9 @@ RegisterParticle(const szName[], pluginID, funcID, Array:sprites, Float:fLifeTim
 SpawnParticles(const szName[], const Float:vOrigin[3], Float:fPlayTime)
 {
 	new index;
-	TrieGetCell(g_particles, szName, index);
+	if (!TrieGetCell(g_particles, szName, index)) {
+		return 0;
+	}
 
 	new ent = engfunc(EngFunc_CreateNamedEntity, g_ptrTargetClassname);
 	engfunc(EngFunc_SetOrigin, ent, vOrigin);
