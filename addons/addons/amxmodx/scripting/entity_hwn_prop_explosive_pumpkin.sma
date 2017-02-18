@@ -26,8 +26,6 @@ new const g_szSndExplode[] = "hwn/misc/pumpkin_explode.wav";
 public plugin_init()
 {
 	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-	
-	RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "OnKilled", .Post = 1);
 }
 
 public plugin_precache()
@@ -41,6 +39,7 @@ public plugin_precache()
 	);
 	
 	CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
+	CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
 	
 	precache_sound(g_szSndExplode);
 	
@@ -51,17 +50,13 @@ public plugin_precache()
 public OnSpawn(ent)
 {
 	set_pev(ent, pev_takedamage, DAMAGE_AIM);
-	set_pev(ent, pev_health, 1);
+	set_pev(ent, pev_health, 1.0);
 
 	engfunc(EngFunc_DropToFloor, ent);
 }
 
 public OnKilled(ent, attacker)
-{
-	if (!CE_CheckAssociation(ent)) {
-		return;
-	}
-	
+{	
 	static Float:vOrigin[3];
 	pev(ent, pev_origin, vOrigin);
 	vOrigin[2] += 16.0;
@@ -69,6 +64,10 @@ public OnKilled(ent, attacker)
 	new target = -1;
 	while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EXPLOSION_RADIUS)) != 0)
 	{
+		if (ent == target) {
+			continue;
+		}	
+	
 		if (!pev_valid(target)) {
 			continue;
 		}
@@ -110,6 +109,4 @@ public OnKilled(ent, attacker)
 	UTIL_Message_BreakModel(vOrigin, Float:{16.0, 16.0, 16.0}, vVelocity, 32, g_mdlGibs, 4, 25, 0);
 	
 	emit_sound(ent, CHAN_BODY, g_szSndExplode, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-
-	CE_Remove(ent);
 }

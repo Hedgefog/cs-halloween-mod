@@ -22,8 +22,12 @@ new g_particlesEnabled;
 new const g_szSndSpawn[] = "hwn/items/spellbook/spellbook_spawn.wav";
 new const g_szSndPickup[] = "hwn/spells/spell_pickup.wav";
 
+new bool:g_isPrecaching;
+
 public plugin_init()
 {
+	g_isPrecaching = false;
+
 	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
 	g_particlesEnabled = get_cvar_num("hwn_enable_particles");
@@ -31,6 +35,8 @@ public plugin_init()
 
 public plugin_precache()
 {
+	g_isPrecaching = true;
+
 	g_sprSparkle = precache_model("sprites/muz7.spr");
 
 	precache_sound(g_szSndSpawn);
@@ -47,9 +53,8 @@ public plugin_precache()
 	
 	CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
 	CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
+	CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
 	CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "OnPickup");
-	
-	RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);
 }
 
 public OnSpawn(ent)
@@ -75,21 +80,22 @@ public OnSpawn(ent)
 	write_byte(16); //Speed Noise
 	write_byte(32); //Speed
 	message_end();
-
-	if (g_particlesEnabled) {
-		set_pev(ent, pev_iuser1, Particles_Spawn("magic_glow", vOrigin, 0.0));	
-	}
 	
 	emit_sound(ent, CHAN_BODY, g_szSndSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);	
 	
-	dllfunc(DLLFunc_Think, ent);
+	TaskThink(ent);
 }
 
 public OnRemove(ent)
 {
-	if (g_particlesEnabled) {
-		Particles_Remove(pev(ent, pev_iuser1));
-	}
+	remove_task(ent);
+	
+	RemoveParticles(ent);
+}
+
+public OnKilled(ent)
+{
+	RemoveParticles(ent);
 }
 
 public OnPickup(ent, id)
@@ -109,7 +115,7 @@ public OnPickup(ent, id)
 	return PLUGIN_HANDLED;
 }
 
-public OnThink(ent)
+public TaskThink(ent)
 {
 	if (!pev_valid(ent)) {
 		return;
@@ -119,13 +125,42 @@ public OnThink(ent)
 		return;
 	}
 	
+	if (pev(ent, pev_deadflag) != DEAD_NO) {
+		return;
+	}
+	
 	static Float:vOrigin[3];
 	pev(ent, pev_origin, vOrigin);
 	vOrigin[2] += 32.0;
 	
-	if (g_particlesEnabled) {
-		engfunc(EngFunc_SetOrigin, pev(ent, pev_iuser1), vOrigin);
+	if (g_particlesEnabled)
+	{
+		new particlesEnt = pev(ent, pev_iuser1);	
+	
+		if (particlesEnt)
+		{
+			if (pev_valid(particlesEnt)) {
+				engfunc(EngFunc_SetOrigin, particlesEnt, vOrigin);	
+			} else {
+				set_pev(ent, pev_iuser1, 0);
+			}
+		}
+		else if (!g_isPrecaching)
+		{
+			particlesEnt = Particles_Spawn("magic_glow", vOrigin, 0.0);
+			set_pev(ent, pev_iuser1, particlesEnt);
+		}
 	}
 	
-	set_pev(ent, pev_nextthink, get_gametime() + 1.0);
+	set_task(1.0, "TaskThink", ent);
+}
+
+RemoveParticles(ent)
+{
+	if (!pev(ent, pev_iuser1)) {
+		return;
+	}
+	
+	Particles_Remove(pev(ent, pev_iuser1));
+	set_pev(ent, pev_iuser1, 0);
 }

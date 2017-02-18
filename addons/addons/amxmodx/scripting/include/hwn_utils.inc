@@ -263,3 +263,8 @@ stock Array:UTIL_FindUsersNearby(Float:vOrigin[3], Float:fDistance, team = 0, bo
 	
 	return users;
 }
+
+stock UTIL_FixedUnsigned16(const Float:fValue, const scale)
+{
+    return clamp(floatround(fValue * scale), 0, 0xFFFF);
+}

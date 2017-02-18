@@ -5,6 +5,7 @@
 
 #pragma reqlib api_custom_entities
 
+#define CE_LOG_PREFIX "[CE]"
 #define CE_BASE_CLASSNAME "info_target"
 
 enum CEPreset
@@ -18,7 +19,8 @@ enum CEPreset
 enum CEFunction
 {
 	CEFunction_Spawn,
-	CEFunction_Remove,
+	CEFunction_Killed,
+	CEFunction_Remove,	
 	CEFunction_Picked,
 	CEFunction_Pickup,
 	CEFunction_KVD
@@ -32,6 +34,7 @@ enum CEFunction
  * @param offset			Offset of entity origin.
  * @param lifeTime			Life time of entity.
  * @param preset			Preset for entity.
+ * @return					Handler of registered entity.
  */
 native CE_Register
 (
@@ -40,6 +43,8 @@ native CE_Register
 	const Float:vMins[3] = {-8.0, -8.0, -8.0},
 	const Float:vMaxs[3] = {8.0, 8.0, 8.0},
 	Float:fLifeTime = 0.0,
+	Float:fRespawnTime = 10.0,
+	bool:ignoreRounds = false,
 	CEPreset:preset = CEPreset_None
 );
 
@@ -77,14 +82,6 @@ native CE_GetModelIndex(const szName[]);
 native bool:CE_Remove(ent);
 
 /*
- * Check if entity is associated with current plugin.
- *
- * @param ent				Index of entity.
- * @return					Result true/false
- */
-native bool:CE_CheckAssociation(ent);
-
-/*
  * Register new hook for entity.
  *
  * @param function			Function handler
@@ -93,5 +90,27 @@ native bool:CE_CheckAssociation(ent);
  */
 native CE_RegisterHook(CEFunction:function, const szClassname[], const szCallback[]);
 
-
 native CE_GetHandler(const szClassname[]);
+native CE_GetHandlerByPlugin(pluginID = -1);
+native CE_GetHandlerByEntity(ent);
+
+/*
+ * Check if entity is associated with current plugin.
+ *
+ * @param ent				Index of entity.
+ * @return					Result true/false
+ */
+stock bool:CE_CheckAssociation(ent) {
+	static bool:notified = false;
+	if (!notified) {
+		log_amx("%s function ^"CE_CheckAssociation^" is deprecated. Check ^"CE_GetHandlerByPlugin^" function.", CE_LOG_PREFIX);
+		notified = true;
+	}
+	
+	new pluginHandler = CE_GetHandlerByPlugin(.pluginID = -1);
+	if (pluginHandler < 0) {
+		return false;
+	}
+
+	return (pluginHandler == CE_GetHandlerByEntity(ent));
+}

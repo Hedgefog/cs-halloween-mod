@@ -20,6 +20,7 @@
 #define LOG_PREFIX "[CE]"
 
 #define TASKID_SUM_DISAPPEAR 1000
+#define TASKID_SUM_RESPAWN   2000
 
 /*--------------------------------[ Constants ]--------------------------------*/
 
@@ -34,6 +35,7 @@ enum CEPreset
 enum CEFunction
 {
 	CEFunction_Spawn,
+	CEFunction_Killed,
 	CEFunction_Remove,
 	CEFunction_Picked,
 	CEFunction_Pickup,
@@ -44,7 +46,7 @@ enum CEHookData
 {
 	CEHookData_PluginID,
 	CEHookData_FuncID
-}
+};
 
 enum _:RegisterArgs
 {
@@ -53,7 +55,17 @@ enum _:RegisterArgs
 	RegisterArg_Mins,
 	RegisterArg_Maxs,
 	RegisterArg_LifeTime,
+	RegisterArg_RespawnTime,
+	RegisterArg_IgnoreRounds,
 	RegisterArg_Preset
+};
+
+enum _:CEData
+{
+	CEData_Handler,
+	CEData_TempIndex,
+	CEData_WorldIndex,
+	CEData_StartOrigin
 };
 
 /*--------------------------------[ Variables ]--------------------------------*/
@@ -67,11 +79,14 @@ new Array:g_entityModelIndex;
 new Array:g_entityMins;
 new Array:g_entityMaxs;
 new Array:g_entityLifeTime;
+new Array:g_entityRespawnTime;
 new Array:g_entityPreset;
+new Array:g_entityIgnoreRounds;
 new Array:g_entityHooks;
 
 new g_entityCount = 0;
 
+new Array:g_worldEntities;
 new Array:g_tmpEntities;
 
 new g_lastCEIdx = 0;
@@ -85,8 +100,12 @@ public plugin_init()
 		dllfunc(DLLFunc_Spawn, g_lastCEEnt);
 	}
 	
-	RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);	
+	RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
+	RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "OnKilled", .Post = 0);	
+	
 	register_event("HLTV", "OnNewRound", "a", "1=0", "2=0");
+	
+	register_concmd("ce_spawn", "OnClCmd_CESpawn", ADMIN_CVAR);
 }
 
 public plugin_end()
@@ -103,12 +122,18 @@ public plugin_end()
 		ArrayDestroy(g_entityMins);
 		ArrayDestroy(g_entityMaxs);
 		ArrayDestroy(g_entityLifeTime);
+		ArrayDestroy(g_entityRespawnTime);
+		ArrayDestroy(g_entityIgnoreRounds);
 		ArrayDestroy(g_entityPreset);
 		ArrayDestroy(g_entityHooks);
 	}
 
 	if (g_tmpEntities) {
 		ArrayDestroy(g_tmpEntities);
+	}
+	
+	if (g_worldEntities) {
+		ArrayDestroy(g_worldEntities);
 	}
 }
 
@@ -131,11 +156,13 @@ public plugin_natives()
 	register_native("CE_GetSize", "Native_GetSize");
 	register_native("CE_GetModelIndex", "Native_GetModelIndex");
 	
-	register_native("CE_CheckAssociation", "Native_CheckAssociation");
+	//register_native("CE_CheckAssociation", "Native_CheckAssociation");
 	
 	register_native("CE_RegisterHook", "Native_RegisterHook");
 
 	register_native("CE_GetHandler", "Native_GetHandler");
+	register_native("CE_GetHandlerByPlugin", "Native_GetHandlerByPlugin");
+	register_native("CE_GetHandlerByEntity", "Native_GetHandlerByEntity");
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -146,8 +173,10 @@ public Native_Register(pluginID, argc)
 	get_string(RegisterArg_Name, szClassName, charsmax(szClassName));
 	
 	new modelIndex = get_param(RegisterArg_ModelIndex);
-	new Float:fLifeTime = get_param_f(RegisterArg_LifeTime);	
-	new CEPreset:preset = CEPreset:get_param(RegisterArg_Preset);	
+	new Float:fLifeTime = get_param_f(RegisterArg_LifeTime);
+	new Float:fRespawnTime = get_param_f(RegisterArg_RespawnTime);
+	new bool:ignoreRounds = bool:get_param(RegisterArg_IgnoreRounds);
+	new CEPreset:preset = CEPreset:get_param(RegisterArg_Preset);
 	
 	new Float:vMins[3];
 	get_array_f(RegisterArg_Mins, vMins, 3);
@@ -155,7 +184,7 @@ public Native_Register(pluginID, argc)
 	new Float:vMaxs[3];
 	get_array_f(RegisterArg_Maxs, vMaxs, 3);
 	
-	Register(szClassName, pluginID, modelIndex, vMins, vMaxs, fLifeTime, preset);
+	return Register(szClassName, pluginID, modelIndex, vMins, vMaxs, fLifeTime, fRespawnTime, ignoreRounds, preset);
 }
 
 public Native_Create(pluginID, argc)
@@ -214,20 +243,34 @@ public Native_GetModelIndex(pluginID, argc)
 
 public Native_GetHandler(pluginID, argc)
 {
-	new szClassName[32];
-	get_string(1, szClassName, charsmax(szClassName));
-
-	new ceIdx;
-	TrieGetCell(g_entityHandlers, szClassName, ceIdx);
-
-	return ceIdx;
+	new szClassname[32];
+	get_string(1, szClassname, charsmax(szClassname));
+	
+	return GetHandler(szClassname);
 }
 
-public bool:Native_CheckAssociation(pluginID, argc)
+public Native_GetHandlerByPlugin(pluginID, argc)
+{
+	new _pluginID = get_param(1);
+	if (_pluginID == -1) {
+		_pluginID = pluginID;
+	}
+
+	return GetHandlerByPlugin(_pluginID);
+}
+
+public Native_GetHandlerByEntity(pluginID, argc)
+{
+	new ent = get_param(1);
+
+	return GetHandlerByEntity(ent);
+}
+
+/*public bool:Native_CheckAssociation(pluginID, argc)
 {
 	new ent = get_param(1);
 	return CheckAssociation(pluginID, ent);
-}
+}*/
 
 public Native_RegisterHook(pluginID, argc)
 {
@@ -243,6 +286,31 @@ public Native_RegisterHook(pluginID, argc)
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
+
+public OnClCmd_CESpawn(id, level, cid)
+{
+	if(!cmd_access(id, level, cid, 2)) {
+		return PLUGIN_HANDLED;
+	}
+	
+	static szClassname[128];
+	read_args(szClassname, charsmax(szClassname));
+	remove_quotes(szClassname);
+	
+	if(szClassname[0] == '^0') {
+		return PLUGIN_HANDLED;
+	}
+	
+	static Float:vOrigin[3];
+	pev(id, pev_origin, vOrigin);
+	
+	new ent = Create(szClassname, vOrigin);
+	if (ent) {
+		dllfunc(DLLFunc_Spawn, ent);
+	}
+	
+	return PLUGIN_HANDLED;
+}
 
 public OnKeyValue(ent, kvd)
 {
@@ -277,13 +345,21 @@ public OnKeyValue(ent, kvd)
 }
 
 public OnSpawn(ent)
-{	
-	static szClassname[32];
-	pev(ent, pev_classname, szClassname, charsmax(szClassname));
-	
-	new ceIdx;
-	if (!TrieGetCell(g_entityHandlers, szClassname, ceIdx)) {
+{
+	if (!Check(ent)) {
 		return;
+	}
+
+	new Array:ceData = GetPData(ent);
+	new ceIdx = ArrayGetCell(ceData, CEData_Handler);
+	
+	if (ArrayGetCell(ceData, CEData_StartOrigin) == Invalid_Array) {
+		new Float:vOrigin[3];
+		pev(ent, pev_origin, vOrigin);	
+	
+		new Array:startOrigin = ArrayCreate(3, 1);
+		ArrayPushArray(startOrigin, vOrigin);
+		ArraySetCell(ceData, CEData_StartOrigin, startOrigin);
 	}
 	
 	InitEntity(ent, ceIdx);
@@ -320,18 +396,39 @@ public OnTouch(ent, id)
 	
 	if (ExecuteFunction(CEFunction_Pickup, ceIdx, ent, id) > 0) {
 		ExecuteFunction(CEFunction_Picked, ceIdx, ent, id);
-		Remove(ent, .picked = true);
+		Kill(ent, id, .picked = true);
 	}
+}
+
+public OnKilled(ent, killer)
+{
+	if (!Check(ent)) {
+		return HAM_IGNORED;
+	}
+	
+	Kill(ent, killer);
+	return HAM_SUPERCEDE;
 }
 
 public OnNewRound()
 {
 	Cleanup();
+	RespawnEntities();
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-Register(const szClassname[], pluginID, modelIndex, const Float:vMins[3], const Float:vMaxs[3], Float:fLifeTime, CEPreset:preset)
+Register(
+	const szClassname[],
+	pluginID,
+	modelIndex,
+	const Float:vMins[3],
+	const Float:vMaxs[3],
+	Float:fLifeTime,
+	Float:fRespawnTime,
+	bool:ignoreRounds,
+	CEPreset:preset
+)
 {
 	if (!g_entityCount) {
 		g_entityHandlers = TrieCreate();
@@ -341,8 +438,10 @@ Register(const szClassname[], pluginID, modelIndex, const Float:vMins[3], const 
 		g_entityMaxs = ArrayCreate(3);
 		g_entityMins = ArrayCreate(3);
 		g_entityLifeTime = ArrayCreate(1);
+		g_entityRespawnTime = ArrayCreate(1);
+		g_entityIgnoreRounds = ArrayCreate(1);
 		g_entityPreset = ArrayCreate(1);
-		g_entityHooks = ArrayCreate();
+		g_entityHooks = ArrayCreate(1);
 	}
 
 	new index = g_entityCount;
@@ -355,12 +454,16 @@ Register(const szClassname[], pluginID, modelIndex, const Float:vMins[3], const 
 	ArrayPushArray(g_entityMins, vMins);
 	ArrayPushArray(g_entityMaxs, vMaxs);
 	ArrayPushCell(g_entityLifeTime, fLifeTime);
+	ArrayPushCell(g_entityRespawnTime, fRespawnTime);
+	ArrayPushCell(g_entityIgnoreRounds, ignoreRounds);
 	ArrayPushCell(g_entityPreset, preset);
 	ArrayPushCell(g_entityHooks, 0);
 	
 	g_entityCount++;
 	
 	log_amx("%s Entity %s successfully registred.", LOG_PREFIX, szClassname);
+	
+	return index;
 }
 
 Create(const szClassname[], const Float:vOrigin[3] = {0.0, 0.0, 0.0}, bool:temp = true)
@@ -370,13 +473,14 @@ Create(const szClassname[], const Float:vOrigin[3] = {0.0, 0.0, 0.0}, bool:temp 
 		log_error(0, "%s Entity %s is not registered as custom entity.", LOG_PREFIX, szClassname);
 		return 0;
 	}
-		
+	
 	new ent = engfunc(EngFunc_CreateNamedEntity, g_ptrBaseClassname);
 	set_pev(ent, pev_classname, szClassname, strlen(szClassname));
 	
 	engfunc(EngFunc_SetOrigin, ent, vOrigin);
 	
 	new tmpIdx = -1;
+	new worldIdx = -1;
 	if (temp) {
 		if (!g_tmpEntities) {
 			g_tmpEntities = ArrayCreate();
@@ -384,59 +488,140 @@ Create(const szClassname[], const Float:vOrigin[3] = {0.0, 0.0, 0.0}, bool:temp 
 	
 		tmpIdx = ArraySize(g_tmpEntities);
 		ArrayPushCell(g_tmpEntities, ent);
+	} else {
+		if (!g_worldEntities) {
+			g_worldEntities = ArrayCreate();
+		}
+		
+		worldIdx = ArraySize(g_worldEntities);
+		ArrayPushCell(g_worldEntities, ent);
 	}
 	
-	set_pev(ent, pev_iStepLeft, tmpIdx);
-	set_pev(ent, pev_impulse, 'c'+'e'+ceIdx);
+	new Array:ceData = CreatePData(ent);
+	
+	ArraySetCell(ceData, CEData_Handler, ceIdx);
+	ArraySetCell(ceData, CEData_TempIndex, tmpIdx);
+	ArraySetCell(ceData, CEData_WorldIndex, worldIdx);
+	ArraySetCell(ceData, CEData_StartOrigin, Invalid_Array);
+	
+	set_pev(ent, pev_deadflag, DEAD_NO);
 	
 	return ent;
 }
 
+Respawn(ent)
+{
+	remove_task(ent+TASKID_SUM_RESPAWN);
+
+	new Array:ceData = GetPData(ent);
+		
+	new Array:startOrigin = ArrayGetCell(ceData, CEData_StartOrigin);
+	if (startOrigin != Invalid_Array) {
+		static Float:vOrigin[3];
+		ArrayGetArray(startOrigin, 0, vOrigin);
+		engfunc(EngFunc_SetOrigin, ent, vOrigin);
+	}
+
+	set_pev(ent, pev_deadflag, DEAD_NO);
+	set_pev(ent, pev_effects, pev(ent, pev_effects) & ~EF_NODRAW);
+	
+	dllfunc(DLLFunc_Spawn, ent);
+}
+
+bool:Kill(ent, killer = 0, bool:picked = false)
+{
+	new Array:ceData = GetPData(ent);
+
+	new ceIdx = ArrayGetCell(ceData, CEData_Handler);
+	
+	if (ExecuteFunction(CEFunction_Killed, ceIdx, ent, killer, picked) != PLUGIN_CONTINUE) {	
+		return;
+	}
+	
+	set_pev(ent, pev_takedamage, DAMAGE_NO);
+	set_pev(ent, pev_effects, pev(ent, pev_effects) | EF_NODRAW);
+	set_pev(ent, pev_solid, SOLID_NOT);
+	set_pev(ent, pev_movetype, MOVETYPE_NONE);
+	set_pev(ent, pev_flags, pev(ent, pev_flags) & ~FL_ONGROUND);
+	
+	//Get temp index
+	new tmpIdx = ArrayGetCell(ceData, CEData_TempIndex);
+	
+	//Check if entity is temp
+	if (tmpIdx < 0) {
+		new Float:fRespawnTime = ArrayGetCell(g_entityRespawnTime, ceIdx);
+		if (fRespawnTime > 0.0) {
+			set_pev(ent, pev_deadflag, DEAD_RESPAWNABLE);
+			set_task(fRespawnTime, "TaskRespawn", ent+TASKID_SUM_RESPAWN);
+		} else {
+			set_pev(ent, pev_deadflag, DEAD_DEAD);
+		}
+		
+		remove_task(ent+TASKID_SUM_DISAPPEAR);
+	} else {
+		Remove(ent, picked);
+	}
+}
+
 bool:Remove(ent, bool:picked = false)
 {
-	new szClassname[32];
-	pev(ent, pev_classname, szClassname, charsmax(szClassname));
-	
-	new ceIdx;
-	if (!TrieGetCell(g_entityHandlers, szClassname, ceIdx)) {
-		log_error(0, "%s Entity %s is not registered.", LOG_PREFIX, szClassname);
+	if (!Check(ent)) {
+		log_error(0, "%s Entity %i is not a custom entity.", LOG_PREFIX, ent);
 		return false;
 	}
 	
-	new index = pev(ent, pev_iStepLeft);
-	if (index >= 0) {
-		ArraySetCell(g_tmpEntities, index, 0);
+	new Array:ceData = GetPData(ent);
+	
+	//Get temp index
+	new tmpIdx = ArrayGetCell(ceData, CEData_TempIndex);
+	
+	//Check if entity is temp
+	if (tmpIdx >= 0) {
+		//Remove entity from storage of temp entities
+		ArraySetCell(g_tmpEntities, tmpIdx, 0);
+	} else {
+		//Get world index
+		new worldIdx = ArrayGetCell(ceData, CEData_WorldIndex);
+		if (worldIdx >= 0) {
+			ArraySetCell(g_worldEntities, worldIdx, 0);	
+		}
 	}
 	
+	//Remove tasks
 	remove_task(ent+TASKID_SUM_DISAPPEAR);
+	remove_task(ent+TASKID_SUM_RESPAWN);
+	
+	//Get handler
+	new ceIdx = ArrayGetCell(ceData, CEData_Handler);
+	
+	//Execute remove function
 	ExecuteFunction(CEFunction_Remove, ceIdx, ent, picked);
+	
+	//Remove entity
 	set_pev(ent, pev_flags, pev(ent, pev_flags) | FL_KILLME);
+	
+	DestroyPData(ent);
 	
 	return true;
 }
 
-bool:CheckAssociation(pluginID, ent)
+Check(ent)
 {
-	if (!pev_valid(ent)) {
-		return false;
-	}
-	
-	new ceIdx = GetCEIndexByPluginID(pluginID);	
-	
-	if (pev(ent, pev_impulse) != 'c'+'e'+ceIdx) {
-		return false;
-	}
-	
-	static szClassname[32];
-	pev(ent, pev_classname, szClassname, charsmax(szClassname));
-	
-	static szAssociatedClassname[32];
-	ArrayGetString(g_entityName, ceIdx, szAssociatedClassname, charsmax(szAssociatedClassname));
-	
-	return bool:equal(szClassname, szAssociatedClassname);
+	return (pev(ent, pev_gaitsequence) == 'c'+'e');
 }
 
-GetCEIndexByPluginID(pluginID)
+GetHandlerByEntity(ent)
+{
+	if (!Check(ent)) {
+		return -1;
+	}
+	
+	new Array:ceData = GetPData(ent);
+	
+	return ArrayGetCell(ceData, CEData_Handler);
+}
+
+GetHandlerByPlugin(pluginID)
 {
 	for (new i = 0; i < g_entityCount; ++i) {
 		if (ArrayGetCell(g_entityPluginID, i) == pluginID) {
@@ -447,6 +632,36 @@ GetCEIndexByPluginID(pluginID)
 	return -1;
 }
 
+GetHandler(const szClassname[])
+{
+	new ceIdx;
+	if (!TrieGetCell(g_entityHandlers, szClassname, ceIdx)) {
+		return -1;
+	}
+
+	return ceIdx;
+}
+
+/*bool:CheckAssociation(pluginID, ent)
+{
+	if (!pev_valid(ent)) {
+		return false;
+	}
+	
+	if (!Check(ent)) {
+		return false;
+	}
+	
+	new ceIdx = GetHandlerByPlugin(pluginID);
+	
+	static szClassname[32];
+	pev(ent, pev_classname, szClassname, charsmax(szClassname));
+	
+	new Array:ceData = GetPData(ent);
+	
+	return (ceIdx == ArrayGetCell(ceData, CEData_Handler));
+}*/
+
 Cleanup()
 {
 	if (!g_tmpEntities) {
@@ -454,43 +669,88 @@ Cleanup()
 	}
 
 	new size = ArraySize(g_tmpEntities);
-	for (new i = 0; i < size; ++i) {
+	for (new i = size - 1; i <= 0; --i)
+	{
 		new ent = ArrayGetCell(g_tmpEntities, i);
-		if (ent && pev_valid(ent)) {			
-			Remove(ent);
+		
+		if (ent && pev_valid(ent))
+		{
+			new ceIdx = GetHandlerByEntity(ent);
+			if (ceIdx == -1) {
+				log_error(0, "%s Entity %i is not a custom entity.", LOG_PREFIX, ent);
+				continue;
+			}
+
+			new ignoreRounds = ArrayGetCell(g_entityIgnoreRounds, ceIdx);
+			if (!ignoreRounds) {
+				Remove(ent);
+				ArrayDeleteItem(g_tmpEntities, i);
+			}
 		}
 	}
+}
+
+RespawnEntities()
+{
+	if (!g_worldEntities) {
+		return;
+	}
 	
-	ArrayClear(g_tmpEntities);
+	new size = ArraySize(g_worldEntities);
+	for (new i = 0; i < size; ++i) {
+		new ent = ArrayGetCell(g_worldEntities, i);
+		if (ent) {
+			Respawn(ent);
+		}
+	}
 }
 
 bool:InitEntity(ent, ceIdx)
-{
-	static Float:vOrigin[3];
-	pev(ent, pev_origin, vOrigin);	
-	
+{	
 	static Float:vMins[3];
 	ArrayGetArray(g_entityMins, ceIdx, vMins);
 	
 	static Float:vMaxs[3];
 	ArrayGetArray(g_entityMaxs, ceIdx, vMaxs);
 	
+	static Float:vOrigin[3];
+	pev(ent, pev_origin, vOrigin);
+	
 	engfunc(EngFunc_SetSize, ent, vMins, vMaxs);
 	engfunc(EngFunc_SetOrigin, ent, vOrigin);
 	
-	new preset = ArrayGetCell(g_entityPreset, ceIdx);
+	{
+		new preset = ArrayGetCell(g_entityPreset, ceIdx);
+		ApplyPreset(ent, preset);
+	}
+	
+	new modelIndex = ArrayGetCell(g_entityModelIndex, ceIdx);
+	if (modelIndex > 0) {
+		set_pev(ent, pev_modelindex, modelIndex);
+	}
+	
+	new Float:fLifeTime = ArrayGetCell(g_entityLifeTime, ceIdx);
+	if (fLifeTime > 0.0) {
+		set_task(fLifeTime, "TaskDisappear", ent+TASKID_SUM_DISAPPEAR);
+	}
+	
+	return true;
+}
+
+ApplyPreset(ent, preset)
+{
 	switch (preset)
 	{
 		case CEPreset_Item:
 		{
 			set_pev(ent, pev_solid, SOLID_TRIGGER);
 			set_pev(ent, pev_movetype, MOVETYPE_TOSS);
+			set_pev(ent, pev_takedamage, DAMAGE_NO);
 		}
 		case CEPreset_NPC:
 		{
 			set_pev(ent, pev_solid, SOLID_BBOX);
 			set_pev(ent, pev_movetype, MOVETYPE_PUSHSTEP);
-				
 			set_pev(ent, pev_takedamage, DAMAGE_AIM);
 			
 			set_pev(ent, pev_controller_0, 125);
@@ -508,20 +768,9 @@ bool:InitEntity(ent, ceIdx)
 		{
 			set_pev(ent, pev_solid, SOLID_BBOX);
 			set_pev(ent, pev_movetype, MOVETYPE_TOSS);
+			set_pev(ent, pev_takedamage, DAMAGE_NO);
 		}
 	}
-	
-	new modelIndex = ArrayGetCell(g_entityModelIndex, ceIdx);
-	if (modelIndex > 0) {
-		set_pev(ent, pev_modelindex, modelIndex);
-	}
-	
-	new Float:lifeTime = ArrayGetCell(g_entityLifeTime, ceIdx);
-	if (lifeTime > 0.0) {
-		set_task(lifeTime, "TaskDisappear", ent+TASKID_SUM_DISAPPEAR);
-	}
-	
-	return true;
 }
 
 RegisterHook(CEFunction:function, const szClassname[], const szCallback[], pluginID = -1)
@@ -597,7 +846,6 @@ ExecuteFunction(CEFunction:function, ceIdx, any:...)
 	new ent = getarg(2);
 	
 	new Array:functions = ArrayGetCell(g_entityHooks, ceIdx);
-
 	if (functions == Invalid_Array) {
 		return 0;
 	}
@@ -621,6 +869,12 @@ ExecuteFunction(CEFunction:function, ceIdx, any:...)
 
 			switch (function)
 			{
+				case CEFunction_Killed: {
+					new killer = getarg(3);
+					new bool:picked = bool:getarg(4);
+					callfunc_push_int(killer);
+					callfunc_push_int(picked);
+				}
 				case CEFunction_Remove: {
 					new bool:picked = bool:getarg(3);
 					callfunc_push_int(picked);
@@ -660,11 +914,56 @@ ExecuteFunction(CEFunction:function, ceIdx, any:...)
 	return result;
 }
 
+Array:CreatePData(ent)
+{
+	new Array:ceData = ArrayCreate(1, CEData);	
+	for (new i = 0; i < CEData; ++i) {
+		ArrayPushCell(ceData, 0);
+	}
+	
+	set_pev(ent, pev_gaitsequence, 'c'+'e');
+	set_pev(ent, pev_iStepLeft, ceData);	
+	
+	return ceData;
+}
+
+DestroyPData(ent)
+{
+	//Destroy data array
+	new Array:ceData = GetPData(ent);
+	{
+		new Array:startOrigin = ArrayGetCell(ceData, CEData_StartOrigin);
+		if (startOrigin != Invalid_Array) {
+			ArrayDestroy(startOrigin);
+		}
+	} ArrayDestroy(ceData);
+	
+	set_pev(ent, pev_gaitsequence, 0);
+	set_pev(ent, pev_iStepLeft, 0);
+}
+
+Array:GetPData(ent)
+{
+	new Array:ceData = any:pev(ent, pev_iStepLeft);
+	if (ceData == Invalid_Array) {
+		log_error(0, "%s Invalid Custom Entity data provided for %i.", LOG_PREFIX, ent);
+	}
+	
+	return ceData;
+}
+
 /*--------------------------------[ Tasks ]--------------------------------*/
 
 public TaskDisappear(taskID)
 {
 	new ent = taskID - TASKID_SUM_DISAPPEAR;
 	
-	Remove(ent, .picked = true);
+	Kill(ent, 0);
+}
+
+public TaskRespawn(taskID)
+{
+	new ent = taskID - TASKID_SUM_RESPAWN;
+	
+	Respawn(ent);
 }

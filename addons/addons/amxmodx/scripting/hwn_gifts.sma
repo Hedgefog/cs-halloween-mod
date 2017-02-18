@@ -20,7 +20,6 @@ new Array:g_giftTargets;
 
 new const g_szSndGiftSpawn[] = "hwn/items/gift/gift_spawn.wav";
 new const g_szSndGiftPickup[] = "hwn/items/gift/gift_pickup.wav";
-new const g_szSndGiftDisappeared[] = "hwn/items/gift/gift_disappeared.wav";
 
 new g_cvarGiftSpawnDelay;
 new g_cvarGiftCosmeticMinTime;
@@ -30,7 +29,6 @@ public plugin_precache()
 {
 	CE_RegisterHook(CEFunction_Spawn, GIFT_TARGET_ENTITY_CLASSNAME, "OnGiftTargetSpawn");
 	CE_RegisterHook(CEFunction_Picked, GIFT_ENTITY_CLASSNAME, "OnGiftPicked");
-	CE_RegisterHook(CEFunction_Remove, GIFT_ENTITY_CLASSNAME, "OnGiftRemove");
 	
 	precache_sound(g_szSndGiftSpawn);
 	precache_sound(g_szSndGiftPickup);
@@ -89,14 +87,6 @@ public OnGiftSpawn(ent)
 	client_cmd(owner, "spk %s", g_szSndGiftSpawn);
 }
 
-public OnGiftRemove(ent, bool:picked)
-{
-	if (!picked) {
-		new owner = pev(ent, pev_owner);
-		client_cmd(owner, "spk %s", g_szSndGiftDisappeared);
-	}
-}
-
 public OnGiftPicked(ent, id)
 {
 	new count = Hwn_Cosmetic_GetCount();
@@ -118,7 +108,7 @@ public OnGiftPicked(ent, id)
 
 SpawnGift(id, const Float:vOrigin[3])
 {
-	new ent = CE_Create(GIFT_ENTITY_CLASSNAME, vOrigin, .temp = false);
+	new ent = CE_Create(GIFT_ENTITY_CLASSNAME, vOrigin);
 
 	if (ent) {
 		set_pev(ent, pev_owner, id);

@@ -57,12 +57,12 @@ public plugin_precache()
 		.preset = CEPreset_Prop
 	);
 	
-	RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);
 	RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTakeDamage", .Post = 0);
-	RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "OnKilled", .Post = 0);
 	RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
 	
 	CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
+	CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
+	CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
 	
 	g_cvarBucketHealth = register_cvar("hwn_bucket_health", "300");
 }
@@ -93,42 +93,12 @@ public OnSpawn(ent)
 	
 	engfunc(EngFunc_DropToFloor, ent);
 	
-	dllfunc(DLLFunc_Think, ent);
+	TaskThink(ent);
 }
 
-public OnThink(ent)
+public OnRemove(ent)
 {
-	if (!pev_valid(ent)) {
-		return;
-	}
-
-	if (!CE_CheckAssociation(ent)) {
-		return;
-	}
-
-	new Float:fGametime = get_gametime();
-	for (new id = 1; id <= g_maxPlayers; ++id)
-	{
-		if (!is_user_alive(id)) {
-			continue;
-		}
-		
-		new playerTeam = get_pdata_int(id, m_iTeam);
-		new bucketTeam = pev(ent, pev_team);
-		
-		if (playerTeam != bucketTeam) {
-			continue;
-		}
-		
-		if (GetDistanceBetweenEntity(ent, id) < 256.0) {
-			if (fGametime >= g_fNextCollectTime[id]) {
-				TakePlayerPoint(ent, id);
-				g_fNextCollectTime[id] = fGametime + 1.0;
-			}
-		}
-	}
-	
-	set_pev(ent, pev_nextthink, fGametime + g_fThinkDelay);
+	remove_task(ent);	
 }
 
 public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
@@ -169,7 +139,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
 public OnKilled(ent)
 {
 	if (!CE_CheckAssociation(ent)) {
-		return HAM_IGNORED;
+		return PLUGIN_CONTINUE;
 	}
 
 	static Float:fHealth;
@@ -183,7 +153,40 @@ public OnKilled(ent)
 	set_pev(ent, pev_health, float(get_pcvar_num(g_cvarBucketHealth)));
 	ExtractPoints(ent, extractCount);
 	
-	return HAM_SUPERCEDE;
+	return PLUGIN_HANDLED;
+}
+
+/*------------[ Tasks ]------------*/
+
+public TaskThink(ent)
+{
+	if (!pev_valid(ent)) {
+		return;
+	}
+
+	new Float:fGametime = get_gametime();
+	for (new id = 1; id <= g_maxPlayers; ++id)
+	{
+		if (!is_user_alive(id)) {
+			continue;
+		}
+		
+		new playerTeam = get_pdata_int(id, m_iTeam);
+		new bucketTeam = pev(ent, pev_team);
+		
+		if (playerTeam != bucketTeam) {
+			continue;
+		}
+		
+		if (GetDistanceBetweenEntity(ent, id) < 256.0) {
+			if (fGametime >= g_fNextCollectTime[id]) {
+				TakePlayerPoint(ent, id);
+				g_fNextCollectTime[id] = fGametime + 1.0;
+			}
+		}
+	}
+	
+	set_task(g_fThinkDelay, "TaskThink", ent);
 }
 
 /*------------[ Private ]------------*/

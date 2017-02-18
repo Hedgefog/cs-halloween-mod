@@ -78,6 +78,8 @@ public plugin_init()
 	register_clcmd("joinclass", "OnClCmd_JoinClass");
 	register_clcmd("menuselect", "OnClCmd_JoinClass");
 	
+	register_message(get_user_msgid("ClCorpse"), "OnMessage_ClCorpse");
+	
 	RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
 	RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
 		
@@ -288,6 +290,16 @@ public OnClCmd_JoinClass(id)
 			
 			return PLUGIN_HANDLED;
 		}
+	}
+	
+	return PLUGIN_CONTINUE;
+}
+
+public OnMessage_ClCorpse()
+{
+	new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
+	if (flags & Hwn_GamemodeFlag_RespawnPlayers) {
+		return PLUGIN_HANDLED;
 	}
 	
 	return PLUGIN_CONTINUE;

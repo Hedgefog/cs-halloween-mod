@@ -26,7 +26,6 @@ public plugin_init()
 	
 	g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 	
-	RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);	
 	RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
 }
 
@@ -34,14 +33,14 @@ public plugin_precache()
 {
 	CE_Register(
 		.szName = ENTITY_NAME,
-		.vMins = Float:{-4.0, -4.0, -4.0},
-		.vMaxs = Float:{4.0, 4.0, 4.0},
-		.fLifeTime = 30.0,
-		.preset = CEPreset_Item
+		.vMins = Float:{-8.0, -8.0, -8.0},
+		.vMaxs = Float:{8.0, 8.0, 8.0},
+		.fLifeTime = 30.0,		
+		.preset = CEPreset_None
 	);
 	
 	CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-	CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "OnPickup");
+	CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
 	
 	g_sprSmoke = precache_model("sprites/black_smoke1.spr");
 }
@@ -53,22 +52,41 @@ public OnSpawn(ent)
 	set_pev(ent, pev_rendermode, kRenderTransAdd);
 	set_pev(ent, pev_renderamt, 255.0);
 	set_pev(ent, pev_gravity, 0.25);
+	set_pev(ent, pev_health, 1.0);
 	
-	dllfunc(DLLFunc_Think, ent);
+	set_pev(ent, pev_solid, SOLID_TRIGGER);
+	set_pev(ent, pev_movetype, MOVETYPE_TOSS);
+	
+	TaskThink(ent);
 }
 
-public OnPickup(id, ent)
+public OnRemove(ent)
 {
-	return PLUGIN_CONTINUE;
+	remove_task(ent);
 }
 
-public OnThink(ent)
+public OnTouch(ent, target)
 {
 	if (!pev_valid(ent)) {
 		return;
 	}
 
 	if (!CE_CheckAssociation(ent)) {
+		return;
+	}
+	
+	if (target == pev(ent, pev_owner)) {
+		return;
+	}
+
+	ExecuteHamB(Ham_Killed, ent, 0, 0);
+}
+
+/*--------------------------------[ Tasks ]--------------------------------*/
+
+public TaskThink(ent)
+{
+	if (!pev_valid(ent)) {
 		return;
 	}
 	
@@ -103,22 +121,5 @@ public OnThink(ent)
 	
 	UTIL_Message_Dlight(vOrigin, 16, color, UTIL_DelayToLifeTime(g_fThinkDelay), 0);
 	
-	set_pev(ent, pev_nextthink, get_gametime() + g_fThinkDelay);
-}
-
-public OnTouch(ent, target)
-{
-	if (!pev_valid(ent)) {
-		return;
-	}
-
-	if (!CE_CheckAssociation(ent)) {
-		return;
-	}
-	
-	if (target == pev(ent, pev_owner)) {
-		return;
-	}
-
-	CE_Remove(ent);
+	set_task(g_fThinkDelay, "TaskThink", ent);
 }

@@ -66,9 +66,6 @@ public plugin_precache()
 	
 	CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
 	CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
-
-	RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);
-	RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "OnKilled", .Post = 1);
 }
 
 public plugin_init()
@@ -123,11 +120,13 @@ public OnSpawn(ent)
 		set_pev(ent, pev_iuser4, particleEnt);
 	}
 	
-	dllfunc(DLLFunc_Think, ent);
+	TaskThink(ent);
 }
 
 public OnRemove(ent)
 {
+	remove_task(ent);
+
 	if (g_particlesEnabled)
 	{
 		new particleEnt = pev(ent, pev_iuser4);
@@ -139,24 +138,16 @@ public OnRemove(ent)
 	NPC_Destroy(ent);
 }
 
-public OnKilled(ent)
-{
-	if (!CE_CheckAssociation(ent)) {
-		return HAM_IGNORED;
-	}
-	
-	CE_Remove(ent);
-	
-	return HAM_SUPERCEDE;
+public OnPlayerKilled(id, killer)
+{	
+	ArraySetCell(g_playerKiller, id, killer);
 }
 
-public OnThink(ent)
+/*--------------------------------[ Tasks ]--------------------------------*/
+
+public TaskThink(ent)
 {
 	if (!pev_valid(ent)) {
-		return;
-	}
-
-	if (!CE_CheckAssociation(ent)) {
 		return;
 	}
 
@@ -228,12 +219,7 @@ public OnThink(ent)
 		}
 	}*/
 
-	set_pev(ent, pev_nextthink, get_gametime() + g_fThinkDelay);
-}
-
-public OnPlayerKilled(id, killer)
-{	
-	ArraySetCell(g_playerKiller, id, killer);
+	set_task(g_fThinkDelay, "TaskThink", ent);
 }
 
 /*Teleport(ent)

@@ -60,6 +60,10 @@ public plugin_end()
 
 public OnSpawn(ent)
 {
+	if (pev(ent, pev_iuser1)) {
+		return;
+	}
+
 	if (!g_spawnerCount) {
 		g_spawners = ArrayCreate(1);
 		g_spawnerCE = ArrayCreate(32);

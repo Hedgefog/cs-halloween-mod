@@ -27,6 +27,7 @@ public plugin_precache()
 		.vMins = Float:{-16.0, -16.0, 0.0},
 		.vMaxs = Float:{16.0, 16.0, 32.0},
 		.fLifeTime = 120.0,
+		.ignoreRounds = true,
 		.preset = CEPreset_Item
 	);
 	
@@ -47,7 +48,7 @@ public OnPickup(ent, id)
 {
 	new owner = pev(ent, pev_owner);
 	
-	if (id != owner) {
+	if (owner && id != owner) {
 		return PLUGIN_CONTINUE;
 	}
 	
@@ -64,7 +65,12 @@ public onAddToFullPack(es, e, ent, host, hostflags, player, pSet)
 		return;
 	}
 	
-	if(pev(ent, pev_owner) == host) {
+	if (!is_user_connected(host)) {
+		return;
+	}
+	
+	new owner = pev(ent, pev_owner);
+	if(!owner || owner == host) {
 		return;
 	}
 	

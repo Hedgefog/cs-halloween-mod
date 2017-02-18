@@ -41,7 +41,6 @@ new Array:g_cosmeticGroups;
 new Array:g_cosmeticModelIndex;
 new g_cosmeticCount = 0;
 
-new Array:g_playerNextUpdate;
 new Array:g_playerRenderMode;
 new Array:g_playerRenderAmt;
 
@@ -65,18 +64,16 @@ public plugin_init()
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 	
 	RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
-	RegisterHam(Ham_Player_PreThink, "player", "OnPlayerPreThink", .Post = 1);
+	RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
 	
 	g_playerRenderMode	= ArrayCreate(1, g_maxPlayers+1);
 	g_playerRenderAmt	= ArrayCreate(1, g_maxPlayers+1);
-	g_playerNextUpdate	= ArrayCreate(1, g_maxPlayers+1);
 	
 	g_maxPlayers = get_maxplayers();	
 	
 	for (new i = 0; i <= g_maxPlayers; ++i) {
 		ArrayPushCell(g_playerRenderMode, 0);
 		ArrayPushCell(g_playerRenderAmt, 0);
-		ArrayPushCell(g_playerNextUpdate, 0);
 	}
 }
 
@@ -111,7 +108,6 @@ public plugin_end()
 
 	ArrayDestroy(g_playerRenderMode);
 	ArrayDestroy(g_playerRenderAmt);
-	ArrayDestroy(g_playerNextUpdate);
 	
 	nvault_close(g_hVault);
 }
@@ -132,6 +128,8 @@ public plugin_end()
 	
 		Unequip(id, i);
 	}
+	
+	remove_task(id);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -139,14 +137,21 @@ public plugin_end()
 public OnPlayerSpawn(id)
 {
 	UpdateEquipment(id);
+	
+	if (!task_exists(id)) {
+		set_task(0.1, "TaskPlayerThink", id);
+	}
 }
 
-public OnPlayerPreThink(id)
+public OnPlayerKilled(id)
 {
-	if (get_gametime() < ArrayGetCell(g_playerNextUpdate, id)) {
-		return;
-	}
+	remove_task(id);
+}
 
+/*--------------------------------[ Tasks ]--------------------------------*/
+
+public TaskPlayerThink(id)
+{
 	new renderMode = pev(id, pev_rendermode);
 	
 	static Float:renderAmt;
@@ -160,7 +165,6 @@ public OnPlayerPreThink(id)
 	
 	ArraySetCell(g_playerRenderMode, id, renderMode);
 	ArraySetCell(g_playerRenderAmt, id, renderAmt);
-	ArraySetCell(g_playerNextUpdate, id, get_gametime() + 0.1);
 
 	new size = PInv_Size(id);
 	for (new i = 0; i < size; ++i)
@@ -184,6 +188,8 @@ public OnPlayerPreThink(id)
 			set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
 		}
 	}
+	
+	set_task(0.1, "TaskPlayerThink", id);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/

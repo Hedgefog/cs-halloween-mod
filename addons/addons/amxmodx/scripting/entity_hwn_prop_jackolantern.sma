@@ -34,9 +34,8 @@ public plugin_precache()
 		.preset = CEPreset_Prop
 	);
 	
-	CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-	
-	RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);	
+	CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");	
+	CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
 }
 
 public OnSpawn(ent)
@@ -44,17 +43,20 @@ public OnSpawn(ent)
 	set_pev(ent, pev_body, random(2));
 	engfunc(EngFunc_DropToFloor, ent);
 	dllfunc(DLLFunc_Think, ent);
+	
+	TaskThink(ent);
 }
 
-/*------------[ Hooks ]------------*/
+public OnRemove(ent)
+{
+	remove_task(ent);
+}
 
-public OnThink(ent)
+/*------------[ Tasks ]------------*/
+
+public TaskThink(ent)
 {
 	if (!pev_valid(ent)) {
-		return;
-	}
-
-	if (!CE_CheckAssociation(ent)) {
 		return;
 	}
 
@@ -64,5 +66,5 @@ public OnThink(ent)
 	
 	UTIL_Message_Dlight(vOrigin, 8, {64, 52, 4}, UTIL_DelayToLifeTime(g_fThinkDelay), 0);
 	
-	set_pev(ent, pev_nextthink, get_gametime() + g_fThinkDelay);
+	set_task(g_fThinkDelay, "TaskThink", ent);
 }

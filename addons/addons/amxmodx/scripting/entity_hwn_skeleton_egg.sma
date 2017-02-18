@@ -55,7 +55,6 @@ public Birth(ent)
 	pev(ent, pev_origin, vOrigin);
 	
 	new skeletonEnt = CE_Create("hwn_npc_skeleton_small", vOrigin);
-
 	if (skeletonEnt) {
 		dllfunc(DLLFunc_Spawn, skeletonEnt);
 	}
