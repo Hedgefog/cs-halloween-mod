@@ -669,7 +669,8 @@ Cleanup()
 	}
 
 	new size = ArraySize(g_tmpEntities);
-	for (new i = size - 1; i <= 0; --i)
+
+	for (new i = size - 1; i >= 0; --i)
 	{
 		new ent = ArrayGetCell(g_tmpEntities, i);
 		
