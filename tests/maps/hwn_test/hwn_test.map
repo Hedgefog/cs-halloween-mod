@@ -944,3 +944,8 @@
 "classname" "hwn_npc_hhh"
 "origin" "-544 0 96"
 }
+{
+"classname" "hwn_prop_jackolantern"
+"angles" "0 120 0"
+"origin" "304 -352 32"
+}

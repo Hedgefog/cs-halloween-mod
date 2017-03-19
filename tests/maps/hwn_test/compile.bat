@@ -16,6 +16,7 @@ SET hlrad=hlrad_x64.exe
 del /s /q /f *.err
 del /s /q /f *.ext
 del /s /q /f *.prt
+del /s /q /f *.max
 del /s /q /f *.wa_
 
 pause
