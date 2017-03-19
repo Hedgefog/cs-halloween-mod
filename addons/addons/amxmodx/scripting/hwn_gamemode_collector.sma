@@ -183,7 +183,7 @@ public OnPlayerKilled(id)
 	
 	new bpEnt = CE_Create(BACKPACK_ENTITY_CLASSNAME, vOrigin);
 
-	if (!bpEnt) {
+	if (bpEnt) {
 		set_pev(bpEnt, pev_iuser1, points);	
 		dllfunc(DLLFunc_Spawn, bpEnt);
 		
