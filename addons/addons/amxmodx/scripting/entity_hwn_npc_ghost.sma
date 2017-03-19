@@ -66,6 +66,7 @@ public plugin_precache()
 	
 	CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
 	CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
+	CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
 }
 
 public plugin_init()
@@ -127,15 +128,20 @@ public OnRemove(ent)
 {
 	remove_task(ent);
 
-	if (g_particlesEnabled)
-	{
-		new particleEnt = pev(ent, pev_iuser4);
-		Particles_Remove(particleEnt);	
+	if (g_particlesEnabled) {
+		Particles_Remove(pev(ent, pev_iuser4));	
+	}
+	
+	NPC_Destroy(ent);
+}
+
+public OnKilled(ent)
+{
+	if (g_particlesEnabled) {
+		Particles_Remove(pev(ent, pev_iuser4));	
 	}
 
 	emit_sound(ent, CHAN_BODY, g_szSndDisappeared, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-	
-	NPC_Destroy(ent);
 }
 
 public OnPlayerKilled(id, killer)
@@ -150,74 +156,77 @@ public TaskThink(ent)
 	if (!pev_valid(ent)) {
 		return;
 	}
-
-	static Float:vOrigin[3];
-	pev(ent, pev_origin, vOrigin);
-
-	new enemy = pev(ent, pev_enemy);
-	if (NPC_IsValidEnemy(enemy))
+	
+	if (pev(ent, pev_deadflag) == DEAD_NO)
 	{
-		static Float:vTarget[3];
-		pev(enemy, pev_origin, vTarget);
-
-		if (get_distance_f(vOrigin, vTarget) <= NPC_HitRange)
+		static Float:vOrigin[3];
+		pev(ent, pev_origin, vOrigin);
+	
+		new enemy = pev(ent, pev_enemy);
+		if (NPC_IsValidEnemy(enemy))
 		{
-			if (NPC_CanHit(ent, enemy, NPC_HitRange)) {				
-				NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], .supercede = true);
-				NPC_Hit(ent, NPC_Damage, NPC_HitRange, NPC_HitDelay);
+			static Float:vTarget[3];
+			pev(enemy, pev_origin, vTarget);
+	
+			if (get_distance_f(vOrigin, vTarget) <= NPC_HitRange)
+			{
+				if (NPC_CanHit(ent, enemy, NPC_HitRange)) {				
+					NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], .supercede = true);
+					NPC_Hit(ent, NPC_Damage, NPC_HitRange, NPC_HitDelay);
+				}
+	
+				set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
 			}
-
-			set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+			else
+			{
+				if (random(100) < 10) {
+					NPC_EmitVoice(ent, g_szSndIdle[random(sizeof(g_szSndIdle))], 4.0);
+				}
+	
+				static Float:vDirection[3];
+				xs_vec_sub(vTarget, vOrigin, vDirection);
+				xs_vec_normalize(vDirection, vDirection);
+	
+				static Float:vVelocity[3];
+				xs_vec_mul_scalar(vDirection, NPC_Speed, vVelocity);
+				set_pev(ent, pev_velocity, vVelocity);
+	
+				xs_vec_mul_scalar(vDirection, NPC_HitRange, vDirection);
+				xs_vec_sub(vTarget, vDirection, vTarget);
+				UTIL_TurnTo(ent, vTarget);
+			}
+		}
+		else if (!UTIL_IsPlayer(enemy))
+		{
+			CE_Kill(ent);
+			return;
 		}
 		else
 		{
-			if (random(100) < 10) {
-				NPC_EmitVoice(ent, g_szSndIdle[random(sizeof(g_szSndIdle))], 4.0);
+			new killer = ArrayGetCell(g_playerKiller, enemy);
+			if (killer == enemy) {
+				killer = 0;
 			}
-
-			static Float:vDirection[3];
-			xs_vec_sub(vTarget, vOrigin, vDirection);
-			xs_vec_normalize(vDirection, vDirection);
-
-			static Float:vVelocity[3];
-			xs_vec_mul_scalar(vDirection, NPC_Speed, vVelocity);
-			set_pev(ent, pev_velocity, vVelocity);
-
-			xs_vec_mul_scalar(vDirection, NPC_HitRange, vDirection);
-			xs_vec_sub(vTarget, vDirection, vTarget);
-			UTIL_TurnTo(ent, vTarget);
+			
+			set_pev(ent, pev_enemy, killer);
 		}
+	
+		//The reason of server crash =(
+		/*new target = -1;
+		while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, 96.0)) != 0)
+		{
+			if (!pev_valid(target)) {
+				continue;
+			}
+	
+			static szTargetClassname[32];
+			pev(target, pev_classname, szTargetClassname, charsmax(szTargetClassname));
+	
+			if (equal(szTargetClassname, "hwn_prop_jackolantern")) {
+				set_pev(target, pev_nextthink, get_gametime() + 10.0);
+			}
+		}*/	
 	}
-	else if (!UTIL_IsPlayer(enemy))
-	{
-		CE_Remove(ent);
-		return;
-	}
-	else
-	{
-		new killer = ArrayGetCell(g_playerKiller, enemy);
-		if (killer == enemy) {
-			killer = 0;
-		}
-		
-		set_pev(ent, pev_enemy, killer);
-	}
-
-	//The reason of server crash =(
-	/*new target = -1;
-	while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, 96.0)) != 0)
-	{
-		if (!pev_valid(target)) {
-			continue;
-		}
-
-		static szTargetClassname[32];
-		pev(target, pev_classname, szTargetClassname, charsmax(szTargetClassname));
-
-		if (equal(szTargetClassname, "hwn_prop_jackolantern")) {
-			set_pev(target, pev_nextthink, get_gametime() + 10.0);
-		}
-	}*/
 
 	set_task(g_fThinkDelay, "TaskThink", ent);
 }

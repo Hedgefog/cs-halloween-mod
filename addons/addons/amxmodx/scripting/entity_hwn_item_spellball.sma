@@ -20,6 +20,8 @@ new g_sprSmoke;
 
 new Float:g_fThinkDelay;
 
+new g_ceHandler;
+
 public plugin_init()
 {
 	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -31,7 +33,7 @@ public plugin_init()
 
 public plugin_precache()
 {
-	CE_Register(
+	g_ceHandler = CE_Register(
 		.szName = ENTITY_NAME,
 		.vMins = Float:{-8.0, -8.0, -8.0},
 		.vMaxs = Float:{8.0, 8.0, 8.0},
@@ -71,7 +73,7 @@ public OnTouch(ent, target)
 		return;
 	}
 
-	if (!CE_CheckAssociation(ent)) {
+	if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
 		return;
 	}
 	

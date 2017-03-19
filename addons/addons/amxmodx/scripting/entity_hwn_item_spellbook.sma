@@ -24,6 +24,8 @@ new const g_szSndPickup[] = "hwn/spells/spell_pickup.wav";
 
 new bool:g_isPrecaching;
 
+new g_ceHandler;
+
 public plugin_init()
 {
 	g_isPrecaching = false;
@@ -42,7 +44,7 @@ public plugin_precache()
 	precache_sound(g_szSndSpawn);
 	precache_sound(g_szSndPickup);
 
-	CE_Register(
+	g_ceHandler = CE_Register(
 		.szName = ENTITY_NAME,
 		.modelIndex = precache_model("models/hwn/items/spellbook.mdl"),
 		.vMins = Float:{-16.0, -12.0, 0.0},
@@ -121,7 +123,7 @@ public TaskThink(ent)
 		return;
 	}
 
-	if (!CE_CheckAssociation(ent)) {
+	if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
 		return;
 	}
 	

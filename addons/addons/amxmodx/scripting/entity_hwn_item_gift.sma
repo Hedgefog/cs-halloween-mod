@@ -12,6 +12,8 @@
 
 #define ENTITY_NAME "hwn_item_gift"
 
+new g_ceHandler;
+
 public plugin_init()
 {
 	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -21,7 +23,7 @@ public plugin_init()
 
 public plugin_precache()
 {
-	CE_Register(
+	g_ceHandler = CE_Register(
 		.szName = ENTITY_NAME,
 		.modelIndex = precache_model("models/hwn/items/gift_v2.mdl"),
 		.vMins = Float:{-16.0, -16.0, 0.0},
@@ -61,7 +63,7 @@ public onAddToFullPack(es, e, ent, host, hostflags, player, pSet)
 		return;
 	}
 
-	if (!CE_CheckAssociation(ent)) {
+	if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
 		return;
 	}
 	

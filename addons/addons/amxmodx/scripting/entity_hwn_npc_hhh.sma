@@ -107,11 +107,13 @@ new g_astarEnt[10];
 
 new g_cvarUseAstar;
 
+new g_ceHandler;
+
 new g_maxPlayers;
 
 public plugin_precache()
 {
-	CE_Register(
+	g_ceHandler = CE_Register(
 		.szName = ENTITY_NAME,
 		.modelIndex = precache_model("models/hwn/npc/headless_hatman.mdl"),
 		.vMins = Float:{-16.0, -16.0, -48.0},
@@ -151,7 +153,6 @@ public plugin_precache()
 	CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
 	CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
 	
-	//RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "OnKilledPre", .Post = 0);
 	RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
 	
 	g_cvarUseAstar = register_cvar("hwn_npc_hhh_use_astar", "1");
@@ -230,11 +231,11 @@ public OnRemove(ent)
 	HHH_Destroy(ent);	
 }
 
-
-
 public OnKilled(ent)
 {
-	if (pev(ent, pev_deadflag) != DEAD_DYING) {
+	new deadflag = pev(ent, pev_deadflag);
+
+	if (deadflag == DEAD_NO) {
 		NPC_EmitVoice(ent, g_szSndDying, .supercede = true);
 		NPC_PlayAction(ent, g_actions[Action_Shake], .supercede = true);
 		
@@ -243,6 +244,8 @@ public OnKilled(ent)
 		
 		remove_task(ent);
 		set_task(2.0, "TaskThink", ent);
+	} else if (deadflag == DEAD_DEAD) {
+		return PLUGIN_CONTINUE;
 	}
 	
 	return PLUGIN_HANDLED;
@@ -250,7 +253,7 @@ public OnKilled(ent)
 
 public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
 {
-	if (!CE_CheckAssociation(ent)) {
+	if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
 		return HAM_IGNORED;
 	}
 	
@@ -429,7 +432,8 @@ public TaskThink(ent)
 	{
 		UTIL_Message_ExplodeModel(vOrigin, random_float(-512.0, 512.0), g_mdlGibs, 5, 25);	
 		NPC_EmitVoice(ent, g_szSndDeath, .supercede = true);
-		CE_Remove(ent);
+		set_pev(ent, pev_deadflag, DEAD_DEAD);
+		CE_Kill(ent);
 		
 		return;
 	}

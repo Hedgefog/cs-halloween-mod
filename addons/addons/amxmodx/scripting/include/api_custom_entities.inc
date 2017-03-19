@@ -58,6 +58,15 @@ native CE_Register
 native CE_Create(const szName[], const Float:vOrigin[3], bool:temp = true);
 
 /*
+ * Remove entity correctly.
+ *
+ * @param ent				Index of entity.
+ * @param killer			Index of killer.
+ */
+native bool:CE_Kill(ent, killer = 0);
+
+
+/*
  * Gets size of entity.
  *
  * @param szClassname		Classname of entity.
@@ -90,27 +99,23 @@ native bool:CE_Remove(ent);
  */
 native CE_RegisterHook(CEFunction:function, const szClassname[], const szCallback[]);
 
-native CE_GetHandler(const szClassname[]);
-native CE_GetHandlerByPlugin(pluginID = -1);
-native CE_GetHandlerByEntity(ent);
-
 /*
  * Check if entity is associated with current plugin.
  *
  * @param ent				Index of entity.
  * @return					Result true/false
  */
+native CE_CheckAssociation_(ent);
+
 stock bool:CE_CheckAssociation(ent) {
 	static bool:notified = false;
 	if (!notified) {
-		log_amx("%s function ^"CE_CheckAssociation^" is deprecated. Check ^"CE_GetHandlerByPlugin^" function.", CE_LOG_PREFIX);
+		log_amx("%s function ^"CE_CheckAssociation^" is deprecated. Check ^"CE_GetHandlerByEntity^" function.", CE_LOG_PREFIX);
 		notified = true;
 	}
 	
-	new pluginHandler = CE_GetHandlerByPlugin(.pluginID = -1);
-	if (pluginHandler < 0) {
-		return false;
-	}
-
-	return (pluginHandler == CE_GetHandlerByEntity(ent));
+	return CE_CheckAssociation_(ent);
 }
+
+native CE_GetHandler(const szClassname[]);
+native CE_GetHandlerByEntity(ent);

@@ -151,17 +151,17 @@ public plugin_natives()
 	
 	register_native("CE_Register", "Native_Register");	
 	register_native("CE_Create", "Native_Create");
+	register_native("CE_Kill", "Native_Kill");
 	register_native("CE_Remove", "Native_Remove");
 	
 	register_native("CE_GetSize", "Native_GetSize");
 	register_native("CE_GetModelIndex", "Native_GetModelIndex");
 	
-	//register_native("CE_CheckAssociation", "Native_CheckAssociation");
-	
 	register_native("CE_RegisterHook", "Native_RegisterHook");
 
+	register_native("CE_CheckAssociation_", "Native_CheckAssociation");
+
 	register_native("CE_GetHandler", "Native_GetHandler");
-	register_native("CE_GetHandlerByPlugin", "Native_GetHandlerByPlugin");
 	register_native("CE_GetHandlerByEntity", "Native_GetHandlerByEntity");
 }
 
@@ -198,6 +198,14 @@ public Native_Create(pluginID, argc)
 	new bool:temp = !!get_param(3);
 	
 	return Create(szClassName, vOrigin, temp);
+}
+
+public Native_Kill(pluginID, argc)
+{
+	new ent = get_param(1);
+	new killer = get_param(2);
+
+	Kill(ent, killer);
 }
 
 public bool:Native_Remove(pluginID, argc)
@@ -241,37 +249,6 @@ public Native_GetModelIndex(pluginID, argc)
 	return ArrayGetCell(g_entityModelIndex, ceIdx);
 }
 
-public Native_GetHandler(pluginID, argc)
-{
-	new szClassname[32];
-	get_string(1, szClassname, charsmax(szClassname));
-	
-	return GetHandler(szClassname);
-}
-
-public Native_GetHandlerByPlugin(pluginID, argc)
-{
-	new _pluginID = get_param(1);
-	if (_pluginID == -1) {
-		_pluginID = pluginID;
-	}
-
-	return GetHandlerByPlugin(_pluginID);
-}
-
-public Native_GetHandlerByEntity(pluginID, argc)
-{
-	new ent = get_param(1);
-
-	return GetHandlerByEntity(ent);
-}
-
-/*public bool:Native_CheckAssociation(pluginID, argc)
-{
-	new ent = get_param(1);
-	return CheckAssociation(pluginID, ent);
-}*/
-
 public Native_RegisterHook(pluginID, argc)
 {
 	new CEFunction:function = CEFunction:get_param(1);
@@ -283,6 +260,29 @@ public Native_RegisterHook(pluginID, argc)
 	get_string(3, szCallback, charsmax(szCallback));
 
 	RegisterHook(function, szClassname, szCallback, pluginID);
+}
+
+public Native_CheckAssociation(pluginID, argc)
+{
+	new ent = get_param(1);
+	new ceIdx = GetHandlerByEntity(ent);
+
+	return (ceIdx > 0 && pluginID == ArrayGetCell(g_entityPluginID, ceIdx));
+}
+
+public Native_GetHandler(pluginID, argc)
+{
+	new szClassname[32];
+	get_string(1, szClassname, charsmax(szClassname));
+	
+	return GetHandler(szClassname);
+}
+
+public Native_GetHandlerByEntity(pluginID, argc)
+{
+	new ent = get_param(1);
+
+	return GetHandlerByEntity(ent);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -528,7 +528,7 @@ Respawn(ent)
 	dllfunc(DLLFunc_Spawn, ent);
 }
 
-bool:Kill(ent, killer = 0, bool:picked = false)
+Kill(ent, killer = 0, bool:picked = false)
 {
 	new Array:ceData = GetPData(ent);
 
@@ -621,17 +621,6 @@ GetHandlerByEntity(ent)
 	return ArrayGetCell(ceData, CEData_Handler);
 }
 
-GetHandlerByPlugin(pluginID)
-{
-	for (new i = 0; i < g_entityCount; ++i) {
-		if (ArrayGetCell(g_entityPluginID, i) == pluginID) {
-			return i;
-		}
-	}
-	
-	return -1;
-}
-
 GetHandler(const szClassname[])
 {
 	new ceIdx;
@@ -641,26 +630,6 @@ GetHandler(const szClassname[])
 
 	return ceIdx;
 }
-
-/*bool:CheckAssociation(pluginID, ent)
-{
-	if (!pev_valid(ent)) {
-		return false;
-	}
-	
-	if (!Check(ent)) {
-		return false;
-	}
-	
-	new ceIdx = GetHandlerByPlugin(pluginID);
-	
-	static szClassname[32];
-	pev(ent, pev_classname, szClassname, charsmax(szClassname));
-	
-	new Array:ceData = GetPData(ent);
-	
-	return (ceIdx == ArrayGetCell(ceData, CEData_Handler));
-}*/
 
 Cleanup()
 {
@@ -845,7 +814,7 @@ ExecuteFunction(CEFunction:function, ceIdx, any:...)
 {
 	new result = 0;
 	new ent = getarg(2);
-	
+
 	new Array:functions = ArrayGetCell(g_entityHooks, ceIdx);
 	if (functions == Invalid_Array) {
 		return 0;

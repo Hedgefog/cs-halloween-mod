@@ -78,6 +78,8 @@ new g_sprBloodSpray;
 
 new Float:g_fThinkDelay;
 
+new g_ceHandler;
+
 new g_maxPlayers;
 
 public plugin_precache()
@@ -92,7 +94,7 @@ public plugin_precache()
 		precache_sound(g_szSndSkeletonIdleList[i]);
 	}
 
-	CE_Register(
+	g_ceHandler = CE_Register(
 		.szName = ENTITY_NAME,
 		.modelIndex = precache_model("models/hwn/npc/skeleton_small.mdl"),
 		.vMins = Float:{-8.0, -8.0, -16.0},
@@ -156,7 +158,7 @@ public OnRemove(ent)
 
 public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
 {
-	if (!CE_CheckAssociation(ent)) {
+	if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
 		return;
 	}
 	

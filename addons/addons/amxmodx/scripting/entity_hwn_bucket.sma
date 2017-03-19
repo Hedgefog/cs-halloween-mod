@@ -41,6 +41,8 @@ new g_cvarBucketHealth;
 
 new Float:g_fThinkDelay;
 
+new g_ceHandler;
+
 new g_maxPlayers;
 
 public plugin_precache()
@@ -49,7 +51,7 @@ public plugin_precache()
 	g_sprBloodSpray = precache_model("sprites/bloodspray.spr");
 	precache_sound(g_szSndPointCollected);
 	
-	CE_Register(
+	g_ceHandler = CE_Register(
 		.szName = ENTITY_NAME,
 		.modelIndex = precache_model("models/hwn/props/pumpkin_bucket.mdl"),
 		.vMins = Float:{-28.0, -28.0, 0.0},
@@ -107,7 +109,7 @@ public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
 		return HAM_IGNORED;
 	}
 
-	if (!CE_CheckAssociation(ent)) {
+	if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
 		return HAM_IGNORED;
 	}
 
@@ -126,7 +128,7 @@ public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
 
 public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
 {
-	if (!CE_CheckAssociation(ent)) {
+	if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
 		return;
 	}
 	
@@ -138,8 +140,8 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
 
 public OnKilled(ent)
 {
-	if (!CE_CheckAssociation(ent)) {
-		return PLUGIN_CONTINUE;
+	if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
+		return HAM_IGNORED;
 	}
 
 	static Float:fHealth;
@@ -178,8 +180,22 @@ public TaskThink(ent)
 			continue;
 		}
 		
-		if (GetDistanceBetweenEntity(ent, id) < 256.0) {
-			if (fGametime >= g_fNextCollectTime[id]) {
+		static Float:vOrigin1[3];
+		pev(ent, pev_origin, vOrigin1);
+		
+		static Float:vOrigin2[3];
+		pev(id, pev_origin, vOrigin2);
+		
+		if (get_distance_f(vOrigin1, vOrigin2) < 256.0)
+		{	
+			new trace = create_tr2();
+			engfunc(EngFunc_TraceLine, vOrigin1, vOrigin2, IGNORE_MONSTERS, ent, trace);
+			
+			new Float:fraction;
+			get_tr2(trace, TR_flFraction, fraction);
+			free_tr2(trace);
+	
+			if (fraction == 1.0 && fGametime >= g_fNextCollectTime[id]) {
 				TakePlayerPoint(ent, id);
 				g_fNextCollectTime[id] = fGametime + 1.0;
 			}
@@ -273,15 +289,4 @@ ExtractPoints(ent, count = 1)
 			dllfunc(DLLFunc_Spawn, pumpkinEnt);
 		}
 	}
-}
-
-stock Float:GetDistanceBetweenEntity(ent1, ent2)
-{
-	static Float:vOrigin1[3];
-	pev(ent1, pev_origin, vOrigin1);
-	
-	static Float:vOrigin2[3];
-	pev(ent2, pev_origin, vOrigin2);
-	
-	return get_distance_f(vOrigin1, vOrigin2);
 }
