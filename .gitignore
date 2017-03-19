@@ -1,4 +1,6 @@
 *.amxx
+*.max
+*.log
 *.amxp
 debug/
 release/
