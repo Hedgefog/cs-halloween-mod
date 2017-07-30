@@ -1,6 +1,19 @@
 ## Halloween Mod for Counter-Strike 1.6
-__Version:__ 2.2.1
+__Version:__ 2.3.0
 
+### Build Project
+
+```bash
+npm i
+npm run build
+```
+
+### Watch Project
+
+```bash
+npm i
+npm run watch
+```
 
 #### Gamemodes
 - __Collector (hwnc_*)__

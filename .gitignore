@@ -2,5 +2,6 @@
 *.max
 *.log
 *.amxp
-debug/
-release/
+node_modules/
+compiler/
+dist/
