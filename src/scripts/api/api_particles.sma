@@ -155,6 +155,7 @@ RemoveParticles(ent)
 {
 	remove_task(ent+TASKID_SUM_TARGET_TICK);
 	set_pev(ent, pev_flags, pev(ent, pev_flags) | FL_KILLME);
+	dllfunc(DLLFunc_Think, ent);
 }
 
 public TaskRemoveTarget(taskID)
@@ -218,4 +219,5 @@ public TaskRemoveParticle(taskID)
 {
 	new ent = taskID - TASKID_SUM_REMOVE_PARTICLE;
 	set_pev(ent, pev_flags, pev(ent, pev_flags) | FL_KILLME);
+	dllfunc(DLLFunc_Think, ent);
 }

@@ -353,12 +353,14 @@ public OnSpawn(ent)
 	new Array:ceData = GetPData(ent);
 	new ceIdx = ArrayGetCell(ceData, CEData_Handler);
 	
+	//Save start origin
 	if (ArrayGetCell(ceData, CEData_StartOrigin) == Invalid_Array) {
 		new Float:vOrigin[3];
 		pev(ent, pev_origin, vOrigin);	
 	
 		new Array:startOrigin = ArrayCreate(3, 1);
 		ArrayPushArray(startOrigin, vOrigin);
+
 		ArraySetCell(ceData, CEData_StartOrigin, startOrigin);
 	}
 	
@@ -599,6 +601,7 @@ bool:Remove(ent, bool:picked = false)
 	
 	//Remove entity
 	set_pev(ent, pev_flags, pev(ent, pev_flags) | FL_KILLME);
+	dllfunc(DLLFunc_Think, ent);
 	
 	DestroyPData(ent);
 	

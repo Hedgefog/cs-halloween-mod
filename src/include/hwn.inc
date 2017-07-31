@@ -73,7 +73,7 @@
 #define HWN_COLOR_GREEN_DARK_F 		47.0, 95.0, 15.0
 #define HWN_COLOR_GREEN_DARK 		47, 95, 15
 
-#define HWN_VERSION "2.3.0"
+#define HWN_VERSION "2.3.1"
 
 enum Hwn_GamemodeFlags (<<=1)
 {

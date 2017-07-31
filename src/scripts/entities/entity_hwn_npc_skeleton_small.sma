@@ -217,46 +217,48 @@ public TaskThink(taskID)
 	new Action:action = Action_Idle;
 	
 	new enemy = pev(ent, pev_enemy);
-	if (NPC_IsValidEnemy(enemy))
-	{	
-		static Float:vOrigin[3];
-		pev(ent, pev_origin, vOrigin);
-	
-		if (NPC_CanHit(ent, enemy, NPC_HitRange) && !task_exists(ent+TASKID_SUM_HIT)) {
-			set_task(NPC_HitDelay, "TaskHit", ent+TASKID_SUM_HIT);
-			action = Action_Attack;
-		}
-	
-		static Float:vTarget[3];
-		if (NPC_GetTarget(ent, NPC_Speed, vTarget))
-		{
-			if (get_distance_f(vOrigin, vTarget) >= NPC_HitRange - 4.0) {
-				action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
-				
-				if (pev(ent, pev_sequence) == Sequence_Attack) {
-					set_pev(ent, pev_sequence, Sequence_RunAttack);
-				}
-			} else {
-				set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});	
-			}
-			
-			if (random(100) < 10) {
-				NPC_EmitVoice(ent, g_szSndSkeletonIdleList[random(sizeof(g_szSndSkeletonIdleList))]);
-			}			
-			
-			NPC_MoveToTarget(ent, vTarget, NPC_Speed);
-		}
-		else
-		{
-			set_pev(ent, pev_enemy, 0);
-		}
-	}
-	else
-	{
+	if (NPC_IsValidEnemy(enemy)) {	
+		Attack(ent, enemy, action);
+	} else {
 		NPC_FindEnemy(ent, g_maxPlayers);
 	}
 	
 	NPC_PlayAction(ent, g_actions[action]);
 	
 	set_task(g_fThinkDelay, "TaskThink", ent);
+}
+
+Action:Attack(ent, target, &Action:action)
+{
+	static Float:vOrigin[3];
+	pev(ent, pev_origin, vOrigin);
+
+	if (NPC_CanHit(ent, target, NPC_HitRange) && !task_exists(ent+TASKID_SUM_HIT)) {
+		set_task(NPC_HitDelay, "TaskHit", ent+TASKID_SUM_HIT);
+		action = Action_Attack;
+	}
+
+	static Float:vTarget[3];
+	if (NPC_GetTarget(ent, NPC_Speed, vTarget))
+	{
+		if (get_distance_f(vOrigin, vTarget) >= NPC_HitRange - 4.0) {
+			action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
+			
+			if (pev(ent, pev_sequence) == Sequence_Attack) {
+				set_pev(ent, pev_sequence, Sequence_RunAttack);
+			}
+		} else {
+			set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});	
+		}
+		
+		if (random(100) < 10) {
+			NPC_EmitVoice(ent, g_szSndSkeletonIdleList[random(sizeof(g_szSndSkeletonIdleList))]);
+		}			
+		
+		NPC_MoveToTarget(ent, vTarget, NPC_Speed);
+	}
+	else
+	{
+		set_pev(ent, pev_enemy, 0);
+	}
 }

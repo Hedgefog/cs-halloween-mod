@@ -470,53 +470,7 @@ public TaskThink(ent)
 	new enemy = pev(ent, pev_enemy);
 	if (NPC_IsValidEnemy(enemy))
 	{
-		new bool:canHit = NPC_CanHit(ent, enemy, NPC_HitRange);
-		
-		if (canHit && !task_exists(ent+TASKID_SUM_HIT)) {
-			set_task(NPC_HitDelay, "TaskHit", ent+TASKID_SUM_HIT);
-			NPC_PlayAction(ent, g_actions[Action_RunAttack]);
-			NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.5);
-		}
-
-		static Float:vTarget[3];
-		if (NPC_GetTarget(ent, NPC_Speed, vTarget)) {
-			if (!canHit) {
-				NPC_PlayAction(ent, g_actions[Action_Run]);
-				
-				if (random(100) < 10) {
-					NPC_EmitVoice(ent, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
-				}
-				
-				NPC_EmitFootStep(ent, g_szSndStep[random(sizeof(g_szSndStep))]);
-			}
-			
-			AStar_Reset(ent);
-			NPC_MoveToTarget(ent, vTarget, NPC_Speed);
-			
-			for (new id = 1; id <= g_maxPlayers; ++id) {
-				if (!is_user_connected(id)) {
-					continue;
-				}
-			
-				if (!is_user_alive(id)) {
-					continue;
-				}
-				
-				static Float:vUserOrigin[3];
-				pev(id, pev_origin, vUserOrigin);
-				
-				if (get_distance_f(vOrigin, vUserOrigin) > 512.0) {
-					continue;
-				}
-				
-				message_begin(MSG_ONE, get_user_msgid("ScreenShake"), .player = id);
-				write_short(UTIL_FixedUnsigned16(8.0, 1<<12));
-				write_short(UTIL_FixedUnsigned16(1.0, 1<<12));
-				write_short(UTIL_FixedUnsigned16(1.0, 1<<8));
-				message_end();
-			}
-			
-		} else if(get_pcvar_num(g_cvarUseAstar) > 0) {
+		if (!Attack(ent, enemy) && (get_pcvar_num(g_cvarUseAstar) > 0)) {
 			astarRequired = true;
 		}
 	}
@@ -558,4 +512,61 @@ public TaskThink(ent)
 	}
 	
 	set_task(g_fThinkDelay, "TaskThink", ent);
+}
+
+bool:Attack(ent, target)
+{
+	static Float:vOrigin[3];	
+	pev(ent, pev_origin, vOrigin);
+
+	new bool:canHit = NPC_CanHit(ent, target, NPC_HitRange);
+		
+	if (canHit && !task_exists(ent+TASKID_SUM_HIT)) {
+		set_task(NPC_HitDelay, "TaskHit", ent+TASKID_SUM_HIT);
+		NPC_PlayAction(ent, g_actions[Action_RunAttack]);
+		NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.5);
+	}
+
+	static Float:vTarget[3];
+	if (NPC_GetTarget(ent, NPC_Speed, vTarget)) {
+		if (!canHit) {
+			NPC_PlayAction(ent, g_actions[Action_Run]);
+			
+			if (random(100) < 10) {
+				NPC_EmitVoice(ent, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
+			}
+			
+			NPC_EmitFootStep(ent, g_szSndStep[random(sizeof(g_szSndStep))]);
+		}
+		
+		AStar_Reset(ent);
+		NPC_MoveToTarget(ent, vTarget, NPC_Speed);
+		
+		for (new id = 1; id <= g_maxPlayers; ++id) {
+			if (!is_user_connected(id)) {
+				continue;
+			}
+		
+			if (!is_user_alive(id)) {
+				continue;
+			}
+			
+			static Float:vUserOrigin[3];
+			pev(id, pev_origin, vUserOrigin);
+			
+			if (get_distance_f(vOrigin, vUserOrigin) > 512.0) {
+				continue;
+			}
+			
+			message_begin(MSG_ONE, get_user_msgid("ScreenShake"), .player = id);
+			write_short(UTIL_FixedUnsigned16(8.0, 1<<12));
+			write_short(UTIL_FixedUnsigned16(1.0, 1<<12));
+			write_short(UTIL_FixedUnsigned16(1.0, 1<<8));
+			message_end();
+		}
+		
+		return true;
+	}
+
+	return false;
 }

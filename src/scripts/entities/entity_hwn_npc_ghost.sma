@@ -43,8 +43,12 @@ new Array:g_playerKiller;
 
 new g_maxPlayers;
 
+new bool:g_isPrecaching;
+
 public plugin_precache()
-{	
+{
+	g_isPrecaching = true;
+
 	precache_sound(g_szSndDisappeared);
 	
 	for (new i = 0; i < sizeof(g_szSndAttack); ++i) {
@@ -71,6 +75,8 @@ public plugin_precache()
 
 public plugin_init()
 {
+	g_isPrecaching = false;
+
 	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 	
 	g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
@@ -113,34 +119,19 @@ public OnSpawn(ent)
 		NPC_FindEnemy(ent, .maxplayers = g_maxPlayers, .reachableOnly = false);
 	}
 	
-	if (g_particlesEnabled)
-	{
-		new particleEnt = Particles_Spawn("magic_glow", Float:{0.0, 0.0, 0.0}, 0.0);
-		set_pev(particleEnt, pev_movetype, MOVETYPE_FOLLOW);
-		set_pev(particleEnt, pev_aiment, ent);
-		set_pev(ent, pev_iuser4, particleEnt);
-	}
-	
 	TaskThink(ent);
 }
 
 public OnRemove(ent)
 {
 	remove_task(ent);
-
-	if (g_particlesEnabled) {
-		Particles_Remove(pev(ent, pev_iuser4));	
-	}
-	
+	RemoveParticles(ent);
 	NPC_Destroy(ent);
 }
 
 public OnKilled(ent)
 {
-	if (g_particlesEnabled) {
-		Particles_Remove(pev(ent, pev_iuser4));	
-	}
-
+	RemoveParticles(ent);
 	emit_sound(ent, CHAN_BODY, g_szSndDisappeared, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
@@ -159,85 +150,95 @@ public TaskThink(ent)
 	
 	if (pev(ent, pev_deadflag) == DEAD_NO)
 	{
-		static Float:vOrigin[3];
-		pev(ent, pev_origin, vOrigin);
-	
+		UpdateParticles(ent);
+
 		new enemy = pev(ent, pev_enemy);
-		if (NPC_IsValidEnemy(enemy))
-		{
-			static Float:vTarget[3];
-			pev(enemy, pev_origin, vTarget);
-	
-			if (get_distance_f(vOrigin, vTarget) <= NPC_HitRange)
-			{
-				if (NPC_CanHit(ent, enemy, NPC_HitRange)) {				
-					NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], .supercede = true);
-					NPC_Hit(ent, NPC_Damage, NPC_HitRange, NPC_HitDelay);
-				}
-	
-				set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
-			}
-			else
-			{
-				if (random(100) < 10) {
-					NPC_EmitVoice(ent, g_szSndIdle[random(sizeof(g_szSndIdle))], 4.0);
-				}
-	
-				static Float:vDirection[3];
-				xs_vec_sub(vTarget, vOrigin, vDirection);
-				xs_vec_normalize(vDirection, vDirection);
-	
-				static Float:vVelocity[3];
-				xs_vec_mul_scalar(vDirection, NPC_Speed, vVelocity);
-				set_pev(ent, pev_velocity, vVelocity);
-	
-				xs_vec_mul_scalar(vDirection, NPC_HitRange, vDirection);
-				xs_vec_sub(vTarget, vDirection, vTarget);
-				UTIL_TurnTo(ent, vTarget);
-			}
-		}
-		else if (!UTIL_IsPlayer(enemy))
-		{
+		if (NPC_IsValidEnemy(enemy)) {
+			Attack(ent, enemy);
+		} else if (!UTIL_IsPlayer(enemy)) {
 			CE_Kill(ent);
 			return;
+		} else {
+			Revenge(ent, enemy);
 		}
-		else
-		{
-			new killer = ArrayGetCell(g_playerKiller, enemy);
-			if (killer == enemy) {
-				killer = 0;
-			}
-			
-			set_pev(ent, pev_enemy, killer);
-		}
-	
-		//The reason of server crash =(
-		/*new target = -1;
-		while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, 96.0)) != 0)
-		{
-			if (!pev_valid(target)) {
-				continue;
-			}
-	
-			static szTargetClassname[32];
-			pev(target, pev_classname, szTargetClassname, charsmax(szTargetClassname));
-	
-			if (equal(szTargetClassname, "hwn_prop_jackolantern")) {
-				set_pev(target, pev_nextthink, get_gametime() + 10.0);
-			}
-		}*/	
 	}
 
 	set_task(g_fThinkDelay, "TaskThink", ent);
 }
 
-/*Teleport(ent)
+Attack(ent, target)
 {
 	static Float:vOrigin[3];
 	pev(ent, pev_origin, vOrigin);
-	
-	for (new i = 0; i < 3; ++i) {
-		new direction = random(1) ? 1 : -1;
-		vOrigin[i] += random_float(256.0, 768.0) * direction;
+
+	static Float:vTarget[3];
+	pev(target, pev_origin, vTarget);
+
+	if (get_distance_f(vOrigin, vTarget) <= NPC_HitRange)
+	{
+		if (NPC_CanHit(ent, target, NPC_HitRange)) {				
+			NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], .supercede = true);
+			NPC_Hit(ent, NPC_Damage, NPC_HitRange, NPC_HitDelay);
+		}
+
+		set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
 	}
-}*/
+	else
+	{
+		if (random(100) < 10) {
+			NPC_EmitVoice(ent, g_szSndIdle[random(sizeof(g_szSndIdle))], 4.0);
+		}
+
+		static Float:vDirection[3];
+		xs_vec_sub(vTarget, vOrigin, vDirection);
+		xs_vec_normalize(vDirection, vDirection);
+
+		static Float:vVelocity[3];
+		xs_vec_mul_scalar(vDirection, NPC_Speed, vVelocity);
+		set_pev(ent, pev_velocity, vVelocity);
+
+		xs_vec_mul_scalar(vDirection, NPC_HitRange, vDirection);
+		xs_vec_sub(vTarget, vDirection, vTarget);
+		UTIL_TurnTo(ent, vTarget);
+	}
+}
+
+Revenge(ent, target)
+{
+	new killer = ArrayGetCell(g_playerKiller, target);
+	if (killer == target) {
+		killer = 0;
+	}
+	
+	set_pev(ent, pev_enemy, killer);
+}
+
+UpdateParticles(ent)
+{
+	if (!g_particlesEnabled) {
+		return;
+	}
+
+	if (g_isPrecaching) {
+		return;
+	}
+
+	if (pev(ent, pev_iuser4)) {
+		return;
+	}
+
+	new particleEnt = Particles_Spawn("magic_glow", Float:{0.0, 0.0, 0.0}, 0.0);
+	set_pev(particleEnt, pev_movetype, MOVETYPE_FOLLOW);
+	set_pev(particleEnt, pev_aiment, ent);
+	set_pev(ent, pev_iuser4, particleEnt);
+}
+
+RemoveParticles(ent)
+{
+	if (!pev(ent, pev_iuser4)) {
+		return;
+	}
+
+	Particles_Remove(pev(ent, pev_iuser4));
+	set_pev(ent, pev_iuser4, 0);
+}

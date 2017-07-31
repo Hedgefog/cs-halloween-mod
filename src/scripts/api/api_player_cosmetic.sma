@@ -495,6 +495,7 @@ Unequip(id, slotIdx)
 	
 	new ent = ArrayGetCell(item, _:ItemData_Entity);
 	set_pev(ent, pev_flags, pev(ent, pev_flags) | FL_KILLME);
+	dllfunc(DLLFunc_Think, ent);
 
 	ArraySetCell(item, _:ItemData_Entity, 0);
 	ArraySetCell(item, _:ItemData_State, ItemState_None);
