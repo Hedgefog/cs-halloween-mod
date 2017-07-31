@@ -282,12 +282,21 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
 /*--------------------------------[ Callbacks ]--------------------------------*/
 
 public AStar_OnPathDone(astarIdx, Array:path, Float:Distance, NodesAdded, NodesValidated, NodesCleared)
-{	
+{
 	if (path == Invalid_Array) {
 		return;
 	}
 	
 	new ent = g_astarEnt[astarIdx];
+
+	if (!pev_valid(ent)) {
+		return;
+	}
+
+	if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
+		return;
+	}
+
 	new Array:hhh = HHH_Get(ent);
 	ArraySetCell(hhh, HHH_AStar_Path, path);
 }
