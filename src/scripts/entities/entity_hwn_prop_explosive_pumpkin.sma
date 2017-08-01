@@ -112,9 +112,6 @@ PumpkinRadiusDamage(ent, owner)
 		}
 
 		lastTarget = target;
-		
-		static szClassname[32];
-		pev(target, pev_classname, szClassname, charsmax(szClassname));
 
 		if (target == owner) {
 			owner = 0;
