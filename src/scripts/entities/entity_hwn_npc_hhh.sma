@@ -152,7 +152,7 @@ public plugin_precache()
 	
 	CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
 	CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
-	CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
+	CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "OnKill");
 	
 	RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
 	
@@ -241,7 +241,7 @@ public OnRemove(ent)
 	HHH_Destroy(ent);	
 }
 
-public OnKilled(ent)
+public OnKill(ent)
 {
 	new deadflag = pev(ent, pev_deadflag);
 

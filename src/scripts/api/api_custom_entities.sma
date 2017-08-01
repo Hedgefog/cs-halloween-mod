@@ -35,6 +35,7 @@ enum CEPreset
 enum CEFunction
 {
 	CEFunction_Spawn,
+	CEFunction_Kill,
 	CEFunction_Killed,
 	CEFunction_Remove,
 	CEFunction_Picked,
@@ -535,10 +536,15 @@ Kill(ent, killer = 0, bool:picked = false)
 	new Array:ceData = GetPData(ent);
 
 	new ceIdx = ArrayGetCell(ceData, CEData_Handler);
-	
-	if (ExecuteFunction(CEFunction_Killed, ceIdx, ent, killer, picked) != PLUGIN_CONTINUE) {	
+
+	if (ExecuteFunction(CEFunction_Kill, ceIdx, ent, killer, picked) != PLUGIN_CONTINUE) {
 		return;
 	}
+
+	new szClassName[32];
+	pev(ent, pev_classname, szClassName, charsmax(szClassName));
+
+	log_amx("[KILL] ent: %d class: %s deadflag: %d", ent, szClassName, pev(ent, pev_deadflag));
 	
 	set_pev(ent, pev_takedamage, DAMAGE_NO);
 	set_pev(ent, pev_effects, pev(ent, pev_effects) | EF_NODRAW);
@@ -560,7 +566,11 @@ Kill(ent, killer = 0, bool:picked = false)
 		}
 		
 		remove_task(ent+TASKID_SUM_DISAPPEAR);
-	} else {
+	}
+
+	ExecuteFunction(CEFunction_Killed, ceIdx, ent, killer, picked);
+
+	if (tmpIdx >= 0) {
 		Remove(ent, picked);
 	}
 }

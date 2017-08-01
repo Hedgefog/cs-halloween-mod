@@ -63,7 +63,7 @@ public plugin_precache()
 	RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
 	
 	CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-	CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
+	CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "OnKill");
 	CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
 	
 	g_cvarBucketHealth = register_cvar("hwn_bucket_health", "300");
@@ -138,7 +138,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
 	UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 103, floatround(fDamage/4));
 }
 
-public OnKilled(ent)
+public OnKill(ent)
 {
 	if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
 		return HAM_IGNORED;

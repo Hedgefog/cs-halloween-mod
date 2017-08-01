@@ -19,6 +19,7 @@ enum CEPreset
 enum CEFunction
 {
 	CEFunction_Spawn,
+	CEFunction_Kill,
 	CEFunction_Killed,
 	CEFunction_Remove,	
 	CEFunction_Picked,
