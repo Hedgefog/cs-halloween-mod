@@ -32,6 +32,7 @@ new g_fwResult;
 new g_fwBossSpawn;
 new g_fwBossKill;
 new g_fwBossEscape;
+new g_fwBossTeleport;
 new g_fwWinner;
 
 new Array:g_bosses;
@@ -40,6 +41,7 @@ new Array:g_bossSpawnPoints;
 new Array:g_playerTotalDamage;
 
 new g_bossEnt = 0;
+new g_bossIdx = 0;
 new g_bossSpawnPoint;
 
 new g_maxPlayers;
@@ -60,6 +62,7 @@ public plugin_init()
 	g_fwBossSpawn = CreateMultiForward("Hwn_Bosses_Fw_BossSpawn", ET_IGNORE, FP_CELL);
 	g_fwBossKill = CreateMultiForward("Hwn_Bosses_Fw_BossKill", ET_IGNORE, FP_CELL);
 	g_fwBossEscape = CreateMultiForward("Hwn_Bosses_Fw_BossEscape", ET_IGNORE, FP_CELL);
+	g_fwBossTeleport = CreateMultiForward("Hwn_Bosses_Fw_BossTeleport", ET_IGNORE, FP_CELL, FP_CELL);
 	g_fwWinner = CreateMultiForward("Hwn_Bosses_Fw_Winner", ET_IGNORE, FP_CELL);
 	
 	CreateBossSpawnTask();
@@ -108,9 +111,12 @@ public Native_Register(pluginID, argc)
 		g_bosses = ArrayCreate(32);
 	}
 	
+	new idx = ArraySize(g_bosses);
 	ArrayPushString(g_bosses, szClassname);
 	
 	CE_RegisterHook(CEFunction_Remove, szClassname, "OnBossRemove");
+
+	return idx;
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -151,6 +157,7 @@ public OnBossRemove(ent)
 	}
 	
 	g_bossEnt = 0;
+	g_bossIdx = 0;
 	remove_task(TASKID_REMOVE_BOSS);
 	
 	CreateBossSpawnTask();
@@ -179,6 +186,8 @@ public OnHurtTouch(ent, toucher)
 	static Float:vOrigin[3];
 	ArrayGetArray(g_bossSpawnPoints, g_bossSpawnPoint, vOrigin);
 	engfunc(EngFunc_SetOrigin, g_bossEnt, vOrigin);
+
+	ExecuteForward(g_fwBossTeleport, g_fwResult, g_bossEnt, g_bossIdx);
 	
 	return HAM_SUPERCEDE;
 }
@@ -218,6 +227,8 @@ SpawnBoss()
 	if (!g_bossEnt) {
 		return;
 	}
+
+	g_bossIdx = bossIdx;
 
 	dllfunc(DLLFunc_Spawn, g_bossEnt);
 	

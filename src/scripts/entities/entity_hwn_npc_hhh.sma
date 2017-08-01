@@ -108,6 +108,7 @@ new g_astarEnt[10];
 new g_cvarUseAstar;
 
 new g_ceHandler;
+new g_bossHandler;
 
 new g_maxPlayers;
 
@@ -121,7 +122,7 @@ public plugin_precache()
 		.preset = CEPreset_NPC
 	);
 	
-	Hwn_Bosses_RegisterBoss(ENTITY_NAME);
+	g_bossHandler = Hwn_Bosses_RegisterBoss(ENTITY_NAME);
 
 	g_sprBlood		= precache_model("sprites/blood.spr");
 	g_sprBloodSpray	= precache_model("sprites/bloodspray.spr");
@@ -181,6 +182,15 @@ public client_putinserver()
 #endif
 {
 	NPC_Health -= 200.0;
+}
+
+public Hwn_Bosses_Fw_BossTeleport(ent, handler)
+{
+	if (handler != g_bossHandler) {
+		return;
+	}
+
+	AStar_Reset(ent);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
