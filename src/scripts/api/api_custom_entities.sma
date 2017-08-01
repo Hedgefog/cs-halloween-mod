@@ -541,11 +541,6 @@ Kill(ent, killer = 0, bool:picked = false)
 		return;
 	}
 
-	new szClassName[32];
-	pev(ent, pev_classname, szClassName, charsmax(szClassName));
-
-	log_amx("[KILL] ent: %d class: %s deadflag: %d", ent, szClassName, pev(ent, pev_deadflag));
-	
 	set_pev(ent, pev_takedamage, DAMAGE_NO);
 	set_pev(ent, pev_effects, pev(ent, pev_effects) | EF_NODRAW);
 	set_pev(ent, pev_solid, SOLID_NOT);
