@@ -19,7 +19,7 @@
 const Float:FireballDamage = 30.0;
 
 const Float:EffectRadius = 128.0;
-new const Float:EffectColor[] = {255.0, 127.0, 47.0};
+new const EffectColor[3] = {255, 127, 47};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_fireball_impact.wav";
 
@@ -164,7 +164,7 @@ DetonateEffect(ent, const Float:vOrigin[3])
       .modelindex = g_sprSpellballTrace,
       .vOrigin = vOrigin,
       .fRadius = EffectRadius,
-      .fColor = EffectColor
+      .color = EffectColor
     );
 
     emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);

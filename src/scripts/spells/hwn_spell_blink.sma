@@ -17,7 +17,7 @@
 #define SPELLBALL_ENTITY_CLASSNAME "hwn_item_spellball"
 
 const Float:EffectRadius = 64.0;
-new const Float:EffectColor[] = {255.0, 127.0, 47.0};
+new const EffectColor[3] = {0, 0, 255};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_teleport.wav";
 
@@ -73,8 +73,6 @@ public OnCast(id)
     set_pev(ent, pev_rendercolor, EffectColor);
     
     dllfunc(DLLFunc_Spawn, ent);
-    
-    set_pev(ent, pev_movetype, MOVETYPE_FLYMISSILE);
 }
 
 public OnTouch(ent, target)
@@ -158,7 +156,7 @@ DetonateEffect(ent, const Float:vOrigin[3])
       .modelindex = g_sprSpellballTrace,
       .vOrigin = vOrigin,
       .fRadius = EffectRadius,
-      .fColor = EffectColor
+      .color = EffectColor
     );
 
     emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);

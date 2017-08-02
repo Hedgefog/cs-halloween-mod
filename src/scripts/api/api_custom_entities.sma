@@ -21,6 +21,7 @@
 
 #define TASKID_SUM_DISAPPEAR 1000
 #define TASKID_SUM_RESPAWN   2000
+#define TASKID_SUM_REMOVE    3000
 
 /*--------------------------------[ Constants ]--------------------------------*/
 
@@ -102,7 +103,8 @@ public plugin_init()
 	}
 	
 	RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
-	RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "OnKilled", .Post = 0);	
+	RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "OnKilled", .Post = 0);
+	RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "OnKilledPost", .Post = 1);	
 	
 	register_event("HLTV", "OnNewRound", "a", "1=0", "2=0");
 	
@@ -413,6 +415,26 @@ public OnKilled(ent, killer)
 	return HAM_SUPERCEDE;
 }
 
+public OnKilledPost(ent, killer)
+{
+	if (!Check(ent)) {
+		return HAM_IGNORED;
+	}
+
+	if (pev(ent, pev_deadflag) != DEAD_DISCARDBODY) {
+		return HAM_IGNORED;
+	}
+
+	new Array:ceData = GetPData(ent);
+
+	new tmpIdx = ArrayGetCell(ceData, CEData_TempIndex);
+	if (tmpIdx >= 0) {
+		set_task(0.0, "TaskRemove", ent+TASKID_SUM_REMOVE);
+	}
+
+	return HAM_SUPERCEDE;
+}
+
 public OnNewRound()
 {
 	Cleanup();
@@ -559,15 +581,13 @@ Kill(ent, killer = 0, bool:picked = false)
 		} else {
 			set_pev(ent, pev_deadflag, DEAD_DEAD);
 		}
-		
-		remove_task(ent+TASKID_SUM_DISAPPEAR);
+	} else {
+		set_pev(ent, pev_deadflag, DEAD_DISCARDBODY);
 	}
+
+	remove_task(ent+TASKID_SUM_DISAPPEAR);
 
 	ExecuteFunction(CEFunction_Killed, ceIdx, ent, killer, picked);
-
-	if (tmpIdx >= 0) {
-		Remove(ent, picked);
-	}
 }
 
 bool:Remove(ent, bool:picked = false)
@@ -604,11 +624,11 @@ bool:Remove(ent, bool:picked = false)
 	//Execute remove function
 	ExecuteFunction(CEFunction_Remove, ceIdx, ent, picked);
 	
+	DestroyPData(ent);
+
 	//Remove entity
 	set_pev(ent, pev_flags, pev(ent, pev_flags) | FL_KILLME);
 	dllfunc(DLLFunc_Think, ent);
-	
-	DestroyPData(ent);
 	
 	return true;
 }
@@ -847,7 +867,7 @@ ExecuteFunction(CEFunction:function, ceIdx, any:...)
 
 			switch (function)
 			{
-				case CEFunction_Killed: {
+				case CEFunction_Kill, CEFunction_Killed: {
 					new killer = getarg(3);
 					new bool:picked = bool:getarg(4);
 					callfunc_push_int(killer);
@@ -935,13 +955,17 @@ Array:GetPData(ent)
 public TaskDisappear(taskID)
 {
 	new ent = taskID - TASKID_SUM_DISAPPEAR;
-	
 	Kill(ent, 0);
 }
 
 public TaskRespawn(taskID)
 {
 	new ent = taskID - TASKID_SUM_RESPAWN;
-	
 	Respawn(ent);
+}
+
+public TaskRemove(taskID)
+{
+	new ent = taskID - TASKID_SUM_REMOVE;
+	Remove(ent);
 }

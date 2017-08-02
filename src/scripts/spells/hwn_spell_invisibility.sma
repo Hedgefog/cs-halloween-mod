@@ -16,7 +16,7 @@
 const Float:InvisibilityTime = 10.0;
 
 const Float:EffectRadius = 128.0;
-new const Float:EffectColor[] = {255.0, 127.0, 47.0};
+new const Float:EffectColor[] = {255.0, 255.0, 255.0};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_teleport.wav";
 

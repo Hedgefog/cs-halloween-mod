@@ -269,7 +269,7 @@ stock UTIL_FixedUnsigned16(const Float:fValue, const scale)
     return clamp(floatround(fValue * scale), 0, 0xFFFF);
 }
 
-stock UTIL_SpellballDetonateEffect(modelindex, const Float:vOrigin[3], const Float:fColor[3], Float:fRadius)
+stock UTIL_SpellballDetonateEffect(modelindex, const Float:vOrigin[3], const color[3], Float:fRadius)
 {
 	engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
 	write_byte(TE_BEAMCYLINDER);
@@ -285,9 +285,9 @@ stock UTIL_SpellballDetonateEffect(modelindex, const Float:vOrigin[3], const Flo
 	write_byte(5);
 	write_byte(floatround(fRadius/2));
 	write_byte(0);
-	write_byte(floatround(fColor[0]));
-	write_byte(floatround(fColor[1]));
-	write_byte(floatround(fColor[2]));
+	write_byte(color[0]);
+	write_byte(color[1]);
+	write_byte(color[2]);
 	write_byte(255);
 	write_byte(0);
 	message_end();
