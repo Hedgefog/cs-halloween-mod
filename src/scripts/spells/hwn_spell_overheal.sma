@@ -74,7 +74,7 @@ DetonateEffect(ent, const Float:vOrigin[3])
       .modelindex = g_sprEffectTrace,
       .vOrigin = vOrigin,
       .fRadius = EffectRadius,
-      .fColor = EffectColor
+      .color = EffectColor
     );
 
     emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
