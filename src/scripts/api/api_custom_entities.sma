@@ -104,7 +104,6 @@ public plugin_init()
 	
 	RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
 	RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "OnKilled", .Post = 0);
-	RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "OnKilledPost", .Post = 1);	
 	
 	register_event("HLTV", "OnNewRound", "a", "1=0", "2=0");
 	
@@ -415,26 +414,6 @@ public OnKilled(ent, killer)
 	return HAM_SUPERCEDE;
 }
 
-public OnKilledPost(ent, killer)
-{
-	if (!Check(ent)) {
-		return HAM_IGNORED;
-	}
-
-	if (pev(ent, pev_deadflag) != DEAD_DISCARDBODY) {
-		return HAM_IGNORED;
-	}
-
-	new Array:ceData = GetPData(ent);
-
-	new tmpIdx = ArrayGetCell(ceData, CEData_TempIndex);
-	if (tmpIdx >= 0) {
-		set_task(0.0, "TaskRemove", ent+TASKID_SUM_REMOVE);
-	}
-
-	return HAM_SUPERCEDE;
-}
-
 public OnNewRound()
 {
 	Cleanup();
@@ -588,6 +567,10 @@ Kill(ent, killer = 0, bool:picked = false)
 	remove_task(ent+TASKID_SUM_DISAPPEAR);
 
 	ExecuteFunction(CEFunction_Killed, ceIdx, ent, killer, picked);
+
+	if (tmpIdx >= 0) {
+		set_task(0.0, "TaskRemove", ent+TASKID_SUM_REMOVE);
+	}
 }
 
 bool:Remove(ent, bool:picked = false)
