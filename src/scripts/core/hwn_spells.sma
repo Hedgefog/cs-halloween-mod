@@ -11,24 +11,12 @@
 #define PLUGIN "[Hwn] Spells"
 #define AUTHOR "Hedgehog Fog"
 
-#define SPELLBALL_ENTITY_CLASSNAME "hwn_item_spellball"
-#define SPELLBALL_ENTITY_CLASSNAME_LEN 18
-
-const SpellBallTraceLifetime = 10;
-const SpellBallTraceWidth = 10;
-
+const Float:SpellCooldown = 1.0;
 new const g_szSndFireballCast[] = "hwn/spells/spell_fireball_cast.wav";
-
-new g_sprSpellballTrace;
-
 new Trie:g_spells;
 new Array:g_spellName;
-new Array:g_spellColor;
 new Array:g_spellPluginID;
-new Array:g_spellBallModelindex;
-new Array:g_spellDetonateRadius;
-new Array:g_spellDetonateFuncID;
-new Array:g_spellBallGravity;
+new Array:g_spellCastFuncID;
 new g_spellCount = 0;
 
 new Array:g_playerSpell;
@@ -39,11 +27,8 @@ new g_maxPlayers;
 
 public plugin_precache()
 {
-	g_sprSpellballTrace = precache_model("sprites/xbeam4.spr");
-	
 	precache_sound(g_szSndFireballCast);
 }
-
 public plugin_init()
 {
 	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -54,8 +39,6 @@ public plugin_init()
 	for (new i = 0; i <= g_maxPlayers; ++i) {
 		ArrayPushCell(g_playerNextCast, 0);
 	}
-	
-	CE_RegisterHook(CEFunction_Remove, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballRemove");
 }
 
 public plugin_natives()
@@ -75,12 +58,8 @@ public plugin_end()
 	if (g_spellCount) {
 		TrieDestroy(g_spells);
 		ArrayDestroy(g_spellName);
-		ArrayDestroy(g_spellDetonateFuncID);
+		ArrayDestroy(g_spellCastFuncID);
 		ArrayDestroy(g_spellPluginID);
-		ArrayDestroy(g_spellBallModelindex);
-		ArrayDestroy(g_spellColor);
-		ArrayDestroy(g_spellDetonateRadius);
-		ArrayDestroy(g_spellBallGravity);
 	}
 
 	if (g_playerSpell) {
@@ -97,20 +76,11 @@ public Native_Register(pluginID, argc)
 	new szName[32];
 	get_string(1, szName, charsmax(szName));
 	
-	new modelindex = get_param(2);
-	
-	new Float:detonateRadius = get_param_f(3);
-	
-	new color[3];
-	get_array(4, color, sizeof(color));
-	
-	new szDetonateCallback[32];
-	get_string(5, szDetonateCallback, charsmax(szDetonateCallback));
-	new detonateFuncID = get_func_id(szDetonateCallback, pluginID);
-	
-	new bool:gravity = any:get_param(6);
+	new szCastCallback[32];
+	get_string(2, szCastCallback, charsmax(szCastCallback));
+	new castFuncID = get_func_id(szCastCallback, pluginID);
 		
-	return Register(szName, pluginID, detonateFuncID, detonateRadius, modelindex, color, gravity);
+	return Register(szName, pluginID, castFuncID);
 }
 
 public Native_CastPlayerSpell(pluginID, argc)
@@ -180,12 +150,12 @@ public Native_GetName(pluginID, argc)
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnSpellballRemove(ent)
+/*public OnSpellballRemove(ent)
 {	
 	new spellIdx = pev(ent, pev_iuser1);
 	
 	new pluginID = ArrayGetCell(g_spellPluginID, spellIdx);
-	new funcID = ArrayGetCell(g_spellDetonateFuncID, spellIdx);
+	new funcID = ArrayGetCell(g_spellCastFuncID, spellIdx);
 	
 	if (callfunc_begin_i(funcID, pluginID) == 1) {
 		callfunc_push_int(ent);
@@ -220,34 +190,25 @@ public OnSpellballRemove(ent)
 	write_byte(255);
 	write_byte(0);
 	message_end();
-}
+}*/
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-Register(const szName[], pluginID, detonateFuncID, Float:detonateRadius, modelindex, color[3], bool:gravity)
+Register(const szName[], pluginID, castFuncID)
 {
 	if (!g_spellCount) {
 		g_spells = TrieCreate();
 		g_spellName = ArrayCreate(32);
-		g_spellDetonateFuncID = ArrayCreate();
+		g_spellCastFuncID = ArrayCreate();
 		g_spellPluginID = ArrayCreate();
-		g_spellBallModelindex = ArrayCreate();	
-		g_spellColor = ArrayCreate(3);
-		g_spellDetonateRadius = ArrayCreate();
-		g_spellBallGravity = ArrayCreate();
 	}
 
 	new spellIdx = g_spellCount;
 	
 	TrieSetCell(g_spells, szName, spellIdx);
-	
 	ArrayPushString(g_spellName, szName);
 	ArrayPushCell(g_spellPluginID, pluginID);
-	ArrayPushCell(g_spellDetonateFuncID, detonateFuncID);
-	ArrayPushCell(g_spellBallModelindex, modelindex);
-	ArrayPushCell(g_spellDetonateRadius, detonateRadius);
-	ArrayPushArray(g_spellColor, color);
-	ArrayPushCell(g_spellBallGravity, gravity);
+	ArrayPushCell(g_spellCastFuncID, castFuncID);
 	
 	g_spellCount++;
 	
@@ -277,39 +238,17 @@ CastPlayerSpell(id)
 	}
 	
 	new spellIdx = ArrayGetCell(g_playerSpell, id);	
-	new spellballModelindex = ArrayGetCell(g_spellBallModelindex, spellIdx);
+	new pluginID = ArrayGetCell(g_spellPluginID, spellIdx);
+	new funcID = ArrayGetCell(g_spellCastFuncID, spellIdx);
 	
-	static Float:vOrigin[3];
-	pev(id, pev_origin, vOrigin);
-	
-	new ent = CE_Create(SPELLBALL_ENTITY_CLASSNAME, vOrigin);
+	if (callfunc_begin_i(funcID, pluginID) == 1) {
+		callfunc_push_int(id);
 
-	if (!ent) {
-		return;
-	}
+		if (callfunc_end() == PLUGIN_CONTINUE) {
+			ArraySetCell(g_playerSpellAmount, id, --spellAmount);
+			ArraySetCell(g_playerNextCast, id, gametime + SpellCooldown);
 
-	static Float:vVelocity[3];
-	velocity_by_aim(id, 512, vVelocity);
-	
-	static color[3];
-	ArrayGetArray(g_spellColor, spellIdx, color);
-	
-	set_pev(ent, pev_iuser1, spellIdx);
-	set_pev(ent, pev_owner, id);
-	set_pev(ent, pev_velocity, vVelocity);	
-	set_pev(ent, pev_modelindex, spellballModelindex);
-	set_pev(ent, pev_scale, 0.25);
-	set_pev(ent, pev_rendercolor, color);
-	
-	dllfunc(DLLFunc_Spawn, ent);
-	
-	new bool:gravity = ArrayGetCell(g_spellBallGravity, spellIdx);
-	if (!gravity) {
-		set_pev(ent, pev_movetype, MOVETYPE_FLYMISSILE);	
+			emit_sound(ent, CHAN_BODY, g_szSndFireballCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+		}
 	}
-	
-	ArraySetCell(g_playerSpellAmount, id, --spellAmount);
-	ArraySetCell(g_playerNextCast, id, gametime + 1.0);
-	
-	emit_sound(ent, CHAN_BODY, g_szSndFireballCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

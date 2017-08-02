@@ -3,7 +3,6 @@
 #include <amxmodx>
 #include <engine>
 #include <fakemeta>
-#include <hamsandwich>
 #include <xs>
 
 #include <api_custom_entities>
@@ -20,20 +19,16 @@ new g_sprSmoke;
 
 new Float:g_fThinkDelay;
 
-new g_ceHandler;
-
 public plugin_init()
 {
 	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 	
 	g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
-	
-	RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
 }
 
 public plugin_precache()
 {
-	g_ceHandler = CE_Register(
+	CE_Register(
 		.szName = ENTITY_NAME,
 		.vMins = Float:{-8.0, -8.0, -8.0},
 		.vMaxs = Float:{8.0, 8.0, 8.0},
@@ -65,23 +60,6 @@ public OnSpawn(ent)
 public OnRemove(ent)
 {
 	remove_task(ent);
-}
-
-public OnTouch(ent, target)
-{
-	if (!pev_valid(ent)) {
-		return;
-	}
-
-	if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
-		return;
-	}
-	
-	if (target == pev(ent, pev_owner)) {
-		return;
-	}
-
-	ExecuteHamB(Ham_Killed, ent, 0, 0);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/

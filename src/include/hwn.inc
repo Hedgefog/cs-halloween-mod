@@ -112,7 +112,7 @@ forward Hwn_Collector_Fw_PlayerPoints(team);
 
 /*--------------------------------[ Spells ]--------------------------------*/
 
-native Hwn_Spell_Register(const szName[], modelindex, Float:fDetonateRadius, color[3], const szDetonateCallback[], bool:gravity = true);
+native Hwn_Spell_Register(const szName[], const szCastCallback[]);
 native Hwn_Spell_GetCount();
 native Hwn_Spell_GetName(spell, szName[], maxlen);
 
