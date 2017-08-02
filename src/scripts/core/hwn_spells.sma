@@ -19,6 +19,9 @@ new Array:g_spellPluginID;
 new Array:g_spellCastFuncID;
 new g_spellCount = 0;
 
+new g_fwCast;
+new g_fwResult;
+
 new Array:g_playerSpell;
 new Array:g_playerSpellAmount;
 new Array:g_playerNextCast;
@@ -29,6 +32,7 @@ public plugin_precache()
 {
 	precache_sound(g_szSndCast);
 }
+
 public plugin_init()
 {
 	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -39,6 +43,8 @@ public plugin_init()
 	for (new i = 0; i <= g_maxPlayers; ++i) {
 		ArrayPushCell(g_playerNextCast, 0);
 	}
+
+	g_fwCast = CreateMultiForward("Hwn_Spell_Fw_Cast", ET_IGNORE, FP_CELL, FP_CELL);
 }
 
 public plugin_natives()
@@ -147,50 +153,6 @@ public Native_GetName(pluginID, argc)
 	set_string(2, szSpellName, maxlen);
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
-
-/*public OnSpellballRemove(ent)
-{	
-	new spellIdx = pev(ent, pev_iuser1);
-	
-	new pluginID = ArrayGetCell(g_spellPluginID, spellIdx);
-	new funcID = ArrayGetCell(g_spellCastFuncID, spellIdx);
-	
-	if (callfunc_begin_i(funcID, pluginID) == 1) {
-		callfunc_push_int(ent);
-		callfunc_end();
-	}
-	
-	static Float:vOrigin[3];
-	pev(ent, pev_origin, vOrigin);
-	
-	static color[3];
-	ArrayGetArray(g_spellColor, spellIdx, color);
-	
-	new Float:detonateRadius = ArrayGetCell(g_spellDetonateRadius, spellIdx);
-	
-	engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
-	write_byte(TE_BEAMCYLINDER);
-	engfunc(EngFunc_WriteCoord, vOrigin[0]);
-	engfunc(EngFunc_WriteCoord, vOrigin[1]);
-	engfunc(EngFunc_WriteCoord, vOrigin[2]);
-	engfunc(EngFunc_WriteCoord, vOrigin[0]);
-	engfunc(EngFunc_WriteCoord, vOrigin[1]);
-	engfunc(EngFunc_WriteCoord, vOrigin[2]+detonateRadius);
-	write_short(g_sprSpellballTrace);
-	write_byte(0);
-	write_byte(0);
-	write_byte(5);
-	write_byte(floatround(detonateRadius/2));
-	write_byte(0);
-	write_byte(color[0]);
-	write_byte(color[1]);
-	write_byte(color[2]);
-	write_byte(255);
-	write_byte(0);
-	message_end();
-}*/
-
 /*--------------------------------[ Methods ]--------------------------------*/
 
 Register(const szName[], pluginID, castFuncID)
@@ -248,6 +210,8 @@ CastPlayerSpell(id)
 			ArraySetCell(g_playerNextCast, id, gametime + SpellCooldown);
 
 			emit_sound(id, CHAN_BODY, g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
+			ExecuteForward(g_fwCast, g_fwResult, id, spellIdx);
 		}
 	}
 }

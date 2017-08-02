@@ -120,6 +120,8 @@ native Hwn_Spell_GetPlayerSpell(id, &amount = 0);
 native Hwn_Spell_SetPlayerSpell(id, spell, amount = 0);
 native Hwn_Spell_CastPlayerSpell(id);
 
+forward Hwn_Spell_Fw_Cast(id, spellIdx);
+
 /*--------------------------------[ Cosmetic ]--------------------------------*/
 
 native Hwn_Cosmetic_GetCount();
