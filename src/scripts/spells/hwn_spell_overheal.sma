@@ -14,7 +14,7 @@
 #define AUTHOR "Hedgehog Fog"
 
 const Float:EffectRadius = 128.0;
-new const Float:EffectColor[] = {255.0, 0.0, 0.0};
+new const EffectColor[3] = {255, 0, 0};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_teleport.wav";
 
@@ -58,7 +58,7 @@ public OnCast(id)
         }
         
         set_pev(id, pev_health, 150.0);
-        UTIL_ScreenFade(id, {255, 0, 0}, 1.0, 0.0, 128, FFADE_IN);
+        UTIL_ScreenFade(id, {255, 0, 0}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
     }
     
     ArrayDestroy(users);

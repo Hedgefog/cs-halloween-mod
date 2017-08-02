@@ -16,11 +16,16 @@
 const Float:InvisibilityTime = 10.0;
 
 const Float:EffectRadius = 128.0;
-new const Float:EffectColor[] = {255.0, 255.0, 255.0};
+new const EffectColor[3] = {255, 255, 255};
+
+new FadeEffectColor[3] = {128, 128, 128};
+new const Float:FadeEffectTimeRatio = 1.2;
 
 new const g_szSndDetonate[] = "hwn/spells/spell_teleport.wav";
 
 new g_sprEffectTrace;
+
+new Array:g_playerInvisibilityStart;
 
 new g_maxPlayers;
 
@@ -40,9 +45,26 @@ public plugin_init()
     Hwn_Spell_Register("Invisibility", "OnCast");
 
     g_maxPlayers = get_maxplayers();
+    g_playerInvisibilityStart = ArrayCreate(1, g_maxPlayers);
+
+    register_message(get_user_msgid("ScreenFade"), "OnMessage_ScreenFade");
+
+    for (new i = 0; i < g_maxPlayers; ++i) {
+        ArrayPushCell(g_playerInvisibilityStart, 0.0);
+    }
+}
+
+public plugin_end()
+{
+    ArrayDestroy(g_playerInvisibilityStart);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
+
+public OnMessage_ScreenFade(msg, type, id)
+{
+    set_task(0.25, "TaskFixInvisibleEffect", id);
+}
 
 public OnPlayerKilled(id)
 {
@@ -67,7 +89,7 @@ public OnCast(id)
         }        
         
         SetInvisible(id, true);
-        UTIL_ScreenFade(id, {128, 128, 128}, InvisibilityTime+2.0, 0.0, 128, FFADE_IN);
+        FadeEffect(id, InvisibilityTime);
         
         if (task_exists(id)) {
             remove_task(id);
@@ -82,6 +104,11 @@ public OnCast(id)
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
+
+FadeEffect(id, Float:fTime, bool:external = true)
+{
+    UTIL_ScreenFade(id, FadeEffectColor, fTime*FadeEffectTimeRatio, 0.0, 128, FFADE_IN, .bExternal = external);
+}
 
 DetonateEffect(ent, const Float:vOrigin[3])
 {
@@ -102,6 +129,8 @@ SetInvisible(id, bool:value = true)
 	if (value) {
 		set_pev(id, pev_rendermode, kRenderTransTexture);
 		set_pev(id, pev_renderamt, 15.0);
+
+		ArraySetCell(g_playerInvisibilityStart, id, get_gametime());
 	} else {
 		set_pev(id, pev_rendermode, kRenderNormal);
 		set_pev(id, pev_renderamt, 0.0);
@@ -113,4 +142,14 @@ SetInvisible(id, bool:value = true)
 public TaskRemoveInvisibility(id)
 {
 	SetInvisible(id, false);
+}
+
+public TaskFixInvisibleEffect(id)
+{
+    new Float:fStart = Float:ArrayGetCell(g_playerInvisibilityStart, id);
+    new Float:fTimeleft =  fStart > 0.0 ? InvisibilityTime - (get_gametime() - fStart) : 0.0;
+
+    if (fTimeleft > 0.0) {
+        FadeEffect(id, fTimeleft, false);
+    }
 }

@@ -139,7 +139,7 @@ Detonate(ent)
         
         if (get_tr2(trace, TR_InOpen)) {
             engfunc(EngFunc_SetOrigin, owner, vOrigin);
-            UTIL_ScreenFade(owner, {0, 0, 255}, 1.0, 0.0, 128, FFADE_IN);
+            UTIL_ScreenFade(owner, {0, 0, 255}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
         }
         
         free_tr2(trace);
