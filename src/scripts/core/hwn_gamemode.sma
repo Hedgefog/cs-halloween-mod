@@ -229,7 +229,6 @@ public Native_FindEventPoint()
 public OnNewRound()
 {
 	g_gamestate = GameState_NewRound;
-	
 	ExecuteForward(g_fwNewRound, g_fwResult);
 }
 

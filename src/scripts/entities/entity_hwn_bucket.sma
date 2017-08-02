@@ -45,6 +45,8 @@ new g_ceHandler;
 
 new g_maxPlayers;
 
+new bool:g_roundStarted = false;
+
 public plugin_precache()
 {
 	g_sprBlood = precache_model("sprites/blood.spr");
@@ -76,6 +78,18 @@ public plugin_init()
 	g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
 	
 	g_maxPlayers = get_maxplayers();
+}
+
+/*------------[ Forward ]------------*/
+
+public Hwn_Gamemode_Fw_RoundStart()
+{
+	g_roundStarted = true;
+}
+
+public Hwn_Gamemode_Fw_RoundEnd()
+{
+	g_roundStarted = false;
 }
 
 /*------------[ Hooks ]------------*/
@@ -166,38 +180,41 @@ public TaskThink(ent)
 		return;
 	}
 
-	new Float:fGametime = get_gametime();
-	for (new id = 1; id <= g_maxPlayers; ++id)
+	if (g_roundStarted)
 	{
-		if (!is_user_alive(id)) {
-			continue;
-		}
-		
-		new playerTeam = get_pdata_int(id, m_iTeam);
-		new bucketTeam = pev(ent, pev_team);
-		
-		if (playerTeam != bucketTeam) {
-			continue;
-		}
-		
-		static Float:vOrigin1[3];
-		pev(ent, pev_origin, vOrigin1);
-		
-		static Float:vOrigin2[3];
-		pev(id, pev_origin, vOrigin2);
-		
-		if (get_distance_f(vOrigin1, vOrigin2) < 256.0)
-		{	
-			new trace = create_tr2();
-			engfunc(EngFunc_TraceLine, vOrigin1, vOrigin2, IGNORE_MONSTERS, ent, trace);
+		new Float:fGametime = get_gametime();
+		for (new id = 1; id <= g_maxPlayers; ++id)
+		{
+			if (!is_user_alive(id)) {
+				continue;
+			}
 			
-			new Float:fraction;
-			get_tr2(trace, TR_flFraction, fraction);
-			free_tr2(trace);
-	
-			if (fraction == 1.0 && fGametime >= g_fNextCollectTime[id]) {
-				TakePlayerPoint(ent, id);
-				g_fNextCollectTime[id] = fGametime + 1.0;
+			new playerTeam = get_pdata_int(id, m_iTeam);
+			new bucketTeam = pev(ent, pev_team);
+			
+			if (playerTeam != bucketTeam) {
+				continue;
+			}
+			
+			static Float:vOrigin1[3];
+			pev(ent, pev_origin, vOrigin1);
+			
+			static Float:vOrigin2[3];
+			pev(id, pev_origin, vOrigin2);
+			
+			if (get_distance_f(vOrigin1, vOrigin2) < 256.0)
+			{	
+				new trace = create_tr2();
+				engfunc(EngFunc_TraceLine, vOrigin1, vOrigin2, IGNORE_MONSTERS, ent, trace);
+				
+				new Float:fraction;
+				get_tr2(trace, TR_flFraction, fraction);
+				free_tr2(trace);
+		
+				if (fraction == 1.0 && fGametime >= g_fNextCollectTime[id]) {
+					TakePlayerPoint(ent, id);
+					g_fNextCollectTime[id] = fGametime + 1.0;
+				}
 			}
 		}
 	}
