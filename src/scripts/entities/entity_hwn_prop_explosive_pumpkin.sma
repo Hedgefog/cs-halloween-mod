@@ -67,9 +67,15 @@ PumpkinRadiusDamage(ent, owner)
 	pev(ent, pev_origin, vOrigin);
 
 	new target;
-	new lastTarget;
-	while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EXPLOSION_RADIUS)) != 0)
+	new prevTarget;
+	while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EXPLOSION_RADIUS)) > 0)
 	{
+		if (prevTarget >= target) {
+			break; // infinite loop fix
+		}
+
+		prevTarget = target;
+
 		if (ent == target) {
 			continue;
 		}
@@ -85,12 +91,6 @@ PumpkinRadiusDamage(ent, owner)
 		if (pev(target, pev_takedamage) == DAMAGE_NO) {
 			continue;
 		}
-		
-		if (lastTarget == target) {
-			break;
-		}
-
-		lastTarget = target;
 
 		if (target == owner) {
 			owner = 0;

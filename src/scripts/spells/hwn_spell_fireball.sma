@@ -117,9 +117,16 @@ Detonate(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     
-    new target = -1;
+    new target;
+    new prevTarget;
     while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EffectRadius)) != 0)
     {
+    	if (prevTarget >= target) {
+			break; // infinite loop fix
+		}
+
+        prevTarget = target;
+
         if (pev(target, pev_takedamage) == DAMAGE_NO) {
             continue;
         }
