@@ -99,7 +99,7 @@ public plugin_init()
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 	
 	if (g_lastCEEnt) {
-		dllfunc(DLLFunc_Spawn, g_lastCEEnt);
+		dllfunc(DLLFunc_Spawn, g_lastCEEnt); // spawn last handled entity
 	}
 	
 	RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
@@ -325,7 +325,7 @@ public OnKeyValue(ent, kvd)
 	if (equal(szKey, "classname"))
 	{
 		if (g_lastCEEnt) {
-			dllfunc(DLLFunc_Spawn, g_lastCEEnt);
+			dllfunc(DLLFunc_Spawn, g_lastCEEnt); // spawn last handled entity
 			g_lastCEEnt = 0;
 		}
 	
@@ -333,7 +333,7 @@ public OnKeyValue(ent, kvd)
 			return;
 		}
 		
-		g_lastCEEnt = Create(szValue, .temp = false);
+		g_lastCEEnt = Create(szValue, .temp = false); // clone entity
 		
 		return;
 	}
@@ -342,7 +342,7 @@ public OnKeyValue(ent, kvd)
 		return;
 	}
 	
-	DispatchKeyValue(g_lastCEEnt, szKey, szValue);
+	DispatchKeyValue(g_lastCEEnt, szKey, szValue); // dispatch kvd to cloned entity
 	ExecuteFunction(CEFunction_KVD, g_lastCEIdx, g_lastCEEnt, szKey, szValue);
 }
 

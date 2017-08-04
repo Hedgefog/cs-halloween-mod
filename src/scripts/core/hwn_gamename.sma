@@ -17,7 +17,7 @@ public plugin_init()
 public OnGetGameDescription()
 {
 	static szGameName[32];
-	format(szGameName, charsmax(szGameName), "Halloween Mod %s", HWN_VERSION);
+	format(szGameName, charsmax(szGameName), "%s %s", HWN_TITLE, HWN_VERSION);
 	forward_return(FMV_STRING, szGameName); 
 	return FMRES_SUPERCEDE;
 }
