@@ -17,7 +17,7 @@
 const Float:EffectRadius = 128.0;
 new const EffectColor[3] = {255, 0, 0};
 
-new const g_szSndDetonate[] = "hwn/spells/spell_teleport.wav";
+new const g_szSndDetonate[] = "hwn/spells/spell_overheal.wav";
 
 new g_sprEffectTrace;
 

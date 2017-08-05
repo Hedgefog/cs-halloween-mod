@@ -20,6 +20,7 @@ const Float:FireballDamage = 30.0;
 const Float:EffectRadius = 128.0;
 new const EffectColor[3] = {255, 127, 47};
 
+new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
 new const g_szSndDetonate[] = "hwn/spells/spell_fireball_impact.wav";
 
 new g_sprSpellball;
@@ -34,6 +35,7 @@ public plugin_precache()
     g_sprSpellball = precache_model("sprites/rjet1.spr");
     g_sprSpellballTrace = precache_model("sprites/xbeam4.spr");
 
+    precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
 }
 
@@ -63,6 +65,8 @@ public OnCast(id)
     set_pev(ent, pev_iuser1, g_hSpell);
     set_pev(ent, pev_movetype, MOVETYPE_FLYMISSILE);
 
+    emit_sound(id, CHAN_BODY, g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
     return PLUGIN_CONTINUE;
 }
 
@@ -76,9 +80,9 @@ public OnTouch(ent, target)
 		return;
 	}
 
-    if (pev(ent, pev_iuser1) != g_hSpell) {
-        return;
-    }
+	if (pev(ent, pev_iuser1) != g_hSpell) {
+		return;
+	}
 
 	if (target == pev(ent, pev_owner)) {
 		return;

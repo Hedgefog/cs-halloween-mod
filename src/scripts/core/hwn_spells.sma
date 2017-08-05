@@ -12,7 +12,7 @@
 #define AUTHOR "Hedgehog Fog"
 
 const Float:SpellCooldown = 1.0;
-new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
+
 new Trie:g_spells;
 new Array:g_spellName;
 new Array:g_spellPluginID;
@@ -27,11 +27,6 @@ new Array:g_playerSpellAmount;
 new Array:g_playerNextCast;
 
 new g_maxPlayers;
-
-public plugin_precache()
-{
-	precache_sound(g_szSndCast);
-}
 
 public plugin_init()
 {
@@ -208,8 +203,6 @@ CastPlayerSpell(id)
 		if (callfunc_end() == PLUGIN_CONTINUE) {
 			ArraySetCell(g_playerSpellAmount, id, --spellAmount);
 			ArraySetCell(g_playerNextCast, id, gametime + SpellCooldown);
-
-			emit_sound(id, CHAN_BODY, g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
 			ExecuteForward(g_fwCast, g_fwResult, id, spellIdx);
 		}

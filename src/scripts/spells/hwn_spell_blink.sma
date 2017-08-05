@@ -17,6 +17,7 @@
 const Float:EffectRadius = 64.0;
 new const EffectColor[3] = {0, 0, 255};
 
+new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
 new const g_szSndDetonate[] = "hwn/spells/spell_teleport.wav";
 
 new g_sprSpellball;
@@ -31,6 +32,7 @@ public plugin_precache()
     g_sprSpellball = precache_model("sprites/xspark1.spr");
     g_sprSpellballTrace = precache_model("sprites/xbeam4.spr");
 
+    precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
 }
 
@@ -58,6 +60,8 @@ public OnCast(id)
     }
 
     set_pev(ent, pev_iuser1, g_hSpell);
+
+    emit_sound(id, CHAN_BODY, g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     return PLUGIN_CONTINUE;
 }
