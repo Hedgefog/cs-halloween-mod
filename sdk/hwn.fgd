@@ -4,6 +4,14 @@
 
 @PointClass
     color(90 27 122)
+= hwn_event_handler
+[
+    target(target_destination) : "Target" 
+    targetname(target_source) : "Name"
+]
+
+@PointClass
+    color(90 27 122)
     size(-48 -48 -48, 48 48 48)
 = hwn_boss_target []
 

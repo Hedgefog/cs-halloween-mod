@@ -329,12 +329,10 @@ public OnKeyValue(ent, kvd)
 			g_lastCEEnt = 0;
 		}
 	
-		if (!TrieGetCell(g_entityHandlers, szValue, g_lastCEIdx)) {
-			return;
+		if (TrieGetCell(g_entityHandlers, szValue, g_lastCEIdx)) {
+			g_lastCEEnt = Create(szValue, .temp = false); // clone entity
 		}
-		
-		g_lastCEEnt = Create(szValue, .temp = false); // clone entity
-		
+
 		return;
 	}
 	
@@ -367,7 +365,7 @@ public OnSpawn(ent)
 	}
 	
 	InitEntity(ent, ceIdx);
-	
+
 	ExecuteFunction(CEFunction_Spawn, ceIdx, ent);
 }
 

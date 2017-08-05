@@ -72,23 +72,23 @@ public OnCast(id)
 
 public OnTouch(ent, target)
 {
-	if (!pev_valid(ent)) {
-		return;
-	}
+    if (!pev_valid(ent)) {
+        return;
+    }
 
-	if (g_hCeSpellball != CE_GetHandlerByEntity(ent)) {
-		return;
-	}
+    if (g_hCeSpellball != CE_GetHandlerByEntity(ent)) {
+        return;
+    }
 
-	if (pev(ent, pev_iuser1) != g_hSpell) {
-		return;
-	}
+    if (pev(ent, pev_iuser1) != g_hSpell) {
+        return;
+    }
 
-	if (target == pev(ent, pev_owner)) {
-		return;
-	}
+    if (target == pev(ent, pev_owner)) {
+        return;
+    }
 
-	ExecuteHamB(Ham_Killed, ent, 0, 0);
+    ExecuteHamB(Ham_Killed, ent, 0, 0);
 }
 
 public OnSpellballKilled(ent)
@@ -116,11 +116,19 @@ Detonate(ent)
     new prevTarget;
     while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EffectRadius)) != 0)
     {
-    	if (prevTarget >= target) {
-			break; // infinite loop fix
-		}
+        if (prevTarget >= target) {
+            break; // infinite loop fix
+        }
 
         prevTarget = target;
+
+        if (ent == target) {
+            continue;
+        }
+
+        if (!pev_valid(target)) {
+            continue;
+        }
 
         if (pev(target, pev_takedamage) == DAMAGE_NO) {
             continue;

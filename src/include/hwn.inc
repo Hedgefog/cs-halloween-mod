@@ -108,8 +108,8 @@ native Hwn_Collector_SetPlayerPoints(id, count);
 native Hwn_Collector_GetTeamPoints(team);
 native Hwn_Collector_SetTeamPoints(team, count);
 
-forward Hwn_Collector_Fw_TeamPoints(id);
-forward Hwn_Collector_Fw_PlayerPoints(team);
+forward Hwn_Collector_Fw_TeamPoints(team);
+forward Hwn_Collector_Fw_PlayerPoints(id);
 
 /*--------------------------------[ Spells ]--------------------------------*/
 
