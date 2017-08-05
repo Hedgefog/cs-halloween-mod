@@ -28,8 +28,8 @@ public plugin_precache()
 	CE_Register(
 		.szName = ENTITY_NAME,
 		.modelIndex = precache_model("models/hwn/items/pumpkin_loot_big.mdl"),
-		.vMins = Float:{-24.0, -24.0, 0.0},
-		.vMaxs = Float:{24.0, 24.0, 48.0},
+		.vMins = Float:{-16.0, -16.0, 0.0},
+		.vMaxs = Float:{16.0, 16.0, 32.0},
 		.fLifeTime = 30.0,
 		.preset = CEPreset_Item
 	);
