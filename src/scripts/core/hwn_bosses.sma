@@ -1,6 +1,8 @@
 #pragma semicolon 1
 
 #include <amxmodx>
+#include <amxmisc>
+
 #include <fakemeta>
 #include <hamsandwich>
 
@@ -65,6 +67,8 @@ public plugin_init()
 	g_fwBossTeleport = CreateMultiForward("Hwn_Bosses_Fw_BossTeleport", ET_IGNORE, FP_CELL, FP_CELL);
 	g_fwWinner = CreateMultiForward("Hwn_Bosses_Fw_Winner", ET_IGNORE, FP_CELL);
 	
+	register_concmd("hwn_spawn_boss", "OnClCmd_SpawnBoss", ADMIN_CVAR);
+	
 	CreateBossSpawnTask();
 }
 
@@ -127,6 +131,18 @@ public client_putinserver(id)
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
+
+public OnClCmd_SpawnBoss(id, level, cid)
+{
+	if(!cmd_access(id, level, cid, 2)) {
+		return PLUGIN_HANDLED;
+	}
+
+	remove_task(TASKID_SPAWN_BOSS);
+	SpawnBoss();
+
+	return PLUGIN_HANDLED;
+}
 
 public OnBossTargetSpawn(ent)
 {

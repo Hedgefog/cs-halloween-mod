@@ -9,12 +9,10 @@
 #include <screenfade_util>
 
 #include <hwn>
-#include <hwn_utils>
+#include <hwn_spell_utils>
 
 #define PLUGIN "[Hwn] Blink Spell"
 #define AUTHOR "Hedgehog Fog"
-
-#define SPELLBALL_ENTITY_CLASSNAME "hwn_item_spellball"
 
 const Float:EffectRadius = 64.0;
 new const EffectColor[3] = {0, 0, 255};
@@ -53,26 +51,15 @@ public plugin_init()
 
 public OnCast(id)
 {
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
-    
-    new ent = CE_Create(SPELLBALL_ENTITY_CLASSNAME, vOrigin);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, g_sprSpellball, EffectColor);
 
     if (!ent) {
-        return;
+        return PLUGIN_HANDLED;
     }
 
-    static Float:vVelocity[3];
-    velocity_by_aim(id, 512, vVelocity);
-    
     set_pev(ent, pev_iuser1, g_hSpell);
-    set_pev(ent, pev_owner, id);
-    set_pev(ent, pev_velocity, vVelocity);
-    set_pev(ent, pev_modelindex, g_sprSpellball);
-    set_pev(ent, pev_scale, 0.25);
-    set_pev(ent, pev_rendercolor, EffectColor);
-    
-    dllfunc(DLLFunc_Spawn, ent);
+
+    return PLUGIN_CONTINUE;
 }
 
 public OnTouch(ent, target)
@@ -152,7 +139,7 @@ Detonate(ent)
 
 DetonateEffect(ent, const Float:vOrigin[3])
 {
-    UTIL_SpellballDetonateEffect(
+    UTIL_HwnSpellDetonateEffect(
       .modelindex = g_sprSpellballTrace,
       .vOrigin = vOrigin,
       .fRadius = EffectRadius,

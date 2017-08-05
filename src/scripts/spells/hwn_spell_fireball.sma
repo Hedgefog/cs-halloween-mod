@@ -10,11 +10,10 @@
 
 #include <hwn>
 #include <hwn_utils>
+#include <hwn_spell_utils>
 
 #define PLUGIN "[Hwn] Fireball Spell"
 #define AUTHOR "Hedgehog Fog"
-
-#define SPELLBALL_ENTITY_CLASSNAME "hwn_item_spellball"
 
 const Float:FireballDamage = 30.0;
 
@@ -55,28 +54,16 @@ public plugin_init()
 
 public OnCast(id)
 {
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
-    
-    new ent = CE_Create(SPELLBALL_ENTITY_CLASSNAME, vOrigin);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, g_sprSpellball, EffectColor);
 
     if (!ent) {
-        return;
+        return PLUGIN_HANDLED;
     }
 
-    static Float:vVelocity[3];
-    velocity_by_aim(id, 512, vVelocity);
-    
     set_pev(ent, pev_iuser1, g_hSpell);
-    set_pev(ent, pev_owner, id);
-    set_pev(ent, pev_velocity, vVelocity);
-    set_pev(ent, pev_modelindex, g_sprSpellball);
-    set_pev(ent, pev_scale, 0.25);
-    set_pev(ent, pev_rendercolor, EffectColor);
-    
-    dllfunc(DLLFunc_Spawn, ent);
-    
     set_pev(ent, pev_movetype, MOVETYPE_FLYMISSILE);
+
+    return PLUGIN_CONTINUE;
 }
 
 public OnTouch(ent, target)
@@ -167,7 +154,7 @@ Detonate(ent)
 
 DetonateEffect(ent, const Float:vOrigin[3])
 {
-    UTIL_SpellballDetonateEffect(
+    UTIL_HwnSpellDetonateEffect(
       .modelindex = g_sprSpellballTrace,
       .vOrigin = vOrigin,
       .fRadius = EffectRadius,

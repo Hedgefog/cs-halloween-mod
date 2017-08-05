@@ -201,7 +201,7 @@ public OnTargetKilled(ent)
 		return;
 	}
 
-	if (pev(ent, pev_flags) & FL_MONSTER && pev(ent, pev_deadflag) == DEAD_NO) { //Monster kill reward
+	if (pev(ent, pev_flags) & FL_MONSTER) { //Monster kill reward
 		static Float:vOrigin[3];
 		pev(ent, pev_origin, vOrigin);
 		

@@ -9,6 +9,7 @@
 
 #include <hwn>
 #include <hwn_utils>
+#include <hwn_spell_utils>
 
 #define PLUGIN "[Hwn] Invisibility Spell"
 #define AUTHOR "Hedgehog Fog"
@@ -112,7 +113,7 @@ FadeEffect(id, Float:fTime, bool:external = true)
 
 DetonateEffect(ent, const Float:vOrigin[3])
 {
-    UTIL_SpellballDetonateEffect(
+    UTIL_HwnSpellDetonateEffect(
       .modelindex = g_sprEffectTrace,
       .vOrigin = vOrigin,
       .fRadius = EffectRadius,
