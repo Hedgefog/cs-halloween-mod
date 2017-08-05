@@ -75,7 +75,11 @@ public OnTouch(ent, target)
 	if (g_hCeSpellball != CE_GetHandlerByEntity(ent)) {
 		return;
 	}
-	
+
+    if (pev(ent, pev_iuser1) != g_hSpell) {
+        return;
+    }
+
 	if (target == pev(ent, pev_owner)) {
 		return;
 	}
