@@ -44,7 +44,9 @@ public OnSpawn(ent)
 	engfunc(EngFunc_DropToFloor, ent);
 	dllfunc(DLLFunc_Think, ent);
 	
-	TaskThink(ent);
+	if (~pev(ent, pev_spawnflags) & (1<<0)) {
+		TaskThink(ent);
+	}
 }
 
 public OnRemove(ent)
