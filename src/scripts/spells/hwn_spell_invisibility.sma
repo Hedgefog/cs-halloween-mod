@@ -50,7 +50,7 @@ public plugin_init()
 
     register_message(get_user_msgid("ScreenFade"), "OnMessage_ScreenFade");
 
-    for (new i = 0; i < g_maxPlayers; ++i) {
+    for (new i = 0; i <= g_maxPlayers; ++i) {
         ArrayPushCell(g_playerInvisibilityStart, 0.0);
     }
 }

@@ -270,7 +270,7 @@ ResetPlayerTotalDamage()
 
 SelectWinners()
 {
-	for (new id = 1; id < g_maxPlayers; ++id)
+	for (new id = 1; id <= g_maxPlayers; ++id)
 	{
 		if (!is_user_connected(id)) {
 			continue;

@@ -230,11 +230,13 @@ GetPlayerPoints(id)
 	return ArrayGetCell(g_playerPoints, id);
 }
 
-SetPlayerPoints(id, count)
+SetPlayerPoints(id, count, bool:silent = false)
 {
 	ArraySetCell(g_playerPoints, id, count);
 	
-	ExecuteForward(g_fwPlayerPointsChanged, g_fwResult, id);
+	if (!silent) {
+		ExecuteForward(g_fwPlayerPointsChanged, g_fwResult, id);
+	}
 }
 
 GetTeamPoints(team)
@@ -242,7 +244,7 @@ GetTeamPoints(team)
 	return ArrayGetCell(g_teamPoints, team);
 }
 
-SetTeamPoints(team, count)
+SetTeamPoints(team, count, bool:silent = false)
 {
 	ArraySetCell(g_teamPoints, team, count);
 	
@@ -251,16 +253,18 @@ SetTeamPoints(team, count)
 		Hwn_Gamemode_DispatchWin(team);
 	}
 	
-	ExecuteForward(g_fwTeamPointsChanged, g_fwResult, team);
+	if (!silent) {
+		ExecuteForward(g_fwTeamPointsChanged, g_fwResult, team);
+	}
 }
 
 ResetVariables()
 {
 	for (new team = 0; team < TEAM_COUNT; ++team) {
-		SetTeamPoints(team, 0);
+		SetTeamPoints(team, 0, .silent = true);
 	}
 	
-	for (new id = 1; id < g_maxPlayers; ++id) {
-		SetPlayerPoints(id, 0);
+	for (new id = 1; id <= g_maxPlayers; ++id) {
+		SetPlayerPoints(id, 0, .silent = true);
 	}
 }
