@@ -249,6 +249,7 @@ public OnKill(ent)
 		NPC_EmitVoice(ent, g_szSndDying, .supercede = true);
 		NPC_PlayAction(ent, g_actions[Action_Shake], .supercede = true);
 		
+		set_pev(ent, pev_takedamage, DAMAGE_NO);
 		set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
 		set_pev(ent, pev_deadflag, DEAD_DYING);
 		

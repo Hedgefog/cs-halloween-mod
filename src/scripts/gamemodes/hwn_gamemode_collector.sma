@@ -51,7 +51,7 @@ public plugin_init()
 	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 	
 	RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
-	RegisterHam(Ham_Killed, "info_target", "OnTargetKilled", .Post = 0);
+	RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "OnTargetKilled", .Post = 1);
 	
 	register_message(get_user_msgid("StatusIcon"), "OnMessageStatusIcon");
 	
