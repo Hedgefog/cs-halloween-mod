@@ -1,4 +1,19 @@
 /*
+	2.3.1
+		Corpse no longer spawn in gamemode with player respawn
+		Spell balls no longer pass through clip brashes
+		Minimizes mod influence on shooting
+		High performance improvement
+		New Spell API
+		Added event handler entity
+		Added Lightning spell
+		Added hwn_boss_min_damage_to_win cvar
+		Improved NPC hit logic
+		Added hwn_spawn_boss command
+		Fixed npc kill reward in collector gamemode
+		Fade effect of invisibility spell now saving after external fade effects
+		Improved HHH NPC
+
 	2.2.1
 		Orpheu no longer required
 		Orpheu replaced to RoundControl
@@ -43,21 +58,6 @@
 	2.0.0 Beta
 		- First Release
 */
-
-/*
-	TODO:
-		+Improve Custom Entities API		
-		+Spell API refactoring
-		+Remove jack'o'lantern light
-		+Corpse no longer spawn in gamemode with player respawn
-		+Spell balls no longer pass through clip brashes
-		+Minimizes mod influence on shooting
-		+The high performance improvement
-		-Add more forwards.
-		-Add more cvars.
-		-ZOMBIE API
-*/
-
 
 #if defined _hwn_included
   #endinput
