@@ -480,7 +480,6 @@ DispatchWin(team)
 	}
 	
 	RoundEndForceControl(team == 1 ? WINSTATUS_TERRORIST : WINSTATUS_CT);
-	//TerminateRound(RoundEndType_TeamExtermination, team, MapType_AutoDetect);
 }
 
 bool:IsTeamExtermination()

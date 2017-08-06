@@ -33,11 +33,6 @@ public plugin_init()
 	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 	
 	g_maxPlayers = get_maxplayers();
-	
-	g_playerNextCast = ArrayCreate(1, g_maxPlayers+1);
-	for (new i = 0; i <= g_maxPlayers; ++i) {
-		ArrayPushCell(g_playerNextCast, 0);
-	}
 
 	g_fwCast = CreateMultiForward("Hwn_Spell_Fw_Cast", ET_IGNORE, FP_CELL, FP_CELL);
 }

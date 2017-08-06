@@ -14,7 +14,7 @@
 #define GIFT_ENTITY_CLASSNAME "hwn_item_gift"
 #define GIFT_TARGET_ENTITY_CLASSNAME "hwn_gift_target"
 
-#define TASKID_SUM_SPAWN_GIFT 100
+#define TASKID_SUM_SPAWN_GIFT 1000
 
 new Array:g_giftTargets;
 
@@ -91,8 +91,10 @@ public OnGiftPicked(ent, id)
 {
 	new count = Hwn_Cosmetic_GetCount();
 	new cosmetic = Hwn_Cosmetic_GetCosmetic(random(count));
-	new time = random_num(get_pcvar_num(g_cvarGiftCosmeticMinTime), 
-							get_pcvar_num(g_cvarGiftCosmeticMaxTime));
+	new time = random_num(
+		get_pcvar_num(g_cvarGiftCosmeticMinTime), 
+		get_pcvar_num(g_cvarGiftCosmeticMaxTime)
+	);
 	
 	new PCosmetic_Type:type = PCosmetic_Type_Normal;
 	if (random(100) >= 20 && random(100) <= 40) { //Find random number two times

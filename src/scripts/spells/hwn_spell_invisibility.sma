@@ -46,7 +46,7 @@ public plugin_init()
     Hwn_Spell_Register("Invisibility", "OnCast");
 
     g_maxPlayers = get_maxplayers();
-    g_playerInvisibilityStart = ArrayCreate(1, g_maxPlayers);
+    g_playerInvisibilityStart = ArrayCreate(1, g_maxPlayers+1);
 
     register_message(get_user_msgid("ScreenFade"), "OnMessage_ScreenFade");
 
