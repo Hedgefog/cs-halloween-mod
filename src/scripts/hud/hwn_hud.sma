@@ -33,7 +33,7 @@ public plugin_init()
 	RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
 	
 	CE_RegisterHook(CEFunction_Spawn, "hwn_item_gift", "OnGiftSpawn");
-	CE_RegisterHook(CEFunction_Remove, "hwn_item_gift", "OnGiftRemove");
+	CE_RegisterHook(CEFunction_Killed, "hwn_item_gift", "OnGiftKilled");
 	CE_RegisterHook(CEFunction_Picked, "hwn_item_gift", "OnGiftPicked");
 	
 	CE_RegisterHook(CEFunction_Picked, "hwn_item_spellbook", "OnSpellbookPicked");
@@ -82,7 +82,7 @@ public OnGiftSpawn(ent)
 	show_dhudmessage(owner, "%L", LANG_PLAYER, "HWN_GIFT_SPAWN");
 }
 
-public OnGiftRemove(ent, bool:picked)
+public OnGiftKilled(ent, bool:picked)
 {
 	if (!picked) {
 		new owner = pev(ent, pev_owner);

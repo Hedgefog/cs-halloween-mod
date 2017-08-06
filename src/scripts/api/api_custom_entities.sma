@@ -571,7 +571,7 @@ Kill(ent, killer = 0, bool:picked = false)
 	}
 }
 
-bool:Remove(ent, bool:picked = false)
+bool:Remove(ent)
 {
 	if (!Check(ent)) {
 		log_error(0, "%s Entity %i is not a custom entity.", LOG_PREFIX, ent);
@@ -603,7 +603,7 @@ bool:Remove(ent, bool:picked = false)
 	new ceIdx = ArrayGetCell(ceData, CEData_Handler);
 	
 	//Execute remove function
-	ExecuteFunction(CEFunction_Remove, ceIdx, ent, picked);
+	ExecuteFunction(CEFunction_Remove, ceIdx, ent);
 	
 	DestroyPData(ent);
 
@@ -746,7 +746,7 @@ ApplyPreset(ent, preset)
 		case CEPreset_Prop:
 		{
 			set_pev(ent, pev_solid, SOLID_BBOX);
-			set_pev(ent, pev_movetype, MOVETYPE_TOSS);
+			set_pev(ent, pev_movetype, MOVETYPE_FLY);
 			set_pev(ent, pev_takedamage, DAMAGE_NO);
 		}
 	}
@@ -852,10 +852,6 @@ ExecuteFunction(CEFunction:function, ceIdx, any:...)
 					new killer = getarg(3);
 					new bool:picked = bool:getarg(4);
 					callfunc_push_int(killer);
-					callfunc_push_int(picked);
-				}
-				case CEFunction_Remove: {
-					new bool:picked = bool:getarg(3);
 					callfunc_push_int(picked);
 				}
 				case CEFunction_Pickup, CEFunction_Picked: {

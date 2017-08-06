@@ -327,6 +327,11 @@ public OnPlayerKilled(id)
 	if (!Hwn_Gamemode_IsPlayerOnSpawn(id)) {
 		static Float:vOrigin[3];
 		pev(id, pev_origin, vOrigin);
+
+		if (!pev(id, pev_bInDuck)) {
+			vOrigin[2] += 18.0;
+		}
+
 		AddEventPoint(vOrigin);
 	}
 

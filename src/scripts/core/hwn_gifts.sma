@@ -81,12 +81,6 @@ public OnGiftTargetSpawn(ent)
 	CE_Remove(ent);
 }
 
-public OnGiftSpawn(ent)
-{
-	new owner = pev(ent, pev_owner);
-	client_cmd(owner, "spk %s", g_szSndGiftSpawn);
-}
-
 public OnGiftPicked(ent, id)
 {
 	new count = Hwn_Cosmetic_GetCount();
@@ -112,10 +106,14 @@ SpawnGift(id, const Float:vOrigin[3])
 {
 	new ent = CE_Create(GIFT_ENTITY_CLASSNAME, vOrigin);
 
-	if (ent) {
-		set_pev(ent, pev_owner, id);
-		dllfunc(DLLFunc_Spawn, ent);
+	if (!ent) {
+		return;
 	}
+
+	set_pev(ent, pev_owner, id);
+	dllfunc(DLLFunc_Spawn, ent);
+
+	client_cmd(id, "spk %s", g_szSndGiftSpawn);
 }
 
 SetupSpawnGiftTask(id)

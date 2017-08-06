@@ -41,7 +41,6 @@ public plugin_precache()
 public OnSpawn(ent)
 {
 	set_pev(ent, pev_body, random(2));
-	set_pev(ent, pev_movetype, MOVETYPE_FLY);
 	engfunc(EngFunc_DropToFloor, ent);
 	dllfunc(DLLFunc_Think, ent);
 	
