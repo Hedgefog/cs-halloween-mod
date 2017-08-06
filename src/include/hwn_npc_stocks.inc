@@ -88,13 +88,34 @@ stock NPC_EmitFootStep(ent, const szSound[])
 	ArraySetCell(npcData, NPC_NextFootStep, fGametime + 0.25);
 }
 
-stock bool:NPC_Hit(ent, Float:fDamage, Float:fRange, Float:fAttackDelay, const Float:vOffset[3] = {0.0, 0.0, 0.0})
+stock bool:NPC_Hit(
+	ent,
+	Float:fDamage,
+	Float:fRange,
+	Float:fAttackDelay,
+	const Float:vOffset[3] = {0.0, 0.0, 0.0},
+	bool:correctByEnemy = true
+)
 {
 	static Float:vOrigin[3];
 	pev(ent, pev_origin, vOrigin);
 
 	static Float:vDirection[3];
-	UTIL_GetDirectionVector(ent, vDirection, fRange);
+	UTIL_GetDirectionVector(ent, vDirection);
+
+	// correction of z axis by enemy origin
+	new enemy = pev(ent, pev_enemy);
+	if (correctByEnemy && enemy) {
+		static Float:vTemp[3];
+		pev(enemy, pev_origin, vTemp);
+		xs_vec_sub(vTemp, vOrigin, vTemp);
+		xs_vec_normalize(vTemp, vTemp);
+
+		vDirection[2] = vTemp[2];
+		xs_vec_normalize(vDirection, vDirection);
+	}
+
+	xs_vec_mul_scalar(vDirection, fRange, vDirection);
 
 	static Float:vTarget[3];
 	xs_vec_add(vOrigin, vDirection, vTarget);

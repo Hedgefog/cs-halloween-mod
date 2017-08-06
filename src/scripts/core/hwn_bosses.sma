@@ -134,7 +134,7 @@ public client_putinserver(id)
 
 public OnClCmd_SpawnBoss(id, level, cid)
 {
-	if(!cmd_access(id, level, cid, 2)) {
+	if(!cmd_access(id, level, cid, 1)) {
 		return PLUGIN_HANDLED;
 	}
 

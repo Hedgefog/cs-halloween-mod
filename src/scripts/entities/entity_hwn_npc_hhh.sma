@@ -91,7 +91,7 @@ new const g_actions[Action][NPC_Action] = {
 };
 
 new Float:NPC_Health 		= 3000.0;
-const Float:NPC_Speed 		= 320.0;
+const Float:NPC_Speed 		= 300.0;
 const Float:NPC_Damage 		= 80.0;
 const Float:NPC_HitRange 	= 96.0;
 const Float:NPC_HitDelay 	= 0.75;
@@ -490,7 +490,7 @@ public TaskThink(ent)
 	if (NPC_IsValidEnemy(enemy))
 	{
 		if (!Attack(ent, enemy) && (get_pcvar_num(g_cvarUseAstar) > 0)) {
-			astarRequired = true;
+			astarRequired = !NPC_FindEnemy(ent, g_maxPlayers);
 		}
 	}
 	else
