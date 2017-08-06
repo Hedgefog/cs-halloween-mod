@@ -45,15 +45,17 @@
 */
 
 /*
-	FEATURE:
-		-Improve Custom Entities API		
-		-Spell API refactoring
-		-Remove jack'o'lantern light
+	TODO:
+		+Improve Custom Entities API		
+		+Spell API refactoring
+		+Remove jack'o'lantern light
 		+Corpse no longer spawn in gamemode with player respawn
 		+Spell balls no longer pass through clip brashes
 		+Minimizes mod influence on shooting
 		+The high performance improvement
-		
+		-Add more forwards.
+		-Add more cvars.
+		-ZOMBIE API
 */
 
 
