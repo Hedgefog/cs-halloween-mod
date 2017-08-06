@@ -11,7 +11,7 @@
 #define PLUGIN "[Hwn] Cosmetics"
 #define AUTHOR "Hedgehog Fog"
 
-#define TASKID_SUM_COSMETIC_TIMER 100
+#define TASKID_SUM_COSMETIC_TIMER 1000
 
 #define UNUSUAL_ENTITY_RENDER_AMT 1.0
 

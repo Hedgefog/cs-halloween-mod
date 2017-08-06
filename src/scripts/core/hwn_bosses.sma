@@ -18,8 +18,6 @@
 #define TASKID_SPAWN_BOSS 0
 #define TASKID_REMOVE_BOSS 1
 
-#define MIN_DAMAGE_TO_WIN 300
-
 #define BOSS_TARGET_ENTITY_CLASSNAME "hwn_boss_target"
 
 new const g_szSndBossSpawn[] = "hwn/misc/halloween_boss_summoned.wav";
@@ -29,6 +27,7 @@ new const g_szSndCongratulations[] = "hwn/misc/congratulations.wav";
 
 new g_cvarBossSpawnDelay;
 new g_cvarBossLifeTime;
+new g_cvarBossMinDamageToWin;
 
 new g_fwResult;
 new g_fwBossSpawn;
@@ -60,6 +59,7 @@ public plugin_init()
 	
 	g_cvarBossSpawnDelay = register_cvar("hwn_boss_spawn_delay", "600.0");
 	g_cvarBossLifeTime = register_cvar("hwn_boss_life_time", "120.0");
+	g_cvarBossMinDamageToWin = register_cvar("hwn_boss_min_damage_to_win", "300");
 	
 	g_fwBossSpawn = CreateMultiForward("Hwn_Bosses_Fw_BossSpawn", ET_IGNORE, FP_CELL);
 	g_fwBossKill = CreateMultiForward("Hwn_Bosses_Fw_BossKill", ET_IGNORE, FP_CELL);
@@ -277,7 +277,7 @@ SelectWinners()
 		}
 		
 		new damage = ArrayGetCell(g_playerTotalDamage, id);
-		if (damage >= MIN_DAMAGE_TO_WIN)
+		if (damage >= get_pcvar_num(g_cvarBossMinDamageToWin))
 		{
 			ExecuteForward(g_fwWinner, g_fwResult, id);
 			
