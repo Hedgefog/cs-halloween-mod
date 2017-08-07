@@ -185,7 +185,7 @@ DrawLightingBeam(const Float:vOrigin[3])
 public TaskKill(taskID)
 {
     new ent = taskID - TASKID_SUM_KILL;
-    ExecuteHamB(Ham_Killed, ent, 0, 0);
+    CE_Kill(ent);
 }
 
 public TaskDamage(taskID)

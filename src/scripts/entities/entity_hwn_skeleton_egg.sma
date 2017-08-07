@@ -59,5 +59,5 @@ public Birth(ent)
 		dllfunc(DLLFunc_Spawn, skeletonEnt);
 	}
 	
-	CE_Remove(ent);
+	CE_Kill(ent);
 }

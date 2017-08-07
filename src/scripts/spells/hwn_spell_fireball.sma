@@ -88,7 +88,7 @@ public OnTouch(ent, target)
         return;
     }
 
-    ExecuteHamB(Ham_Killed, ent, 0, 0);
+    CE_Kill(ent);
 }
 
 public OnSpellballKilled(ent)
