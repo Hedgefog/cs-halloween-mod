@@ -94,11 +94,13 @@ public Hwn_Gamemode_Fw_RoundEnd()
 public Hwn_Bosses_Fw_BossSpawn(ent)
 {
     Dispatch("boss_spawn", ent);
+    Dispatch("boss_remove", ent);
 }
 
 public Hwn_Bosses_Fw_BossKill(ent)
 {
     Dispatch("boss_kill", ent);
+    Dispatch("boss_remove", ent);
 }
 
 public Hwn_Bosses_Fw_BossEscape(ent)
