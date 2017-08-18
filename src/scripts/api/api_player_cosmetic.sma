@@ -167,37 +167,36 @@ public TaskPlayerThink(id)
 	static Float:renderAmt;
 	pev(id, pev_renderamt, renderAmt);
 	
-	if (renderMode == ArrayGetCell(g_playerRenderMode, id)
-		&& renderAmt == ArrayGetCell(g_playerRenderAmt, id))
+	if (renderMode != ArrayGetCell(g_playerRenderMode, id)
+		|| renderAmt != ArrayGetCell(g_playerRenderAmt, id))
 	{
-		return;
-	}
-	
-	ArraySetCell(g_playerRenderMode, id, renderMode);
-	ArraySetCell(g_playerRenderAmt, id, renderAmt);
+		ArraySetCell(g_playerRenderMode, id, renderMode);
+		ArraySetCell(g_playerRenderAmt, id, renderAmt);
 
-	new size = PInv_Size(id);
-	for (new i = 0; i < size; ++i)
-	{
-		if (g_itemType != PInv_GetItemType(id, i)) {
-			continue;
-		}
-		
-		new Array:item = Array:PInv_GetItem(id, i);
-		
-		if (ArrayGetCell(item, _:ItemData_State) != ItemState_Equiped) {
-			continue;
-		}
-		
-		new ent = ArrayGetCell(item, _:ItemData_Entity);
-		set_pev(ent, pev_rendermode, renderMode);
-		
-		if (ArrayGetCell(item, _:ItemData_CosmeticType) == PCosmetic_Type_Normal) {
-			set_pev(ent, pev_renderamt, renderAmt);	
-		} else {
-			set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
+		new size = PInv_Size(id);
+		for (new i = 0; i < size; ++i)
+		{
+			if (g_itemType != PInv_GetItemType(id, i)) {
+				continue;
+			}
+			
+			new Array:item = Array:PInv_GetItem(id, i);
+			
+			if (ArrayGetCell(item, _:ItemData_State) != ItemState_Equiped) {
+				continue;
+			}
+			
+			new ent = ArrayGetCell(item, _:ItemData_Entity);
+			set_pev(ent, pev_rendermode, renderMode);
+			
+			if (ArrayGetCell(item, _:ItemData_CosmeticType) == PCosmetic_Type_Normal) {
+				set_pev(ent, pev_renderamt, renderAmt);	
+			} else {
+				set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
+			}
 		}
 	}
+
 	
 	set_task(0.1, "TaskPlayerThink", id);
 }

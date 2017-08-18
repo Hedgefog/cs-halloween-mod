@@ -25,11 +25,11 @@ public plugin_init()
 	new pluginID = register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 	register_clcmd("chooseteam", "OnClCmd_ChooseTeam");
 	
-	Translate("HWN_MENU_TITLE", g_szMenuTitle, charsmax(g_szMenuTitle));
+	format(g_szMenuTitle, charsmax(g_szMenuTitle), "%L", LANG_SERVER, "HWN_MENU_TITLE");
 
 	{
 		new szChooseTeamText[32];
-		Translate("TEAM_MENU", szChooseTeamText, charsmax(szChooseTeamText));
+		format(szChooseTeamText, charsmax(szChooseTeamText), "%L", LANG_SERVER, "TEAM_MENU");
 		AddItem(szChooseTeamText, pluginID, get_func_id("ChooseTeam", pluginID));
 	}
 }
@@ -136,10 +136,6 @@ ShowMenu(id)
 	}
 
 	menu_display(id, g_menu);
-}
-
-Translate(const key[], output[], len) {
-	format(output, len, "%L", LANG_SERVER, key);
 }
 
 /*--------------------------------[ Menu ]--------------------------------*/
