@@ -67,6 +67,8 @@ new g_maxPlayers;
 public plugin_init()
 {
 	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+
+	register_dictionary("hwn.txt");
 	
 	if (g_gamemode < 0 && g_defaultGamemode >= 0) {
 		SetGamemode(g_defaultGamemode);
@@ -397,7 +399,9 @@ SetGamemode(gamemode)
 	
 	new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
 	if ((flags & Hwn_GamemodeFlag_SpecialEquip)) {
-		Hwn_Menu_AddItem("Change Equipment", "MenuItem_ChangeEquipment");
+		new szMenuTitle[32];
+		format(szMenuTitle, charsmax(szMenuTitle), "%L", LANG_SERVER, "HWN_EQUIPMENT_MENU_TITLE");
+		Hwn_Menu_AddItem(szMenuTitle, "MenuItem_ChangeEquipment");
 	}
 	
 	log_amx("[Hwn] Gamemode '%s' activated", szGamemodeName);

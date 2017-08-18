@@ -14,10 +14,14 @@
 public plugin_init()
 {
 	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+
+	register_dictionary("hwn.txt");
 	
 	register_impulse(100, "OnImpulse_100");
 	
-	Hwn_Menu_AddItem("Cosmetic Inventory", "MenuItemCosmeticCallback");
+	new szMenuTitle[32];
+	format(szMenuTitle, charsmax(szMenuTitle), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_TITLE");
+	Hwn_Menu_AddItem(szMenuTitle, "MenuItemCosmeticCallback");
 }
 
 public OnImpulse_100(id)
