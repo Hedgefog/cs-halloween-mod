@@ -51,6 +51,8 @@ new g_hVault;
 
 new g_maxPlayers;
 
+new Float:g_unusualColor[3];
+
 public plugin_precache()
 {
 	g_allocClassname = engfunc(EngFunc_AllocString, "info_target");	
@@ -75,6 +77,14 @@ public plugin_init()
 		ArrayPushCell(g_playerRenderMode, 0);
 		ArrayPushCell(g_playerRenderAmt, 0);
 	}
+
+	register_cvar("pcosmetic_unusual_color_r", "120.0");
+	register_cvar("pcosmetic_unusual_color_g", "0.0");
+	register_cvar("pcosmetic_unusual_color_b", "200.0");
+
+	g_unusualColor[0] = get_cvar_float("pcosmetic_unusual_color_r");
+	g_unusualColor[1] = get_cvar_float("pcosmetic_unusual_color_g");
+	g_unusualColor[2] = get_cvar_float("pcosmetic_unusual_color_b");
 }
 
 public plugin_natives()
@@ -157,37 +167,36 @@ public TaskPlayerThink(id)
 	static Float:renderAmt;
 	pev(id, pev_renderamt, renderAmt);
 	
-	if (renderMode == ArrayGetCell(g_playerRenderMode, id)
-		&& renderAmt == ArrayGetCell(g_playerRenderAmt, id))
+	if (renderMode != ArrayGetCell(g_playerRenderMode, id)
+		|| renderAmt != ArrayGetCell(g_playerRenderAmt, id))
 	{
-		return;
-	}
-	
-	ArraySetCell(g_playerRenderMode, id, renderMode);
-	ArraySetCell(g_playerRenderAmt, id, renderAmt);
+		ArraySetCell(g_playerRenderMode, id, renderMode);
+		ArraySetCell(g_playerRenderAmt, id, renderAmt);
 
-	new size = PInv_Size(id);
-	for (new i = 0; i < size; ++i)
-	{
-		if (g_itemType != PInv_GetItemType(id, i)) {
-			continue;
-		}
-		
-		new Array:item = Array:PInv_GetItem(id, i);
-		
-		if (ArrayGetCell(item, _:ItemData_State) != ItemState_Equiped) {
-			continue;
-		}
-		
-		new ent = ArrayGetCell(item, _:ItemData_Entity);
-		set_pev(ent, pev_rendermode, renderMode);
-		
-		if (ArrayGetCell(item, _:ItemData_CosmeticType) == PCosmetic_Type_Normal) {
-			set_pev(ent, pev_renderamt, renderAmt);	
-		} else {
-			set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
+		new size = PInv_Size(id);
+		for (new i = 0; i < size; ++i)
+		{
+			if (g_itemType != PInv_GetItemType(id, i)) {
+				continue;
+			}
+			
+			new Array:item = Array:PInv_GetItem(id, i);
+			
+			if (ArrayGetCell(item, _:ItemData_State) != ItemState_Equiped) {
+				continue;
+			}
+			
+			new ent = ArrayGetCell(item, _:ItemData_Entity);
+			set_pev(ent, pev_rendermode, renderMode);
+			
+			if (ArrayGetCell(item, _:ItemData_CosmeticType) == PCosmetic_Type_Normal) {
+				set_pev(ent, pev_renderamt, renderAmt);	
+			} else {
+				set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
+			}
 		}
 	}
+
 	
 	set_task(0.1, "TaskPlayerThink", id);
 }
@@ -551,7 +560,7 @@ CreateCosmeticEntity(owner, cosmetic, PCosmetic_Type:type = PCosmetic_Type_Norma
 	
 	if (type == PCosmetic_Type_Unusual) {
 		set_pev(ent, pev_renderfx, kRenderFxGlowShell);
-		set_pev(ent, pev_rendercolor, {120.0, 0.0, 200.0});
+		set_pev(ent, pev_rendercolor, g_unusualColor);
 		set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
 	}
 	
