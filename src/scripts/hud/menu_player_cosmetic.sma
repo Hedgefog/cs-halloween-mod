@@ -112,9 +112,9 @@ Create(id)
 		(
 			text,
 			charsmax(text), 
-			"%s%s %s (%i seconds left)",
+			"%s%s%s (%i seconds left)",
 			(PCosmetic_IsItemEquiped(id, i) ? "\y" : ""),
-			(cosmeticType == PCosmetic_Type_Unusual ? "Unusual" : "^0"),
+			(cosmeticType == PCosmetic_Type_Unusual ? "Unusual " : "^0"),
 			szCosmeticName,
 			itemTime
 		);
