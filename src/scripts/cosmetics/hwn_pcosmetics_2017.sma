@@ -7,6 +7,8 @@
 #define PLUGIN "[Hwn] Player Cosmetic 2017"
 #define AUTHOR "Hedgehog Fog"
 
+#define UNUSUAL_COLOR {HWN_COLOR_GREEN_DARK_F}
+
 public plugin_precache()
 {
     // TODO: add new player cosmetic
@@ -16,7 +18,8 @@ public plugin_precache()
             PCosmetic_Register(
                 .szName = "",
                 .modelIndex = precache_model(""),
-                .groups = (PCosmetic_Group_)
+                .groups = (PCosmetic_Group_),
+                .fUnusualColor = UNUSUAL_COLOR
             )
         );
     */

@@ -19,7 +19,7 @@ enum PCosmetic_Type
 	PCosmetic_Type_Unusual
 };
 
-native PCosmetic:PCosmetic_Register(const szName[], PCosmetic_Groups:groups, modelIndex);
+native PCosmetic:PCosmetic_Register(const szName[], PCosmetic_Groups:groups, modelIndex, Float:fUnusualColor[3]);
 native PCosmetic_Give(id, cosmetic, PCosmetic_Type:type, time);
 
 native PCosmetic_Equip(id, slotIdx);

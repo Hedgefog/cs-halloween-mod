@@ -39,6 +39,7 @@ new Trie:g_cosmeticIndexes;
 new Array:g_cosmeticName;
 new Array:g_cosmeticGroups;
 new Array:g_cosmeticModelIndex;
+new Array:g_cosmeticUnusualColor;
 new g_cosmeticCount = 0;
 
 new Array:g_playerRenderMode;
@@ -50,8 +51,6 @@ new PInv_ItemType:g_itemType;
 new g_hVault;
 
 new g_maxPlayers;
-
-new Float:g_unusualColor[3];
 
 public plugin_precache()
 {
@@ -77,14 +76,6 @@ public plugin_init()
 		ArrayPushCell(g_playerRenderMode, 0);
 		ArrayPushCell(g_playerRenderAmt, 0);
 	}
-
-	register_cvar("pcosmetic_unusual_color_r", "120.0");
-	register_cvar("pcosmetic_unusual_color_g", "0.0");
-	register_cvar("pcosmetic_unusual_color_b", "200.0");
-
-	g_unusualColor[0] = get_cvar_float("pcosmetic_unusual_color_r");
-	g_unusualColor[1] = get_cvar_float("pcosmetic_unusual_color_g");
-	g_unusualColor[2] = get_cvar_float("pcosmetic_unusual_color_b");
 }
 
 public plugin_natives()
@@ -113,7 +104,8 @@ public plugin_end()
 	if (g_cosmeticCount)  {
 		ArrayDestroy(g_cosmeticName);
 		ArrayDestroy(g_cosmeticGroups);
-		ArrayDestroy(g_cosmeticModelIndex);		
+		ArrayDestroy(g_cosmeticModelIndex);	
+		ArrayDestroy(g_cosmeticUnusualColor);
 	}
 
 	ArrayDestroy(g_playerRenderMode);
@@ -211,7 +203,10 @@ public Native_Register(pluginID, argc)
 	new PCosmetic_Groups:groups = PCosmetic_Groups:get_param(2);
 	new modelIndex = get_param(3);
 	
-	return Register(szName, groups, modelIndex);
+	new Float:color[3];
+	get_array_f(4, color, 3);
+	
+	return Register(szName, groups, modelIndex, color);
 }
 
 public Native_Give(pluginID, argc)
@@ -406,18 +401,20 @@ Array:CreateCosmetic(cosmetic, PCosmetic_Type:cosmeticType, time)
 	return item;
 }
 
-Register(const szName[], PCosmetic_Groups:groups, modelIndex)
+Register(const szName[], PCosmetic_Groups:groups, modelIndex, const Float:unusualColor[3])
 {
 	if (!g_cosmeticCount) {
 		g_cosmeticName = ArrayCreate(32);		
 		g_cosmeticGroups = ArrayCreate();
 		g_cosmeticModelIndex = ArrayCreate();
+		g_cosmeticUnusualColor = ArrayCreate(3);
 		g_cosmeticIndexes = TrieCreate();
 	}
 
 	ArrayPushString(g_cosmeticName, szName);
 	ArrayPushCell(g_cosmeticGroups, groups);
 	ArrayPushCell(g_cosmeticModelIndex, modelIndex);
+	ArrayPushArray(g_cosmeticUnusualColor, unusualColor);
 	
 	new cosmetic = g_cosmeticCount;
 	TrieSetCell(g_cosmeticIndexes, szName, cosmetic);
@@ -559,8 +556,11 @@ CreateCosmeticEntity(owner, cosmetic, PCosmetic_Type:type = PCosmetic_Type_Norma
 	set_pev(ent, pev_aiment, owner);
 	
 	if (type == PCosmetic_Type_Unusual) {
+		static Float:color[3];
+		ArrayGetArray(g_cosmeticUnusualColor, cosmetic, color);
+
 		set_pev(ent, pev_renderfx, kRenderFxGlowShell);
-		set_pev(ent, pev_rendercolor, g_unusualColor);
+		set_pev(ent, pev_rendercolor, color);
 		set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
 	}
 	
