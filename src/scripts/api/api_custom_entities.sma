@@ -13,7 +13,7 @@
 #include <xs>
 
 #define PLUGIN	"[API] Custom Entities"
-#define VERSION	"1.0.1"
+#define VERSION	"1.2.1"
 #define AUTHOR	"Hedgehog Fog"
 
 #define CE_BASE_CLASSNAME "info_target"

@@ -11,20 +11,20 @@
 enum CEPreset
 {
 	CEPreset_None = 0,
-	CEPreset_Item,
-	CEPreset_NPC,
-	CEPreset_Prop
+	CEPreset_Item, // For items
+	CEPreset_NPC, // For NPC
+	CEPreset_Prop // For static props
 };
 
 enum CEFunction
 {
-	CEFunction_Spawn,
-	CEFunction_Kill,
-	CEFunction_Killed,
-	CEFunction_Remove,	
-	CEFunction_Picked,
-	CEFunction_Pickup,
-	CEFunction_KVD
+	CEFunction_Spawn, // Call when entity spawned
+	CEFunction_Kill, // Call when some plugin try to kill entity. return PLUGIN_HANDLED to discard kill.
+	CEFunction_Killed, // Call when entity killed
+	CEFunction_Remove,	// Call when entity removed
+	CEFunction_Picked, // Call when player pick item
+	CEFunction_Pickup, // Call when player touch item. Should return PLUGIN_HANDLED if picked.
+	CEFunction_KVD // Call when new key value obtained
 };
 /*
  * Register entity.
@@ -59,7 +59,7 @@ native CE_Register
 native CE_Create(const szName[], const Float:vOrigin[3], bool:temp = true);
 
 /*
- * Remove entity correctly.
+ * Kill entity.
  *
  * @param ent				Index of entity.
  * @param killer			Index of killer.
