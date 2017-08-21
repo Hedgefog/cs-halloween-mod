@@ -15,12 +15,23 @@ new bool:g_update = false;
 new g_chooseTeamOverride;
 new g_menu;
 
+static g_szMenuTitle[32];
+
 public plugin_init()
 {
+	register_dictionary("hwn.txt");
+	register_dictionary("plmenu.txt");
+
 	new pluginID = register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 	register_clcmd("chooseteam", "OnClCmd_ChooseTeam");
 	
-	AddItem("Choose Team", pluginID, get_func_id("ChooseTeam", pluginID));
+	format(g_szMenuTitle, charsmax(g_szMenuTitle), "%L", LANG_SERVER, "HWN_MENU_TITLE");
+
+	{
+		new szChooseTeamText[32];
+		format(szChooseTeamText, charsmax(szChooseTeamText), "%L", LANG_SERVER, "TEAM_MENU");
+		AddItem(szChooseTeamText, pluginID, get_func_id("ChooseTeam", pluginID));
+	}
 }
 
 public plugin_natives()
@@ -79,7 +90,7 @@ public ChooseTeam(id)
 
 CreateMenu()
 {
-	g_menu = menu_create("Halloween Mod Menu", "MenuHandler");
+	g_menu = menu_create(g_szMenuTitle, "MenuHandler");
 	
 	for (new i = 0; i < g_itemCount; ++i) {
 		static szTitle[32];

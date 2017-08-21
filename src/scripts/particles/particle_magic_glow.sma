@@ -23,7 +23,7 @@ public plugin_precache()
 	
 	Particles_Register(
 		.szName = "magic_glow",
-		.szTransformCallback = "TransformParticle",
+		.szTransformCallback = "Transform",
 		.sprites = g_sprites,
 		.fLifeTime = 0.8,
 		.fScale = 0.05,
@@ -43,7 +43,7 @@ public plugin_end()
 	ArrayDestroy(g_sprites);
 }
 
-public TransformParticle(Float:vOrigin[3], Float:vVelocity[3])
+public Transform(Float:vOrigin[3], Float:vVelocity[3], index, tickIndex)
 {
 	static Float:vRandom[3];
 
@@ -57,7 +57,7 @@ public TransformParticle(Float:vOrigin[3], Float:vVelocity[3])
 	}
 }
 
-stock UTIL_RandomVector(Float:fMin, Float:fMax, Float:vOut[3])
+stock UTIL_RandomVector(const Float:fMin, const Float:fMax, Float:vOut[3])
 {
 	for (new i = 0; i < 3; ++i) {
 		vOut[i] = random_float(fMin, fMax);

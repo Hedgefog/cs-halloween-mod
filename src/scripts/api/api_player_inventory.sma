@@ -416,7 +416,7 @@ SavePlayerInventory(id)
 		ExecuteForward(g_fwSlotSaved, g_fwResult, id, i);
 	}
 	
-		//Save inventory size
+	//Save inventory size
 	{
 		format(key, charsmax(key), "%s_size", authID);
 		format(value, charsmax(value), "%i", inventorySize);

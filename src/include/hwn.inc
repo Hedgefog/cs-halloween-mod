@@ -129,6 +129,7 @@ forward Hwn_Spell_Fw_Cast(id, spellIdx);
 
 native Hwn_Cosmetic_GetCount();
 native Hwn_Cosmetic_GetCosmetic(index);
+native Hwn_Cosmetic_Register(PCosmetic:hPCosmetic);
 
 /*--------------------------------[ Bosses ]--------------------------------*/
 

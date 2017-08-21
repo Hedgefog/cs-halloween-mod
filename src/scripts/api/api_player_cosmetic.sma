@@ -39,6 +39,7 @@ new Trie:g_cosmeticIndexes;
 new Array:g_cosmeticName;
 new Array:g_cosmeticGroups;
 new Array:g_cosmeticModelIndex;
+new Array:g_cosmeticUnusualColor;
 new g_cosmeticCount = 0;
 
 new Array:g_playerRenderMode;
@@ -103,7 +104,8 @@ public plugin_end()
 	if (g_cosmeticCount)  {
 		ArrayDestroy(g_cosmeticName);
 		ArrayDestroy(g_cosmeticGroups);
-		ArrayDestroy(g_cosmeticModelIndex);		
+		ArrayDestroy(g_cosmeticModelIndex);	
+		ArrayDestroy(g_cosmeticUnusualColor);
 	}
 
 	ArrayDestroy(g_playerRenderMode);
@@ -157,37 +159,36 @@ public TaskPlayerThink(id)
 	static Float:renderAmt;
 	pev(id, pev_renderamt, renderAmt);
 	
-	if (renderMode == ArrayGetCell(g_playerRenderMode, id)
-		&& renderAmt == ArrayGetCell(g_playerRenderAmt, id))
+	if (renderMode != ArrayGetCell(g_playerRenderMode, id)
+		|| renderAmt != ArrayGetCell(g_playerRenderAmt, id))
 	{
-		return;
-	}
-	
-	ArraySetCell(g_playerRenderMode, id, renderMode);
-	ArraySetCell(g_playerRenderAmt, id, renderAmt);
+		ArraySetCell(g_playerRenderMode, id, renderMode);
+		ArraySetCell(g_playerRenderAmt, id, renderAmt);
 
-	new size = PInv_Size(id);
-	for (new i = 0; i < size; ++i)
-	{
-		if (g_itemType != PInv_GetItemType(id, i)) {
-			continue;
-		}
-		
-		new Array:item = Array:PInv_GetItem(id, i);
-		
-		if (ArrayGetCell(item, _:ItemData_State) != ItemState_Equiped) {
-			continue;
-		}
-		
-		new ent = ArrayGetCell(item, _:ItemData_Entity);
-		set_pev(ent, pev_rendermode, renderMode);
-		
-		if (ArrayGetCell(item, _:ItemData_CosmeticType) == PCosmetic_Type_Normal) {
-			set_pev(ent, pev_renderamt, renderAmt);	
-		} else {
-			set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
+		new size = PInv_Size(id);
+		for (new i = 0; i < size; ++i)
+		{
+			if (g_itemType != PInv_GetItemType(id, i)) {
+				continue;
+			}
+			
+			new Array:item = Array:PInv_GetItem(id, i);
+			
+			if (ArrayGetCell(item, _:ItemData_State) != ItemState_Equiped) {
+				continue;
+			}
+			
+			new ent = ArrayGetCell(item, _:ItemData_Entity);
+			set_pev(ent, pev_rendermode, renderMode);
+			
+			if (ArrayGetCell(item, _:ItemData_CosmeticType) == PCosmetic_Type_Normal) {
+				set_pev(ent, pev_renderamt, renderAmt);	
+			} else {
+				set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
+			}
 		}
 	}
+
 	
 	set_task(0.1, "TaskPlayerThink", id);
 }
@@ -202,7 +203,10 @@ public Native_Register(pluginID, argc)
 	new PCosmetic_Groups:groups = PCosmetic_Groups:get_param(2);
 	new modelIndex = get_param(3);
 	
-	return Register(szName, groups, modelIndex);
+	new Float:color[3];
+	get_array_f(4, color, 3);
+	
+	return Register(szName, groups, modelIndex, color);
 }
 
 public Native_Give(pluginID, argc)
@@ -397,18 +401,20 @@ Array:CreateCosmetic(cosmetic, PCosmetic_Type:cosmeticType, time)
 	return item;
 }
 
-Register(const szName[], PCosmetic_Groups:groups, modelIndex)
+Register(const szName[], PCosmetic_Groups:groups, modelIndex, const Float:unusualColor[3])
 {
 	if (!g_cosmeticCount) {
 		g_cosmeticName = ArrayCreate(32);		
 		g_cosmeticGroups = ArrayCreate();
 		g_cosmeticModelIndex = ArrayCreate();
+		g_cosmeticUnusualColor = ArrayCreate(3);
 		g_cosmeticIndexes = TrieCreate();
 	}
 
 	ArrayPushString(g_cosmeticName, szName);
 	ArrayPushCell(g_cosmeticGroups, groups);
 	ArrayPushCell(g_cosmeticModelIndex, modelIndex);
+	ArrayPushArray(g_cosmeticUnusualColor, unusualColor);
 	
 	new cosmetic = g_cosmeticCount;
 	TrieSetCell(g_cosmeticIndexes, szName, cosmetic);
@@ -550,8 +556,11 @@ CreateCosmeticEntity(owner, cosmetic, PCosmetic_Type:type = PCosmetic_Type_Norma
 	set_pev(ent, pev_aiment, owner);
 	
 	if (type == PCosmetic_Type_Unusual) {
+		static Float:color[3];
+		ArrayGetArray(g_cosmeticUnusualColor, cosmetic, color);
+
 		set_pev(ent, pev_renderfx, kRenderFxGlowShell);
-		set_pev(ent, pev_rendercolor, {120.0, 0.0, 200.0});
+		set_pev(ent, pev_rendercolor, color);
 		set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
 	}
 	
