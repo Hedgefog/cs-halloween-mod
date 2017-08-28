@@ -12,7 +12,7 @@
   "devDependencies": {
     "gulp": "^3.9.1",
     "gulp-flatten": "^0.3.1",
-    "gulp-sma": "^1.0.0",
+    "gulp-sma": "^1.0.1",
     "gulp-watch": "^4.3.11"
   }
 }
