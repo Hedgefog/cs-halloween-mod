@@ -106,7 +106,7 @@ public Native_GetPlayerSpell(pluginID, argc)
 }
 
 public Native_SetPlayerSpell(pluginID, argc)
-{	
+{
 	if (!g_playerSpell) {
 		g_playerSpell = ArrayCreate(1, g_maxPlayers+1);
 		g_playerSpellAmount = ArrayCreate(1, g_maxPlayers+1);

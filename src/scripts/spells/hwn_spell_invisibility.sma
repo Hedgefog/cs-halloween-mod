@@ -41,6 +41,7 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
     
+    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
     
     Hwn_Spell_Register("Invisibility", "OnCast");
@@ -67,9 +68,14 @@ public OnMessage_ScreenFade(msg, type, id)
     set_task(0.25, "TaskFixInvisibleEffect", id);
 }
 
+public OnPlayerSpawn(id)
+{
+    SetInvisible(id, false);
+}
+
 public OnPlayerKilled(id)
 {
-	SetInvisible(id, false);
+    SetInvisible(id, false);
 }
 
 public OnCast(id)
@@ -90,7 +96,6 @@ public OnCast(id)
         }        
         
         SetInvisible(id, true);
-        FadeEffect(id, InvisibilityTime);
         
         if (task_exists(id)) {
             remove_task(id);
@@ -106,9 +111,31 @@ public OnCast(id)
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
+SetInvisible(id, bool:value = true)
+{
+    if (value) {
+        set_pev(id, pev_rendermode, kRenderTransTexture);
+        set_pev(id, pev_renderamt, 15.0);
+
+        ArraySetCell(g_playerInvisibilityStart, id, get_gametime());
+        FadeEffect(id, InvisibilityTime);
+    } else {
+        set_pev(id, pev_rendermode, kRenderNormal);
+        set_pev(id, pev_renderamt, 0.0);
+
+        ArraySetCell(g_playerInvisibilityStart, id, 0.0);
+        RemoveFadeEffect(id);
+    }
+}
+
 FadeEffect(id, Float:fTime, bool:external = true)
 {
     UTIL_ScreenFade(id, FadeEffectColor, fTime*FadeEffectTimeRatio, 0.0, 128, FFADE_IN, .bExternal = external);
+}
+
+RemoveFadeEffect(id)
+{
+    UTIL_ScreenFade(id);
 }
 
 DetonateEffect(ent, const Float:vOrigin[3])
@@ -123,26 +150,11 @@ DetonateEffect(ent, const Float:vOrigin[3])
     emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
-/*--------------------------------[ Methods ]--------------------------------*/
-
-SetInvisible(id, bool:value = true)
-{
-	if (value) {
-		set_pev(id, pev_rendermode, kRenderTransTexture);
-		set_pev(id, pev_renderamt, 15.0);
-
-		ArraySetCell(g_playerInvisibilityStart, id, get_gametime());
-	} else {
-		set_pev(id, pev_rendermode, kRenderNormal);
-		set_pev(id, pev_renderamt, 0.0);
-	}
-}
-
 /*--------------------------------[ Tasks ]--------------------------------*/
 
 public TaskRemoveInvisibility(id)
 {
-	SetInvisible(id, false);
+    SetInvisible(id, false);
 }
 
 public TaskFixInvisibleEffect(id)

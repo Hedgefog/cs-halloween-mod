@@ -266,5 +266,6 @@ ResetVariables()
 	
 	for (new id = 1; id <= g_maxPlayers; ++id) {
 		SetPlayerPoints(id, 0, .silent = true);
+		Hwn_Spell_SetPlayerSpell(id, -1, 0);
 	}
 }
