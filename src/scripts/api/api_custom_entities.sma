@@ -527,6 +527,7 @@ Respawn(ent)
 	set_pev(ent, pev_deadflag, DEAD_NO);
 	set_pev(ent, pev_effects, pev(ent, pev_effects) & ~EF_NODRAW);
 	
+	set_pev(ent, pev_flags, pev(ent, pev_flags) & ~FL_ONGROUND);
 	dllfunc(DLLFunc_Spawn, ent);
 }
 
@@ -701,10 +702,6 @@ bool:InitEntity(ent, ceIdx)
 	{
 		new preset = ArrayGetCell(g_entityPreset, ceIdx);
 		ApplyPreset(ent, preset);
-
-		if (preset == _:CEPreset_Item) {
-			engfunc(EngFunc_DropToFloor, ent);
-		}
 	}
 	
 	new modelIndex = ArrayGetCell(g_entityModelIndex, ceIdx);
