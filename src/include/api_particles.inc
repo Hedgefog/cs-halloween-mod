@@ -5,14 +5,14 @@
 
 native Particles_Register
 (
-	const szName[],
-	const szTransformCallback[],
-	Array:sprites,
-	Float:fLifeTime,
-	Float:fScale,
-	renderMode,
-	Float:fRenderAmt,
-	spawnCount
+    const szName[],
+    const szTransformCallback[],
+    Array:sprites,
+    Float:fLifeTime,
+    Float:fScale,
+    renderMode,
+    Float:fRenderAmt,
+    spawnCount
 );
 
 native Particles_Spawn(const szName[], const Float:vOrigin[3], Float:fPlayTime);

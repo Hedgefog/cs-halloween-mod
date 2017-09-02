@@ -1,62 +1,62 @@
 /*
-	2.3.1
-		Corpse no longer spawn in gamemode with player respawn
-		Spell balls no longer pass through clip brashes
-		Minimizes mod influence on shooting
-		High performance improvement
-		New Spell API
-		Added event handler entity
-		Added Lightning spell
-		Added hwn_boss_min_damage_to_win cvar
-		Improved NPC hit logic
-		Added hwn_spawn_boss command
-		Fixed npc kill reward in collector gamemode
-		Fade effect of invisibility spell now saving after external fade effects
-		Improved HHH NPC
+    2.3.1
+        Corpse no longer spawn in gamemode with player respawn
+        Spell balls no longer pass through clip brashes
+        Minimizes mod influence on shooting
+        High performance improvement
+        New Spell API
+        Added event handler entity
+        Added Lightning spell
+        Added hwn_boss_min_damage_to_win cvar
+        Improved NPC hit logic
+        Added hwn_spawn_boss command
+        Fixed npc kill reward in collector gamemode
+        Fade effect of invisibility spell now saving after external fade effects
+        Improved HHH NPC
 
-	2.2.1
-		Orpheu no longer required
-		Orpheu replaced to RoundControl
-		Changed color for 'hwn4' sky		
-		Fixed lighting
-		Fixed crashes
+    2.2.1
+        Orpheu no longer required
+        Orpheu replaced to RoundControl
+        Changed color for 'hwn4' sky        
+        Fixed lighting
+        Fixed crashes
 
-	2.2.0
-		Improved ghosts
-		Improved performance
-		Added cvar to disable particles
-		Ghost can no longer disable Jack'O'Lantern around
-		Added fps settings
-		Fixed NPC reachable check
-		Fixed crashes
-		Fixed fireballs
-		Fixed explosive pumpkins
-		Fixed ce temp storage
+    2.2.0
+        Improved ghosts
+        Improved performance
+        Added cvar to disable particles
+        Ghost can no longer disable Jack'O'Lantern around
+        Added fps settings
+        Fixed NPC reachable check
+        Fixed crashes
+        Fixed fireballs
+        Fixed explosive pumpkins
+        Fixed ce temp storage
 
-	2.1.1
-		Fixed buyzone in Default Gamemode	
+    2.1.1
+        Fixed buyzone in Default Gamemode    
 
-	2.1.0
-		Updated Custom Entities API
-		Players now can move through skeletons
-		Ghosts now disable Jack'O'Lantern around
-		In Collector Gamemode teampoins and player points now reset at new round
-		Entity weaponbox now will be removed by correct way
-		Killed ghosts now drop pumpkin
-		Dead players can no longer cast spells
-		Improved hit algorithm
-		Removed vortex beam (cuz ugly)
-		Fixed drop to bucket effect
-		Fixed memory leaks
-		Fixed ghost attack origin
-	
-	2.0.1
-		Fixed bug when items duplicate after rejoin
-		Fixed round termination problem on Linux Servers
-		Updated EndRoundMessage signatures for Linux Servers
+    2.1.0
+        Updated Custom Entities API
+        Players now can move through skeletons
+        Ghosts now disable Jack'O'Lantern around
+        In Collector Gamemode teampoins and player points now reset at new round
+        Entity weaponbox now will be removed by correct way
+        Killed ghosts now drop pumpkin
+        Dead players can no longer cast spells
+        Improved hit algorithm
+        Removed vortex beam (cuz ugly)
+        Fixed drop to bucket effect
+        Fixed memory leaks
+        Fixed ghost attack origin
+    
+    2.0.1
+        Fixed bug when items duplicate after rejoin
+        Fixed round termination problem on Linux Servers
+        Updated EndRoundMessage signatures for Linux Servers
 
-	2.0.0 Beta
-		- First Release
+    2.0.0 Beta
+        - First Release
 */
 
 #if defined _hwn_included
@@ -68,22 +68,22 @@
 
 /*--------------------------------[ Constants ]--------------------------------*/
 
-#define HWN_COLOR_PURPLE_F 			120.0, 0.0, 200.0
-#define HWN_COLOR_PURPLE			120, 0, 200
-#define HWN_COLOR_RED_F 			255.0, 0.0, 0.0
-#define HWN_COLOR_YELLOW_F 			255.0, 200.0, 0.0
-#define HWN_COLOR_GREEN_DARK_F 		47.0, 95.0, 15.0
-#define HWN_COLOR_GREEN_DARK 		47, 95, 15
+#define HWN_COLOR_PURPLE_F             120.0, 0.0, 200.0
+#define HWN_COLOR_PURPLE            120, 0, 200
+#define HWN_COLOR_RED_F             255.0, 0.0, 0.0
+#define HWN_COLOR_YELLOW_F             255.0, 200.0, 0.0
+#define HWN_COLOR_GREEN_DARK_F         47.0, 95.0, 15.0
+#define HWN_COLOR_GREEN_DARK         47, 95, 15
 
 #define HWN_TITLE "Halloween Mod"
 #define HWN_VERSION "2.3.1"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
-	Hwn_GamemodeFlag_None,
-	Hwn_GamemodeFlag_Default = 1,
-	Hwn_GamemodeFlag_RespawnPlayers,
-	Hwn_GamemodeFlag_SpecialEquip
+    Hwn_GamemodeFlag_None,
+    Hwn_GamemodeFlag_Default = 1,
+    Hwn_GamemodeFlag_RespawnPlayers,
+    Hwn_GamemodeFlag_SpecialEquip
 };
 
 /*--------------------------------[ Gamemode ]--------------------------------*/

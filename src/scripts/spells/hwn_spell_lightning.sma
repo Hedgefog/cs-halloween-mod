@@ -209,8 +209,8 @@ public TaskDamage(taskID)
         prevTarget = target;
 
         if (ent == target) {
-			continue;
-		}
+            continue;
+        }
 
         if (!pev_valid(target)) {
             continue;
@@ -258,8 +258,8 @@ public TaskThink(ent)
         prevTarget = target;
 
         if (ent == target) {
-			continue;
-		}
+            continue;
+        }
 
         if (!pev_valid(target)) {
             continue;

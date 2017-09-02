@@ -13,24 +13,24 @@
 
 public plugin_init()
 {
-	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-	register_dictionary("hwn.txt");
-	
-	register_impulse(100, "OnImpulse_100");
-	
-	new szMenuTitle[32];
-	format(szMenuTitle, charsmax(szMenuTitle), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_TITLE");
-	Hwn_Menu_AddItem(szMenuTitle, "MenuItemCosmeticCallback");
+    register_dictionary("hwn.txt");
+    
+    register_impulse(100, "OnImpulse_100");
+    
+    new szMenuTitle[32];
+    format(szMenuTitle, charsmax(szMenuTitle), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_TITLE");
+    Hwn_Menu_AddItem(szMenuTitle, "MenuItemCosmeticCallback");
 }
 
 public OnImpulse_100(id)
 {
-	Hwn_Spell_CastPlayerSpell(id);	
-	return PLUGIN_HANDLED;
+    Hwn_Spell_CastPlayerSpell(id);    
+    return PLUGIN_HANDLED;
 }
 
 public MenuItemCosmeticCallback(id)
 {
-	PCosmetic_Menu_Open(id);
+    PCosmetic_Menu_Open(id);
 }

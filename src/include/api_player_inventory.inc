@@ -5,7 +5,7 @@
 
 enum PInv_ItemType
 {
-	PInv_Invalid_ItemType = -1
+    PInv_Invalid_ItemType = -1
 };
 
 native PInv_ItemType:PInv_RegisterItemType(const szTypeName[]);

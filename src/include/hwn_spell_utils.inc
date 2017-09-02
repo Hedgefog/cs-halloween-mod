@@ -36,24 +36,24 @@ stock UTIL_HwnSpawnPlayerSpellball
 
 stock UTIL_HwnSpellDetonateEffect(modelindex, const Float:vOrigin[3], const color[3], Float:fRadius)
 {
-	engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
-	write_byte(TE_BEAMCYLINDER);
-	engfunc(EngFunc_WriteCoord, vOrigin[0]);
-	engfunc(EngFunc_WriteCoord, vOrigin[1]);
-	engfunc(EngFunc_WriteCoord, vOrigin[2]);
-	engfunc(EngFunc_WriteCoord, vOrigin[0]);
-	engfunc(EngFunc_WriteCoord, vOrigin[1]);
-	engfunc(EngFunc_WriteCoord, vOrigin[2]+fRadius);
-	write_short(modelindex);
-	write_byte(0);
-	write_byte(0);
-	write_byte(5);
-	write_byte(floatround(fRadius/2));
-	write_byte(0);
-	write_byte(color[0]);
-	write_byte(color[1]);
-	write_byte(color[2]);
-	write_byte(255);
-	write_byte(0);
-	message_end();
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_BEAMCYLINDER);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]+fRadius);
+    write_short(modelindex);
+    write_byte(0);
+    write_byte(0);
+    write_byte(5);
+    write_byte(floatround(fRadius/2));
+    write_byte(0);
+    write_byte(color[0]);
+    write_byte(color[1]);
+    write_byte(color[2]);
+    write_byte(255);
+    write_byte(0);
+    message_end();
 }

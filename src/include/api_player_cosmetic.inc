@@ -5,18 +5,18 @@
 
 enum PCosmetic_Groups (<<=1)
 {
-	PCosmetic_Group_Hat = 1,
-	PCosmetic_Group_Mask,
-	PCosmetic_Group_Body,
-	PCosmetic_Group_Back,
-	PCosmetic_Group_Fanny,
-	PCosmetic_Group_Legs
+    PCosmetic_Group_Hat = 1,
+    PCosmetic_Group_Mask,
+    PCosmetic_Group_Body,
+    PCosmetic_Group_Back,
+    PCosmetic_Group_Fanny,
+    PCosmetic_Group_Legs
 };
 
 enum PCosmetic_Type
 {
-	PCosmetic_Type_Normal = 0,
-	PCosmetic_Type_Unusual
+    PCosmetic_Type_Normal = 0,
+    PCosmetic_Type_Unusual
 };
 
 native PCosmetic:PCosmetic_Register(const szName[], PCosmetic_Groups:groups, modelIndex, Float:fUnusualColor[3]);

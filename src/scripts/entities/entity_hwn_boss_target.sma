@@ -10,12 +10,12 @@
 
 public plugin_init()
 {
-	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
 public plugin_precache()
 {
-	CE_Register(
-		.szName = "hwn_boss_target"
-	);
+    CE_Register(
+        .szName = "hwn_boss_target"
+    );
 }

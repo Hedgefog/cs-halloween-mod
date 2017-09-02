@@ -13,28 +13,28 @@
 
 public plugin_init()
 {
-	register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
 public plugin_precache()
 {
-	register_cvar("hwn_fps", "25");
-	register_cvar("hwn_npc_fps", "25");
-	register_cvar("hwn_enable_particles", "1");
+    register_cvar("hwn_fps", "25");
+    register_cvar("hwn_npc_fps", "25");
+    register_cvar("hwn_enable_particles", "1");
 
-	LoadConfig();
+    LoadConfig();
 }
 
 public plugin_natives()
 {
-	register_library("hwn");
+    register_library("hwn");
 }
 
 LoadConfig()
 {
-	new szConfigDir[32];
-	get_configsdir(szConfigDir, charsmax(szConfigDir));
-	
-	server_cmd("exec %s/hwn.cfg", szConfigDir);
-	server_exec();
+    new szConfigDir[32];
+    get_configsdir(szConfigDir, charsmax(szConfigDir));
+    
+    server_cmd("exec %s/hwn.cfg", szConfigDir);
+    server_exec();
 }
