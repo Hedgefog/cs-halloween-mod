@@ -48,6 +48,7 @@ public plugin_precache()
         .vMins = Float:{-12.0, -12.0, 0.0},
         .vMaxs = Float:{12.0, 12.0, 24.0},
         .fLifeTime = 10.0,
+        .fRespawnTime = 30.0,
         .preset = CEPreset_Item
     );
     

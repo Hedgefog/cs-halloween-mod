@@ -35,6 +35,7 @@ public plugin_precache()
         .modelIndex = precache_model("models/hwn/props/pumpkin_explode.mdl"),
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
+        .fRespawnTime = 30.0,
         .preset = CEPreset_Prop
     );
     

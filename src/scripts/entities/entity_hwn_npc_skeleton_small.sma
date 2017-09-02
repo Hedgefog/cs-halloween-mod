@@ -100,6 +100,7 @@ public plugin_precache()
         .vMins = Float:{-8.0, -8.0, -16.0},
         .vMaxs = Float:{8.0, 8.0, 16.0},
         .fLifeTime = 30.0,
+		.fRespawnTime = 30.0,
         .preset = CEPreset_NPC
     );
     

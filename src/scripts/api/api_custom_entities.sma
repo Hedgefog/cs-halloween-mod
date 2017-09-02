@@ -701,6 +701,10 @@ bool:InitEntity(ent, ceIdx)
 	{
 		new preset = ArrayGetCell(g_entityPreset, ceIdx);
 		ApplyPreset(ent, preset);
+
+		if (preset == _:CEPreset_Item) {
+			engfunc(EngFunc_DropToFloor, ent);
+		}
 	}
 	
 	new modelIndex = ArrayGetCell(g_entityModelIndex, ceIdx);
