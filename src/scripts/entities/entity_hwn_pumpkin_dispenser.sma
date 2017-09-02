@@ -6,7 +6,7 @@
 
 #include <api_custom_entities>
 
-#define PLUGIN "[Custom Entity] Hwn Pumpkin Dispanser"
+#define PLUGIN "[Custom Entity] Hwn Pumpkin Dispenser"
 #define VERSION "1.0.0"
 #define AUTHOR "Hedgehog Fog"
 
