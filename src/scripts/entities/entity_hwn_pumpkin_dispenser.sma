@@ -98,6 +98,8 @@ public OnRoundStart()
 		
 		if (fDelay > 0.0) {
 			set_task(fDelay, "TaskDrop", ent+TASKID_SUM_DROP, _, _, "b");
+		} else {
+			Drop(ent);
 		}
 	}
 }
