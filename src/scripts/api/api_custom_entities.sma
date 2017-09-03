@@ -364,7 +364,8 @@ public OnSpawn(ent)
 		ArraySetCell(ceData, CEData_StartOrigin, startOrigin);
 	}
 	
-	InitEntity(ent, ceIdx);
+	new tmpIdx = ArrayGetCell(ceData, CEData_TempIndex);
+	InitEntity(ent, ceIdx, (tmpIdx >= 0));
 
 	ExecuteFunction(CEFunction_Spawn, ceIdx, ent);
 }
@@ -685,7 +686,7 @@ RespawnEntities()
 	}
 }
 
-bool:InitEntity(ent, ceIdx)
+bool:InitEntity(ent, ceIdx, bool:temp)
 {	
 	static Float:vMins[3];
 	ArrayGetArray(g_entityMins, ceIdx, vMins);
@@ -708,10 +709,12 @@ bool:InitEntity(ent, ceIdx)
 	if (modelIndex > 0) {
 		set_pev(ent, pev_modelindex, modelIndex);
 	}
-	
-	new Float:fLifeTime = ArrayGetCell(g_entityLifeTime, ceIdx);
-	if (fLifeTime > 0.0) {
-		set_task(fLifeTime, "TaskDisappear", ent+TASKID_SUM_DISAPPEAR);
+
+	if (temp) {
+		new Float:fLifeTime = ArrayGetCell(g_entityLifeTime, ceIdx);
+		if (fLifeTime > 0.0) {
+			set_task(fLifeTime, "TaskDisappear", ent+TASKID_SUM_DISAPPEAR);
+		}
 	}
 	
 	return true;
