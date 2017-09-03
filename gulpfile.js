@@ -18,6 +18,11 @@ gulp.task('plugins', () => {
         .pipe(gulp.dest(config.scriptsDir));
 });
 
+gulp.task('include', () => {
+    return gulp.src('./src/include/*.inc')
+        .pipe(gulp.dest(config.includeDestDir));
+});
+
 gulp.task('assets', () => {
     return gulp.src('./assets/**/*')
         .pipe(gulp.dest(config.distDir));
@@ -30,10 +35,15 @@ gulp.task('plugins:watch', () => {
         .pipe(gulp.dest(config.scriptsDir));
 });
 
+gulp.task('include:watch', () => {
+    return watch('./src/include/*.inc', {ignoreInitial: false})
+        .pipe(gulp.dest(config.includeDestDir));
+});
+
 gulp.task('assets:watch', () => {
     return watch('./assets/**/*', {ignoreInitial: false})
         .pipe(gulp.dest(config.distDir));
 });
 
-gulp.task('default', ['plugins', 'assets']);
-gulp.task('watch', ['plugins:watch', 'assets:watch']);
+gulp.task('default', ['plugins', 'include', 'assets']);
+gulp.task('watch', ['plugins:watch', 'include:watch', 'assets:watch']);
