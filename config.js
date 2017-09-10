@@ -8,4 +8,5 @@ module.exports = {
     includeDir: path.join(__dirname, 'src/include'),
     pluginsDir: path.join(DIST_DIR, 'addons/amxmodx/plugins'),
     scriptsDir: path.join(DIST_DIR, 'addons/amxmodx/scripting'),
+    includeDestDir: path.join(DIST_DIR, 'addons/amxmodx/scripting/include')
 };
