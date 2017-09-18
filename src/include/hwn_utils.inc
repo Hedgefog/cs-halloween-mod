@@ -1,13 +1,15 @@
 #define MENU_CHOOSEAPPEARANCE 3
 #define JOIN_CHOOSEAPPEARANCE 4
 
-stock const XO_CMapInfo = 4;
+#if !defined _reapi_included
+    stock const XO_CMapInfo = 4;
 
-stock const m_iKevlar = 112;
-stock const m_iTeam = 114;
-stock const m_iJoiningState = 121;
-stock const m_iMenu = 205;
-stock const m_fClientMapZone = 235;
+    stock const m_iKevlar = 112;
+    stock const m_iTeam = 114;
+    stock const m_iJoiningState = 121;
+    stock const m_iMenu = 205;
+    stock const m_fClientMapZone = 235;
+#endif
 
 stock UTIL_DelayToLifeTime(Float:fDelay)
 {

@@ -6,8 +6,6 @@
 #tryinclude <reapi>
 
 #if defined _reapi_included
-    #include <reapi_gamedll_const>
-
     #define ROUND_CONTINUE HC_CONTINUE
     #define ROUND_SUPERCEDE HC_SUPERCEDE
 #else
@@ -501,7 +499,11 @@ DispatchWin(team)
         return;
     }
     
-    RoundEndForceControl(team == 1 ? WINSTATUS_TERRORIST : WINSTATUS_CT);
+    #if defined _reapi_included
+        rg_round_end(2.0, team == 1 ? WINSTATUS_TERRORISTS : WINSTATUS_CTS, team == 1 ? ROUND_TERRORISTS_WIN : ROUND_CTS_WIN);
+    #else
+        RoundEndForceControl(team == 1 ? WINSTATUS_TERRORIST : WINSTATUS_CT);
+    #endif
 }
 
 bool:IsTeamExtermination()
