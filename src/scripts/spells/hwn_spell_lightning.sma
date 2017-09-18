@@ -196,7 +196,7 @@ public TaskDamage(taskID)
     pev(ent, pev_origin, vOrigin);
 
     new owner = pev(ent, pev_owner);
-    new team = owner ? get_pdata_int(owner, m_iTeam) : -1;
+    new team = owner ? UTIL_GetPlayerTeam(owner) : -1;
 
     new target;
     new prevTarget;
@@ -225,7 +225,7 @@ public TaskDamage(taskID)
         }
         
         if (UTIL_IsPlayer(target)) {
-            if (team == get_pdata_int(target, m_iTeam)) {
+            if (team == UTIL_GetPlayerTeam(target)) {
                 continue;
             }
 
@@ -245,7 +245,7 @@ public TaskThink(ent)
     pev(ent, pev_origin, vOrigin);
 
     new owner = pev(ent, pev_owner);
-    new team = owner ? get_pdata_int(owner, m_iTeam) : -1;
+    new team = owner ? UTIL_GetPlayerTeam(owner) : -1;
 
     new target;
     new prevTarget;
@@ -277,7 +277,7 @@ public TaskThink(ent)
         pev(target, pev_origin, vTargetOrigin);
         
         if (UTIL_IsPlayer(target)) {
-            if (team == get_pdata_int(target, m_iTeam)) {
+            if (team == UTIL_GetPlayerTeam(target)) {
                 continue;
             }
         

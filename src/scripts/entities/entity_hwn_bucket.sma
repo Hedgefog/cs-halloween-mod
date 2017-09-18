@@ -128,7 +128,7 @@ public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
     }
 
     new team = pev(ent, pev_team);
-    if (team == get_pdata_int(attacker, m_iTeam)) {
+    if (team == UTIL_GetPlayerTeam(attacker)) {
         return HAM_SUPERCEDE;
     }
 
@@ -189,7 +189,7 @@ public TaskThink(ent)
                 continue;
             }
             
-            new playerTeam = get_pdata_int(id, m_iTeam);
+            new playerTeam = UTIL_GetPlayerTeam(id);
             new bucketTeam = pev(ent, pev_team);
             
             if (playerTeam != bucketTeam) {
@@ -231,7 +231,7 @@ TakePlayerPoint(ent, id)
         return;
     }
     
-    new team = get_pdata_int(id, m_iTeam);
+    new team = UTIL_GetPlayerTeam(id);
     new teamPoints = Hwn_Collector_GetTeamPoints(team);
     
     Hwn_Collector_SetPlayerPoints(id, playerPoints-1);    

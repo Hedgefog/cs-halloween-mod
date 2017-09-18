@@ -80,7 +80,7 @@ public OnPlayerKilled(id)
 
 public OnCast(id)
 {
-    new team = get_pdata_int(id, m_iTeam);
+    new team = UTIL_GetPlayerTeam(id);
     
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);        
@@ -91,7 +91,7 @@ public OnCast(id)
     for (new i = 0; i < userCount; ++i) {
         new id = ArrayGetCell(users, i);
         
-        if (team != get_pdata_int(id, m_iTeam)) {
+        if (team != UTIL_GetPlayerTeam(id)) {
             continue;
         }        
         

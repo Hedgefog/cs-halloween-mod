@@ -1,14 +1,14 @@
 #define MENU_CHOOSEAPPEARANCE 3
 #define JOIN_CHOOSEAPPEARANCE 4
 
-#if !defined _reapi_included
-    stock const XO_CMapInfo = 4;
+stock const XO_CMapInfo = 4;
+stock const m_fClientMapZone = 235;
 
+#if !defined _reapi_included
     stock const m_iKevlar = 112;
     stock const m_iTeam = 114;
     stock const m_iJoiningState = 121;
     stock const m_iMenu = 205;
-    stock const m_fClientMapZone = 235;
 #endif
 
 stock UTIL_DelayToLifeTime(Float:fDelay)
@@ -77,10 +77,21 @@ stock bool:UTIL_IsPlayer(id)
 
 stock UTIL_CS_DamagePlayer(victim, Float:fDamage, dmgbits = DMG_GENERIC, attacker = 0, inflictor = 0)
 {
-    new armorType = get_pdata_int(victim, m_iKevlar);
-    set_pdata_int(victim, m_iKevlar, 0);
+    #if defined _reapi_included
+        new armorType = get_member(victim, m_iKevlar);
+        set_member(victim, m_iKevlar, 0);
+    #else
+        new armorType = get_pdata_int(victim, m_iKevlar);
+        set_pdata_int(victim, m_iKevlar, 0);
+    #endif
+
     ExecuteHamB(Ham_TakeDamage, victim, inflictor, attacker, fDamage, dmgbits);
-    set_pdata_int(victim, m_iKevlar, armorType);
+
+    #if defined _reapi_included
+        set_member(victim, m_iKevlar, armorType);
+    #else
+        set_pdata_int(victim, m_iKevlar, armorType);
+    #endif
 }
 
 stock Float:UTIL_GetDistanceToFloor(const Float:vOrigin[3], ignoreEnt = 0)
@@ -249,7 +260,7 @@ stock Array:UTIL_FindUsersNearby(Float:vOrigin[3], Float:fDistance, team = 0, bo
             continue;
         }
         
-        if (team && team != get_pdata_int(id, m_iTeam)) {
+        if (team && team != UTIL_GetPlayerTeam(id)) {
             continue;
         }
         
@@ -269,4 +280,13 @@ stock Array:UTIL_FindUsersNearby(Float:vOrigin[3], Float:fDistance, team = 0, bo
 stock UTIL_FixedUnsigned16(const Float:fValue, const scale)
 {
     return clamp(floatround(fValue * scale), 0, 0xFFFF);
+}
+
+stock UTIL_GetPlayerTeam(id)
+{
+    #if defined _reapi_included
+        return get_member(id, m_iTeam);
+    #else
+        return get_pdata_int(id, m_iTeam);
+    #endif
 }

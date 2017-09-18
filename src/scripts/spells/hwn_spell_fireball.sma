@@ -107,7 +107,7 @@ public OnSpellballKilled(ent)
 Detonate(ent)
 {
     new owner = pev(ent, pev_owner);
-    new team = get_pdata_int(owner, m_iTeam);
+    new team = UTIL_GetPlayerTeam(owner);
     
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
@@ -144,7 +144,7 @@ Detonate(ent)
         new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EffectRadius, FireballDamage);
         
         if (UTIL_IsPlayer(target)) {
-            if (team == get_pdata_int(target, m_iTeam)) {
+            if (team == UTIL_GetPlayerTeam(target)) {
                 continue;
             }
         

@@ -283,8 +283,15 @@ public OnClCmd_Drop(id)
 
 public OnClCmd_JoinClass(id)
 {
-    if(get_pdata_int(id, m_iMenu) == MENU_CHOOSEAPPEARANCE 
-        && get_pdata_int(id, m_iJoiningState) == JOIN_CHOOSEAPPEARANCE)
+    #if defined _reapi_included
+        new menu = get_member(id, m_iMenu);
+        new joinState = get_member(id, m_iJoiningState);
+    #else
+        new menu = get_pdata_int(id, m_iMenu);
+        new joinState = get_pdata_int(id, m_iJoiningState);
+    #endif
+
+    if(menu == MENU_CHOOSEAPPEARANCE && joinState == JOIN_CHOOSEAPPEARANCE)
     {
         new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
         if (flags & Hwn_GamemodeFlag_RespawnPlayers)
@@ -441,7 +448,9 @@ RespawnPlayer(id)
         return;
     }
     
-    if (get_pdata_int(id, m_iTeam) != 1 && get_pdata_int(id, m_iTeam) != 2) {
+    new team = UTIL_GetPlayerTeam(id);
+
+    if (team != 1 && team != 2) {
         return;
     }
 
@@ -513,7 +522,7 @@ bool:IsTeamExtermination()
     
     for (new id = 1; id <= g_maxPlayers; ++id) {
         if (is_user_connected(id) && is_user_alive(id)) {
-            new team = get_pdata_int(id, m_iTeam);
+            new team = UTIL_GetPlayerTeam(id);
             
             if (team == 1) {
                 aliveT = true;
@@ -539,7 +548,7 @@ bool:IsTeamExtermination()
 public TaskRespawnPlayer(taskID)
 {
     new id = taskID - TASKID_SUM_RESPAWN_PLAYER;
-    
+
     RespawnPlayer(id);
 }
 
