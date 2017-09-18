@@ -3,7 +3,16 @@
 #include <fakemeta>
 #include <hamsandwich>
 
-#include <roundcontrol>
+#tryinclude <reapi>
+
+#if defined _reapi_included
+    #include <reapi_gamedll_const>
+
+    #define ROUND_CONTINUE HC_CONTINUE
+    #define ROUND_SUPERCEDE HC_SUPERCEDE
+#else
+    #include <roundcontrol>
+#endif
 
 #include <hwn>
 #include <hwn_utils>
@@ -74,7 +83,11 @@ public plugin_init()
         SetGamemode(g_defaultGamemode);
     }
     
-    RegisterControl(RC_CheckWinConditions,"OnRCCheckWinConditions");    
+    #if defined _reapi_included
+        RegisterHookChain(RG_CSGameRules_CheckWinConditions, "OnCheckWinConditions");
+    #else
+        RegisterControl(RC_CheckWinConditions, "OnCheckWinConditions");
+    #endif
     
     register_clcmd("drop", "OnClCmd_Drop");    
     register_clcmd("joinclass", "OnClCmd_JoinClass");
@@ -370,7 +383,7 @@ public MenuItem_ChangeEquipment(id)
     Hwn_PEquipment_ShowMenu(id);
 }
 
-public OnRCCheckWinConditions()
+public OnCheckWinConditions()
 {
     if (!g_gamemodeCount) {
         return ROUND_CONTINUE;
