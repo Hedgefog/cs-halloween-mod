@@ -71,11 +71,17 @@ new Array:g_eventPoints;
 
 new g_maxPlayers;
 
+static g_szEquipmentMenuTitle[32];
+
+public plugin_precache()
+{
+    register_dictionary("hwn.txt");
+    format(g_szEquipmentMenuTitle, charsmax(g_szEquipmentMenuTitle), "%L", LANG_SERVER, "HWN_EQUIPMENT_MENU_TITLE");
+}
+
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-
-    register_dictionary("hwn.txt");
     
     if (g_gamemode < 0 && g_defaultGamemode >= 0) {
         SetGamemode(g_defaultGamemode);
@@ -417,9 +423,7 @@ SetGamemode(gamemode)
     
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if ((flags & Hwn_GamemodeFlag_SpecialEquip)) {
-        new szMenuTitle[32];
-        format(szMenuTitle, charsmax(szMenuTitle), "%L", LANG_SERVER, "HWN_EQUIPMENT_MENU_TITLE");
-        Hwn_Menu_AddItem(szMenuTitle, "MenuItem_ChangeEquipment");
+        Hwn_Menu_AddItem(g_szEquipmentMenuTitle, "MenuItem_ChangeEquipment");
     }
     
     log_amx("[Hwn] Gamemode '%s' activated", szGamemodeName);
