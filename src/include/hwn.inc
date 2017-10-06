@@ -1,4 +1,11 @@
 /*
+    2.3.3
+        fixed a bug in api_player_cosmetic which crash server after player disconnect.
+
+    2.3.2
+        ReAPI Support.
+        Fixed equipment menu title.
+
     2.3.1
         Corpse no longer spawn in gamemode with player respawn
         Spell balls no longer pass through clip brashes
@@ -76,7 +83,7 @@
 #define HWN_COLOR_GREEN_DARK         47, 95, 15
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "2.3.1"
+#define HWN_VERSION "2.3.3"
 
 enum Hwn_GamemodeFlags (<<=1)
 {

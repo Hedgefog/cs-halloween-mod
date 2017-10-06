@@ -596,10 +596,8 @@ bool:Remove(ent)
 			ArraySetCell(g_worldEntities, worldIdx, 0);	
 		}
 	}
-	
-	//Remove tasks
-	remove_task(ent+TASKID_SUM_DISAPPEAR);
-	remove_task(ent+TASKID_SUM_RESPAWN);
+
+	ClearTasks(ent);
 	
 	//Get handler
 	new ceIdx = ArrayGetCell(ceData, CEData_Handler);
@@ -619,6 +617,13 @@ bool:Remove(ent)
 Check(ent)
 {
 	return (pev(ent, pev_gaitsequence) == 'c'+'e');
+}
+
+ClearTasks(ent)
+{
+	remove_task(ent+TASKID_SUM_DISAPPEAR);
+	remove_task(ent+TASKID_SUM_RESPAWN);
+	remove_task(ent+TASKID_SUM_REMOVE);
 }
 
 GetHandlerByEntity(ent)

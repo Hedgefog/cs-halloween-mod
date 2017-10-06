@@ -131,7 +131,7 @@ public plugin_end()
         Unequip(id, i);
     }
     
-    remove_task(id);
+    remove_task(id+TASKID_SUM_PLAYER_TIMER);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -147,7 +147,7 @@ public OnPlayerSpawn(id)
 
 public OnPlayerKilled(id)
 {
-    remove_task(id);
+    remove_task(id+TASKID_SUM_PLAYER_TIMER);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
@@ -500,8 +500,9 @@ Unequip(id, slotIdx)
     }
     
     new ent = ArrayGetCell(item, _:ItemData_Entity);
-    set_pev(ent, pev_flags, pev(ent, pev_flags) | FL_KILLME);
-    dllfunc(DLLFunc_Think, ent);
+    if (pev_valid(ent)) {
+        engfunc(EngFunc_RemoveEntity, ent);
+    }
 
     ArraySetCell(item, _:ItemData_Entity, 0);
     ArraySetCell(item, _:ItemData_State, ItemState_None);
