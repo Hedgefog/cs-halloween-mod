@@ -16,5 +16,3 @@
 - [hwn_prop_jackolantern](./hwn_prop_jackolantern.md)
 - [hwn_prop_vortex](./hwn_prop_vortex.md)
 - [hwn_pumpkin_dispenser](./hwn_pumpkin_dispenser.md)
-
-***[Home...](../index.md)***

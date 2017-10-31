@@ -4,5 +4,3 @@
 - [Headless Horseless Horsemann](./hhh.md)
 - [Monoculus](./monoculus.md)
 - [Skeleton](./skeleton.md)
-
-***[Home...](../index.md)***

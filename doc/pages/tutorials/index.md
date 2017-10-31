@@ -8,5 +8,3 @@
 * All pathways to bucket should cross middle of map or just have to be dangerous.
 * The basket should be a little further from the team spawn (7-10 seconds of run).
 * Traps will be nice.
-
-***[Home...](../index.md)***
