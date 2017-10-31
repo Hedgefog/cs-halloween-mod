@@ -22,6 +22,8 @@
 #define TASKID_SUM_REMOVE_STUN      3000
 #define TASKID_SUM_PUSH_BACK_END    4000
 #define TASKID_SUM_IDLE_SOUND       5000
+#define TASKID_SUM_JUMP_TO_PORTAL   6000
+#define TASKID_SUM_TELEPORT         7000
 
 #define ZERO_VECTOR_F Float:{0.0, 0.0, 0.0}
 
@@ -79,28 +81,33 @@ enum _:Monoculus
 };
 
 new const g_szSndAttack[][128] = {
-    "hwn/npc/hhh/hhh_attack01.wav",
-    "hwn/npc/hhh/hhh_attack02.wav",
-    "hwn/npc/hhh/hhh_attack03.wav",
-    "hwn/npc/hhh/hhh_attack04.wav"
+    "hwn/npc/monoculus/monoculus_attack01.wav",
+    "hwn/npc/monoculus/monoculus_attack02.wav",
+    "hwn/npc/monoculus/monoculus_attack03.wav"
 };
 
 new const g_szSndLaugh[][128] = {
-    "hwn/npc/hhh/hhh_laugh01.wav",
-    "hwn/npc/hhh/hhh_laugh02.wav",
-    "hwn/npc/hhh/hhh_laugh03.wav",
-    "hwn/npc/hhh/hhh_laugh04.wav"
+    "hwn/npc/monoculus/monoculus_laugh01.wav",
+    "hwn/npc/monoculus/monoculus_laugh02.wav",
+    "hwn/npc/monoculus/monoculus_laugh03.wav"
 };
 
 new const g_szSndPain[][128] = {
-    "hwn/npc/hhh/hhh_pain01.wav",
-    "hwn/npc/hhh/hhh_pain02.wav",
-    "hwn/npc/hhh/hhh_pain03.wav"
+    "hwn/npc/monoculus/monoculus_pain01.wav"
 };
 
-new const g_szSndSpawn[] = "hwn/npc/hhh/hhh_spawn.wav";
-new const g_szSndDying[] = "hwn/npc/hhh/hhh_dying.wav";
-new const g_szSndDeath[] = "hwn/npc/hhh/hhh_death.wav";
+new const g_szSndStunned[][128] = {
+    "hwn/npc/monoculus/monoculus_stunned01.wav",
+    "hwn/npc/monoculus/monoculus_stunned02.wav",
+    "hwn/npc/monoculus/monoculus_stunned03.wav",
+    "hwn/npc/monoculus/monoculus_stunned04.wav",
+    "hwn/npc/monoculus/monoculus_stunned05.wav"
+};
+
+
+new const g_szSndSpawn[] = "hwn/npc/monoculus/monoculus_teleport.wav";
+new const g_szSndDeath[] = "hwn/npc/monoculus/monoculus_died.wav";
+new const g_szSndMoved[] = "hwn/npc/monoculus/monoculus_moved.wav";
 
 new const g_actions[Action][NPC_Action] =
 {
@@ -131,8 +138,8 @@ new Float:g_fThinkDelay;
 
 new g_cvarAngryTime;
 new g_cvarDamageToStun;
-new g_cvarTeleTimeMin;
-new g_cvarTeleTimeMax;
+new g_cvarJumpTimeMin;
+new g_cvarJumpTimeMax;
 
 new g_ceHandler;
 new g_bossHandler;
@@ -172,7 +179,6 @@ public plugin_precache()
     }
     
     precache_sound(g_szSndSpawn);
-    precache_sound(g_szSndDying);    
     precache_sound(g_szSndDeath);
     
     CE_RegisterHook(CEFunction_Spawn, PORTAL_ENTITY_NAME, "OnPortalSpawn");
@@ -191,8 +197,8 @@ public plugin_init()
     
     g_cvarAngryTime = register_cvar("hwn_npc_monoculus_angry_time", "15.0");
     g_cvarDamageToStun = register_cvar("hwn_npc_monoculus_dmg_to_stun", "2000.0");
-    g_cvarTeleTimeMin = register_cvar("hwn_npc_monoculus_tele_time_min", "10.0");
-    g_cvarTeleTimeMax = register_cvar("hwn_npc_monoculus_tele_time_max", "20.0");
+    g_cvarJumpTimeMin = register_cvar("hwn_npc_monoculus_jump_time_min", "10.0");
+    g_cvarJumpTimeMax = register_cvar("hwn_npc_monoculus_jump_time_max", "20.0");
 
     g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
     
@@ -252,14 +258,14 @@ public OnSpawn(ent)
     engfunc(EngFunc_DropToFloor, ent);
 
     set_pev(ent, pev_takedamage, DAMAGE_NO);
-    NPC_EmitVoice(ent, g_szSndSpawn);    
+    NPC_EmitVoice(ent, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 1.0);
     NPC_PlayAction(ent, g_actions[Action_Spawn]);
 
     ArraySetCell(monoculus, Monoculus_IsStunned, false);
     ArraySetCell(monoculus, Monoculus_DamageToStun, get_pcvar_float(g_cvarDamageToStun));
     ArraySetCell(monoculus, Monoculus_IsAngry, false);
     
-    CreateSpawnToRandomPortalTask(ent);
+    CreateJumpToPortalTask(ent);
 
     set_task(g_actions[Action_Spawn][NPC_Action_Time], "TaskThink", ent);
 }
@@ -272,14 +278,16 @@ public OnRemove(ent)
     remove_task(ent+TASKID_SUM_REMOVE_STUN);
     remove_task(ent+TASKID_SUM_PUSH_BACK_END);
     remove_task(ent+TASKID_SUM_IDLE_SOUND);
+    remove_task(ent+TASKID_SUM_JUMP_TO_PORTAL);
+    remove_task(ent+TASKID_SUM_TELEPORT);
 
     {
         new Float:vOrigin[3];
         pev(ent, pev_origin, vOrigin);
         
-        UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PURPLE}, 10, 32);
+        TeleportEffect(vOrigin);
     }
-    
+
     NPC_Destroy(ent);
     Monoculus_Destroy(ent);    
 }
@@ -289,7 +297,6 @@ public OnKill(ent)
     new deadflag = pev(ent, pev_deadflag);
 
     if (deadflag == DEAD_NO) {
-        NPC_EmitVoice(ent, g_szSndDying, .supercede = true);
         NPC_PlayAction(ent, g_actions[Action_Death], .supercede = true);
         
         set_pev(ent, pev_takedamage, DAMAGE_NO);
@@ -324,10 +331,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     get_tr2(trace, TR_vecEndPos, vEnd);
 
     UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 212, floatround(fDamage/4));
-    if (random(100) < 10) {
-        NPC_EmitVoice(ent, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
-    }
-    
+
     return HAM_IGNORED;
 }
 
@@ -342,12 +346,16 @@ public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
     new Float:fDamageToStun = ArrayGetCell(monoculus, Monoculus_DamageToStun);
     fDamageToStun -= fDamage;
 
+    if (random(100) < 10) {
+        NPC_EmitVoice(ent, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
+    }
+
     if (fDamageToStun <= 0) {
         fDamageToStun = get_pcvar_float(g_cvarDamageToStun);
         Stun(ent);
     }
 
-    if (random_num(0, 100) < 10) {
+    if (random_num(0, 100) < 5) {
         MakeAngry(ent);
     }
 
@@ -442,6 +450,10 @@ bool:Attack(ent, target)
         return true;
     }
 
+    if (random(100) < 10) {
+        NPC_EmitVoice(ent, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
+    }
+
     static Float:vTarget[3];
     pev(target, pev_origin, vTarget);
 
@@ -488,9 +500,10 @@ Stun(ent)
     new Array:monoculus = Monoculus_Get(ent);
     ArraySetCell(monoculus, Monoculus_IsStunned, true);
 
+    NPC_EmitVoice(ent, g_szSndStunned[random(sizeof(g_szSndStunned))], 1.0);
+    NPC_PlayAction(ent, g_actions[Action_Stunned], .supercede = true);
+    
     set_task(g_actions[Action_Stunned][NPC_Action_Time], "Task_RemoveStun", ent+TASKID_SUM_REMOVE_STUN);
-
-    NPC_PlayAction(ent, g_actions[Action_Stunned], .supercede = true);   
 }
 
 MakeAngry(ent)
@@ -565,7 +578,7 @@ PushBack(ent)
     set_task(0.25, "Task_PushBackEnd", ent+TASKID_SUM_PUSH_BACK_END);
 }
 
-SpawnToRandomPortal(ent)
+JumpToPortal(ent)
 {
     if (g_portals == Invalid_Array) {
         return;
@@ -587,14 +600,14 @@ SpawnToRandomPortal(ent)
     ArraySetCell(monoculus, Monoculus_NextPortal, portalIdx);
 
     NPC_PlayAction(ent, g_actions[Action_TeleportIn]);
-    set_task(g_actions[Action_TeleportIn][NPC_Action_Time], "Task_Teleport", ent);
+    set_task(g_actions[Action_TeleportIn][NPC_Action_Time], "Task_Teleport", ent+TASKID_SUM_TELEPORT);
 }
 
-CreateSpawnToRandomPortalTask(ent)
+CreateJumpToPortalTask(ent)
 {
-    new Float:fMinTime = get_pcvar_float(g_cvarTeleTimeMin);
-    new Float:fMaxTime = get_pcvar_float(g_cvarTeleTimeMax);
-    set_task(random_float(fMinTime, fMaxTime), "Task_SpawnToRandomPortal", ent);
+    new Float:fMinTime = get_pcvar_float(g_cvarJumpTimeMin);
+    new Float:fMaxTime = get_pcvar_float(g_cvarJumpTimeMax);
+    set_task(random_float(fMinTime, fMaxTime), "Task_JumpToPortal", ent+TASKID_SUM_JUMP_TO_PORTAL);
 }
 
 TeleportEffect(const Float:vOrigin[3])
@@ -626,7 +639,7 @@ public Task_Shot(taskID)
 
     PushBack(ent);
     SpawnRocket(ent);
-    NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.5);
+    NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.3);
 }
 
 public Task_CalmDown(taskID)
@@ -651,16 +664,19 @@ public Task_PushBackEnd(taskID)
     set_pev(ent, pev_velocity, ZERO_VECTOR_F);
 }
 
-public Task_SpawnToRandomPortal(taskID)
+public Task_JumpToPortal(taskID)
 {
-    new ent = taskID;
-    SpawnToRandomPortal(ent);
-    CreateSpawnToRandomPortalTask(ent);
+    new ent = taskID - TASKID_SUM_JUMP_TO_PORTAL;
+    JumpToPortal(ent);
+    CreateJumpToPortalTask(ent);
 }
 
 public Task_Teleport(taskID)
 {
-    new ent = taskID;
+    new ent = taskID - TASKID_SUM_TELEPORT;
+
+    client_cmd(0, "spk %s", g_szSndMoved);
+    NPC_EmitVoice(ent, g_szSndSpawn, 1.0);
 
     new Array:monoculus = Monoculus_Get(ent);
     new portalIdx = ArrayGetCell(monoculus, Monoculus_NextPortal);

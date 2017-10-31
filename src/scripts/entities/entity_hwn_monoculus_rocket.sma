@@ -82,7 +82,7 @@ public OnRemove(ent)
 public OnKilled(ent)
 {
     ExplosionEffect(ent);
-    RocketRadiusDamage(ent, ent);
+    RocketRadiusDamage(ent, pev(ent, pev_owner));
 }
 
 public OnTouch(ent, target)
