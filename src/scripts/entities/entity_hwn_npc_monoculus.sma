@@ -21,9 +21,8 @@
 #define TASKID_SUM_CALM_DOWN        2000
 #define TASKID_SUM_REMOVE_STUN      3000
 #define TASKID_SUM_PUSH_BACK_END    4000
-#define TASKID_SUM_IDLE_SOUND       5000
-#define TASKID_SUM_JUMP_TO_PORTAL   6000
-#define TASKID_SUM_TELEPORT         7000
+#define TASKID_SUM_JUMP_TO_PORTAL   5000
+#define TASKID_SUM_TELEPORT         6000
 
 #define ZERO_VECTOR_F Float:{0.0, 0.0, 0.0}
 
@@ -277,7 +276,6 @@ public OnRemove(ent)
     remove_task(ent+TASKID_SUM_CALM_DOWN);
     remove_task(ent+TASKID_SUM_REMOVE_STUN);
     remove_task(ent+TASKID_SUM_PUSH_BACK_END);
-    remove_task(ent+TASKID_SUM_IDLE_SOUND);
     remove_task(ent+TASKID_SUM_JUMP_TO_PORTAL);
     remove_task(ent+TASKID_SUM_TELEPORT);
 
@@ -451,7 +449,7 @@ bool:Attack(ent, target)
     }
 
     if (random(100) < 10) {
-        NPC_EmitVoice(ent, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
+        Laugh(ent);
     }
 
     static Float:vTarget[3];
@@ -493,6 +491,12 @@ AngryShot(ent)
 
     NPC_PlayAction(ent, g_actions[Action_AngryAttack]);
     BaseShot(ent, g_actions[Action_AngryAttack][NPC_Action_Time] + 0.1);
+}
+
+Laugh(ent)
+{
+    NPC_PlayAction(ent, g_actions[Action_Laugh]);
+    NPC_EmitVoice(ent, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
 }
 
 Stun(ent)
