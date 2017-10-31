@@ -153,12 +153,16 @@ stock bool:NPC_IsReachable(ent, const Float:vTarget[3])
         return false;
     }
     
+    if (pev(ent, pev_movetype) == MOVETYPE_FLY) {
+        return true;
+    }
+
     static Float:vMins[3];    
     pev(ent, pev_mins, vMins);
     
     static Float:vMaxs[3];
     pev(ent, pev_maxs, vMaxs);
-    
+
     {
         if (!NPC_IsVisibleWrapper(
             vOrigin[0], vOrigin[1], vOrigin[2] + vMaxs[2],
@@ -271,7 +275,7 @@ stock bool:NPC_IsReachable(ent, const Float:vTarget[3])
     return true;
 }
 
-stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3])
+stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly = true)
 {
     new enemy = pev(ent, pev_enemy);
     if (!enemy) {
@@ -287,7 +291,7 @@ stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3])
     new Array:lastReachablePoint = ArrayGetCell(npcData, NPC_LastReachablePoint);    
     
     new Float:fGameTime = get_gametime();
-    if (NPC_IsReachable(ent, vTarget))
+    if (!reachableOnly || NPC_IsReachable(ent, vTarget))
     {
         new Float:fDistance = get_distance_f(vOrigin, vTarget);
         new Float:fReachTime = fGameTime + fDistance/fSpeed;    
@@ -343,8 +347,6 @@ stock NPC_FindEnemy(ent, maxplayers = 32, bool:reachableOnly = true)
     }
     
     ArrayDestroy(targets);
-    
-    return false;
 }
 
 stock bool:NPC_IsVisible(const Float:vOrigin1[3], const Float:vOrigin2[3], ent = 0)
@@ -399,7 +401,10 @@ stock NPC_GetSideLine(ent, Float:vOrigin1[3], Float:vOrigin2[3], Float:fLength =
 
 stock NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed)
 {
-    UTIL_TurnTo(ent, vTarget);
+    new bool:lockAxis[3] = {true, false, true};
+    lockAxis[0] = pev(ent, pev_movetype) != MOVETYPE_FLY;
+
+    UTIL_TurnTo(ent, vTarget, lockAxis);
     NPC_MoveForward(ent, fSpeed);
 }
 

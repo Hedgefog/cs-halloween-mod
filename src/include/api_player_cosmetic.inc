@@ -33,4 +33,4 @@ native PCosmetic_GetItemTime(id, slotIdx);
 native PCosmetic_GetCosmeticName(cosmetic, szDest[], maxlen);
 native PCosmetic_GetCosmeticGroups(cosmetic);
 
-native PCosmetic_CanBeEquiped(id, cosmetic, ignoreSlotIdx);
+native PCosmetic_CanBeEquiped(id, cosmetic, ignoreSlotIdx = -1);

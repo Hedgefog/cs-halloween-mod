@@ -128,9 +128,10 @@ stock UTIL_GetDirectionVector(ent, Float:vOut[3], Float:fLength = 1.0)
     angle_vector(vAngles, ANGLEVECTOR_FORWARD, vOut);
     xs_vec_normalize(vOut, vOut);
     xs_vec_mul_scalar(vOut, fLength, vOut);
+    vOut[2] = -vOut[2];
 }
 
-stock UTIL_TurnTo(ent, const Float:vTarget[3]) 
+stock UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {true, false, false}) 
 {
     //Get user origin
     new Float:vOrigin[3];
@@ -142,8 +143,12 @@ stock UTIL_TurnTo(ent, const Float:vTarget[3])
     //Convert direction vector to angle
     new Float:vAngles[3];
     engfunc(EngFunc_VecToAngles, vOrigin, vAngles);
-    vAngles[0] = 0.0; //Disable x rotation
-    vAngles[2] = 0.0; //Disable z rotation
+
+    for (new i = 0; i < 3; ++i) {
+        if (lockAxis[i]) {
+            vAngles[i] = 0.0;
+        }
+    }
     
     //Apply new angles
     set_pev(ent, pev_angles, vAngles);

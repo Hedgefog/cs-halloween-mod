@@ -131,7 +131,7 @@ public plugin_end()
         Unequip(id, i);
     }
     
-    remove_task(id+TASKID_SUM_PLAYER_TIMER);
+    ClearPlayerTasks(id);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -139,58 +139,12 @@ public plugin_end()
 public OnPlayerSpawn(id)
 {
     UpdateEquipment(id);
-    
-    if (!task_exists(id)) {
-        set_task(0.1, "TaskPlayerThink", id);
-    }
+    SetupPlayerTasks(id);
 }
 
 public OnPlayerKilled(id)
 {
-    remove_task(id+TASKID_SUM_PLAYER_TIMER);
-}
-
-/*--------------------------------[ Tasks ]--------------------------------*/
-
-public TaskPlayerThink(id)
-{
-    new renderMode = pev(id, pev_rendermode);
-    
-    static Float:renderAmt;
-    pev(id, pev_renderamt, renderAmt);
-    
-    if (renderMode != ArrayGetCell(g_playerRenderMode, id)
-        || renderAmt != ArrayGetCell(g_playerRenderAmt, id))
-    {
-        ArraySetCell(g_playerRenderMode, id, renderMode);
-        ArraySetCell(g_playerRenderAmt, id, renderAmt);
-
-        new size = PInv_Size(id);
-        for (new i = 0; i < size; ++i)
-        {
-            if (g_itemType != PInv_GetItemType(id, i)) {
-                continue;
-            }
-            
-            new Array:item = Array:PInv_GetItem(id, i);
-            
-            if (ArrayGetCell(item, _:ItemData_State) != ItemState_Equiped) {
-                continue;
-            }
-            
-            new ent = ArrayGetCell(item, _:ItemData_Entity);
-            set_pev(ent, pev_rendermode, renderMode);
-            
-            if (ArrayGetCell(item, _:ItemData_CosmeticType) == PCosmetic_Type_Normal) {
-                set_pev(ent, pev_renderamt, renderAmt);    
-            } else {
-                set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
-            }
-        }
-    }
-
-    
-    set_task(0.1, "TaskPlayerThink", id);
+    ClearPlayerTasks(id);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -479,10 +433,6 @@ Equip(id, slotIdx)
     new ent = CreateCosmeticEntity(id, cosmetic, cosmeticType);
     ArraySetCell(item, _:ItemData_Entity, ent);
     ArraySetCell(item, _:ItemData_State, ItemState_Equiped);
-    
-    if (!task_exists(id+TASKID_SUM_PLAYER_TIMER)) {
-        set_task(1.0, "TaskPlayerTimer", id+TASKID_SUM_PLAYER_TIMER, _, _, "b");
-    }
 }
 
 Unequip(id, slotIdx)
@@ -501,6 +451,8 @@ Unequip(id, slotIdx)
     
     new ent = ArrayGetCell(item, _:ItemData_Entity);
     if (pev_valid(ent)) {
+        set_pev(ent, pev_movetype, MOVETYPE_NONE);
+        set_pev(ent, pev_aiment, 0);
         engfunc(EngFunc_RemoveEntity, ent);
     }
 
@@ -590,6 +542,23 @@ UpdateEquipment(id)
             Unequip(id, i);
         }
     }
+}
+
+SetupPlayerTasks(id)
+{
+    if (!task_exists(id)) {
+        set_task(0.1, "TaskPlayerThink", id, _, _, "b");
+    }
+
+    if (!task_exists(id+TASKID_SUM_PLAYER_TIMER)) {
+        set_task(1.0, "TaskPlayerTimer", id+TASKID_SUM_PLAYER_TIMER, _, _, "b");
+    }
+}
+
+ClearPlayerTasks(id)
+{
+    remove_task(id);
+    remove_task(id+TASKID_SUM_PLAYER_TIMER);
 }
 
 /*--------------------------------[ Vault ]--------------------------------*/
@@ -723,4 +692,48 @@ public TaskPlayerTimer(taskID)
             ArraySetCell(item, _:ItemData_State, ItemState_Unequip);
         }
     }    
+}
+
+
+public TaskPlayerThink(id)
+{
+    new renderMode = pev(id, pev_rendermode);
+    
+    static Float:renderAmt;
+    pev(id, pev_renderamt, renderAmt);
+    
+    if (renderMode != ArrayGetCell(g_playerRenderMode, id)
+        || renderAmt != ArrayGetCell(g_playerRenderAmt, id))
+    {
+        ArraySetCell(g_playerRenderMode, id, renderMode);
+        ArraySetCell(g_playerRenderAmt, id, renderAmt);
+
+        new size = PInv_Size(id);
+        for (new i = 0; i < size; ++i)
+        {
+            if (g_itemType != PInv_GetItemType(id, i)) {
+                continue;
+            }
+            
+            new Array:item = Array:PInv_GetItem(id, i);
+            
+            if (ArrayGetCell(item, _:ItemData_State) != ItemState_Equiped
+                && ArrayGetCell(item, _:ItemData_State) != ItemState_Unequip) {
+                continue;
+            }
+            
+            new ent = ArrayGetCell(item, _:ItemData_Entity);
+            if (!ent) {
+                continue;
+            }
+
+            set_pev(ent, pev_rendermode, renderMode);
+            
+            if (ArrayGetCell(item, _:ItemData_CosmeticType) == PCosmetic_Type_Normal) {
+                set_pev(ent, pev_renderamt, renderAmt);    
+            } else {
+                set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
+            }
+        }
+    }
 }
