@@ -12,7 +12,7 @@
 - [Spells](./spells/index.md)
 - [Cosmetics](./cosmetics/index.md)
 - [Props](./props/index.md)
-- [Gamemodes](./maps/gamemodes.md)
+- [Gamemodes](./gamemodes/index.md)
 - [Maps](./maps/index.md)
 
 ---
