@@ -12,3 +12,5 @@
 
 # Lightning
 > Spawns magic ball on cast. Magic ball has no gravity and move forward, damage enemies in radius for 15 hp each 0.5 second and sucks them in.
+
+***[Home...](../index.md)***

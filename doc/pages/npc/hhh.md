@@ -1,4 +1,3 @@
-
 # Headless Horseless Horsemann
 
 ![](../../images/npc/hhh.png)
