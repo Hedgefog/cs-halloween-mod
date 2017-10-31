@@ -2,6 +2,10 @@
 
 ---
 
+- [Cvars](./cvars/index.md)
+
+---
+
 - [NPC](./npc/index.md)
 - [Spells](./spells/index.md)
 - [Cosmetics](./cosmetics/index.md)
