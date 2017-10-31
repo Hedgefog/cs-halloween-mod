@@ -10,6 +10,7 @@
 - [Items](./items/index.md)
 - [Spells](./spells/index.md)
 - [Cosmetics](./cosmetics/index.md)
+- [Props](./props/index.md)
 
 ---
 
