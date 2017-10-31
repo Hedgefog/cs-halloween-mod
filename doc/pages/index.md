@@ -3,6 +3,7 @@
 ---
 
 - [Cvars](./cvars/index.md)
+- [Control](./control/index.md)
 
 ---
 
@@ -11,6 +12,8 @@
 - [Spells](./spells/index.md)
 - [Cosmetics](./cosmetics/index.md)
 - [Props](./props/index.md)
+- [Gamemodes](./maps/gamemodes.md)
+- [Maps](./maps/index.md)
 
 ---
 
