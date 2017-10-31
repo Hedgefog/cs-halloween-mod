@@ -40,6 +40,12 @@
 = hwn_boss_target []
 
 @PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-48 -48 -48, 48 48 48)
+= hwn_monoculus_portal []
+
+@PointClass
     base(Targetname)
     color(90 27 122)
     size(-16 -16 0, 16 16 32)

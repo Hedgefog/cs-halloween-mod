@@ -1,4 +1,0 @@
-Add more forwards
-Add more cvars
-ZOMBIE API
-Allowed weapons cvar
