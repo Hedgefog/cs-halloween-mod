@@ -13,9 +13,6 @@ module.exports = {
         default: {
             destDir: path.join(__dirname, 'dist')
         },
-        game: {
-            destDir: 'D:/Steam/steamapps/common/Half-Life/cstrike'
-        },
         reapi: {
             destDir: path.join(__dirname, 'dist_reapi')
         }

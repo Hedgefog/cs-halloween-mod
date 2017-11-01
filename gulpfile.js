@@ -1,17 +1,16 @@
-const gulp = require('gulp');
-const zip = require('gulp-zip');
+const resolveThirdparty = require('./helpers/third-party.resolver');
+const config = require('./helpers/user-config.resolver');
 
 const path = require('path');
 const fs = require('fs');
 
-const buildTaskFactory = require('./build-task-factory');
+const gulp = require('gulp');
+const zip = require('gulp-zip');
+const file = require('gulp-file');
+const merge2 = require('merge2')
 
-const config = require('./config');
-const package = require('./package.json');
-
-const resolveArchiveName = (sufix) => `hwn-${package.version.replace(/\./g, '')}-${sufix}.zip`;
-const resolveBundledDir = (name) => `bundles/${name}`;
-const resolveThirdparty = (relativepPath) => path.join(__dirname, 'thirdparty', relativepPath);
+const resolveArchiveName = (sufix) => `hwn-${require('./package.json').version.replace(/\./g, '')}-${sufix}.zip`;
+const resolveBundledDir = (name) => path.join(__dirname, `bundles/${name}`);
 const resolveDestConfig = (destDir) => ({
     dir: destDir,
     includeDir: path.join(destDir, 'addons/amxmodx/scripting/include'),
@@ -20,7 +19,6 @@ const resolveDestConfig = (destDir) => ({
 });
 
 const defaultDestConfig = resolveDestConfig(config.build.default.destDir);
-const gameDestConfig = resolveDestConfig(config.build.game.destDir);
 
 const defaultSmaConfig = {
     compiler: config.compiler.executable,
@@ -28,13 +26,9 @@ const defaultSmaConfig = {
     includeDir: config.project.includeDir
 };
 
-const gameSmaConfig = {
-    compiler: config.compiler.executable,
-    dest: gameDestConfig.pluginsDir,
-    includeDir: config.project.includeDir
-};
+const buildTaskFactory = require('./helpers/build-task.factory');
 
-buildTaskFactory('build', {
+buildTaskFactory('build:default', {
     smaConfig: defaultSmaConfig,
     dest: defaultDestConfig
 });
@@ -64,72 +58,84 @@ buildTaskFactory('watch', {
     watch: true
 });
 
-buildTaskFactory('build-game', {
-    smaConfig: gameSmaConfig,
-    dest: gameDestConfig,
-    extraTasks: {
-        roundControl: () => gulp.src(resolveThirdparty('round-control') + '/**')
-            .pipe(gulp.dest(config.build.default.destDir))
-    }
-});
-
-buildTaskFactory('watch-game', {
-    smaConfig: gameSmaConfig,
-    dest: defaultDestConfig,
-    watch: true
-});
-
 gulp.task('pack:alliedmods', () => {
     const distDir = config.build.default.destDir;
+
+    if (!fs.existsSync(distDir)) {
+        throw new Error('Build project before packing');
+    }
+
     const buildDir = resolveBundledDir('alliedmods');
 
-    gulp.src([
-        distDir + '/**',
-        '!' + distDir + '/addons{,/**}',
-    ])
-        .pipe(zip(resolveArchiveName('resources')))
-        .pipe(gulp.dest(buildDir));
-
-    gulp.src([
-        distDir + '/addons{,/**}',
-        '!' + distDir + '/addons/amxmodx/plugins{,/**}',
-        '!' + distDir + '/addons/amxmodx/modules{,/**}',
-    ])
-        .pipe(zip(resolveArchiveName('addons')))
-        .pipe(gulp.dest(buildDir));
+    return merge2(
+        gulp.src([
+            distDir + '/**',
+            '!' + distDir + '/addons{,/**}',
+        ])
+            .pipe(zip(resolveArchiveName('resources')))
+            .pipe(gulp.dest(buildDir)),
+        gulp.src([
+            distDir + '/addons{,/**}',
+            '!' + distDir + '/addons/amxmodx/plugins{,/**}',
+            '!' + distDir + '/addons/amxmodx/modules{,/**}',
+        ])
+            .pipe(zip(resolveArchiveName('addons')))
+            .pipe(gulp.dest(buildDir))
+    )
 });
 
 gulp.task('pack:full', () => {
     const distDir = config.build.default.destDir;
+
+    if (!fs.existsSync(distDir)) {
+        throw new Error('Build project before packing');
+    }
+
     const reapiDistDir = config.build.default.destDir;
     const buildDir = resolveBundledDir('full');
 
-    gulp.src([
-        distDir + '/**',
-        '!' + distDir + '/addons{,/**}',
-    ])
-        .pipe(zip(resolveArchiveName('resources')))
-        .pipe(gulp.dest(buildDir));
+    const resArchiveName = resolveArchiveName('resources');
+    const addonsArchiveName = resolveArchiveName('addons');
+    const reapiAddonsArchiveName = resolveArchiveName('addons-reapi');
+    const bundleArchiveName = resolveArchiveName('bundle');
 
-    gulp.src([
-        distDir + '/addons{,/**}',
-        resolveThirdparty('round-control') + '/**'
-    ])
-        .pipe(zip(resolveArchiveName('addons')))
-        .pipe(gulp.dest(buildDir));
+    return merge2(
+        [
+            gulp.src([
+                distDir + '/addons{,/**}',
+                resolveThirdparty('round-control') + '/**'
+            ])
+                .pipe(zip(addonsArchiveName))
+                .pipe(gulp.dest(buildDir)),
 
-    gulp.src([
-        reapiDistDir + '/addons{,/**}',
-    ])
-        .pipe(zip(resolveArchiveName('addons-reapi')))
-        .pipe(gulp.dest(buildDir));
+            gulp.src([
+                reapiDistDir + '/addons{,/**}',
+            ])
+                .pipe(zip(reapiAddonsArchiveName))
+                .pipe(gulp.dest(buildDir)),
 
-    fs.writeFileSync(path.join(buildDir, 'README.TXT'), [
-        `${resolveArchiveName('addons')} - addons for vanilla server`,
-        `${resolveArchiveName('addons-reapi')} - addons for ReAPI`,
-        `${resolveArchiveName('resources')} - resources`
-    ].join('\r\n'));
+            gulp.src([
+                distDir + '/**',
+                '!' + distDir + '/addons{,/**}',
+            ])
+                .pipe(zip(resArchiveName))
+                .pipe(gulp.dest(buildDir)),
+
+            file('README.TXT', [
+                '[INSTALLATION]',
+                '   Extract addons and resources to cstrike folder',
+                '',
+                '[FILES]',
+                `   ${addonsArchiveName}        - addons for vanilla server`,
+                `   ${reapiAddonsArchiveName}   - addons for ReAPI`,
+                `   ${resArchiveName}   - resources`
+            ].join('\r\n'), {src: true})
+                .pipe(gulp.dest(buildDir)),
+        ],
+    )
+        .pipe(zip(bundleArchiveName))
+        .pipe(gulp.dest(buildDir));
 });
 
 gulp.task('pack', ['pack:alliedmods', 'pack:full']);
-gulp.task('default', ['build', 'build:reapi']);
+gulp.task('default', ['build:default', 'build:reapi']);
