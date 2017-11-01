@@ -125,7 +125,7 @@ gulp.task('pack:full', () => {
                 '[FILES]',
                 `   ${addonsArchiveName}        - addons for vanilla server`,
                 `   ${reapiAddonsArchiveName}   - addons for ReAPI`,
-                `   ${resArchiveName}   - resources`
+                `   ${resArchiveName}           - resources`
             ].join('\r\n'), {src: true})
                 .pipe(gulp.dest(buildDir)),
         ],
