@@ -6,3 +6,5 @@ node_modules/
 compiler/
 dist/
 dist_reapi/
+bundles/
+thirdparty/**
