@@ -4,6 +4,6 @@
 > (Using as decoration)
 
 ### FLAGS
-Flag | Description | Default Value
-- | - | -
-1 |	disable dynamic light. (recommended) | false
+| Flag | Description                          | Default Value |
+|------|--------------------------------------|---------------|
+| 1    | disable dynamic light. (recommended) | false         |
