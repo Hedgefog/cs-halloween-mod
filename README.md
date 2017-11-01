@@ -22,7 +22,7 @@ npm i
 npm run watch
 ```
 
-#### Pack project to archives
+#### Create bundle
 
 ```bash
 npm i

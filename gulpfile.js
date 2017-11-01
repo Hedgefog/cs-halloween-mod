@@ -86,12 +86,12 @@ gulp.task('pack:alliedmods', () => {
 
 gulp.task('pack:full', () => {
     const distDir = config.build.default.destDir;
+    const reapiDistDir = config.build.reapi.destDir;
 
-    if (!fs.existsSync(distDir)) {
+    if (!fs.existsSync(distDir) || !fs.existsSync(reapiDistDir)) {
         throw new Error('Build project before packing');
     }
 
-    const reapiDistDir = config.build.default.destDir;
     const buildDir = resolveBundledDir('full');
 
     const resArchiveName = resolveArchiveName('resources');
