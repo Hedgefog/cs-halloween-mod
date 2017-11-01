@@ -10,7 +10,8 @@ enum PCosmetic_Groups (<<=1)
     PCosmetic_Group_Body,
     PCosmetic_Group_Back,
     PCosmetic_Group_Fanny,
-    PCosmetic_Group_Legs
+    PCosmetic_Group_Legs,
+    PCosmetic_Group_Cape
 };
 
 enum PCosmetic_Type

@@ -27,27 +27,22 @@
 #define ZERO_VECTOR_F Float:{0.0, 0.0, 0.0}
 
 #define MONOCULUS_ROCKET_SPEED 960.0
-#define MONOCULUS_PUSHBACK_SPEED 64.0
+#define MONOCULUS_PUSHBACK_SPEED 128.0
 #define MONOCULUS_MIN_HEIGHT 128.0
 #define MONOCULUS_MAX_HEIGHT 320.0
 #define MONOCULUS_SPAWN_ROCKET_DISTANCE 80.0
 
 enum _:Sequence 
 {
-    Sequence_Ref = 0,
-    Sequence_Angry,
-    Sequence_Idle,
+    Sequence_Idle = 0,
     Sequence_Stunned,
     Sequence_Attack1,
     Sequence_Attack2,
     Sequence_Attack3,
     Sequence_Spawn,
     Sequence_Laugh,
-    Sequence_LongLaugh,
     Sequence_TeleportIn,
     Sequence_TeleportOut,
-    Sequence_Huff1,
-    Sequence_Huff2,
     Sequence_Death,
     Sequence_LookAround1,
     Sequence_LookAround2,
@@ -63,12 +58,10 @@ enum Action
     Action_AngryAttack,
     Action_Spawn,
     Action_Laugh,
-    Action_LongLaugh,
     Action_TeleportIn,
     Action_TeleportOut,
     Action_Death,
-    Action_LookAround,
-    Action_Escape
+    Action_LookAround
 };
 
 enum _:Monoculus
@@ -81,8 +74,7 @@ enum _:Monoculus
 
 new const g_szSndAttack[][128] = {
     "hwn/npc/monoculus/monoculus_attack01.wav",
-    "hwn/npc/monoculus/monoculus_attack02.wav",
-    "hwn/npc/monoculus/monoculus_attack03.wav"
+    "hwn/npc/monoculus/monoculus_attack02.wav"
 };
 
 new const g_szSndLaugh[][128] = {
@@ -116,12 +108,10 @@ new const g_actions[Action][NPC_Action] =
     {Sequence_Attack2, Sequence_Attack3, 2.0},
     {Sequence_Spawn, Sequence_Spawn, 4.5},
     {Sequence_Laugh, Sequence_Laugh, 1.3},
-    {Sequence_LongLaugh, Sequence_LongLaugh, 3.6},
     {Sequence_TeleportIn, Sequence_TeleportIn, 1.0},
     {Sequence_TeleportOut, Sequence_TeleportOut, 1.0},
     {Sequence_Death, Sequence_Death, 8.36},
-    {Sequence_LookAround1, Sequence_LookAround3, 6.0},
-    {Sequence_Escape, Sequence_Escape, 4.16}
+    {Sequence_LookAround1, Sequence_LookAround3, 1.0}
 };
 
 const Float:NPC_Health = 10000.0;
@@ -176,9 +166,14 @@ public plugin_precache()
     for (new i = 0; i < sizeof(g_szSndPain); ++i) {
         precache_sound(g_szSndPain[i]);
     }
+
+    for (new i = 0; i < sizeof(g_szSndStunned); ++i) {
+        precache_sound(g_szSndStunned[i]);
+    }
     
     precache_sound(g_szSndSpawn);
     precache_sound(g_szSndDeath);
+    precache_sound(g_szSndMoved);
     
     CE_RegisterHook(CEFunction_Spawn, PORTAL_ENTITY_NAME, "OnPortalSpawn");
 
@@ -188,6 +183,8 @@ public plugin_precache()
     
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
     RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTakeDamage", .Post = 1);
+
+    RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
 }
 
 public plugin_init()
@@ -330,6 +327,10 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
 
     UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 212, floatround(fDamage/4));
 
+    if (random(100) < 10) {
+        NPC_EmitVoice(ent, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
+    }
+
     return HAM_IGNORED;
 }
 
@@ -358,6 +359,17 @@ public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
     }
 
     ArraySetCell(monoculus, Monoculus_DamageToStun, fDamageToStun);
+}
+
+public OnPlayerKilled(id, killer)
+{
+    if (!killer || g_ceHandler != CE_GetHandlerByEntity(killer)) {
+        return;
+    }
+
+    if (random_num(0, 100) < 30) {
+        Laugh(killer);
+    }
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -417,7 +429,11 @@ public TaskThink(ent)
         new enemy = pev(ent, pev_enemy);
         if (NPC_IsValidEnemy(enemy) && Attack(ent, enemy)) {
             // do something
-        } else {
+        } else {        
+            if (random_num(0, 100) < 5) {
+                LookAround(ent);
+            }
+
             NPC_FindEnemy(ent, g_maxPlayers);
             set_pev(ent, pev_velocity, ZERO_VECTOR_F);
             NPC_PlayAction(ent, g_actions[Action_Idle]);
@@ -448,10 +464,6 @@ bool:Attack(ent, target)
         return true;
     }
 
-    if (random(100) < 10) {
-        Laugh(ent);
-    }
-
     static Float:vTarget[3];
     pev(target, pev_origin, vTarget);
 
@@ -479,7 +491,7 @@ BaseShot(ent, Float:attackDelay)
 
 Shot(ent)
 {
-    set_task(NPC_AttackDelay, "Task_Shot", ent+TASKID_SUM_SHOT, _, _, "a", 1);
+    set_task(NPC_AttackDelay, "TaskShot", ent+TASKID_SUM_SHOT, _, _, "a", 1);
 
     NPC_PlayAction(ent, g_actions[Action_Attack]);
     BaseShot(ent, g_actions[Action_Attack][NPC_Action_Time] + 0.1);
@@ -487,7 +499,7 @@ Shot(ent)
 
 AngryShot(ent)
 {
-    set_task(NPC_AttackDelay, "Task_Shot", ent+TASKID_SUM_SHOT, _, _, "a", 3);
+    set_task(NPC_AttackDelay, "TaskShot", ent+TASKID_SUM_SHOT, _, _, "a", 3);
 
     NPC_PlayAction(ent, g_actions[Action_AngryAttack]);
     BaseShot(ent, g_actions[Action_AngryAttack][NPC_Action_Time] + 0.1);
@@ -499,6 +511,11 @@ Laugh(ent)
     NPC_EmitVoice(ent, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
 }
 
+LookAround(ent)
+{
+    NPC_PlayAction(ent, g_actions[Action_LookAround]);
+}
+
 Stun(ent)
 {   
     new Array:monoculus = Monoculus_Get(ent);
@@ -507,7 +524,7 @@ Stun(ent)
     NPC_EmitVoice(ent, g_szSndStunned[random(sizeof(g_szSndStunned))], 1.0);
     NPC_PlayAction(ent, g_actions[Action_Stunned], .supercede = true);
     
-    set_task(g_actions[Action_Stunned][NPC_Action_Time], "Task_RemoveStun", ent+TASKID_SUM_REMOVE_STUN);
+    set_task(g_actions[Action_Stunned][NPC_Action_Time], "TaskRemoveStun", ent+TASKID_SUM_REMOVE_STUN);
 }
 
 MakeAngry(ent)
@@ -518,7 +535,7 @@ MakeAngry(ent)
 
     if (!isAngry) {
         ArraySetCell(monoculus, Monoculus_IsAngry, true);
-        set_task(get_pcvar_float(g_cvarAngryTime), "Task_CalmDown", ent+TASKID_SUM_CALM_DOWN);
+        set_task(get_pcvar_float(g_cvarAngryTime), "TaskCalmDown", ent+TASKID_SUM_CALM_DOWN);
     }
 }
 
@@ -579,7 +596,7 @@ PushBack(ent)
 
     set_pev(ent, pev_velocity, vVelocity);
 
-    set_task(0.25, "Task_PushBackEnd", ent+TASKID_SUM_PUSH_BACK_END);
+    set_task(0.25, "TaskPushBackEnd", ent+TASKID_SUM_PUSH_BACK_END);
 }
 
 JumpToPortal(ent)
@@ -596,6 +613,11 @@ JumpToPortal(ent)
 
     new Array:monoculus = Monoculus_Get(ent);
 
+    new bool:isStunned = ArrayGetCell(monoculus, Monoculus_IsStunned);
+    if (isStunned) {
+        return;
+    }
+
     new portalIdx = random(size);
     if (portalIdx == ArrayGetCell(monoculus, Monoculus_NextPortal)) {
         return;
@@ -604,14 +626,14 @@ JumpToPortal(ent)
     ArraySetCell(monoculus, Monoculus_NextPortal, portalIdx);
 
     NPC_PlayAction(ent, g_actions[Action_TeleportIn]);
-    set_task(g_actions[Action_TeleportIn][NPC_Action_Time], "Task_Teleport", ent+TASKID_SUM_TELEPORT);
+    set_task(g_actions[Action_TeleportIn][NPC_Action_Time], "TaskTeleport", ent+TASKID_SUM_TELEPORT);
 }
 
 CreateJumpToPortalTask(ent)
 {
     new Float:fMinTime = get_pcvar_float(g_cvarJumpTimeMin);
     new Float:fMaxTime = get_pcvar_float(g_cvarJumpTimeMax);
-    set_task(random_float(fMinTime, fMaxTime), "Task_JumpToPortal", ent+TASKID_SUM_JUMP_TO_PORTAL);
+    set_task(random_float(fMinTime, fMaxTime), "TaskJumpToPortal", ent+TASKID_SUM_JUMP_TO_PORTAL);
 }
 
 TeleportEffect(const Float:vOrigin[3])
@@ -637,7 +659,7 @@ TeleportEffect(const Float:vOrigin[3])
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
-public Task_Shot(taskID)
+public TaskShot(taskID)
 {
     new ent = taskID - TASKID_SUM_SHOT;
 
@@ -646,7 +668,7 @@ public Task_Shot(taskID)
     NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.3);
 }
 
-public Task_CalmDown(taskID)
+public TaskCalmDown(taskID)
 {
     new ent = taskID - TASKID_SUM_CALM_DOWN;
 
@@ -654,7 +676,7 @@ public Task_CalmDown(taskID)
     ArraySetCell(monoculus, Monoculus_IsAngry, false);
 }
 
-public Task_RemoveStun(taskID)
+public TaskRemoveStun(taskID)
 {
     new ent = taskID - TASKID_SUM_REMOVE_STUN;
 
@@ -662,20 +684,20 @@ public Task_RemoveStun(taskID)
     ArraySetCell(monoculus, Monoculus_IsStunned, false);
 }
 
-public Task_PushBackEnd(taskID)
+public TaskPushBackEnd(taskID)
 {
     new ent = taskID - TASKID_SUM_PUSH_BACK_END;
     set_pev(ent, pev_velocity, ZERO_VECTOR_F);
 }
 
-public Task_JumpToPortal(taskID)
+public TaskJumpToPortal(taskID)
 {
     new ent = taskID - TASKID_SUM_JUMP_TO_PORTAL;
     JumpToPortal(ent);
     CreateJumpToPortalTask(ent);
 }
 
-public Task_Teleport(taskID)
+public TaskTeleport(taskID)
 {
     new ent = taskID - TASKID_SUM_TELEPORT;
 
