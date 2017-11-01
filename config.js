@@ -1,6 +1,10 @@
 const path = require('path');
 
-const DIST_DIR = path.join(__dirname, 'dist');
+const userConfig = true;
+
+const DIST_DIR = userConfig
+    ? 'D:/Steam/steamapps/common/Half-Life/cstrike'
+    : path.join(__dirname, 'dist');
 
 module.exports = {
     distDir: DIST_DIR,
