@@ -45,10 +45,7 @@ buildTaskFactory('build:reapi', () => {
                 config.project.includeDir
             ]
         },
-        dest: destConfig,
-        tasks: {
-            assets: false
-        }
+        dest: destConfig
     };
 });
 
@@ -109,7 +106,7 @@ gulp.task('pack:full', () => {
                 .pipe(gulp.dest(buildDir)),
 
             gulp.src([
-                reapiDistDir + '/addons{,/**}',
+                reapiDistDir + '/addons{,/**}'
             ])
                 .pipe(zip(reapiAddonsArchiveName))
                 .pipe(gulp.dest(buildDir)),
