@@ -82,7 +82,13 @@ public OnRemove(ent)
 public OnKilled(ent)
 {
     ExplosionEffect(ent);
-    RocketRadiusDamage(ent, pev(ent, pev_owner));
+
+    new owner = pev(ent, pev_owner);
+    if (!pev_valid(owner)) {
+        owner = 0;
+    }
+
+    RocketRadiusDamage(ent, owner);
 }
 
 public OnTouch(ent, target)
@@ -156,10 +162,6 @@ RocketRadiusDamage(ent, owner)
 
         if (pev(target, pev_takedamage) == DAMAGE_NO) {
             continue;
-        }
-
-        if (target == owner) {
-            owner = 0;
         }
         
         static Float:vTargetOrigin[3];
