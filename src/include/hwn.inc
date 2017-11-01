@@ -1,4 +1,10 @@
 /*
+    3.0.0
+        Halloween is here!
+        Added new cosmetic items.
+        Added monoculus npc.
+        Fixed player cosmetic api.
+
     2.3.3
         fixed a bug in api_player_cosmetic which crash server after player disconnect.
 
@@ -83,7 +89,7 @@
 #define HWN_COLOR_GREEN_DARK         47, 95, 15
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "2.3.3"
+#define HWN_VERSION "3.0.0"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
