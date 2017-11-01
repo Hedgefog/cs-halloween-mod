@@ -1,6 +1,6 @@
 const path = require('path');
 
-const userConfig = true;
+const userConfig = false;
 
 const DIST_DIR = userConfig
     ? 'D:/Steam/steamapps/common/Half-Life/cstrike'
