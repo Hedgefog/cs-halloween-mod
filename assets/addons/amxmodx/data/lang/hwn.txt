@@ -1,0 +1,55 @@
+[en]
+HWN_GIFT_SPAWN = A Haunted Halloween Gift has^nmysteriously spawned somewhere,^nplaced just for you. Go and find it!
+HWN_GIFT_DISAPPEARED = The Haunted Halloween Gift has disappeared!
+HWN_GIFT_FOUND = %s found the Haunted Halloween Gift!
+HWN_PLAYER_POINTS = Points: %d 
+HWN_SPELL = Spell: %s
+HWN_DEFEAT_BOSS = %s defeat the boss!
+HWN_BOSS_REWARD = Boss is defeated!^nMysterious reward is waiting for you in your inventory.
+HWN_SPELLBOOK_PICKUP = You picked spell!^nUse flashlight key ('f' by default) to cast spell.
+HWN_MENU_HELP = Use choose team key ('m' by default) to open mod menu.
+HWN_MENU_TITLE = Halloween Mod Menu
+HWN_EQUIPMENT_MENU_TITLE = Equipment
+HWN_COSMETIC_MENU_TITLE = Cosmetic Inventory
+
+[ru]
+HWN_GIFT_SPAWN = Призрачный Подарок таинственно появился в случайном месте,^nтолько для вас. Идите и найдите его!
+HWN_GIFT_DISAPPEARED = Призрачный Подарок исчез!
+HWN_GIFT_FOUND = %s нашел Призрачный Подарок.
+HWN_PLAYER_POINTS = Очки: %d
+HWN_SPELL = Заклинание: %s
+HWN_DEFEAT_BOSS = %s победил босса!
+HWN_BOSS_REWARD = Босс побежден!^nТаинственная награда ждет вас в вашем инвентаре.
+HWN_SPELLBOOK_PICKUP = Вы подобрали заклинание!^nИспользуйте клавишу активации фонаря ('f' по умолчанию), чтоб колдовать.
+HWN_MENU_HELP = Используйте клавишу смены команды ('m' по умолчанию), чтоб открыть меню.
+HWN_MENU_TITLE = Halloween Mod Меню
+HWN_EQUIPMENT_MENU_TITLE = Экипировка
+HWN_COSMETIC_MENU_TITLE = Аксессуары
+
+[es]
+HWN_GIFT_SPAWN = Un misterioso regalo de ^nHalloween ha aparecido en algun lugar,^nve y encuentralo!
+HWN_GIFT_DISAPPEARED = El misterioso regalo de Halloween desaparecio!
+HWN_GIFT_FOUND = %s encontro el misterioso regalo de Halloween!
+HWN_PLAYER_POINTS = Puntos: %d 
+HWN_SPELL = Hechizos: %s
+HWN_DEFEAT_BOSS = %s derroto al jefe!
+HWN_BOSS_REWARD = El jefe fue derrotado!^nUn misterioso regaldo te aguarda en tu inventario.
+HWN_SPELLBOOK_PICKUP = Agarraste un hechizo!^nUsa el boton de la linterna(F) para usarlo.
+HWN_MENU_HELP = Use choose team key ('m' by default) to open mod menu.
+HWN_MENU_TITLE = Halloween Mod Menu
+HWN_EQUIPMENT_MENU_TITLE = Equipment
+HWN_COSMETIC_MENU_TITLE = Cosmetic Inventory
+
+[ro]
+HWN_GIFT_SPAWN = Un Cadou Bantuit de Halloween a^naparut in mod misterios undeva,^nasezat doar pentru tine. Du-te si gaseste-l!
+HWN_GIFT_DISAPPEARED = Cadoul Bantuit de Halloween a disparut!
+HWN_GIFT_FOUND = %s a gasit Cadoul Bantuit de Halloween!
+HWN_PLAYER_POINTS = Puncte: %d 
+HWN_SPELL = Vraja: %s
+HWN_DEFEAT_BOSS = %s a invins seful!
+HWN_BOSS_REWARD = Seful este invins!^nUn cadou misterios te asteapta in inventarul tau.
+HWN_SPELLBOOK_PICKUP = Ai ales vraja!^nFoloseste butonul de lanterna (implicit 'f') pentru a face vraja.
+HWN_MENU_HELP = Use choose team key ('m' by default) to open mod menu.
+HWN_MENU_TITLE = Halloween Mod Menu
+HWN_EQUIPMENT_MENU_TITLE = Equipment
+HWN_COSMETIC_MENU_TITLE = Cosmetic Inventory

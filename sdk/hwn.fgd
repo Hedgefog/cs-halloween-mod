@@ -1,39 +1,134 @@
-@PointClass 
-    color(90 27 122)
-= hwn_ambient
 
-@PointClass
-    color(90 27 122)
-    size(-48 -48 -48, 48 48 48) 
-= hwn_boss_target
-
-@PointClass
-    color(90 27 122) 
-    size(28 28 0, 28 28 56) 
-    Studio("models/hwn/props/pumpkin_bucket.mdl")
-= hwn_bucket
+@BaseClass = Angles
 [
-    team(choices) : "": 1 : "Team" = 
+	angles(string) : "Pitch Yaw Roll (Y Z X)" : "0 0 0"
+]
+
+@BaseClass = Target
+[ 
+	target(target_destination) : "Target" 
+]
+
+@BaseClass = Targetname
+[ 
+	targetname(target_source) : "Name"
+]
+
+@BaseClass = Team
+[
+    team(choices) : "Team" : 1 = 
     [
-        1: "Terrorists",
+        1: "Terrorists"
         2: "Counter-Terrorists"
     ]
 ]
 
 @PointClass
-    color(90 27 122) 
-    size(16 16 0, 16 16 32) 
-= hwn_gift_target
-
+    base(Targetname)
+    color(90 27 122)
+= hwn_ambient []
 
 @PointClass
+    base(Targetname, Target)
     color(90 27 122)
-    size(12 12 0, 12 12 24)
+= hwn_event_handler []
+
+@PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-48 -48 -48, 48 48 48)
+= hwn_boss_target []
+
+@PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-48 -48 -48, 48 48 48)
+= hwn_monoculus_portal []
+
+@PointClass
+    base(Targetname)
+    color(90 27 122)
+    size(-16 -16 0, 16 16 32)
+    Studio("models/hwn/items/gift_v2.mdl")
+= hwn_gift_target []
+
+@PointClass
+    base(Targetname, Angles, Team)
+    color(90 27 122)
+    size(-28 -28 0, 28 28 56)
+    Studio("models/hwn/props/pumpkin_bucket.mdl")
+= hwn_bucket []
+
+@PointClass
+    base(Angles)
+    color(90 27 122)
+    size(-12 -12 0, 12 12 24)
+= hwn_pumpkin_dispenser [
+	delay(string) : "Delay" : "10.0"
+	impulse(string) : "Impulse" : "320.0"
+	spawnflags(flags) = [
+		1 : "Random Drop Direction" : 0
+	]
+]
+
+@PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-16 -16 0, 16 16 32)
+    Studio("models/hwn/props/jackolantern.mdl")
+= hwn_prop_jackolantern
+[
+    spawnflags(Flags) =
+	[
+		1 : "Disable Dynamic Light" : 1
+	]
+]
+
+@PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-256 -256 -32, 256 256 32)
+    Studio("models/hwn/props/vortex.mdl")
+= hwn_prop_vortex []
+
+@PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-16 -16 0, 16 16 32)
+    Studio("models/hwn/props/pumpkin_explode.mdl")
+= hwn_prop_explosive_pumpkin []
+
+@PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-12 -12 0, 12 12 24)
     Studio("models/hwn/items/pumpkin_loot_v2.mdl")
-= hwn_item_pumpkin
+= hwn_item_pumpkin []
 
 @PointClass
+    base(Targetname, Angles)
     color(90 27 122)
-    size(16 12 0 , 16 12 24)
-    Studio("models/hwn/items/spellbook.mdl") 
-= hwn_item_spellbook
+    size(-16 -12 0, 16 12 24)
+    Studio("models/hwn/items/spellbook.mdl")
+= hwn_item_spellbook []
+
+@PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-12 -12 -32, 12 12 32)
+    Studio("models/hwn/npc/ghost_v2.mdl")
+= hwn_npc_ghost []
+
+@PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-12 -12 -32, 12 12 32)
+    Studio("models/hwn/npc/skeleton.mdl")
+= hwn_npc_skeleton []
+
+@PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-8 -8 -16, 8 8 16)
+    Studio("models/hwn/npc/skeleton_small.mdl")
+= hwn_npc_skeleton_small []

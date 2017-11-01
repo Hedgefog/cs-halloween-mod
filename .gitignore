@@ -1,0 +1,7 @@
+*.amxx
+*.max
+*.log
+*.amxp
+node_modules/
+compiler/
+dist/
