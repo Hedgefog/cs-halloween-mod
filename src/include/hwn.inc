@@ -1,4 +1,8 @@
 /*
+    3.0.1
+        Fixed HHH NPC Pathfinding.
+        Fixed monoculus rocket entity.
+
     3.0.0
         Halloween is here!
         Added new cosmetic items.
@@ -89,7 +93,7 @@
 #define HWN_COLOR_GREEN_DARK         47, 95, 15
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "3.0.0"
+#define HWN_VERSION "3.0.1"
 
 enum Hwn_GamemodeFlags (<<=1)
 {

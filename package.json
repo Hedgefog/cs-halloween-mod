@@ -1,18 +1,22 @@
 {
   "name": "halloween-mod",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Halloween Mod",
   "scripts": {
     "gulp": "gulp",
     "build": "gulp",
-    "watch": "gulp watch"
+    "watch": "gulp watch",
+    "pack": "gulp pack"
   },
   "author": "Hedgehog Fog",
   "license": "MIT",
   "devDependencies": {
     "gulp": "^3.9.1",
+    "gulp-file": "^0.3.0",
     "gulp-flatten": "^0.3.1",
-    "gulp-sma": "^1.0.4",
-    "gulp-watch": "^4.3.11"
+    "gulp-sma": "^1.0.5",
+    "gulp-watch": "^4.3.11",
+    "gulp-zip": "^4.0.0",
+    "merge2": "^1.2.0"
   }
 }

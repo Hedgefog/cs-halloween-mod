@@ -496,17 +496,17 @@ public TaskThink(ent)
     }
     else
     {
-        if (!NPC_FindEnemy(ent, g_maxPlayers) && get_pcvar_num(g_cvarUseAstar) > 0) {
-            astarRequired = true;
-        } else {
+        if (NPC_FindEnemy(ent, g_maxPlayers)) {
             NPC_PlayAction(ent, g_actions[Action_Idle]);    
+        } else {
+            astarRequired = get_pcvar_num(g_cvarUseAstar) > 0;
         }
     }
     
     new Float:fGametime = get_gametime();    
     
     if (astarRequired)
-    {    
+    {
         new Array:hhh = HHH_Get(ent);
         new astarIdx = ArrayGetCell(hhh, HHH_AStar_Idx);
         new Array:path = ArrayGetCell(hhh, HHH_AStar_Path);

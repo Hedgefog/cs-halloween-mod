@@ -348,7 +348,7 @@ stock bool:NPC_FindEnemy(ent, maxplayers = 32, bool:reachableOnly = true)
     
     ArrayDestroy(targets);
 
-    return true;
+    return (size > 0);
 }
 
 stock bool:NPC_IsVisible(const Float:vOrigin1[3], const Float:vOrigin2[3], ent = 0)

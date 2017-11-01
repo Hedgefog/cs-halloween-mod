@@ -1,22 +1,33 @@
-<p align="center">
-  <img src="./logo.png">
-</p>
+![](./logo.png)
 
-## Halloween Mod for Counter-Strike 1.6
-__Version:__ 2.3.0
+### Halloween Mod for Counter-Strike 1.6
+__Version:__ 3.0.1
 
-### Build Project
+#### Deploy
+- Clone repository.
+- Extract RoundControl module to _"thirdparty/round-control"_ folder of project (example: _"thirdparty/round-control/addons"_).
+- Extract ReAPI module to _"thirdparty/reapi"_ folder of project (example: _"thirdparty/reapi/addons"_).
+
+#### Build project
 
 ```bash
 npm i
 npm run build
 ```
 
-### Watch Project
+#### Watch project
 
 ```bash
 npm i
 npm run watch
 ```
 
-### [Documentation](./doc/pages/index.md)
+#### Create bundle
+
+```bash
+npm i
+npm run pack
+```
+
+#### Documentation
+- [Index](./doc/pages/index.md)
