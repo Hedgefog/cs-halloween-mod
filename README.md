@@ -19,4 +19,4 @@ npm i
 npm run watch
 ```
 
-### - [Documentation](./doc/pages/index.md)
+### [Documentation](./doc/pages/index.md)
