@@ -4,6 +4,6 @@
 > (Should contains 'team' param)
 
 ### PARAMS
- Param | Description | Type | Default Value 
- - | - | - | -
- team | which team owns this bucket | integer | 1
+| Param | Description                 | Type    | Default Value |
+|-------|-----------------------------|---------|---------------|
+| team  | which team owns this bucket | integer | 1             |

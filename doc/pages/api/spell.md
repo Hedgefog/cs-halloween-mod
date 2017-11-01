@@ -3,10 +3,10 @@
 ### Hwn_Spell_Register
 > Register new spell.
 
-Param | Description 
-- | - 
-szName | Name of the spell
-szCastCallback | Callback. Will be executed when player cast spell. Player id will be passed at first argument.
+| Param          | Description                                                                                    |
+|----------------|------------------------------------------------------------------------------------------------|
+| szName         | Name of the spell                                                                              |
+| szCastCallback | Callback. Will be executed when player cast spell. Player id will be passed at first argument. |
 
 ### Hwn_Spell_GetCount
 > Get count of registered spells.
@@ -14,11 +14,12 @@ szCastCallback | Callback. Will be executed when player cast spell. Player id wi
 ### Hwn_Spell_GetName
 > Get name of spell by spell handler.
 
-Param | Description 
-- | - 
-spell | Spell handler.
-szName | Output array.
-maxlen | Max len of output string.
+| Param  | Description               |
+|--------|---------------------------|
+| spell  | Spell handler.            |
+| szName | Output array.             |
+| maxlen | Max len of output string. |
+
 
 ---
 
@@ -27,25 +28,26 @@ maxlen | Max len of output string.
 ### UTIL_HwnSpawnPlayerSpellball
 > Create spellball entity with predefined velocity, modelindex and render color.
 
-Param | Description | Type | Default Value
-- | - | - | - 
-owner | Spawn origin to will be read from the owner position. | Integer | 
-modelindex | Max len of output string. | Integer |
-color | Color of spellball | Integer Array [3] | 
-speed | Start speed of spell ball. Direction will be generated from the owner aim vector. | Integer | 512
-scale | Scale of spellball sprite. | Float | 0.25 
+| Param      | Description                                                                       | Type              | Default Value |
+|------------|-----------------------------------------------------------------------------------|-------------------|---------------|
+| owner      | Spawn origin to will be read from the owner position.                             | Integer           |               |
+| modelindex | Max len of output string.                                                         | Integer           |               |
+| color      | Color of spellball                                                                | Integer Array [3] |               |
+| speed      | Start speed of spell ball. Direction will be generated from the owner aim vector. | Integer           | 512           |
+| scale      | Scale of spellball sprite.                                                        | Float             | 0.25          |
 
 ---
  
 ### UTIL_HwnSpellDetonateEffect
 > Create detonation effect.
 
-Param | Description | Type | Default Value
-- | - | - | - 
-modelindex | Effect sprite. | Integer | 
-vOrigin | Effect origin. | Float Array [3] | 
-color | Effect color. | Integer Array [3] | 
-fRadius | Effect radius. | Float | 
+| Param      | Description    | Type              | Default Value |
+|------------|----------------|-------------------|---------------|
+| modelindex | Effect sprite. | Integer           |               |
+| vOrigin    | Effect origin. | Float Array [3]   |               |
+| color      | Effect color.  | Integer Array [3] |               |
+| fRadius    | Effect radius. | Float             |               |
+
 
 # Create your spell using spellball entity.
 
