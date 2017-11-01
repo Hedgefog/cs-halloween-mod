@@ -2,6 +2,7 @@ const gulp = require('gulp');
 const zip = require('gulp-zip');
 
 const path = require('path');
+const fs = require('fs');
 
 const buildTaskFactory = require('./build-task-factory');
 
@@ -122,6 +123,12 @@ gulp.task('pack:full', () => {
     ])
         .pipe(zip(resolveArchiveName('addons-reapi')))
         .pipe(gulp.dest(buildDir));
+
+    fs.writeFileSync(path.join(buildDir, 'README.TXT'), [
+        `${resolveArchiveName('addons')} - addons for vanilla server`,
+        `${resolveArchiveName('addons-reapi')} - addons for ReAPI`,
+        `${resolveArchiveName('resources')} - resources`
+    ].join('\r\n'));
 });
 
 gulp.task('pack', ['pack:alliedmods', 'pack:full']);

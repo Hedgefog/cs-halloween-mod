@@ -1,12 +1,9 @@
 const gulp = require('gulp');
 const watch = require('gulp-watch');
-
 const sma = require('gulp-sma');
 const flatten = require('gulp-flatten');
 
-function resolveTaskName(task, name) {
-    return `${task}:${name}`;
-}
+const resolveTaskName = (task, name) => `${task}:${name}`;
 
 module.exports = (name, options) => {
     if (typeof options === 'function') {
