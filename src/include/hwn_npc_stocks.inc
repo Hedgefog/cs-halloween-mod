@@ -312,7 +312,7 @@ stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly
     return true;
 }
 
-stock NPC_FindEnemy(ent, maxplayers = 32, bool:reachableOnly = true)
+stock bool:NPC_FindEnemy(ent, maxplayers = 32, bool:reachableOnly = true)
 {
     new Array:targets = ArrayCreate();
     for (new i = 1; i <= maxplayers; ++i)
@@ -347,6 +347,8 @@ stock NPC_FindEnemy(ent, maxplayers = 32, bool:reachableOnly = true)
     }
     
     ArrayDestroy(targets);
+
+    return true;
 }
 
 stock bool:NPC_IsVisible(const Float:vOrigin1[3], const Float:vOrigin2[3], ent = 0)
