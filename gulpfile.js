@@ -137,5 +137,18 @@ gulp.task('pack:full', () => {
         .pipe(gulp.dest(buildDir));
 });
 
-gulp.task('pack', ['pack:alliedmods', 'pack:full']);
+gulp.task('pack:sdk', () => {
+    const buildDir = resolveBundledDir('sdk');
+
+    const sdkArchiveName = resolveArchiveName('sdk');
+
+    return gulp.src([
+        __dirname + '/sdk/**',
+        __dirname + '/examples{,/**/*.map}',
+    ])
+        .pipe(zip(sdkArchiveName))
+        .pipe(gulp.dest(buildDir));
+});
+
+gulp.task('pack', ['pack:alliedmods', 'pack:full', 'pack:sdk']);
 gulp.task('default', ['build:default', 'build:reapi']);
