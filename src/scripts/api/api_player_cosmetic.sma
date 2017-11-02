@@ -198,15 +198,13 @@ public Native_Equip(pluginID, argc)
     new Array:item = Array:PInv_GetItem(id, slotIdx);        
     new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
     
-    if (itemState == ItemState_Equiped) {
-        return;
+    if (itemState == ItemState_None) {
+        itemState = ItemState_Equip;
+    } else if (itemState == ItemState_Unequip) {
+        itemState = ItemState_Equiped;
     }
     
-    if (itemState == ItemState_Equip) {
-        return;
-    }
-    
-    ArraySetCell(item, _:ItemData_State, ItemState_Equip);
+    ArraySetCell(item, _:ItemData_State, itemState);
 }
 
 public Native_Unequip(pluginID, argc)
@@ -217,15 +215,13 @@ public Native_Unequip(pluginID, argc)
     new Array:item = Array:PInv_GetItem(id, slotIdx);        
     new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
     
-    if (itemState == ItemState_None) {
-        return;
+    if (itemState == ItemState_Equiped) {
+        itemState = ItemState_Unequip;
+    } else if (itemState == ItemState_Equip) {
+        itemState = ItemState_None;
     }
-    
-    if (itemState == ItemState_Unequip) {
-        return;
-    }
-    
-    ArraySetCell(item, _:ItemData_State, ItemState_Unequip);
+
+    ArraySetCell(item, _:ItemData_State, itemState);
 }
 
 public Native_IsItemEquiped(pluginID, argc)
@@ -460,7 +456,7 @@ Unequip(id, slotIdx)
     ArraySetCell(item, _:ItemData_State, ItemState_None);
     
     new itemTime = ArrayGetCell(item, _:ItemData_Time);
-    if (!itemTime) {
+    if (itemTime <= 0) {
         PInv_TakeItem(id, slotIdx);
     }
 }
@@ -530,7 +526,7 @@ UpdateEquipment(id)
     {
         new PInv_ItemType:itemType = PInv_GetItemType(id, i);
         if (itemType != g_itemType) {
-            return; //Invalid item type
+            continue; //Invalid item type
         }    
     
         new Array:item = Array:PInv_GetItem(id, i);
