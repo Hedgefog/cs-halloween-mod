@@ -18,7 +18,7 @@ const package = require(
 );
 
 const resolveArchiveName = (sufix) => `hwn-${package.version.replace(/\./g, '')}-${sufix}.zip`;
-const resolveBundledDir = (name) => path.join(process.cwd(), `bundles/${name}`);
+const resolveBundledDir = (name) => path.join(config.build.bundles.destDir, name);
 
 gulp.task('pack:alliedmods', () => {
     const distDir = config.build.default.destDir;

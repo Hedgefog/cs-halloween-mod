@@ -3,24 +3,28 @@ const path = require('path');
 const userConfig = false;
 
 module.exports = {
+    version: '1.0.0',
     compiler: {
-        executable: path.join(__dirname, 'compiler/amxxpc')
+        executable: path.resolve('./compiler/amxxpc')
     },
     project: {
-        includeDir: path.join(__dirname, 'src/include'),
+        includeDir: path.resolve('./src/include'),
     },
     sdk: {
-        dir: path.join(__dirname, 'sdk')
+        dir: path.resolve('./sdk')
     },
     thirdparty: {
-        dir: path.join(__dirname, 'thirdparty')
+        dir: path.resolve('./thirdparty')
     },
     build: {
         default: {
-            destDir: path.join(__dirname, 'dist')
+            destDir: path.resolve('./dist/vanilla')
         },
         reapi: {
-            destDir: path.join(__dirname, 'dist_reapi')
+            destDir: path.resolve('./dist/reapi')
+        },
+        bundles: {
+            destDir: path.resolve('./dist/bundles')
         }
     }
 };
