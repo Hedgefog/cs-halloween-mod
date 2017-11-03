@@ -281,7 +281,7 @@ public PInv_Event_SlotLoaded(id, slotIdx)
     }
     
     if (!LoadItem(item, cosmetic, cosmeticType, itemTime, itemState)) {
-        // PInv_SetItem(id, slotIdx, Invalid_Array, PInv_Invalid_ItemType);
+        PInv_SetItem(id, slotIdx, Invalid_Array, PInv_Invalid_ItemType);
         PInv_TakeItem(id, slotIdx);
         return; //Invalid cosmetic
     }
