@@ -11,6 +11,7 @@ HWN_MENU_HELP = Use choose team key ('m' by default) to open mod menu.
 HWN_MENU_TITLE = Halloween Mod Menu
 HWN_EQUIPMENT_MENU_TITLE = Equipment
 HWN_COSMETIC_MENU_TITLE = Cosmetic Inventory
+HWN_COSMETIC_MENU_EMPTY = You have no cosmetic items
 
 [ru]
 HWN_GIFT_SPAWN = Призрачный Подарок таинственно появился в случайном месте,^nтолько для вас. Идите и найдите его!
@@ -25,6 +26,7 @@ HWN_MENU_HELP = Используйте клавишу смены команды 
 HWN_MENU_TITLE = Halloween Mod Меню
 HWN_EQUIPMENT_MENU_TITLE = Экипировка
 HWN_COSMETIC_MENU_TITLE = Аксессуары
+HWN_COSMETIC_MENU_EMPTY = У вас нету аксессуаров
 
 [es]
 HWN_GIFT_SPAWN = Un misterioso regalo de ^nHalloween ha aparecido en algun lugar,^nve y encuentralo!
@@ -39,6 +41,7 @@ HWN_MENU_HELP = Use choose team key ('m' by default) to open mod menu.
 HWN_MENU_TITLE = Halloween Mod Menu
 HWN_EQUIPMENT_MENU_TITLE = Equipment
 HWN_COSMETIC_MENU_TITLE = Cosmetic Inventory
+HWN_COSMETIC_MENU_EMPTY = You have no cosmetic items
 
 [ro]
 HWN_GIFT_SPAWN = Un Cadou Bantuit de Halloween a^naparut in mod misterios undeva,^nasezat doar pentru tine. Du-te si gaseste-l!
@@ -53,3 +56,4 @@ HWN_MENU_HELP = Use choose team key ('m' by default) to open mod menu.
 HWN_MENU_TITLE = Halloween Mod Menu
 HWN_EQUIPMENT_MENU_TITLE = Equipment
 HWN_COSMETIC_MENU_TITLE = Cosmetic Inventory
+HWN_COSMETIC_MENU_EMPTY = You have no cosmetic items
