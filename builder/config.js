@@ -5,6 +5,7 @@ const userConfig = false;
 module.exports = {
     version: '1.0.0',
     compiler: {
+        dir: path.resolve('./compiler'),
         executable: path.resolve('./compiler/amxxpc')
     },
     project: {
