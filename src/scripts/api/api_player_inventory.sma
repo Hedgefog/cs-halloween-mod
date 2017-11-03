@@ -62,6 +62,7 @@ public plugin_init()
 public plugin_end()
 {        
     for (new id = 0; id <= g_maxPlayers; ++id) {
+        SavePlayerInventory(id);
         DestroyPlayerInventory(id);
     }
     
@@ -369,6 +370,10 @@ LoadPlayerInventory(id)
 
 SavePlayerInventory(id)
 {
+    if (g_userAuthID == Invalid_Array) {
+        return;
+    }
+
     new Array:inventory = ArrayGetCell(g_playerInventories, id);
     if (inventory == Invalid_Array) {
         return;
@@ -389,7 +394,7 @@ SavePlayerInventory(id)
     new inventorySize = 0;
     for (new i = 0; i < size; ++i)
     {
-        new Array:slot = ArrayGetCell(inventory, inventorySize);
+        new Array:slot = ArrayGetCell(inventory, i);
         
         new itemType = ArrayGetCell(slot, Slot_ItemType);
         if (itemType == _:PInv_Invalid_ItemType) {
