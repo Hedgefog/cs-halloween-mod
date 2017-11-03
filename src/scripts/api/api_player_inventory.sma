@@ -24,6 +24,7 @@ new g_fwTakeSlot;
 new g_fwSlotLoaded;
 new g_fwSlotSaved;
 new g_fwResult;
+new g_fwDestroy;
 
 new g_hVault;
 
@@ -45,6 +46,7 @@ public plugin_precache()
     g_fwTakeSlot = CreateMultiForward("PInv_Event_TakeSlot", ET_IGNORE, FP_CELL, FP_CELL);
     g_fwSlotLoaded = CreateMultiForward("PInv_Event_SlotLoaded", ET_IGNORE, FP_CELL, FP_CELL);
     g_fwSlotSaved = CreateMultiForward("PInv_Event_SlotSaved", ET_IGNORE, FP_CELL, FP_CELL);
+    g_fwDestroy = CreateMultiForward("PInv_Event_Destroy", ET_IGNORE);
 }
 
 public plugin_init()
@@ -62,6 +64,7 @@ public plugin_init()
 public plugin_end()
 {        
     for (new id = 0; id <= g_maxPlayers; ++id) {
+        SavePlayerInventory(id);
         DestroyPlayerInventory(id);
     }
     
@@ -77,6 +80,8 @@ public plugin_end()
     }
     
     nvault_close(g_hVault);
+
+    ExecuteForward(g_fwDestroy, g_fwResult);
 }
 
 public plugin_natives()
@@ -369,6 +374,10 @@ LoadPlayerInventory(id)
 
 SavePlayerInventory(id)
 {
+    if (g_userAuthID == Invalid_Array) {
+        return;
+    }
+
     new Array:inventory = ArrayGetCell(g_playerInventories, id);
     if (inventory == Invalid_Array) {
         return;
@@ -389,7 +398,7 @@ SavePlayerInventory(id)
     new inventorySize = 0;
     for (new i = 0; i < size; ++i)
     {
-        new Array:slot = ArrayGetCell(inventory, inventorySize);
+        new Array:slot = ArrayGetCell(inventory, i);
         
         new itemType = ArrayGetCell(slot, Slot_ItemType);
         if (itemType == _:PInv_Invalid_ItemType) {

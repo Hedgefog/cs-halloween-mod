@@ -81,43 +81,66 @@ public OnPickup(ent, id)
     {
         case PumpkinType_Equipment:
         {
-            new clip, ammo;
-            new weapon = get_user_weapon(id, clip, ammo);
-            new ammoType = WeaponAmmo[weapon];
-            
-            if (ammoType >= 0) {
-                give_item(id, AmmoEntityNames[ammoType]);
-            }
-            
-            new Float:fArmor = float(pev(id, pev_armorvalue));
-            
-            if (fArmor < 100.0)
-            {
-                fArmor += 30.0;
-            
-                if (fArmor > 100.0)
-                    fArmor = 100.0;
-                
-                set_pev(id, pev_armorvalue, fArmor);
-            }
+            GiveAmmo(id);
+            GiveArmor(id, 30.0);
         }
         case PumpkinType_Health:
         {
-            new Float:fHealth;
-            pev(id, pev_health, fHealth);
-            
-            if (fHealth < 100.0)
-            {
-                fHealth += 30.0;
-            
-                if (fHealth > 100.0)
-                    fHealth = 100.0;
-                
-                set_pev(id, pev_health, fHealth);
-            }
+            GiveHealth(id, 30.0);
         }
     }
     
     emit_sound(ent, CHAN_BODY, g_szSndItemPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
     return PLUGIN_HANDLED;
+}
+
+/*------------[ Methods ]------------*/
+
+GiveHealth(id, Float:fCount)
+{
+    new Float:fHealth;
+    pev(id, pev_health, fHealth);
+    
+    if (fHealth < 100.0) {
+        fHealth += fCount;
+    
+        if (fHealth > 100.0) {
+            fHealth = 100.0;
+        }
+        
+        set_pev(id, pev_health, fHealth);
+    }
+}
+
+
+GiveArmor(id, Float:fCount)
+{
+    new Float:fArmor = float(pev(id, pev_armorvalue));
+    
+    if (fArmor < 100.0) {
+        fArmor += fCount;
+    
+        if (fArmor > 100.0) {
+            fArmor = 100.0;
+        }
+        
+        set_pev(id, pev_armorvalue, fArmor);
+    }
+}
+
+GiveAmmo(id)
+{
+    new weapons[32];
+    new weaponCount = 0;
+
+    get_user_weapons(id, weapons, weaponCount);
+
+    for (new i = 0; i < weaponCount; ++i) {
+        new weapon = weapons[i];
+        new ammoType = WeaponAmmo[weapon];
+        
+        if (ammoType >= 0) {
+            give_item(id, AmmoEntityNames[ammoType]);
+        }
+    }
 }

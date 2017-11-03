@@ -26,7 +26,7 @@
 
 #define ZERO_VECTOR_F Float:{0.0, 0.0, 0.0}
 
-#define MONOCULUS_ROCKET_SPEED 960.0
+#define MONOCULUS_ROCKET_SPEED 720.0
 #define MONOCULUS_PUSHBACK_SPEED 128.0
 #define MONOCULUS_MIN_HEIGHT 128.0
 #define MONOCULUS_MAX_HEIGHT 320.0
@@ -115,7 +115,7 @@ new const g_actions[Action][NPC_Action] =
 };
 
 const Float:NPC_Health = 10000.0;
-const Float:NPC_Speed = 32.0;
+const Float:NPC_Speed = 64.0;
 const Float:NPC_HitRange = 1024.0;
 const Float:NPC_AttackDelay = 0.33;
 

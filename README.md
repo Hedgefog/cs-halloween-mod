@@ -1,10 +1,11 @@
 ![](./logo.png)
 
 ### Halloween Mod for Counter-Strike 1.6
-__Version:__ 3.0.1
+__Version:__ 3.1.0
 
 #### Deploy
 - Clone repository.
+- Extract compiler executable and includes to _"compiler"_ folder of project.
 - Extract RoundControl module to _"thirdparty/round-control"_ folder of project (example: _"thirdparty/round-control/addons"_).
 - Extract ReAPI module to _"thirdparty/reapi"_ folder of project (example: _"thirdparty/reapi/addons"_).
 
