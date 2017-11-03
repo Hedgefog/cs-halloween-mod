@@ -1,5 +1,6 @@
 const resolveThirdparty = require('./helpers/third-party.resolver');
 const config = require('./helpers/user-config.resolver');
+const generateReadme = require('./helpers/bundle-readme.generator');
 
 const path = require('path');
 const fs = require('fs');
@@ -91,10 +92,12 @@ gulp.task('pack:full', () => {
 
     const buildDir = resolveBundledDir('full');
 
-    const resArchiveName = resolveArchiveName('resources');
-    const addonsArchiveName = resolveArchiveName('addons');
-    const reapiAddonsArchiveName = resolveArchiveName('addons-reapi');
-    const bundleArchiveName = resolveArchiveName('bundle');
+    const archiveNames = {
+        resources: resolveArchiveName('resources'),
+        addons: resolveArchiveName('addons'),
+        reapiAddons: resolveArchiveName('addons-reapi'),
+        bundle: resolveArchiveName('bundle')
+    };
 
     return merge2(
         [
@@ -102,35 +105,27 @@ gulp.task('pack:full', () => {
                 distDir + '/addons{,/**}',
                 resolveThirdparty('round-control') + '/**'
             ])
-                .pipe(zip(addonsArchiveName))
+                .pipe(zip(archiveNames.addons))
                 .pipe(gulp.dest(buildDir)),
 
             gulp.src([
                 reapiDistDir + '/addons{,/**}'
             ])
-                .pipe(zip(reapiAddonsArchiveName))
+                .pipe(zip(archiveNames.reapiAddons))
                 .pipe(gulp.dest(buildDir)),
 
             gulp.src([
                 distDir + '/**',
                 '!' + distDir + '/addons{,/**}',
             ])
-                .pipe(zip(resArchiveName))
+                .pipe(zip(archiveNames.resources))
                 .pipe(gulp.dest(buildDir)),
 
-            file('README.TXT', [
-                '[INSTALLATION]',
-                '   Extract addons and resources to cstrike folder',
-                '',
-                '[FILES]',
-                `   ${addonsArchiveName}        - addons for vanilla server`,
-                `   ${reapiAddonsArchiveName}   - addons for ReAPI`,
-                `   ${resArchiveName}           - resources`
-            ].join('\r\n'), {src: true})
+            file('README.TXT', generateReadme(archiveNames), {src: true})
                 .pipe(gulp.dest(buildDir)),
         ],
     )
-        .pipe(zip(bundleArchiveName))
+        .pipe(zip(archiveNames.bundle))
         .pipe(gulp.dest(buildDir));
 });
 
