@@ -5,6 +5,7 @@ __Version:__ 3.0.1
 
 #### Deploy
 - Clone repository.
+- Extract compiler executable and includes to _"compiler"_ folder of project.
 - Extract RoundControl module to _"thirdparty/round-control"_ folder of project (example: _"thirdparty/round-control/addons"_).
 - Extract ReAPI module to _"thirdparty/reapi"_ folder of project (example: _"thirdparty/reapi/addons"_).
 

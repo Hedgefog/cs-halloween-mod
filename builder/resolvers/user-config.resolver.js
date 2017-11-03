@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const configFilename = path.join(process.cwd(), 'config.js');
+const configFilename = path.join('../config');
 const userConfigFilename = path.join(process.cwd(), 'config.user.js');
 
 if (!fs.existsSync(userConfigFilename)) {
