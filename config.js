@@ -9,6 +9,12 @@ module.exports = {
     project: {
         includeDir: path.join(__dirname, 'src/include'),
     },
+    sdk: {
+        dir: path.join(__dirname, 'sdk')
+    },
+    thirdparty: {
+        dir: path.join(__dirname, 'thirdparty')
+    },
     build: {
         default: {
             destDir: path.join(__dirname, 'dist')
