@@ -99,19 +99,8 @@ public plugin_natives()
 
 public plugin_end()
 {
-    TrieDestroy(g_cosmeticIndexes);
-
-    if (g_cosmeticCount)  {
-        ArrayDestroy(g_cosmeticName);
-        ArrayDestroy(g_cosmeticGroups);
-        ArrayDestroy(g_cosmeticModelIndex);    
-        ArrayDestroy(g_cosmeticUnusualColor);
-    }
-
     ArrayDestroy(g_playerRenderMode);
     ArrayDestroy(g_playerRenderAmt);
-    
-    nvault_close(g_hVault);
 }
 
 #if AMXX_VERSION_NUM < 183
@@ -337,6 +326,20 @@ public PInv_Event_TakeSlot(id, slotIdx)
     }
     
     ArrayDestroy(item);
+}
+
+public PInv_Event_Destroy()
+{
+    TrieDestroy(g_cosmeticIndexes);
+
+    if (g_cosmeticCount)  {
+        ArrayDestroy(g_cosmeticName);
+        ArrayDestroy(g_cosmeticGroups);
+        ArrayDestroy(g_cosmeticModelIndex);    
+        ArrayDestroy(g_cosmeticUnusualColor);
+    }
+    
+    nvault_close(g_hVault);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
