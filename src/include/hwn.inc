@@ -1,4 +1,13 @@
 /*
+    3.1.0
+        Equipment pumpkin now give ammo for all weapons.
+        Cosmetic equip state now saved on player disconnect.
+        Added localization for empty comsetic menu text.
+        Added PInv_Event_Destroy forward, call when the player inventory api plugin destroy the handlers.
+        Cosmetic api plugin now destroy handlers after player inventory api plugin.
+        Fixed issue when the player losing some cosmetic items after disconnect.
+        Fixed issue when the player's inventory was not saved after the server restart.
+
     3.0.1
         Fixed HHH NPC Pathfinding.
         Fixed monoculus rocket entity.
@@ -93,7 +102,7 @@
 #define HWN_COLOR_GREEN_DARK         47, 95, 15
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "3.0.1"
+#define HWN_VERSION "3.1.0"
 
 enum Hwn_GamemodeFlags (<<=1)
 {

@@ -1,7 +1,7 @@
 ![](./logo.png)
 
 ### Halloween Mod for Counter-Strike 1.6
-__Version:__ 3.0.1
+__Version:__ 3.1.0
 
 #### Deploy
 - Clone repository.
