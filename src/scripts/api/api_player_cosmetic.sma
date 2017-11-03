@@ -67,8 +67,8 @@ public plugin_init()
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
     
-    g_playerRenderMode    = ArrayCreate(1, g_maxPlayers+1);
-    g_playerRenderAmt    = ArrayCreate(1, g_maxPlayers+1);
+    g_playerRenderMode = ArrayCreate(1, g_maxPlayers+1);
+    g_playerRenderAmt = ArrayCreate(1, g_maxPlayers+1);
     
     g_maxPlayers = get_maxplayers();    
     
@@ -99,19 +99,8 @@ public plugin_natives()
 
 public plugin_end()
 {
-    TrieDestroy(g_cosmeticIndexes);
-
-    if (g_cosmeticCount)  {
-        ArrayDestroy(g_cosmeticName);
-        ArrayDestroy(g_cosmeticGroups);
-        ArrayDestroy(g_cosmeticModelIndex);    
-        ArrayDestroy(g_cosmeticUnusualColor);
-    }
-
     ArrayDestroy(g_playerRenderMode);
     ArrayDestroy(g_playerRenderAmt);
-    
-    nvault_close(g_hVault);
 }
 
 #if AMXX_VERSION_NUM < 183
@@ -128,7 +117,7 @@ public plugin_end()
             continue;
         }
     
-        Unequip(id, i);
+        Unequip(id, i, .changeState = false);
     }
     
     ClearPlayerTasks(id);
@@ -198,15 +187,13 @@ public Native_Equip(pluginID, argc)
     new Array:item = Array:PInv_GetItem(id, slotIdx);        
     new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
     
-    if (itemState == ItemState_Equiped) {
-        return;
+    if (itemState == ItemState_None) {
+        itemState = ItemState_Equip;
+    } else if (itemState == ItemState_Unequip) {
+        itemState = ItemState_Equiped;
     }
     
-    if (itemState == ItemState_Equip) {
-        return;
-    }
-    
-    ArraySetCell(item, _:ItemData_State, ItemState_Equip);
+    ArraySetCell(item, _:ItemData_State, itemState);
 }
 
 public Native_Unequip(pluginID, argc)
@@ -217,15 +204,13 @@ public Native_Unequip(pluginID, argc)
     new Array:item = Array:PInv_GetItem(id, slotIdx);        
     new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
     
-    if (itemState == ItemState_None) {
-        return;
+    if (itemState == ItemState_Equiped) {
+        itemState = ItemState_Unequip;
+    } else if (itemState == ItemState_Equip) {
+        itemState = ItemState_None;
     }
-    
-    if (itemState == ItemState_Unequip) {
-        return;
-    }
-    
-    ArraySetCell(item, _:ItemData_State, ItemState_Unequip);
+
+    ArraySetCell(item, _:ItemData_State, itemState);
 }
 
 public Native_IsItemEquiped(pluginID, argc)
@@ -296,13 +281,18 @@ public PInv_Event_SlotLoaded(id, slotIdx)
     }
     
     if (!LoadItem(item, cosmetic, cosmeticType, itemTime, itemState)) {
-        PInv_SetItem(id, slotIdx, Invalid_Array, PInv_Invalid_ItemType);
+        // PInv_SetItem(id, slotIdx, Invalid_Array, PInv_Invalid_ItemType);
         PInv_TakeItem(id, slotIdx);
         return; //Invalid cosmetic
     }
     
-    new _item = _:CreateCosmetic(cosmetic, cosmeticType, itemTime);
-    item = _item;
+    item = _:CreateCosmetic(cosmetic, cosmeticType, itemTime);
+
+    if (itemState == ItemState_Equiped) {
+        itemState = ItemState_Equip;
+    } else if (itemState == ItemState_Unequip) {
+        itemState = ItemState_None;
+    }
     
     PInv_SetItem(id, slotIdx, item, g_itemType);
     ArraySetCell(Array:item, _:ItemData_State, itemState); //Change state of item
@@ -336,6 +326,20 @@ public PInv_Event_TakeSlot(id, slotIdx)
     }
     
     ArrayDestroy(item);
+}
+
+public PInv_Event_Destroy()
+{
+    TrieDestroy(g_cosmeticIndexes);
+
+    if (g_cosmeticCount)  {
+        ArrayDestroy(g_cosmeticName);
+        ArrayDestroy(g_cosmeticGroups);
+        ArrayDestroy(g_cosmeticModelIndex);    
+        ArrayDestroy(g_cosmeticUnusualColor);
+    }
+    
+    nvault_close(g_hVault);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -435,7 +439,7 @@ Equip(id, slotIdx)
     ArraySetCell(item, _:ItemData_State, ItemState_Equiped);
 }
 
-Unequip(id, slotIdx)
+Unequip(id, slotIdx, bool:changeState = true)
 {
     new PInv_ItemType:itemType = PInv_GetItemType(id, slotIdx);
     if (itemType != g_itemType) {
@@ -457,10 +461,13 @@ Unequip(id, slotIdx)
     }
 
     ArraySetCell(item, _:ItemData_Entity, 0);
-    ArraySetCell(item, _:ItemData_State, ItemState_None);
+
+    if (changeState) {
+        ArraySetCell(item, _:ItemData_State, ItemState_None);
+    }
     
     new itemTime = ArrayGetCell(item, _:ItemData_Time);
-    if (!itemTime) {
+    if (itemTime <= 0) {
         PInv_TakeItem(id, slotIdx);
     }
 }
@@ -530,7 +537,7 @@ UpdateEquipment(id)
     {
         new PInv_ItemType:itemType = PInv_GetItemType(id, i);
         if (itemType != g_itemType) {
-            return; //Invalid item type
+            continue; //Invalid item type
         }    
     
         new Array:item = Array:PInv_GetItem(id, i);
@@ -611,7 +618,7 @@ bool:LoadItem(any:item, &cosmetic, &PCosmetic_Type:cosmeticType, &itemTime, &Ite
 SaveItem(any:item)
 {
     new itemTime = ArrayGetCell(item, _:ItemData_Time);
-    if (!itemTime) {
+    if (itemTime <= 0) {
         return;
     }
     
@@ -644,15 +651,9 @@ SaveItem(any:item)
     
     new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
     {
-        if (itemState == ItemState_Equip) {
-            itemState = ItemState_Equiped;
-        } else if (itemState == ItemState_Unequip) {
-            itemState = ItemState_None;
-        }
-    
         format(szKey, charsmax(szKey), "%i_state", item);
         format(szValue, charsmax(szValue), "%i", itemState);
-        
+
         nvault_set(g_hVault, szKey, szValue);
     }
 }

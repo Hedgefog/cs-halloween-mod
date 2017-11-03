@@ -25,3 +25,4 @@ forward PInv_Event_SlotLoaded(id, slotIdx);
 forward PInv_Event_SlotSaved(id, slotIdx);
 forward Pinv_Event_NewSlot(id, slotIdx);
 forward Pinv_Event_TakeSlot(id, slotIdx);
+forward PInv_Event_Destroy();

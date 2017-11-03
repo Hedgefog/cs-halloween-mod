@@ -16,6 +16,8 @@ new Array:g_playerMenuSlotRefs;
 
 new g_maxPlayers;
 
+static g_szEmptyCosmeticText[32];
+
 public plugin_init()
 {
     register_plugin(PLUGIN, VERSION, AUTHOR);
@@ -30,6 +32,8 @@ public plugin_init()
         ArrayPushCell(g_playerMenu, 0);
         ArrayPushCell(g_playerMenuSlotRefs, Invalid_Array);
     }
+
+    format(g_szEmptyCosmeticText, charsmax(g_szEmptyCosmeticText), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_EMPTY");
 }
 
 public plugin_natives()
@@ -123,7 +127,7 @@ Create(id)
     }
     
     if (!size) {
-        menu_additem(menu, "You have no cosmetic items", .callback = callbackDisabled);
+        menu_additem(menu, g_szEmptyCosmeticText, .callback = callbackDisabled);
     }
     
     menu_setprop(menu, MPROP_EXIT, MEXIT_ALL);

@@ -24,7 +24,10 @@ const defaultDestConfig = resolveDestConfig(config.build.default.destDir);
 const defaultSmaConfig = {
     compiler: config.compiler.executable,
     dest: defaultDestConfig.pluginsDir,
-    includeDir: config.project.includeDir
+    includeDir: [
+        resolveThirdparty('round-control/addons/amxmodx/scripting/include'),
+        config.project.includeDir
+    ]
 };
 
 const buildTaskFactory = require('./helpers/build-task.factory');
