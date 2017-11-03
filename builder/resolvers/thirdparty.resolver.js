@@ -6,7 +6,7 @@ const constants = require('../constants');
 
 const resolveThirdparty = (relativepPath) => path.join(config.dir, relativepPath);
 
-const thirdpartyRelative = path.relative(config.dir, process.cwd());
+const thirdpartyRelative = path.relative(process.cwd(), config.dir);
 
 if (!fs.existsSync(resolveThirdparty(`${constants.reapiDir}/addons`))) {
     throw new Error(`extract ReAPI to "${thirdpartyRelative}/${constants.reapiDir}" directory`);

@@ -1,4 +1,4 @@
-const resolveThirdparty = require('../resolvers/third-party.resolver');
+const resolveThirdparty = require('../resolvers/thirdparty.resolver');
 
 const generateReadme = require('../generators/bundle-readme.generator');
 

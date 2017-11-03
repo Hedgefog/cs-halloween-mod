@@ -1,4 +1,4 @@
-const resolveThirdparty = require('../resolvers/third-party.resolver');
+const resolveThirdparty = require('../resolvers/thirdparty.resolver');
 const config = require('../resolvers/user-config.resolver');
 const constants = require('../constants');
 
