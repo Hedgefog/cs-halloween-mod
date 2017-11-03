@@ -17,7 +17,7 @@ module.exports = {
         dir: path.resolve('./thirdparty')
     },
     build: {
-        default: {
+        vanilla: {
             destDir: path.resolve('./dist/vanilla')
         },
         reapi: {

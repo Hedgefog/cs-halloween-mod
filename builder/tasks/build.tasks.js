@@ -1,8 +1,13 @@
+const path = require('path');
+
+const gulp = require('gulp');
+
 const resolveThirdparty = require('../resolvers/thirdparty.resolver');
 const config = require('../resolvers/user-config.resolver');
-const constants = require('../constants');
 
-const path = require('path');
+const buildTaskFactory = require('../factories/build-task.factory');
+
+const constants = require('../constants');
 
 const resolveDestConfig = (destDir) => ({
     dir: destDir,
@@ -11,42 +16,66 @@ const resolveDestConfig = (destDir) => ({
     scriptsDir: path.join(destDir, 'addons/amxmodx/scripting')
 });
 
-const defaultDestConfig = resolveDestConfig(config.build.default.destDir);
+const buildTasks = [];
+const watchTasks = [];
 
-const defaultSmaConfig = {
-    compiler: config.compiler.executable,
-    dest: defaultDestConfig.pluginsDir,
-    includeDir: [
-        resolveThirdparty(`${constants.roundControlDir}/addons/amxmodx/scripting/include`),
-        config.project.includeDir
-    ]
-};
+// vanilla server
 
-const buildTaskFactory = require('../factories/build-task.factory');
+if (config.build.vanilla) {
+    const vanillaDestConfig = resolveDestConfig(config.build.vanilla.destDir);
+    const vanillaSmaConfig = {
+        compiler: config.compiler.executable,
+        dest: vanillaDestConfig.pluginsDir,
+        includeDir: [
+            resolveThirdparty(`${constants.roundControlDir}/addons/amxmodx/scripting/include`),
+            config.project.includeDir
+        ]
+    };
 
-buildTaskFactory('build:default', {
-  smaConfig: defaultSmaConfig,
-  dest: defaultDestConfig
-});
+    buildTaskFactory('build:vanilla', {
+        smaConfig: vanillaSmaConfig,
+        dest: vanillaDestConfig
+    });
+    
+    buildTaskFactory('watch:vanilla', {
+        smaConfig: vanillaSmaConfig,
+        dest: vanillaDestConfig,
+        watch: true
+    });
 
-buildTaskFactory('build:reapi', () => {
-  const destConfig = resolveDestConfig(config.build.reapi.destDir);
+    buildTasks.push('build:vanilla');
+    watchTasks.push('watch:vanilla');
+}
 
-  return {
-      smaConfig: {
-          compiler: config.compiler.executable,
-          dest: destConfig.pluginsDir,
-          includeDir: [
-              resolveThirdparty(`${constants.roundControlDir}/addons/amxmodx/scripting/include`),
-              config.project.includeDir
-          ]
-      },
-      dest: destConfig
-  };
-});
+// ReAPI server
 
-buildTaskFactory('watch', {
-  smaConfig: defaultSmaConfig,
-  dest: defaultDestConfig,
-  watch: true
-});
+if (config.build.reapi) {
+    const reapiDestConfig = resolveDestConfig(config.build.reapi.destDir);
+    const reapiSmaConfig = {
+        compiler: config.compiler.executable,
+        dest: reapiDestConfig.pluginsDir,
+        includeDir: [
+            resolveThirdparty(`${constants.reapiDir}/addons/amxmodx/scripting/include`),
+            config.project.includeDir
+        ]
+    }
+
+    buildTaskFactory('watch:reapi', {
+        smaConfig: reapiSmaConfig,
+        dest: reapiDestConfig,
+        watch: true
+    });
+
+    buildTaskFactory('build:reapi', {
+        smaConfig: reapiSmaConfig,
+        dest: reapiDestConfig
+    });
+
+    buildTasks.push('build:reapi');
+    watchTasks.push('watch:reapi');
+}
+
+// final tasks
+
+gulp.task('build', buildTasks);
+gulp.task('watch', watchTasks);

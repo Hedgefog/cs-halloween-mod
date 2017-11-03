@@ -21,7 +21,13 @@ const resolveArchiveName = (sufix) => `hwn-${package.version.replace(/\./g, '')}
 const resolveBundledDir = (name) => path.join(config.build.bundles.destDir, name);
 
 gulp.task('pack:alliedmods', () => {
-    const distDir = config.build.default.destDir;
+    const build = config.build.vanilla || config.build.reapi;
+
+    if (!build) {
+        throw new Error('Building config not found!');
+    }
+
+    const distDir = build.destDir;
 
     if (!fs.existsSync(distDir)) {
         throw new Error('Build project before packing');
@@ -47,11 +53,10 @@ gulp.task('pack:alliedmods', () => {
 });
 
 gulp.task('pack:full', () => {
-    const distDir = config.build.default.destDir;
-    const reapiDistDir = config.build.reapi.destDir;
-
-    if (!fs.existsSync(distDir) || !fs.existsSync(reapiDistDir)) {
-        throw new Error('Build project before packing');
+    const build = config.build.vanilla || config.build.reapi;
+    
+    if (!build) {
+        throw new Error('Building config not found!');
     }
 
     const buildDir = resolveBundledDir('full');
@@ -63,31 +68,55 @@ gulp.task('pack:full', () => {
         bundle: resolveArchiveName('bundle')
     };
 
-    return merge2(
-        [
+    const tasks = [];
+    
+    if (config.build.vanilla) {
+        const vanillaDistDir = config.build.vanilla.destDir;
+
+        if (!fs.existsSync(vanillaDistDir)) {
+            throw new Error('Build project before packing');
+        }
+
+        tasks.push(
             gulp.src([
-                distDir + '/addons{,/**}',
+                vanillaDistDir + '/addons{,/**}',
                 resolveThirdparty(constants.roundControlDir) + '/**'
             ])
                 .pipe(zip(archiveNames.addons))
-                .pipe(gulp.dest(buildDir)),
+                .pipe(gulp.dest(buildDir))
+        );
+    }
 
+    if (config.build.reapi) {
+        const reapiDistDir = config.build.reapi.destDir;
+
+        if (!fs.existsSync(reapiDistDir)) {
+            throw new Error('Build ReAPI project before packing');
+        }
+
+        tasks.push(
             gulp.src([
                 reapiDistDir + '/addons{,/**}'
             ])
                 .pipe(zip(archiveNames.reapiAddons))
-                .pipe(gulp.dest(buildDir)),
+                .pipe(gulp.dest(buildDir))
+        );
+    }
+
+    return merge2(
+        [
+            ...tasks,
 
             gulp.src([
-                distDir + '/**',
-                '!' + distDir + '/addons{,/**}',
+                build.destDir + '/**',
+                '!' + build.destDir + '/addons{,/**}',
             ])
                 .pipe(zip(archiveNames.resources))
                 .pipe(gulp.dest(buildDir)),
 
             file('README.TXT', generateReadme(archiveNames), {src: true})
-                .pipe(gulp.dest(buildDir)),
-        ],
+                .pipe(gulp.dest(buildDir))
+        ]
     )
         .pipe(zip(archiveNames.bundle))
         .pipe(gulp.dest(buildDir));
@@ -104,5 +133,4 @@ gulp.task('pack:sdk', () => {
         .pipe(gulp.dest(buildDir));
 });
 
-gulp.task('pack', ['pack:alliedmods', 'pack:full', 'pack:sdk']);
-gulp.task('default', ['build:default', 'build:reapi']);
+gulp.task('pack', ['pack:full', 'pack:alliedmods', 'pack:sdk']);
