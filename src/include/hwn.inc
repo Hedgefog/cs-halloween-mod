@@ -5,6 +5,7 @@
         Added localization for empty comsetic menu text.
         Added PInv_Event_Destroy forward, call when the player inventory api plugin destroy the handlers.
         Cosmetic api plugin now destroy handlers after player inventory api plugin.
+        Monoculus rocket speed reduced to 720 ups.
         Fixed issue when the player losing some cosmetic items after disconnect.
         Fixed issue when the player's inventory was not saved after the server restart.
 
