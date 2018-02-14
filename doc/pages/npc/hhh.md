@@ -2,7 +2,7 @@
 
 ![](../../images/npc/hhh.png)
 
-> **The Headless Horseless Horsemann** are Boss NPC with melee weapon.
+> **The Headless Horseless Horsemann** is a boss NPC with melee weapon.
 >
 > The Headless Horseless Horsemann uses A* path finding algorithm to find victims, also he attack all players in reachable range.
 
