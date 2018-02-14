@@ -3,7 +3,7 @@
 
 ![](../../images/npc/monoculus.png)
 
-> **Monoculus** are Boss NPC.
+> **Monoculus** is a boss NPC.
 >
 > Monoculus attack players using explosion eyeballs.
 >
