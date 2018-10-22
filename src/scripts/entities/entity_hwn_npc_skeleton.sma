@@ -95,7 +95,7 @@ public plugin_precache()
 
     g_ceHandler = CE_Register(
         .szName = ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/npc/skeleton.mdl"),
+        .modelIndex = precache_model("models/hwn/npc/skeleton_lp.mdl"),
         .vMins = Float:{-12.0, -12.0, -32.0},
         .vMaxs = Float:{12.0, 12.0, 32.0},
         .fLifeTime = 30.0,
@@ -184,7 +184,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 242, floatround(fDamage/4));
 }
 
-Action:Attack(ent, target, &Action:action)
+Attack(ent, target, &Action:action)
 {
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
@@ -265,7 +265,7 @@ public TaskThink(taskID)
     }
     
     new Action:action = Action_Idle;
-    
+
     new enemy = pev(ent, pev_enemy);
     if (NPC_IsValidEnemy(enemy)) {    
         Attack(ent, enemy, action);
