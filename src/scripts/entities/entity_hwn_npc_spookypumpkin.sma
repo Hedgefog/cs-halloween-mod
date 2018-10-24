@@ -39,10 +39,13 @@ enum Action
 };
 
 const Float:NPC_Health = 70.0;
-const Float:NPC_Speed = 128.0;
+const Float:NPC_Speed = 128.0; // for jump velocity
 const Float:NPC_Damage = 10.0;
 const Float:NPC_HitRange = 48.0;
-const Float:NPC_HitDelay = 0.35;
+const Float:NPC_HitDelay = 0.5;
+
+const Float:ENTITY_LifeTime = 30.0;
+const Float:ENTITY_RespawnTime = 30.0;
 
 const Float:SP_BigScaleMul = 1.5;
 const Float:SP_JumpVelocityY = 128.0;
@@ -60,7 +63,7 @@ new const g_actions[Action][NPC_Action] = {
     { Sequence_JumpStart, Sequence_JumpStart, 0.6 },
     { Sequence_JumpFloat, Sequence_JumpFloat, 0.0 },
     { Sequence_Why, Sequence_Why, 0.0 },
-    { Sequence_Attack, Sequence_Attack, 1.2 },
+    { Sequence_Attack, Sequence_Attack, 1.2 }
 };
 
 new g_mdlGibs;
@@ -92,8 +95,8 @@ public plugin_precache()
         .modelIndex = precache_model("models/hwn/npc/spookypumpkin.mdl"),
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
-        .fLifeTime = 30.0,
-		.fRespawnTime = 30.0,
+        .fLifeTime = ENTITY_LifeTime,
+		.fRespawnTime = ENTITY_RespawnTime,
         .preset = CEPreset_NPC
     );
 
@@ -102,12 +105,10 @@ public plugin_precache()
         .modelIndex = precache_model("models/hwn/npc/spookypumpkin_big.mdl"),
         .vMins = Float:{-24.0, -24.0, 0.0},
         .vMaxs = Float:{24.0, 24.0, 48.0},
-        .fLifeTime = 30.0,
-		.fRespawnTime = 30.0,
+        .fLifeTime = ENTITY_LifeTime,
+		.fRespawnTime = ENTITY_RespawnTime,
         .preset = CEPreset_NPC
     );
-
-    g_cvarPumpkinMutateChance = register_cvar("hwn_pumpkin_mutate_chance", "20");
     
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_SP, "OnSpawn");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME_SP, "OnKilled");
@@ -127,6 +128,8 @@ public plugin_init()
     
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);    
     
+    g_cvarPumpkinMutateChance = register_cvar("hwn_pumpkin_mutate_chance", "20");
+
     g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
     g_maxPlayers = get_maxplayers();
 }
@@ -205,8 +208,9 @@ Attack(ent, target, &Action:action)
 
     if (NPC_CanHit(ent, target, NPC_HitRange) && !task_exists(ent+TASKID_SUM_HIT)) {
         if (Jump(ent, 0.0, SP_AttackJumpVelocityY)) {
-            action = Action_Attack;
+            EmitRandomLaugh(ent);
             set_task(NPC_HitDelay, "TaskHit", ent+TASKID_SUM_HIT);
+            action = Action_Attack;
         }
     } else {
         static Float:vTarget[3];
@@ -239,15 +243,10 @@ DisappearEffect(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    if (isBig(ent)) {
-        UTIL_Message_Dlight(vOrigin, 16, {HWN_COLOR_YELLOW}, 10, 32);
-    } else {
-        UTIL_Message_Dlight(vOrigin, 8, {HWN_COLOR_YELLOW}, 10, 32);
-    }
-
     static Float:vVelocity[3];
     UTIL_RandomVector(-16.0, 16.0, vVelocity);
 
+    UTIL_Message_Dlight(vOrigin, isBig(ent) ? 16 : 8, {HWN_COLOR_YELLOW}, 10, 32);
     UTIL_Message_BreakModel(vOrigin, Float:{4.0, 4.0, 4.0}, vVelocity, 32, g_mdlGibs, 4, 25, 0);
 }
 
