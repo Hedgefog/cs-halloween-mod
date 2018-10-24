@@ -131,7 +131,7 @@ stock UTIL_GetDirectionVector(ent, Float:vOut[3], Float:fLength = 1.0)
     vOut[2] = -vOut[2];
 }
 
-stock UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {true, false, false}) 
+stock bool:UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {true, false, false}, const Float:fMaxAngle = 0.0) 
 {
     //Get user origin
     new Float:vOrigin[3];
@@ -149,10 +149,36 @@ stock UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {true, f
             vAngles[i] = 0.0;
         }
     }
+
+    new bool:turnResult = true;
+
+    if (fMaxAngle > 0.0) {
+        new Float:vOldAngles[3];
+        pev(ent, pev_angles, vOldAngles);
+
+        new Float:fDiffAngles[3];
+        xs_vec_sub(vAngles, vOldAngles, fDiffAngles);
+
+        for (new i = 0; i < 3; ++i) {
+            if (lockAxis[i]) {
+                continue;
+            }
+
+            new direction = fDiffAngles[i] > 0 ? 1 : -1;
+
+            new Float:fAbs = fDiffAngles[i] * direction;
+            if (fAbs > fMaxAngle) {
+                vAngles[i] = vOldAngles[i] + (fMaxAngle * direction);
+                turnResult = false;
+            }
+        }
+    }
     
     //Apply new angles
     set_pev(ent, pev_angles, vAngles);
     set_pev(ent, pev_v_angle, vAngles);
+
+    return turnResult;
 }
 
 stock UTIL_Message_BloodSprite(const Float:vOrigin[3], sprBloodSpray, sprBlood, color, scale)

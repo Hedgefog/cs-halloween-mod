@@ -8,6 +8,7 @@ enum _:NPC
     Float:NPC_NextFootStep,
     Float:NPC_LastReachablePoint,
     Float:NPC_ReachTime,
+    Float:NPC_LastRotation
 }
 
 enum NPC_Action
@@ -406,8 +407,28 @@ stock NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed)
     new bool:lockAxis[3] = {true, false, true};
     lockAxis[0] = pev(ent, pev_movetype) != MOVETYPE_FLY;
 
-    UTIL_TurnTo(ent, vTarget, lockAxis);
-    NPC_MoveForward(ent, fSpeed);
+    new Array:npcData = NPC_GetData(ent);
+    new Float:fLastRotation = ArrayGetCell(npcData, NPC_LastRotation);
+    new Float:fGameTime = get_gametime();
+
+    new Float:fMaxAngle = 180.0;
+    new Float:fTimePassed = fGameTime - fLastRotation;
+
+    new bool:turnResult = UTIL_TurnTo(
+        ent,
+        vTarget,
+        lockAxis,
+        (fTimePassed > 1.0)
+            ? fMaxAngle
+            : fMaxAngle * fTimePassed
+    );
+
+    if (fSpeed > 0.0 && turnResult) {
+        set_pev(ent, pev_speed, fSpeed);
+        NPC_MoveForward(ent, fSpeed);
+    }
+
+    ArraySetCell(npcData, NPC_LastRotation, fGameTime);
 }
 
 stock NPC_MoveForward(ent, Float:fSpeed)
