@@ -469,7 +469,7 @@ bool:Attack(ent, target)
 
     if (NPC_IsVisible(vOrigin, vTarget, ent)) {
         if (task_exists(ent+TASKID_SUM_PUSH_BACK_END)) {
-            UTIL_TurnTo(ent, vTarget, bool:{false, false, true});
+            NPC_MoveToTarget(ent, vTarget, 0.0);
         } else {
             NPC_MoveToTarget(ent, vTarget, NPC_Speed);
         }
