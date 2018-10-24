@@ -99,6 +99,7 @@
 #define HWN_COLOR_PURPLE            120, 0, 200
 #define HWN_COLOR_RED_F             255.0, 0.0, 0.0
 #define HWN_COLOR_YELLOW_F             255.0, 200.0, 0.0
+#define HWN_COLOR_YELLOW             255, 200, 0
 #define HWN_COLOR_GREEN_DARK_F         47.0, 95.0, 15.0
 #define HWN_COLOR_GREEN_DARK         47, 95, 15
 
