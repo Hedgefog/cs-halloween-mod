@@ -38,7 +38,7 @@ enum Action
     Action_Attack,
 };
 
-const Float:NPC_Health = 50.0;
+const Float:NPC_Health = 70.0;
 const Float:NPC_Speed = 128.0;
 const Float:NPC_Damage = 10.0;
 const Float:NPC_HitRange = 48.0;
@@ -355,7 +355,7 @@ public TaskThink(taskID)
         action = Action_JumpFloat;
     }
     
-    new bool:supercede = action == Action_JumpStart;
+    new bool:supercede = action == Action_JumpStart || action == Action_Attack;
     NPC_PlayAction(ent, g_actions[action], supercede);
 
     set_task(g_fThinkDelay, "TaskThink", ent);
