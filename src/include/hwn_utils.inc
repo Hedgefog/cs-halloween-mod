@@ -295,3 +295,27 @@ stock UTIL_GetPlayerTeam(id)
         return get_pdata_int(id, m_iTeam);
     #endif
 }
+
+stock Array:UTIL_FindEntityNearby(const Float:vOrigin[3], const Float:fRadius)
+{
+    new Array:arr = ArrayCreate();
+
+    new target;
+    new prevTarget;
+    while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, fRadius)) != 0)
+    {
+        if (prevTarget >= target) {
+            break; // infinite loop fix
+        }
+
+        prevTarget = target;
+
+        if (!pev_valid(target)) {
+            continue;
+        }
+
+        ArrayPushCell(arr, target);
+    }
+
+    return arr;
+}
