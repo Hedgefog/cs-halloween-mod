@@ -96,7 +96,7 @@ public plugin_precache()
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
         .fLifeTime = ENTITY_LifeTime,
-		.fRespawnTime = ENTITY_RespawnTime,
+        .fRespawnTime = ENTITY_RespawnTime,
         .preset = CEPreset_NPC
     );
 
@@ -106,7 +106,7 @@ public plugin_precache()
         .vMins = Float:{-24.0, -24.0, 0.0},
         .vMaxs = Float:{24.0, 24.0, 48.0},
         .fLifeTime = ENTITY_LifeTime,
-		.fRespawnTime = ENTITY_RespawnTime,
+        .fRespawnTime = ENTITY_RespawnTime,
         .preset = CEPreset_NPC
     );
     
