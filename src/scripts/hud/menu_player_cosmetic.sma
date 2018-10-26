@@ -79,7 +79,7 @@ Open(id)
 
 Create(id)
 {    
-    new callbackDisabled = menu_makecallback("MenuDisabledCallback");    
+    new callbackDisabled = menu_makecallback("MenuDisabledCallback");
     new menu = menu_create("Cosmetic Inventory", "MenuHandler");
     
     new Array:slotRefs = ArrayGetCell(g_playerMenuSlotRefs, id);
@@ -123,7 +123,8 @@ Create(id)
             itemTime
         );
         
-        menu_additem(menu, text, .callback = PCosmetic_CanBeEquiped(id, cosmetic, i) ? -1 : callbackDisabled);
+        menu_additem(menu, text, .callback = PCosmetic_CanBeEquiped(id, cosmetic, i)
+            || PCosmetic_IsItemEquiped(id, i)  ? -1 : callbackDisabled);
     }
     
     if (!size) {
