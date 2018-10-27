@@ -256,7 +256,7 @@ stock UTIL_Message_Dlight
 (
     const Float:vOrigin[3],
     radius = 16,
-    color[3] = {255, 255, 255},
+    const color[3] = {255, 255, 255},
     lifeTime = 1,
     decayRate = 0
 )
