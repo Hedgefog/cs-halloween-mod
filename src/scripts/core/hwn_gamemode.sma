@@ -268,6 +268,10 @@ public OnRoundEnd()
 
 public Hwn_PEquipment_Event_Changed(id)
 {
+    if (!g_gamemodeCount) {
+        return;
+    }
+
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if (!(flags & Hwn_GamemodeFlag_SpecialEquip)) {
         return;
@@ -280,6 +284,10 @@ public Hwn_PEquipment_Event_Changed(id)
 
 public OnClCmd_Drop(id)
 {
+    if (!g_gamemodeCount) {
+        return PLUGIN_CONTINUE;
+    }
+
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if (!(flags & Hwn_GamemodeFlag_SpecialEquip)) {
         return PLUGIN_CONTINUE;
@@ -292,6 +300,10 @@ public OnClCmd_Drop(id)
 
 public OnClCmd_JoinClass(id)
 {
+    if (!g_gamemodeCount) {
+        return PLUGIN_CONTINUE;
+    }
+
     #if defined _reapi_included
         new menu = get_member(id, m_iMenu);
         new joinState = get_member(id, m_iJoiningState);
@@ -325,6 +337,10 @@ public OnClCmd_JoinClass(id)
 
 public OnMessage_ClCorpse()
 {
+    if (!g_gamemodeCount) {
+        return PLUGIN_CONTINUE;
+    }
+
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if (flags & Hwn_GamemodeFlag_RespawnPlayers) {
         return PLUGIN_HANDLED;
@@ -335,6 +351,10 @@ public OnMessage_ClCorpse()
 
 public OnPlayerSpawn(id)
 {
+    if (!g_gamemodeCount) {
+        return;
+    }
+
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if ((flags & Hwn_GamemodeFlag_SpecialEquip)) {
         Hwn_PEquipment_Equip(id);
@@ -380,6 +400,10 @@ public OnPlayerKilled(id)
 
 public OnSetModel(ent)
 {
+    if (!g_gamemodeCount) {
+        return;
+    }
+
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if ((flags & Hwn_GamemodeFlag_SpecialEquip))
     {
@@ -551,8 +575,8 @@ bool:IsTeamExtermination()
     
     return true;
 }
-    
-ClearRespawnTasks() {
+
+    ClearRespawnTasks() {
     for (new id = 1; id <= g_maxPlayers; ++id) {
         remove_task(id+TASKID_SUM_RESPAWN_PLAYER);
     }
