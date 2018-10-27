@@ -229,6 +229,10 @@ UpdateParticles(ent)
     }
 
     new particleEnt = Particles_Spawn("magic_glow", Float:{0.0, 0.0, 0.0}, 0.0);
+    if (!particleEnt) {
+        return;
+    }
+
     set_pev(particleEnt, pev_movetype, MOVETYPE_FOLLOW);
     set_pev(particleEnt, pev_aiment, ent);
     set_pev(ent, pev_iuser4, particleEnt);
