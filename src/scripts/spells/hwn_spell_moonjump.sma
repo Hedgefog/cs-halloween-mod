@@ -5,7 +5,7 @@
 #include <hamsandwich>
 
 #include <hwn>
-#include <hwn_spell_utils>
+#include <hwn_utils>
 
 #define PLUGIN "[Hwn] Moon Jump Spell"
 #define AUTHOR "Hedgehog Fog"
@@ -15,17 +15,13 @@
 
 const Float:EffectTime = 25.0;
 
-const Float:EffectRadius = 128.0;
-new const EffectColor[3] = {255, 255, 255};
+const EffectRadius = 48;
+new const EffectColor[3] = {32, 32, 32};
 
-new const g_szSndDetonate[] = "hwn/spells/spell_stealth.wav";
-
-new g_sprEffectTrace;
+new const g_szSndDetonate[] = "hwn/spells/spell_moonjump.wav";
 
 public plugin_precache()
 {
-    g_sprEffectTrace = precache_model("sprites/xbeam4.spr");
-
     precache_sound(g_szSndDetonate);
 }
 
@@ -58,9 +54,15 @@ public OnCast(id)
     pev(id, pev_origin, vOrigin);
 
     SetGravity(id, true);
+
+    UTIL_Message_Dlight(vOrigin, EffectRadius, EffectColor, 5, 80);
+    emit_sound(id, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
+    if (task_exists(id)) {
+        remove_task(id);
+    }
+
     set_task(EffectTime, "TaskRemoveGravity", id);
-    
-    DetonateEffect(id, vOrigin);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -69,23 +71,10 @@ SetGravity(id, bool:value = true)
 {
     if (value) {
         new Float:fGravityValue = (GRAVITATIONAL_ACCELERATION_MOON / GRAVITATIONAL_ACCELERATION_EARTH);
-        set_pev(id, pev_rendermode, kRenderTransTexture);
         set_pev(id, pev_gravity, fGravityValue);
     } else {
         set_pev(id, pev_gravity, 1.0);
     }
-}
-
-DetonateEffect(ent, const Float:vOrigin[3])
-{
-    UTIL_HwnSpellDetonateEffect(
-      .modelindex = g_sprEffectTrace,
-      .vOrigin = vOrigin,
-      .fRadius = EffectRadius,
-      .color = EffectColor
-    );
-
-    emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
