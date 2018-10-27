@@ -34,6 +34,8 @@ new g_weaponMenu;
 
 new g_maxPlayers;
 
+static g_szMenuTitle[32];
+
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -46,6 +48,8 @@ public plugin_init()
     }
     
     g_fwEquipmentChanged = CreateMultiForward("Hwn_PEquipment_Event_Changed", ET_IGNORE, FP_CELL);
+    
+    format(g_szMenuTitle, charsmax(g_szMenuTitle), "%L", LANG_SERVER, "HWN_EQUIPMENT_MENU_TITLE");
     
     SetupMenu();
 }
@@ -92,7 +96,7 @@ SetupMenu()
         g_weaponMenu = 0;
     }
 
-    g_weaponMenu = menu_create("\rSelect your weapon:", "MenuHandler");
+    g_weaponMenu = menu_create(g_szMenuTitle, "MenuHandler");
     new callback = menu_makecallback("MenuCallback");
     
     for(new i = 0; i < sizeof(g_weaponIndexes); ++i) {

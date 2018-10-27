@@ -101,7 +101,7 @@ public OnCast(id)
             remove_task(id);
         }
         
-        set_task(10.0, "TaskRemoveInvisibility", id);
+        set_task(InvisibilityTime, "TaskRemoveInvisibility", id);
     }
     
     ArrayDestroy(users);

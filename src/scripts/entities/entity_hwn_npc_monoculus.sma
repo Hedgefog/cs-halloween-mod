@@ -268,13 +268,7 @@ public OnSpawn(ent)
 
 public OnRemove(ent)
 {
-    remove_task(ent);
-    remove_task(ent+TASKID_SUM_SHOT);
-    remove_task(ent+TASKID_SUM_CALM_DOWN);
-    remove_task(ent+TASKID_SUM_REMOVE_STUN);
-    remove_task(ent+TASKID_SUM_PUSH_BACK_END);
-    remove_task(ent+TASKID_SUM_JUMP_TO_PORTAL);
-    remove_task(ent+TASKID_SUM_TELEPORT);
+    ClearTasks(ent);
 
     {
         new Float:vOrigin[3];
@@ -298,7 +292,7 @@ public OnKill(ent)
         set_pev(ent, pev_velocity, ZERO_VECTOR_F);
         set_pev(ent, pev_deadflag, DEAD_DYING);
         
-        remove_task(ent);
+        ClearTasks(ent);
         set_task(g_actions[Action_Death][NPC_Action_Time], "TaskThink", ent);
     } else if (deadflag == DEAD_DEAD) {
         return PLUGIN_CONTINUE;
@@ -469,7 +463,7 @@ bool:Attack(ent, target)
 
     if (NPC_IsVisible(vOrigin, vTarget, ent)) {
         if (task_exists(ent+TASKID_SUM_PUSH_BACK_END)) {
-            UTIL_TurnTo(ent, vTarget, bool:{false, false, true});
+            NPC_MoveToTarget(ent, vTarget, 0.0);
         } else {
             NPC_MoveToTarget(ent, vTarget, NPC_Speed);
         }
@@ -655,6 +649,16 @@ TeleportEffect(const Float:vOrigin[3])
     message_end();
 
     UTIL_Message_Dlight(vOrigin, 48, {HWN_COLOR_PURPLE}, 5, 32);
+}
+
+ClearTasks(ent) {
+    remove_task(ent);
+    remove_task(ent+TASKID_SUM_SHOT);
+    remove_task(ent+TASKID_SUM_CALM_DOWN);
+    remove_task(ent+TASKID_SUM_REMOVE_STUN);
+    remove_task(ent+TASKID_SUM_PUSH_BACK_END);
+    remove_task(ent+TASKID_SUM_JUMP_TO_PORTAL);
+    remove_task(ent+TASKID_SUM_TELEPORT);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
