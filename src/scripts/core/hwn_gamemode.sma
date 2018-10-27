@@ -154,6 +154,15 @@ public plugin_end()
     ArrayDestroy(g_playerSpawnPoint);
 }
 
+#if AMXX_VERSION_NUM < 183
+    public client_disconnect(id)
+#else
+    public client_disconnected(id)
+#endif
+{
+    remove_task(id+TASKID_SUM_SPAWN_PROTECTION);
+}
+
 /*--------------------------------[ Natives ]--------------------------------*/
 
 public Native_Register(pluginID, argc)
@@ -575,8 +584,8 @@ bool:IsTeamExtermination()
     
     return true;
 }
-
-    ClearRespawnTasks() {
+    
+ClearRespawnTasks() {
     for (new id = 1; id <= g_maxPlayers; ++id) {
         remove_task(id+TASKID_SUM_RESPAWN_PLAYER);
     }
