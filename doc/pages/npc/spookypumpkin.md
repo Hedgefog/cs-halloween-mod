@@ -1,7 +1,7 @@
 
 # Spooky Pumpkin
 
-![](../../images/npc/spookypumpkin.png)
+![](../../images/npc/spookypumpkins.png)
 
 > **Spooky Pumpkin** is melee attack NPC, move with low jumps.
 
