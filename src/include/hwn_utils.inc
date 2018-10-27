@@ -131,28 +131,59 @@ stock UTIL_GetDirectionVector(ent, Float:vOut[3], Float:fLength = 1.0)
     vOut[2] = -vOut[2];
 }
 
-stock UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {true, false, false}) 
+stock bool:UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {true, false, false}, const Float:fMaxAngle = -1.0) 
 {
     //Get user origin
     new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
-    
-    //Get sub vector from origin and target
-    xs_vec_sub(vTarget, vOrigin, vOrigin);
-    
-    //Convert direction vector to angle
-    new Float:vAngles[3];
-    engfunc(EngFunc_VecToAngles, vOrigin, vAngles);
 
-    for (new i = 0; i < 3; ++i) {
-        if (lockAxis[i]) {
-            vAngles[i] = 0.0;
+    new Float:vAngles[3];
+    pev(ent, pev_angles, vAngles);
+
+    static Float:vDiffAngles[3];
+    {
+        static Float:vSub[3];
+        xs_vec_sub(vTarget, vOrigin, vSub);
+
+        static Float:vSubAngles[3];
+        engfunc(EngFunc_VecToAngles, vSub, vSubAngles);
+        
+        for (new i = 0; i < 3; ++i) {
+            if (lockAxis[i]) {
+                vDiffAngles[i] = 0.0;
+                continue;
+            }
+
+            new Float:fDiff = vSubAngles[i] - vAngles[i];
+            new direction = fDiff > 0 ? 1 : -1;
+            new Float:fAbs = fDiff * direction;
+
+            if (fAbs > 180.0) {
+                vDiffAngles[i] = (180.0 - (fAbs - 180.0)) * -direction;
+            } else {
+                vDiffAngles[i] = fDiff;
+            }
         }
     }
     
+
+    new bool:turnResult = true;
+    if (fMaxAngle >= 0.0) {
+        new Float:fAngle = xs_vec_len(vDiffAngles);
+        if (fAngle > fMaxAngle) {
+            xs_vec_normalize(vDiffAngles, vDiffAngles);
+            xs_vec_mul_scalar(vDiffAngles, fMaxAngle, vDiffAngles);
+            turnResult = false;
+        }
+    }
+
+    xs_vec_add(vAngles, vDiffAngles, vAngles);
+
     //Apply new angles
     set_pev(ent, pev_angles, vAngles);
     set_pev(ent, pev_v_angle, vAngles);
+
+    return turnResult;
 }
 
 stock UTIL_Message_BloodSprite(const Float:vOrigin[3], sprBloodSpray, sprBlood, color, scale)
