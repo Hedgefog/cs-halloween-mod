@@ -39,7 +39,7 @@ enum Action
 };
 
 const Float:NPC_Health = 70.0;
-const Float:NPC_Speed = 128.0; // for jump velocity
+const Float:NPC_Speed = 160.0; // for jump velocity
 const Float:NPC_Damage = 10.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.5;
@@ -48,8 +48,8 @@ const Float:ENTITY_LifeTime = 30.0;
 const Float:ENTITY_RespawnTime = 30.0;
 
 const Float:SP_BigScaleMul = 1.5;
-const Float:SP_JumpVelocityY = 128.0;
-const Float:SP_AttackJumpVelocityY = 256.0;
+const Float:SP_JumpVelocityZ = 160.0;
+const Float:SP_AttackJumpVelocityZ = 256.0;
 
 new const g_szSndIdleList[][] =
 {
@@ -93,8 +93,8 @@ public plugin_precache()
     g_ceHandlerSp = CE_Register(
         .szName = ENTITY_NAME_SP,
         .modelIndex = precache_model("models/hwn/npc/spookypumpkin.mdl"),
-        .vMins = Float:{-16.0, -16.0, 0.0},
-        .vMaxs = Float:{16.0, 16.0, 32.0},
+        .vMins = Float:{-12.0, -12.0, 0.0},
+        .vMaxs = Float:{12.0, 12.0, 24.0},
         .fLifeTime = ENTITY_LifeTime,
         .fRespawnTime = ENTITY_RespawnTime,
         .preset = CEPreset_NPC
@@ -103,8 +103,8 @@ public plugin_precache()
     g_ceHandlerSpBig = CE_Register(
         .szName = ENTITY_NAME_SP_BIG,
         .modelIndex = precache_model("models/hwn/npc/spookypumpkin_big.mdl"),
-        .vMins = Float:{-24.0, -24.0, 0.0},
-        .vMaxs = Float:{24.0, 24.0, 48.0},
+        .vMins = Float:{-16.0, -16.0, 0.0},
+        .vMaxs = Float:{16.0, 16.0, 32.0},
         .fLifeTime = ENTITY_LifeTime,
         .fRespawnTime = ENTITY_RespawnTime,
         .preset = CEPreset_NPC
@@ -207,7 +207,7 @@ Attack(ent, target, &Action:action)
     pev(ent, pev_origin, vOrigin);
 
     if (NPC_CanHit(ent, target, NPC_HitRange) && !task_exists(ent+TASKID_SUM_HIT)) {
-        if (Jump(ent, 0.0, SP_AttackJumpVelocityY)) {
+        if (Jump(ent, 0.0, SP_AttackJumpVelocityZ)) {
             EmitRandomLaugh(ent);
             set_task(NPC_HitDelay, "TaskHit", ent+TASKID_SUM_HIT);
             action = Action_Attack;
@@ -327,7 +327,7 @@ public TaskJump(taskID) {
         NPC_MoveToTarget(ent, vTarget, 0.0);
     }
     
-    Jump(ent, NPC_Speed, SP_JumpVelocityY);
+    Jump(ent, NPC_Speed, SP_JumpVelocityZ);
 }
 
 public TaskThink(taskID)
