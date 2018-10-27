@@ -16,6 +16,7 @@ new Array:g_playerMenuSlotRefs;
 
 new g_maxPlayers;
 
+static g_szMenuTitle[32];
 static g_szEmptyCosmeticText[32];
 
 public plugin_init()
@@ -33,6 +34,7 @@ public plugin_init()
         ArrayPushCell(g_playerMenuSlotRefs, Invalid_Array);
     }
 
+    format(g_szMenuTitle, charsmax(g_szMenuTitle), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_TITLE");
     format(g_szEmptyCosmeticText, charsmax(g_szEmptyCosmeticText), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_EMPTY");
 }
 
@@ -79,8 +81,8 @@ Open(id)
 
 Create(id)
 {    
-    new callbackDisabled = menu_makecallback("MenuDisabledCallback");    
-    new menu = menu_create("Cosmetic Inventory", "MenuHandler");
+    new callbackDisabled = menu_makecallback("MenuDisabledCallback");
+    new menu = menu_create(g_szMenuTitle, "MenuHandler");
     
     new Array:slotRefs = ArrayGetCell(g_playerMenuSlotRefs, id);
     if (slotRefs != Invalid_Array) {
