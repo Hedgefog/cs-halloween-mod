@@ -19,6 +19,6 @@
 ### Credits
 https://steamcommunity.com/sharedfiles/filedetails/?id=1167510708
 
-Benoist - NPC idea
-Chillax - Spooky Pumpkin Monster Animations
-Maxxy - Spooky Pumpkin Monster Models
+- Benoist - NPC idea
+- Chillax - Spooky Pumpkin Monster Animations
+- Maxxy - Spooky Pumpkin Monster Models
