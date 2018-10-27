@@ -148,8 +148,4 @@ public TaskThink()
     pev(g_bossEnt, pev_origin, vBarOrigin);
     vBarOrigin[2] += g_fHealthBarOffsetZ;
     set_pev(g_healthBarEnt, pev_origin, vBarOrigin);
-
-    static Float:vDiff[3];
-    pev(g_bossEnt, pev_origin, vDiff);
-    xs_vec_sub(vDiff, vBarOrigin, vDiff);
 }
