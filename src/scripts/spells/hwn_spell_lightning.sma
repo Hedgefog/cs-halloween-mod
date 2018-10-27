@@ -198,15 +198,11 @@ public TaskDamage(taskID)
     new owner = pev(ent, pev_owner);
     new team = owner ? UTIL_GetPlayerTeam(owner) : -1;
 
-    new target;
-    new prevTarget;
-    while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EffectRadius)) != 0)
-    {
-        if (prevTarget >= target) {
-            break; // infinite loop fix
-        }
+    new Array:nearbyEntities = UTIL_FindEntityNearby(vOrigin, EffectRadius);
+    new size = ArraySize(nearbyEntities);
 
-        prevTarget = target;
+    for (new i = 0; i < size; ++i) {
+        new target = ArrayGetCell(nearbyEntities, i);
 
         if (ent == target) {
             continue;
@@ -234,6 +230,8 @@ public TaskDamage(taskID)
             ExecuteHamB(Ham_TakeDamage, target, 0, owner, EffectDamage, DMG_SHOCK);
         }
     }
+
+    ArrayDestroy(nearbyEntities);
 
     emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
     CreateDamageTask(ent);
