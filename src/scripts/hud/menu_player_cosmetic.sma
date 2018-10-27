@@ -125,7 +125,8 @@ Create(id)
             itemTime
         );
         
-        menu_additem(menu, text, .callback = PCosmetic_CanBeEquiped(id, cosmetic, i) ? -1 : callbackDisabled);
+        menu_additem(menu, text, .callback = PCosmetic_CanBeEquiped(id, cosmetic, i)
+            || PCosmetic_IsItemEquiped(id, i)  ? -1 : callbackDisabled);
     }
     
     if (!size) {
