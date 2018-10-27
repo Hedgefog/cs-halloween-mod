@@ -132,3 +132,17 @@
     size(-8 -8 -16, 8 8 16)
     Studio("models/hwn/npc/skeleton_small.mdl")
 = hwn_npc_skeleton_small []
+
+@PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-12 -12 0, 12 12 24)
+    Studio("models/hwn/npc/spookypumpkin.mdl")
+= hwn_npc_spookypumpkin []
+
+@PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-16 -16 0, 16 16 32)
+    Studio("models/hwn/npc/spookypumpkin_big.mdl")
+= hwn_npc_spookypumpkin_big []
