@@ -82,7 +82,7 @@ new g_cvarPumpkinMutateChance;
 
 public plugin_precache()
 {
-    g_mdlGibs = precache_model("models/hwn/props/pumpkin_explode_jib.mdl");
+    g_mdlGibs = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
     g_sprBlood = precache_model("sprites/blood.spr");
     g_sprBloodSpray = precache_model("sprites/bloodspray.spr");
 

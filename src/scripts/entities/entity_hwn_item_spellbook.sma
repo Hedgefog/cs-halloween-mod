@@ -46,7 +46,7 @@ public plugin_precache()
 
     g_ceHandler = CE_Register(
         .szName = ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/items/spellbook.mdl"),
+        .modelIndex = precache_model("models/hwn/items/spellbook_v2.mdl"),
         .vMins = Float:{-16.0, -12.0, 0.0},
         .vMaxs = Float:{16.0, 12.0, 24.0},
         .fLifeTime = 30.0,

@@ -32,7 +32,7 @@ public plugin_precache()
 {    
     CE_Register(
         .szName = ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/props/pumpkin_explode.mdl"),
+        .modelIndex = precache_model("models/hwn/props/pumpkin_explode_v2.mdl"),
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
         .fRespawnTime = 30.0,
@@ -45,7 +45,7 @@ public plugin_precache()
     precache_sound(g_szSndExplode);
     
     g_sprExlplosion = precache_model("sprites/dexplo.spr");
-    g_mdlGibs = precache_model("models/hwn/props/pumpkin_explode_jib.mdl");
+    g_mdlGibs = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
 }
 
 public OnSpawn(ent)
