@@ -32,3 +32,6 @@ npm run pack
 
 #### Documentation
 - [Index](./doc/pages/index.md)
+
+#### Special Thanks:
+- [Credits](./CREDITS.md)
