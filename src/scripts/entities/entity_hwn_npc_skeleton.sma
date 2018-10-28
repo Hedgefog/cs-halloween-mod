@@ -184,7 +184,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 242, floatround(fDamage/4));
 }
 
-Attack(ent, target, &Action:action)
+Attack:Attack(ent, target, &Action:action)
 {
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
