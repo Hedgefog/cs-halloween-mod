@@ -22,5 +22,6 @@
 | hwn_npc_monoculus_dmg_to_stun      | Required damage count to stun monoculus                  | 2000.0        |
 | hwn_npc_monoculus_jump_time_min    | Min time of monoculus jump interval                      | 10.0          |
 | hwn_npc_monoculus_jump_time_max    | Max time of monoculus jump interval                      | 20.0          |
+| hwn_spawn_boss                     | Spawn Boss command (Admin Access)                        |               |
 | hwn_pumpkin_mutate_chance          | Chance mutation pumpkin in a spooky pumpkin              | 20.0          |
 | hwn_boss_healthbar                 | Enable/Disable healthbar for bosses                      | 1             |
