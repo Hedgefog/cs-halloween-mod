@@ -8,6 +8,7 @@ enum _:NPC
     Float:NPC_NextFootStep,
     Float:NPC_LastReachablePoint,
     Float:NPC_ReachTime,
+    Float:NPC_LastRotation
 }
 
 enum NPC_Action
@@ -401,13 +402,28 @@ stock NPC_GetSideLine(ent, Float:vOrigin1[3], Float:vOrigin2[3], Float:fLength =
     xs_vec_add(vOrigin, vDirection, vOrigin2);
 }
 
-stock NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed)
+stock NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed, Float:fMaxAnglePerSecond = 180.0)
 {
     new bool:lockAxis[3] = {true, false, true};
     lockAxis[0] = pev(ent, pev_movetype) != MOVETYPE_FLY;
 
-    UTIL_TurnTo(ent, vTarget, lockAxis);
-    NPC_MoveForward(ent, fSpeed);
+    new Array:npcData = NPC_GetData(ent);
+    new Float:fLastRotation = ArrayGetCell(npcData, NPC_LastRotation);
+    new Float:fGameTime = get_gametime();
+
+    new Float:fTimePassed = fGameTime - fLastRotation;
+    new Float:fMaxAngle = (fTimePassed > 1.0)
+            ? 0.0 // skip first rotation
+            : fMaxAnglePerSecond * fTimePassed;
+
+    new bool:turnResult = UTIL_TurnTo(ent, vTarget, lockAxis, fMaxAngle);
+
+    if (fSpeed > 0.0 && turnResult) {
+        set_pev(ent, pev_speed, fSpeed);
+        NPC_MoveForward(ent, fSpeed);
+    }
+
+    ArraySetCell(npcData, NPC_LastRotation, fGameTime);
 }
 
 stock NPC_MoveForward(ent, Float:fSpeed)

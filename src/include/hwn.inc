@@ -1,4 +1,26 @@
 /*
+    4.0.0
+
+        Additions and improvements:
+            Added Moon Jump spell
+            Added healthbar for bosses
+            Added Spooky Pumpkin NPC
+            Added smooth rotation for NPC
+            Improved NPC movement algorithm
+            Added localization for equipment menu title
+            Added localization for cosmetic menu title
+            Optimized models
+
+        Cvars:
+            Added hwn_gamemode_new_round_delay cvar
+            Added hwn_pumpkin_mutate_chance cvar
+            Added hwn_boss_healthbar cvar
+
+        Fixes:
+            Fixed interaction of some plugins
+            Fixed issue when equipped items are disabled in the cosmetic menu
+            Fixed cleaning tasks in some plugins
+
     3.1.0
         Equipment pumpkin now give ammo for all weapons.
         Cosmetic equip state now saved on player disconnect.
@@ -99,11 +121,12 @@
 #define HWN_COLOR_PURPLE            120, 0, 200
 #define HWN_COLOR_RED_F             255.0, 0.0, 0.0
 #define HWN_COLOR_YELLOW_F             255.0, 200.0, 0.0
+#define HWN_COLOR_YELLOW             255, 200, 0
 #define HWN_COLOR_GREEN_DARK_F         47.0, 95.0, 15.0
 #define HWN_COLOR_GREEN_DARK         47, 95, 15
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "3.1.0"
+#define HWN_VERSION "4.0.0"
 
 enum Hwn_GamemodeFlags (<<=1)
 {

@@ -112,21 +112,14 @@ Detonate(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     
-    new target;
-    new prevTarget;
-    while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EffectRadius)) != 0)
-    {
-        if (prevTarget >= target) {
-            break; // infinite loop fix
-        }
 
-        prevTarget = target;
+    new Array:nearbyEntities = UTIL_FindEntityNearby(vOrigin, EffectRadius);
+    new size = ArraySize(nearbyEntities);
+
+    for (new i = 0; i < size; ++i) {
+        new target = ArrayGetCell(nearbyEntities, i);
 
         if (ent == target) {
-            continue;
-        }
-
-        if (!pev_valid(target)) {
             continue;
         }
 
@@ -164,7 +157,9 @@ Detonate(ent)
             ExecuteHamB(Ham_TakeDamage, target, 0, owner, fDamage, DMG_BURN);
         }
     }
-    
+
+    ArrayDestroy(nearbyEntities);
+
     DetonateEffect(ent, vOrigin);
 }
 

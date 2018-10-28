@@ -131,6 +131,10 @@ RegisterParticle(const szName[], pluginID, funcID, Array:sprites, Float:fLifeTim
 
 SpawnParticles(const szName[], const Float:vOrigin[3], Float:fPlayTime)
 {
+    if (!g_particleCount) {
+        return 0;
+    }
+
     new index;
     if (!TrieGetCell(g_particles, szName, index)) {
         return 0;
