@@ -27,7 +27,7 @@ public plugin_precache()
 
     CE_Register(
         .szName = ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/items/pumpkin_loot_big.mdl"),
+        .modelIndex = precache_model("models/hwn/items/pumpkin_loot_big_v2.mdl"),
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
         .fLifeTime = 30.0,

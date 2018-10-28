@@ -61,7 +61,7 @@ public plugin_precache()
 
     CE_Register(
         .szName = ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/npc/ghost_v2.mdl"),
+        .modelIndex = precache_model("models/hwn/npc/ghost_v3.mdl"),
         .vMins = Float:{-12.0, -12.0, -32.0},
         .vMaxs = Float:{12.0, 12.0, 32.0},
         .fLifeTime = 30.0,
@@ -229,6 +229,10 @@ UpdateParticles(ent)
     }
 
     new particleEnt = Particles_Spawn("magic_glow", Float:{0.0, 0.0, 0.0}, 0.0);
+    if (!particleEnt) {
+        return;
+    }
+
     set_pev(particleEnt, pev_movetype, MOVETYPE_FOLLOW);
     set_pev(particleEnt, pev_aiment, ent);
     set_pev(ent, pev_iuser4, particleEnt);

@@ -54,6 +54,7 @@ new g_fwRoundEnd;
 
 new g_cvarRespawnTime;
 new g_cvarSpawnProtectionTime;
+new g_cvarNewRoundDelay;
 
 new GameState:g_gamestate;
 
@@ -111,6 +112,7 @@ public plugin_init()
 
     g_cvarRespawnTime = register_cvar("hwn_gamemode_respawn_time", "10.0");
     g_cvarSpawnProtectionTime = register_cvar("hwn_gamemode_spawn_protection_time", "3.0");
+    g_cvarNewRoundDelay = register_cvar("hwn_gamemode_new_round_delay", "10.0");
 
     register_event("HLTV", "OnNewRound", "a", "1=0", "2=0");
     register_logevent("OnRoundStart", 2, "1=Round_Start");
@@ -150,6 +152,15 @@ public plugin_end()
     }
     
     ArrayDestroy(g_playerSpawnPoint);
+}
+
+#if AMXX_VERSION_NUM < 183
+    public client_disconnect(id)
+#else
+    public client_disconnected(id)
+#endif
+{
+    remove_task(id+TASKID_SUM_SPAWN_PROTECTION);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -261,10 +272,15 @@ public OnRoundEnd()
 {
     g_gamestate = GameState_RoundEnd;
     ExecuteForward(g_fwRoundEnd, g_fwResult);
+    ClearRespawnTasks();
 }
 
 public Hwn_PEquipment_Event_Changed(id)
 {
+    if (!g_gamemodeCount) {
+        return;
+    }
+
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if (!(flags & Hwn_GamemodeFlag_SpecialEquip)) {
         return;
@@ -277,6 +293,10 @@ public Hwn_PEquipment_Event_Changed(id)
 
 public OnClCmd_Drop(id)
 {
+    if (!g_gamemodeCount) {
+        return PLUGIN_CONTINUE;
+    }
+
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if (!(flags & Hwn_GamemodeFlag_SpecialEquip)) {
         return PLUGIN_CONTINUE;
@@ -289,6 +309,10 @@ public OnClCmd_Drop(id)
 
 public OnClCmd_JoinClass(id)
 {
+    if (!g_gamemodeCount) {
+        return PLUGIN_CONTINUE;
+    }
+
     #if defined _reapi_included
         new menu = get_member(id, m_iMenu);
         new joinState = get_member(id, m_iJoiningState);
@@ -322,6 +346,10 @@ public OnClCmd_JoinClass(id)
 
 public OnMessage_ClCorpse()
 {
+    if (!g_gamemodeCount) {
+        return PLUGIN_CONTINUE;
+    }
+
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if (flags & Hwn_GamemodeFlag_RespawnPlayers) {
         return PLUGIN_HANDLED;
@@ -332,6 +360,10 @@ public OnMessage_ClCorpse()
 
 public OnPlayerSpawn(id)
 {
+    if (!g_gamemodeCount) {
+        return;
+    }
+
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if ((flags & Hwn_GamemodeFlag_SpecialEquip)) {
         Hwn_PEquipment_Equip(id);
@@ -370,13 +402,17 @@ public OnPlayerKilled(id)
     }
     
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if (flags & Hwn_GamemodeFlag_RespawnPlayers) {
+    if ((flags & Hwn_GamemodeFlag_RespawnPlayers) && g_gamestate != GameState_RoundEnd) {
         set_task(get_pcvar_float(g_cvarRespawnTime), "TaskRespawnPlayer", id+TASKID_SUM_RESPAWN_PLAYER);
     }
 }
 
 public OnSetModel(ent)
 {
+    if (!g_gamemodeCount) {
+        return;
+    }
+
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if ((flags & Hwn_GamemodeFlag_SpecialEquip))
     {
@@ -512,10 +548,12 @@ DispatchWin(team)
         return;
     }
     
+    new Float:fDelay = get_pcvar_float(g_cvarNewRoundDelay);
+
     #if defined _reapi_included
-        rg_round_end(2.0, team == 1 ? WINSTATUS_TERRORISTS : WINSTATUS_CTS, team == 1 ? ROUND_TERRORISTS_WIN : ROUND_CTS_WIN);
+        rg_round_end(fDelay, team == 1 ? WINSTATUS_TERRORISTS : WINSTATUS_CTS, team == 1 ? ROUND_TERRORISTS_WIN : ROUND_CTS_WIN);
     #else
-        RoundEndForceControl(team == 1 ? WINSTATUS_TERRORIST : WINSTATUS_CT);
+        RoundEndForceControl(team == 1 ? WINSTATUS_TERRORIST : WINSTATUS_CT, fDelay);
     #endif
 }
 
@@ -546,7 +584,13 @@ bool:IsTeamExtermination()
     
     return true;
 }
-    
+
+ClearRespawnTasks() {
+    for (new id = 1; id <= g_maxPlayers; ++id) {
+        remove_task(id+TASKID_SUM_RESPAWN_PLAYER);
+    }
+}
+
 /*--------------------------------[ Tasks ]--------------------------------*/
 
 public TaskRespawnPlayer(taskID)

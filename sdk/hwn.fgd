@@ -95,40 +95,54 @@
     base(Targetname, Angles)
     color(90 27 122)
     size(-16 -16 0, 16 16 32)
-    Studio("models/hwn/props/pumpkin_explode.mdl")
+    Studio("models/hwn/props/pumpkin_explode_v2.mdl")
 = hwn_prop_explosive_pumpkin []
 
 @PointClass
     base(Targetname, Angles)
     color(90 27 122)
     size(-12 -12 0, 12 12 24)
-    Studio("models/hwn/items/pumpkin_loot_v2.mdl")
+    Studio("models/hwn/items/pumpkin_loot_v3.mdl")
 = hwn_item_pumpkin []
 
 @PointClass
     base(Targetname, Angles)
     color(90 27 122)
     size(-16 -12 0, 16 12 24)
-    Studio("models/hwn/items/spellbook.mdl")
+    Studio("models/hwn/items/spellbook_v2.mdl")
 = hwn_item_spellbook []
 
 @PointClass
     base(Targetname, Angles)
     color(90 27 122)
     size(-12 -12 -32, 12 12 32)
-    Studio("models/hwn/npc/ghost_v2.mdl")
+    Studio("models/hwn/npc/ghost_v3.mdl")
 = hwn_npc_ghost []
 
 @PointClass
     base(Targetname, Angles)
     color(90 27 122)
     size(-12 -12 -32, 12 12 32)
-    Studio("models/hwn/npc/skeleton.mdl")
+    Studio("models/hwn/npc/skeleton_v2.mdl")
 = hwn_npc_skeleton []
 
 @PointClass
     base(Targetname, Angles)
     color(90 27 122)
     size(-8 -8 -16, 8 8 16)
-    Studio("models/hwn/npc/skeleton_small.mdl")
+    Studio("models/hwn/npc/skeleton_small_v2.mdl")
 = hwn_npc_skeleton_small []
+
+@PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-12 -12 0, 12 12 24)
+    Studio("models/hwn/npc/spookypumpkin.mdl")
+= hwn_npc_spookypumpkin []
+
+@PointClass
+    base(Targetname, Angles)
+    color(90 27 122)
+    size(-16 -16 0, 16 16 32)
+    Studio("models/hwn/npc/spookypumpkin_big.mdl")
+= hwn_npc_spookypumpkin_big []
