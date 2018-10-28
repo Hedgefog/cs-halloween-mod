@@ -95,7 +95,7 @@ public plugin_precache()
 
     g_ceHandler = CE_Register(
         .szName = ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/npc/skeleton_lp.mdl"),
+        .modelIndex = precache_model("models/hwn/npc/skeleton_v2.mdl"),
         .vMins = Float:{-12.0, -12.0, -32.0},
         .vMaxs = Float:{12.0, 12.0, 32.0},
         .fLifeTime = 30.0,
