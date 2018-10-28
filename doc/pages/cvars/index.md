@@ -5,6 +5,7 @@
 | hwn_boss_min_damage_to_win         | Min damage to get reward for boss kill                   | 300           |
 | hwn_gamemode_respawn_time          | Time to respawn in gamemode with player respawn          | 10.0          |
 | hwn_gamemode_spawn_protection_time | Godmode time after spawn in gamemode with player respawn | 3.0           |
+| hwn_gamemode_new_round_delay       | Delay before the start of a new round                    | 10.0          |
 | hwn_gifts_spawn_delay              | Time before new gift will be spawned                     | 450.0         |
 | hwn_gifts_cosmetic_min_time        | Min time of hat from gift                                | 300.0         |
 | hwn_gifts_cosmetic_max_time        | Max time of hat from gift                                | 600.0         |
@@ -21,3 +22,5 @@
 | hwn_npc_monoculus_dmg_to_stun      | Required damage count to stun monoculus                  | 2000.0        |
 | hwn_npc_monoculus_jump_time_min    | Min time of monoculus jump interval                      | 10.0          |
 | hwn_npc_monoculus_jump_time_max    | Max time of monoculus jump interval                      | 20.0          |
+| hwn_pumpkin_mutate_chance          | Chance mutation pumpkin in a spooky pumpkin              | 20.0          |
+| hwn_boss_healthbar                 | Enable/Disable healthbar for bosses                      | 1             |

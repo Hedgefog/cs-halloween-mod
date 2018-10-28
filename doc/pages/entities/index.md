@@ -12,6 +12,7 @@
 - [hwn_npc_hhh](./hwn_npc_hhh.md)
 - [hwn_npc_monoculus](./hwn_npc_monoculus.md)
 - [hwn_npc_skeleton](./hwn_npc_skeleton.md)
+- [hwn_npc_spookypumpkin](./hwn_npc_spookypumpkin.md)
 - [hwn_prop_explosive_pumpkin](./hwn_prop_explosive_pumpkin.md)
 - [hwn_prop_jackolantern](./hwn_prop_jackolantern.md)
 - [hwn_prop_vortex](./hwn_prop_vortex.md)
