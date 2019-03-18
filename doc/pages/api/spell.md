@@ -53,7 +53,7 @@
 
 At first you should register your spell and save returned handler to the global variable
 
-```
+```SourcePawn
 #include <amxmodx>
 
 #include <hwn>
@@ -73,7 +73,7 @@ public OnCast(id) {}
 
 Precache resources for spell effects.
 
-```
+```SourcePawn
 new g_sprSpellball;
 new g_sprSpellballTrace;
 
@@ -88,7 +88,7 @@ Implement cast handler
 
 You can use hwn_spell_utils to spawn spellball entity.
 
-```
+```SourcePawn
 new ent = UTIL_HwnSpawnPlayerSpellball(id, g_sprSpellball, {255, 0, 0});
 
 if (!ent) {
@@ -103,7 +103,7 @@ return PLUGIN_CONTINUE; // allow cast
 
 Now implement task to kill spellball using hwn_spell_utils include to make detonation effect.
 
-```
+```SourcePawn
 public TaskKillSpellball(ent)
 {
     static Float:vOrigin[3];
