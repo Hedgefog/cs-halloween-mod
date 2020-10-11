@@ -1,0 +1,27 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Fetch compiler
+        run: |
+          mkdir amxmodx
+          wget https://www.amxmodx.org/release/amxmodx-1.8.2-base-linux.tar.gz
+          wget https://www.amxmodx.org/release/amxmodx-1.8.2-cstrike-linux.tar.gz
+          tar -xzvf ./amxmodx-1.8.2-base-linux.tar.gz -C ./amxmodx
+          tar -xzvf ./amxmodx-1.8.2-cstrike-linux.tar.gz -C ./amxmodx
+          cp -a ./amxmodx/addons/amxmodx/scripting/ ./compiler
+      - name: Install Dependencies
+        run: npm install
+      - name: Build
+        run: npm run build
