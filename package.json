@@ -11,7 +11,7 @@
   "author": "Hedgehog Fog",
   "license": "MIT",
   "devDependencies": {
-    "gulp": "^3.9.1",
+    "gulp": "^4.0.2",
     "gulp-file": "^0.3.0",
     "gulp-flatten": "^0.3.1",
     "gulp-sma": "^1.0.5",
