@@ -57,3 +57,18 @@ HWN_MENU_TITLE = Halloween Mod Menu
 HWN_EQUIPMENT_MENU_TITLE = Equipment
 HWN_COSMETIC_MENU_TITLE = Cosmetic Inventory
 HWN_COSMETIC_MENU_EMPTY = You have no cosmetic items
+
+[hu]
+HWN_GIFT_SPAWN = Egy Kísérteties Halloweeni Ajándék^nrejtelmesen megjelent valahol,^ncsak a számodra. Menj és találd meg!
+HWN_GIFT_DISAPPEARED = A Kísérteties Halloweeni Ajándék eltűnt!
+HWN_GIFT_FOUND = %s megtalálta a Kísérteties Halloweeni Ajándékot!
+HWN_PLAYER_POINTS = Pontok: %d 
+HWN_SPELL = Varázslat: %s
+HWN_DEFEAT_BOSS = %s legyőzte a bosst!
+HWN_BOSS_REWARD = A Boss legyőzve!^nEgy rejtélyes jutalom vár a Leltáradban rád!
+HWN_SPELLBOOK_PICKUP = Varázslat felvéve!^nHasználd a lámpa gombot ('f' alapból) a varázsláshoz.
+HWN_MENU_HELP = Használd a csapatválasztás gombot ('m' alapból), hogy elérd a mód menüjét.
+HWN_MENU_TITLE = Halloween Mod Menu
+HWN_EQUIPMENT_MENU_TITLE = Felszerelés
+HWN_COSMETIC_MENU_TITLE = Kozmetikai Leltár
+HWN_COSMETIC_MENU_EMPTY = Nincs kozmetikai tárgyad
