@@ -6,7 +6,8 @@
     "gulp": "gulp",
     "build": "gulp",
     "watch": "gulp watch",
-    "pack": "gulp pack"
+    "pack": "gulp pack",
+    "update-version": "node ./scripts/update-version.js"
   },
   "author": "Hedgehog Fog",
   "license": "MIT",
