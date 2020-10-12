@@ -77,5 +77,5 @@ if (config.build.reapi) {
 
 // final tasks
 
-gulp.task('build', buildTasks);
-gulp.task('watch', watchTasks);
+gulp.task('build', gulp.series(...buildTasks));
+gulp.task('watch', gulp.series(...watchTasks));

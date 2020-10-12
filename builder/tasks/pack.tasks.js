@@ -133,4 +133,4 @@ gulp.task('pack:sdk', () => {
         .pipe(gulp.dest(buildDir));
 });
 
-gulp.task('pack', ['pack:full', 'pack:alliedmods', 'pack:sdk']);
+gulp.task('pack', gulp.series('pack:full', 'pack:alliedmods', 'pack:sdk'));
