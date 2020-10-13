@@ -26,6 +26,8 @@
             wget https://www.amxmodx.org/release/amxmodx-1.8.2-cstrike-linux.tar.gz -P ./downloads
             wget https://github.com/s1lentq/reapi/releases/download/5.12.0.192/reapi_5.12.0.192-dev.zip -P ./downloads
             wget 'https://svn.aghl.ru:8443/svn/s1lentq/!svn/ver/415/AMXX%20modules/RoundControl/AMXX%20Pawn/include/roundcontrol.inc' --no-check-certificate -P ./downloads
+            wget 'https://svn.aghl.ru:8443/svn/s1lentq/!svn/ver/416/AMXX%20modules/RoundControl/bin/roundcontrol_amxx.dll' --no-check-certificate -P ./downloads
+            wget 'https://svn.aghl.ru:8443/svn/s1lentq/!svn/ver/412/AMXX%20modules/RoundControl/bin/roundcontrol_amxx_i386.so' --no-check-certificate -P ./downloads
         - name: Setup Build Variables
           id: buildvars
           uses: actions/github-script@v3
@@ -50,6 +52,9 @@
             tar --strip-components=3 -zxf ./downloads/amxmodx-1.8.2-cstrike-linux.tar.gz -C ./compiler addons/amxmodx/scripting
             mkdir -p ./thirdparty/reapi
             unzip ./downloads/reapi_5.12.0.192-dev.zip -d ./thirdparty/reapi
+            mkdir -p ./thirdparty/round-control/addons/amxmodx/modules
+            cp ./downloads/roundcontrol_amxx.dll ./thirdparty/round-control/addons/amxmodx/modules/roundcontrol_amxx.dll
+            cp ./downloads/roundcontrol_amxx_i386.so ./thirdparty/round-control/addons/amxmodx/modules/roundcontrol_amxx_i386.so
             mkdir -p ./thirdparty/round-control/addons/amxmodx/scripting/include
             cp ./downloads/roundcontrol.inc ./thirdparty/round-control/addons/amxmodx/scripting/include/roundcontrol.inc
         - name: Install Dependencies
