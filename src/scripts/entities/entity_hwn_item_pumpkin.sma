@@ -9,11 +9,16 @@
 #include <api_custom_entities>
 
 #include <hwn>
+#include <hwn_utils>
 
 #define PLUGIN "[Custom Entity] Hwn Item Pumpkin"
 #define AUTHOR "Hedgehog Fog"
 
 #define ENTITY_NAME "hwn_item_pumpkin"
+
+#define FLASH_RADIUS 16
+#define FLASH_LIFETIME 10
+#define FLASH_DECAY_RATE 16
 
 enum _:PumpkinType
 {
@@ -31,6 +36,8 @@ new const Float:g_fLootTypeColor[PumpkinType][3] =
 
 new const g_szSndItemSpawn[] = "hwn/items/pumpkin/pumpkin_drop.wav";
 new const g_szSndItemPickup[] = "hwn/items/pumpkin/pumpkin_pickup.wav";
+
+new g_cvarPumpkinFlash;
 
 public plugin_init()
 {
@@ -54,6 +61,8 @@ public plugin_precache()
     
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "OnPickup");
+
+    g_cvarPumpkinFlash = get_cvar_pointer("hwn_pumpkin_pickup_flash");
 }
 
 /*------------[ Hooks ]------------*/
@@ -90,7 +99,20 @@ public OnPickup(ent, id)
         }
     }
     
+    static Float:vPlayerOrigin[3];
+    pev(ent, pev_origin, vPlayerOrigin);
+
     emit_sound(ent, CHAN_BODY, g_szSndItemPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
+    if (get_pcvar_num(g_cvarPumpkinFlash) > 0) {
+        new color[3];
+        for (new i = 0; i < 3; ++i) {
+            color[i] = floatround(g_fLootTypeColor[type][i]);
+        }
+
+        UTIL_Message_Dlight(vPlayerOrigin, FLASH_RADIUS, color, FLASH_LIFETIME, FLASH_DECAY_RATE);
+    }
+
     return PLUGIN_HANDLED;
 }
 
