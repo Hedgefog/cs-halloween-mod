@@ -1,14 +1,14 @@
 | Command                            | Description                                              | Default Value |
 |------------------------------------|----------------------------------------------------------|---------------|
-| hwn_boss_spawn_delay               | Time before boss will be spawned                         | 600.0         |
+| hwn_boss_spawn_delay               | Time before boss will be spawned                         | 300.0         |
 | hwn_boss_life_time                 | Time to boss escape                                      | 120.0         |
 | hwn_boss_min_damage_to_win         | Min damage to get reward for boss kill                   | 300           |
-| hwn_gamemode_respawn_time          | Time to respawn in gamemode with player respawn          | 10.0          |
+| hwn_gamemode_respawn_time          | Time to respawn in gamemode with player respawn          | 5.0           |
 | hwn_gamemode_spawn_protection_time | Godmode time after spawn in gamemode with player respawn | 3.0           |
 | hwn_gamemode_new_round_delay       | Delay before the start of a new round                    | 10.0          |
 | hwn_gifts_spawn_delay              | Time before new gift will be spawned                     | 450.0         |
-| hwn_gifts_cosmetic_min_time        | Min time of hat from gift                                | 300.0         |
-| hwn_gifts_cosmetic_max_time        | Max time of hat from gift                                | 600.0         |
+| hwn_gifts_cosmetic_min_time        | Min time of hat from gift                                | 450.0         |
+| hwn_gifts_cosmetic_max_time        | Max time of hat from gift                                | 1200.0        |
 | hwn_fps                            | FPS for effects                                          | 25            |
 | hwn_npc_fps                        | FPS for NPC                                              | 25            |
 | hwn_enable_particles               | Enable/Disable custom particles                          | 1             |
@@ -25,3 +25,6 @@
 | hwn_spawn_boss                     | Spawn Boss command (Admin Access)                        |               |
 | hwn_pumpkin_mutate_chance          | Chance mutation pumpkin in a spooky pumpkin              | 20.0          |
 | hwn_boss_healthbar                 | Enable/Disable healthbar for bosses                      | 1             |
+| hwn_spellbook_max_spell_count      | Max count of spells that are given for spellbook pickup  | 3             |
+| hwn_bucket_collect_flash           | Enable/Disable flash effect on bucket                    | 1             |
+| hwn_pumpkin_pickup_flash           | Enable/Disable flash effect on filling the bucket        | 1             |
