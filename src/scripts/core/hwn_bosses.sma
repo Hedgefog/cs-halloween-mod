@@ -2,6 +2,7 @@
 
 #include <amxmodx>
 #include <amxmisc>
+#include <engine>
 
 #include <fakemeta>
 #include <hamsandwich>
@@ -19,6 +20,7 @@
 #define TASKID_REMOVE_BOSS 1
 
 #define BOSS_TARGET_ENTITY_CLASSNAME "hwn_boss_target"
+#define BOSS_SPAWN_DAMAGE 1000.0
 
 new const g_szSndBossSpawn[] = "hwn/misc/halloween_boss_summoned.wav";
 new const g_szSndBossDefeat[] = "hwn/misc/halloween_boss_defeated.wav";
@@ -68,7 +70,7 @@ public plugin_init()
     g_fwWinner = CreateMultiForward("Hwn_Bosses_Fw_Winner", ET_IGNORE, FP_CELL);
     
     register_concmd("hwn_spawn_boss", "OnClCmd_SpawnBoss", ADMIN_CVAR);
-    
+
     CreateBossSpawnTask();
 }
 
@@ -252,8 +254,31 @@ SpawnBoss()
     
     client_cmd(0, "spk %s", g_szSndBossSpawn);
     set_task(get_pcvar_float(g_cvarBossLifeTime), "TaskRemoveBoss", TASKID_REMOVE_BOSS);
-    
+
+    IntersectKill();
+
     ExecuteForward(g_fwBossSpawn, g_fwResult, g_bossEnt);
+}
+
+IntersectKill()
+{
+    if (!g_bossEnt) {
+        return;
+    }
+
+    for (new id = 1; id <= g_maxPlayers; ++id) {
+        if (!is_user_connected(id)) {
+            continue;
+        }
+        
+        if (!is_user_alive(id)) {
+            continue;
+        }
+
+        if (entity_intersects(id, g_bossEnt)) {
+            UTIL_CS_DamagePlayer(id, BOSS_SPAWN_DAMAGE, DMG_ALWAYSGIB, g_bossEnt, g_bossEnt);
+        }
+    }
 }
 
 CreateBossSpawnTask()
