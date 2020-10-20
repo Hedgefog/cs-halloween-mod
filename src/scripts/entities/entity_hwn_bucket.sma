@@ -14,6 +14,9 @@
 #define AUTHOR "Hedgehog Fog"
 
 #define ENTITY_NAME "hwn_bucket"
+#define FLASH_RADIUS 32
+#define FLASH_LIFETIME 10
+#define FLASH_DECAY_RATE 28
 
 enum Team
 {
@@ -38,6 +41,7 @@ new g_sprBloodSpray;
 new const g_szSndPointCollected[] = "hwn/misc/collected.wav";
 
 new g_cvarBucketHealth;
+new g_cvarBucketCollectFlash;
 
 new Float:g_fThinkDelay;
 
@@ -69,6 +73,7 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
     
     g_cvarBucketHealth = register_cvar("hwn_bucket_health", "300");
+    g_cvarBucketCollectFlash = register_cvar("hwn_bucket_collect_flash", "1");
 }
 
 public plugin_init()
@@ -266,6 +271,10 @@ TakePlayerPoint(ent, id)
     write_byte(10);
     write_byte(id);
     message_end();
+
+    if (get_pcvar_num(g_cvarBucketCollectFlash) > 0) {
+        FlashEffect(vOrigin, team);
+    }
 }
 
 ExtractPoints(ent, count = 1)
@@ -306,4 +315,13 @@ ExtractPoints(ent, count = 1)
             dllfunc(DLLFunc_Spawn, pumpkinEnt);
         }
     }
+}
+
+FlashEffect(const Float:vOrigin[3], team) {
+    new color[3];
+    for (new i = 0; i < 3; ++i) {
+        color[i] = floatround(g_vTeamColor[Team:team][i]);
+    }
+
+    UTIL_Message_Dlight(vOrigin, FLASH_RADIUS, color, FLASH_LIFETIME, FLASH_DECAY_RATE);
 }
