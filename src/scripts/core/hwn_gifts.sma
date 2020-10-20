@@ -39,8 +39,8 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
     
     g_cvarGiftSpawnDelay = register_cvar("hwn_gifts_spawn_delay", "450.0");
-    g_cvarGiftCosmeticMinTime = register_cvar("hwn_gifts_cosmetic_min_time", "300");
-    g_cvarGiftCosmeticMaxTime = register_cvar("hwn_gifts_cosmetic_max_time", "600");
+    g_cvarGiftCosmeticMinTime = register_cvar("hwn_gifts_cosmetic_min_time", "450");
+    g_cvarGiftCosmeticMaxTime = register_cvar("hwn_gifts_cosmetic_max_time", "1200");
 }
 
 public plugin_end()

@@ -110,7 +110,7 @@ public plugin_init()
         ArrayPushCell(g_playerSpawnPoint, 0);
     }
 
-    g_cvarRespawnTime = register_cvar("hwn_gamemode_respawn_time", "10.0");
+    g_cvarRespawnTime = register_cvar("hwn_gamemode_respawn_time", "5.0");
     g_cvarSpawnProtectionTime = register_cvar("hwn_gamemode_spawn_protection_time", "3.0");
     g_cvarNewRoundDelay = register_cvar("hwn_gamemode_new_round_delay", "10.0");
 

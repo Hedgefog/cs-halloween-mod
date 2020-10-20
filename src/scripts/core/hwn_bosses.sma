@@ -59,7 +59,7 @@ public plugin_init()
         ArrayPushCell(g_playerTotalDamage, 0);
     }
     
-    g_cvarBossSpawnDelay = register_cvar("hwn_boss_spawn_delay", "600.0");
+    g_cvarBossSpawnDelay = register_cvar("hwn_boss_spawn_delay", "300.0");
     g_cvarBossLifeTime = register_cvar("hwn_boss_life_time", "120.0");
     g_cvarBossMinDamageToWin = register_cvar("hwn_boss_min_damage_to_win", "300");
     
