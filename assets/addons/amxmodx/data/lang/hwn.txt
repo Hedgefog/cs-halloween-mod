@@ -14,14 +14,14 @@ HWN_COSMETIC_MENU_TITLE = Cosmetic Inventory
 HWN_COSMETIC_MENU_EMPTY = You have no cosmetic items
 
 [ru]
-HWN_GIFT_SPAWN = Призрачный Подарок таинственно появился в случайном месте,^nтолько для вас. Идите и найдите его!
+HWN_GIFT_SPAWN = Призрачный Подарок таинственно появился в случайном месте!
 HWN_GIFT_DISAPPEARED = Призрачный Подарок исчез!
 HWN_GIFT_FOUND = %s нашел Призрачный Подарок.
 HWN_PLAYER_POINTS = Очки: %d
 HWN_SPELL = Заклинание: %s
 HWN_DEFEAT_BOSS = %s победил босса!
 HWN_BOSS_REWARD = Босс побежден!^nТаинственная награда ждет вас в вашем инвентаре.
-HWN_SPELLBOOK_PICKUP = Вы подобрали заклинание!^nИспользуйте клавишу активации фонаря ('f' по умолчанию), чтоб колдовать.
+HWN_SPELLBOOK_PICKUP = Вы подобрали заклинание!^nИспользуйте клавишу фонаря, чтоб колдовать.
 HWN_MENU_HELP = Используйте клавишу смены команды ('m' по умолчанию), чтоб открыть меню.
 HWN_MENU_TITLE = Halloween Mod Меню
 HWN_EQUIPMENT_MENU_TITLE = Экипировка
