@@ -317,7 +317,8 @@ ExtractPoints(ent, count = 1)
     }
 }
 
-FlashEffect(const Float:vOrigin[3], team) {
+FlashEffect(const Float:vOrigin[3], team)
+{
     new color[3];
     for (new i = 0; i < 3; ++i) {
         color[i] = floatround(g_vTeamColor[Team:team][i]);
