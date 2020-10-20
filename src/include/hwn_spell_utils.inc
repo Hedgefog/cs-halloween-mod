@@ -13,6 +13,11 @@ stock UTIL_HwnSpawnPlayerSpellball
 {
     static Float:vOrigin[3];
     pev(owner, pev_origin, vOrigin);
+
+    static Float:vViewOfs[3];
+    pev(owner, pev_view_ofs, vViewOfs);
+
+    xs_vec_add(vOrigin, vViewOfs, vOrigin);
     
     new ent = CE_Create(SPELLBALL_ENTITY_CLASSNAME, vOrigin);
 
