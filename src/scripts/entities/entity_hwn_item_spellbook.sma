@@ -24,6 +24,8 @@ new const g_szSndPickup[] = "hwn/spells/spell_pickup.wav";
 
 new bool:g_isPrecaching;
 
+new g_cvarMaxSpellCount;
+
 new g_ceHandler;
 
 public plugin_init()
@@ -58,6 +60,8 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "OnPickup");
+
+    g_cvarMaxSpellCount = register_cvar("hwn_spellbook_max_spell_count", "3");
 }
 
 public OnSpawn(ent)
@@ -108,9 +112,11 @@ public OnPickup(ent, id)
     }
 
     new count = Hwn_Spell_GetCount();
-    if (count) {
+    new maxSpellCount = get_pcvar_num(g_cvarMaxSpellCount);
+
+    if (count && maxSpellCount > 0) {
         new idx = random(count);
-        Hwn_Spell_SetPlayerSpell(id, idx, random(2)+1);
+        Hwn_Spell_SetPlayerSpell(id, idx, random(maxSpellCount) + 1);
     }
     
     emit_sound(ent, CHAN_BODY, g_szSndPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
