@@ -1,4 +1,24 @@
 /*
+    4.1.0
+        Additions and improvements:
+            NPCs can now walk up stairs
+            Improved small skeletons spawning
+            Spellballs are now cast from view position
+            Bosses will now kill the player when intersect while respawning
+            Added a flash effect when picking up a pumpkin
+            Added a flash effect while putting pumpkin into bucket
+
+        Cvars:
+            Added hwn_spellbook_max_spell_count cvar
+            Added hwn_bucket_collect_flash cvar
+            Added hwn_pumpkin_pickup_flash cvar
+
+        Fixes: 
+            Fixed blink spell teleportation
+            Fixed ru lang
+            Fixed small skeletons getting stuck
+            Added Hungarian translation (by regener)
+
     4.0.0
 
         Additions and improvements:
@@ -126,7 +146,7 @@
 #define HWN_COLOR_GREEN_DARK         47, 95, 15
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "4.0.0"
+#define HWN_VERSION "4.1.0"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
