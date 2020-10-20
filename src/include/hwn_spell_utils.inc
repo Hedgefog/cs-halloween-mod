@@ -16,8 +16,11 @@ stock UTIL_HwnSpawnPlayerSpellball
 
     static Float:vViewOfs[3];
     pev(owner, pev_view_ofs, vViewOfs);
-
     xs_vec_add(vOrigin, vViewOfs, vOrigin);
+
+    static Float:vOffset[3];
+    velocity_by_aim(owner, 16, vOffset);
+    xs_vec_add(vOrigin, vOffset, vOrigin);
     
     new ent = CE_Create(SPELLBALL_ENTITY_CLASSNAME, vOrigin);
 
@@ -33,7 +36,7 @@ stock UTIL_HwnSpawnPlayerSpellball
     set_pev(ent, pev_modelindex, modelindex);
     set_pev(ent, pev_scale, scale);
     set_pev(ent, pev_rendercolor, color);
-    
+
     dllfunc(DLLFunc_Spawn, ent);
 
     return ent;
