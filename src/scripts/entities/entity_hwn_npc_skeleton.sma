@@ -112,8 +112,8 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
     
-    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);    
-    
+    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
+
     g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
     g_maxPlayers = get_maxplayers();
 }
@@ -152,15 +152,19 @@ public OnKilled(ent, killer)
     {
         static Float:vOrigin[3];
         pev(ent, pev_origin, vOrigin);
-        
+
         for (new i = 0; i < 2; ++i) {
             new eggEnt = CE_Create("hwn_skeleton_egg", vOrigin);
-    
+
             if (!eggEnt) {
                 continue;
             }
-            
+
             dllfunc(DLLFunc_Spawn, eggEnt);
+            
+            static Float:vVelocity[3];
+            xs_vec_set(vVelocity, random_float(-96.0, 96.0), random_float(-96.0, 96.0), 128.0);
+            set_pev(eggEnt, pev_velocity, vVelocity);
         }
     }
 }
@@ -255,7 +259,7 @@ public TaskHit(taskID)
 public TaskThink(taskID)
 {
     new ent = taskID;
-    
+
     if (pev(ent, pev_deadflag) != DEAD_NO) {
         return;
     }

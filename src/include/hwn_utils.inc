@@ -350,3 +350,15 @@ stock Array:UTIL_FindEntityNearby(const Float:vOrigin[3], const Float:fRadius)
 
     return arr;
 }
+stock bool:UTIL_IsStuck(ent)
+{
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    new trace = create_tr2();
+    engfunc(EngFunc_TraceMonsterHull, ent, vOrigin, vOrigin, DONT_IGNORE_MONSTERS, ent, trace);
+    new bool:isStuck = !get_tr2(trace, TR_InOpen);
+    free_tr2(trace);
+
+    return isStuck;
+}
