@@ -275,7 +275,7 @@ IntersectKill()
             continue;
         }
 
-        if (entity_intersects(id, g_bossEnt)) {
+        if (UTIL_EntityIntersects(id, g_bossEnt)) {
             UTIL_CS_DamagePlayer(id, BOSS_SPAWN_DAMAGE, DMG_ALWAYSGIB, g_bossEnt, g_bossEnt);
         }
     }

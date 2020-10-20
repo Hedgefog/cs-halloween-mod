@@ -351,6 +351,32 @@ stock Array:UTIL_FindEntityNearby(const Float:vOrigin[3], const Float:fRadius)
     return arr;
 }
 
+stock bool:UTIL_EntityIntersects(ent1, ent2)
+{
+    new Float:vAbsMin1[3];
+    pev(ent1, pev_absmin, vAbsMin1);
+
+    new Float:vAbsMax1[3];
+    pev(ent1, pev_absmax, vAbsMax1);
+
+    new Float:vAbsMin2[3];
+    pev(ent2, pev_absmin, vAbsMin2);
+
+    new Float:vAbsMax2[3];
+    pev(ent2, pev_absmax, vAbsMax2);
+
+    if (vAbsMin2[0] > vAbsMax1[0]
+        || vAbsMin2[1] > vAbsMax1[1]
+        || vAbsMin2[2] > vAbsMax1[2]
+        || vAbsMax2[0] < vAbsMin1[0]
+        || vAbsMax2[1] < vAbsMin1[1]
+        || vAbsMax2[2] < vAbsMin1[2]) {
+        return false;
+    }
+
+    return true;
+}
+
 stock bool:UTIL_FindPlaceToTeleport(ent, const Float:vTarget[3], Float:vOut[3], hull = HULL_POINT)
 {
     static Float:vMins[3];
