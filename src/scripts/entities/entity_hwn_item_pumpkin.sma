@@ -105,12 +105,7 @@ public OnPickup(ent, id)
     emit_sound(ent, CHAN_BODY, g_szSndItemPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     if (get_pcvar_num(g_cvarPumpkinFlash) > 0) {
-        new color[3];
-        for (new i = 0; i < 3; ++i) {
-            color[i] = floatround(g_fLootTypeColor[type][i]);
-        }
-
-        UTIL_Message_Dlight(vPlayerOrigin, FLASH_RADIUS, color, FLASH_LIFETIME, FLASH_DECAY_RATE);
+        FlashEffect(vPlayerOrigin, type);
     }
 
     return PLUGIN_HANDLED;
@@ -165,4 +160,14 @@ GiveAmmo(id)
             give_item(id, AmmoEntityNames[ammoType]);
         }
     }
+}
+
+FlashEffect(const Float:vOrigin[3], type)
+{
+    new color[3];
+    for (new i = 0; i < 3; ++i) {
+        color[i] = floatround(g_fLootTypeColor[type][i]);
+    }
+
+    UTIL_Message_Dlight(vOrigin, FLASH_RADIUS, color, FLASH_LIFETIME, FLASH_DECAY_RATE);
 }
