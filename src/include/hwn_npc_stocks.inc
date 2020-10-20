@@ -434,7 +434,14 @@ stock NPC_MoveForward(ent, Float:fSpeed)
     static Float:vVelocity[3];
     pev(ent, pev_velocity, vVelocity);
     vDirection[2] = vVelocity[2];
-    
+
+    static Float:vAngles[3];
+    pev(ent, pev_angles, vAngles);
+
+    if (pev(ent, pev_movetype) != MOVETYPE_FLY) {
+        engfunc(EngFunc_WalkMove, ent, vAngles[1], 0.5, WALKMOVE_NORMAL);
+    }
+
     set_pev(ent, pev_velocity, vDirection);
 }
 
