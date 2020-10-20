@@ -350,6 +350,50 @@ stock Array:UTIL_FindEntityNearby(const Float:vOrigin[3], const Float:fRadius)
 
     return arr;
 }
+
+stock bool:UTIL_FindPlaceToTeleport(ent, const Float:vTarget[3], Float:vOut[3], hull = HULL_POINT)
+{
+    static Float:vMins[3];
+    pev(ent, pev_mins, vMins);
+
+    static Float:vMaxs[3];
+    pev(ent, pev_maxs, vMaxs);
+
+    if (UTIL_IsOpenHull(vTarget, hull, ent)) {
+        xs_vec_copy(vTarget, vOut);
+        return true;
+    }
+
+    for (new i = 0; i < 3; ++i) {
+        static Float:vNewTarget[3];
+        xs_vec_copy(vTarget, vNewTarget);
+
+        vNewTarget[i] = vTarget[i] - vMins[i];
+        if (UTIL_IsOpenHull(vNewTarget, hull, ent)) {
+            xs_vec_copy(vNewTarget, vOut);
+            return true;
+        }
+
+        vNewTarget[i] = vTarget[i] - vMaxs[i];
+        if (UTIL_IsOpenHull(vNewTarget, hull, ent)) {
+            xs_vec_copy(vNewTarget, vOut);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+stock bool:UTIL_IsOpenHull(const Float:vOrigin[3], hull, ignoreEnt = 0)
+{
+    new trace = create_tr2();
+    engfunc(EngFunc_TraceHull, vOrigin, vOrigin, 0, hull, ignoreEnt, trace);
+    new bool:isVacant = !!get_tr2(trace, TR_InOpen);
+    free_tr2(trace);
+
+    return isVacant;
+}
+
 stock bool:UTIL_IsStuck(ent)
 {
     static Float:vOrigin[3];

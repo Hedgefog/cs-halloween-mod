@@ -9,6 +9,7 @@
 #include <screenfade_util>
 
 #include <hwn>
+#include <hwn_utils>
 #include <hwn_spell_utils>
 
 #define PLUGIN "[Hwn] Blink Spell"
@@ -103,47 +104,23 @@ public OnSpellballKilled(ent)
 Detonate(ent)
 {
     new owner = pev(ent, pev_owner);
-    
+
+    if (!is_user_alive(owner)) {
+        return;
+    }
+
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    static Float:vVelocity[3];
-    pev(ent, pev_velocity, vVelocity);
-
-    static Float:vMins[3];
-    pev(owner, pev_mins, vMins);        
-    
-    static Float:vAngles[3];
-    vector_to_angle(vVelocity, vAngles);
-    
-    static Float:vAngleForward[3];            
-    angle_vector(vAngles, ANGLEVECTOR_FORWARD, vAngleForward);
-    xs_vec_mul_scalar(vAngleForward, vMins[1]-16.0, vAngleForward);
-    xs_vec_add(vAngleForward, vOrigin, vOrigin);
-    
-    static Float:vAngleUp[3];
-    angle_vector(vAngles, ANGLEVECTOR_UP, vAngleUp);
-    xs_vec_mul_scalar(vAngleUp, -(vMins[2]-16.0), vAngleUp);
-    xs_vec_add(vAngleUp, vOrigin, vOrigin);
-    
-    {
-        new hull = (pev(owner, pev_flags) & FL_DUCKING) ? HULL_HEAD : HULL_HUMAN;            
-    
-        new trace = 0;
-        engfunc(EngFunc_TraceHull, vOrigin, vOrigin, 0, hull, 0, trace);
-        
-        if (get_tr2(trace, TR_InOpen)) {
-            engfunc(EngFunc_SetOrigin, owner, vOrigin);
-            UTIL_ScreenFade(owner, {0, 0, 255}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
-        }
-        
-        free_tr2(trace);
+    new hull = (pev(ent, pev_flags) & FL_DUCKING) ? HULL_HEAD : HULL_HUMAN;
+    if (UTIL_FindPlaceToTeleport(owner, vOrigin, vOrigin, hull)) {
+        engfunc(EngFunc_SetOrigin, owner, vOrigin);
+        UTIL_ScreenFade(owner, {0, 0, 255}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
+        emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+        DetonateEffect(ent, vOrigin);
     }
-    
-    emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-
-    DetonateEffect(ent, vOrigin);
 }
+
 
 DetonateEffect(ent, const Float:vOrigin[3])
 {
