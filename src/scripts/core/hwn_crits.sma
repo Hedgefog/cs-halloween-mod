@@ -109,6 +109,13 @@ public plugin_init()
   }
 }
 
+public plugin_natives()
+{
+    register_library("hwn");
+    register_native("Hwn_Crits_Get", "Native_GetPlayerCrits");
+    register_native("Hwn_Crits_Set", "Native_SetPlayerCrits");
+}
+
 public plugin_end()
 {
   ArrayDestroy(g_playerCritChance);
@@ -116,12 +123,7 @@ public plugin_end()
   ArrayDestroy(g_playerLastMiss);
 }
 
-public plugin_natives()
-{
-    register_library("hwn");
-    register_native("Hwn_Crits_Get", "Native_GetPlayerCrits");
-    register_native("Hwn_Crits_Set", "Native_SetPlayerCrits");
-}
+/*--------------------------------[ Natives ]--------------------------------*/
 
 #if AMXX_VERSION_NUM < 183
     public client_disconnect(id)
@@ -146,6 +148,8 @@ public Native_SetPlayerCrits(plugin_id, argc)
   
   SetPlayerCrits(id, value);
 }
+
+/*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnClCmd_CritsToggle(id, level, cid)
 {
@@ -205,6 +209,8 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
   return HAM_HANDLED;
 }
 
+/*--------------------------------[ Methods ]--------------------------------*/
+
 bool:GetPlayerCrits(id)
 {
     return !!(g_flagPlayerCrits & (1 << (id & 31)));
@@ -248,7 +254,11 @@ ProcessRandomCrit(id, hitEnt)
   if ((UTIL_IsPlayer(hitEnt) && !IsTeammate(id, hitEnt)) || pev(hitEnt, pev_flags) & FL_MONSTER) {
     if (fLastHit != get_gametime()) { // ignore if already hit of if teammate
       set_task(0.0, "TaskHitBonus", id + TASKID_SUM_HIT_BONUS);
-      remove_task(id + TASKID_SUM_PENALTY); // remove penalty task on hit
+
+      if (task_exists(id + TASKID_SUM_PENALTY)) {
+        remove_task(id + TASKID_SUM_PENALTY); // remove penalty task on hit
+      }
+
       ArraySetCell(g_playerLastHit, id, get_gametime());
     }
   } else {
@@ -259,26 +269,6 @@ ProcessRandomCrit(id, hitEnt)
   }
 
   return false;
-}
-
-public TaskHitBonus(taskID)
-{
-  new id = taskID - TASKID_SUM_HIT_BONUS;
-  
-  new Float:fHitChance = GetCritChance(id);
-  new Float:fHitBonus = get_pcvar_float(g_cvarCritsRandomChanceBonus);
-
-  SetCritChance(id, fHitChance + fHitBonus);
-}
-
-public TaskPenalty(taskID)
-{
-  new id = taskID - TASKID_SUM_PENALTY;
-  
-  new Float:fHitChance = GetCritChance(id);
-  new Float:fMissPenalty = get_pcvar_float(g_cvarCritsRandomChancePenalty);
-
-  SetCritChance(id, fHitChance - fMissPenalty);
 }
 
 Float:GetCritChance(id)
@@ -355,4 +345,27 @@ bool:IsTeammate(id, ent)
   return UTIL_IsPlayer(id)
     && UTIL_IsPlayer(ent)
     && UTIL_GetPlayerTeam(id) == UTIL_GetPlayerTeam(ent);
+}
+
+
+/*--------------------------------[ Tasks ]--------------------------------*/
+
+public TaskHitBonus(taskID)
+{
+  new id = taskID - TASKID_SUM_HIT_BONUS;
+  
+  new Float:fHitChance = GetCritChance(id);
+  new Float:fHitBonus = get_pcvar_float(g_cvarCritsRandomChanceBonus);
+
+  SetCritChance(id, fHitChance + fHitBonus);
+}
+
+public TaskPenalty(taskID)
+{
+  new id = taskID - TASKID_SUM_PENALTY;
+  
+  new Float:fHitChance = GetCritChance(id);
+  new Float:fMissPenalty = get_pcvar_float(g_cvarCritsRandomChancePenalty);
+
+  SetCritChance(id, fHitChance - fMissPenalty);
 }
