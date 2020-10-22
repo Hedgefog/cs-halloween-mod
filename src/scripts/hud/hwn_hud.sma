@@ -58,12 +58,27 @@ public Hwn_Collector_Fw_PlayerPoints(id)
 
 public Hwn_Bosses_Fw_Winner(id)
 {
-    new szName[32];
+    new szName[128];
     get_user_name(id, szName, charsmax(szName));
     client_print(0, print_chat, "%L", LANG_PLAYER, "HWN_DEFEAT_BOSS", szName);
     
     SetupNotificationMessage(-1.0, 0.35);
     show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_BOSS_REWARD");
+}
+
+public Hwn_Wof_Fw_Roll_Start()
+{
+    SetupNotificationMessage(-1.0, 0.15);
+    show_dhudmessage(0, "Wheel of Fate roll started...");
+}
+
+public Hwn_Wof_Fw_Effect_Start(spellIdx)
+{
+    new szName[32];
+    Hwn_Wof_Spell_GetName(spellIdx, szName, charsmax(szName));
+
+    SetupNotificationMessage(-1.0, 0.15, .holdTime = 0.25);
+    show_dhudmessage(0, "Your fate... Is... %s!", szName);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -94,7 +109,7 @@ public OnGiftKilled(ent, bool:picked)
 
 public OnGiftPicked(ent, id)
 {
-    static szName[32];
+    static szName[128];
     get_user_name(id, szName, charsmax(szName));
     
     SetupNotificationMessage(0.05, 0.35);
@@ -186,19 +201,19 @@ UpdatePlayerSpell(id)
     show_hudmessage(id, "%L x%i", LANG_PLAYER, "HWN_SPELL", szSpellName, amount);
 }
 
-SetupNotificationMessage(Float:x = -1.0, Float:y = -1.0)
+SetupNotificationMessage(Float:x = -1.0, Float:y = -1.0, const color[3] = {HWN_COLOR_PURPLE}, Float:holdTime = 3.0)
 {
     set_dhudmessage
     (
-        .red = 120, 
-        .green = 0, 
-        .blue = 200, 
-        .x = x, 
-        .y = y, 
-        .effects = 0, 
-        .fxtime = 0.0, 
-        .holdtime = 3.0, 
-        .fadeintime = 0.1, 
+        .red = color[0],
+        .green = color[1],
+        .blue = color[2],
+        .x = x,
+        .y = y,
+        .effects = 0,
+        .fxtime = 0.0,
+        .holdtime = holdTime,
+        .fadeintime = 0.1,
         .fadeouttime = 1.5
     );
 }
