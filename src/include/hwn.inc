@@ -1,19 +1,37 @@
 /*
-    4.1.0
+    6.0.0
         Additions and improvements:
-            NPCs can now walk up stairs
-            Improved small skeletons spawning
-            Spellballs are now cast from view position
-            Bosses will now kill the player when intersect while respawning
+            Added Wheel of Fate (random spell effects)
+            Added crits
+            Added crits spell
             Added a flash effect when picking up a pumpkin
             Added a flash effect while putting pumpkin into bucket
+            Bosses will now kill the player when intersect while respawning
+            Spellballs are now cast from view position
+            NPCs can now walk up stairs
+            Improved small skeletons spawning
 
         Cvars:
             Added hwn_spellbook_max_spell_count cvar
             Added hwn_bucket_collect_flash cvar
             Added hwn_pumpkin_pickup_flash cvar
+            Added hwn_wof_effect_time cvar
+            Added hwn_collector_wof cvar
+            Added hwn_collector_wof_delay cvar
+            Added hwn_crits_random cvar
+            Added hwn_crits_random_chance_max cvar
+            Added hwn_crits_random_chance_bonus cvar
+            Added hwn_crits_random_chance_penalty cvar
+            Added hwn_crits_effect_trace cvar
+            Added hwn_crits_effect_splash cvar
+            Added hwn_crits_effect_flash cvar
+            Added hwn_crits_effect_status_icon cvar
+            Added hwn_crits_sound_use cvar
+            Added hwn_crits_sound_hit cvar
+            Added hwn_crits_sound_shoot cvar
 
-        Fixes: 
+        Fixes:
+            Fixed spellbar display
             Fixed blink spell teleportation
             Fixed ru lang
             Fixed small skeletons getting stuck
@@ -146,7 +164,7 @@
 #define HWN_COLOR_GREEN_DARK         47, 95, 15
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "4.1.0"
+#define HWN_VERSION "6.0.0 Beta"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
