@@ -84,29 +84,29 @@ public plugin_precache()
 
 public plugin_init()
 {
-    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+  register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_TraceAttack, "worldspawn", "OnTraceAttack", .Post = 0);
-    RegisterHam(Ham_TraceAttack, "func_wall", "OnTraceAttack", .Post = 0);
-    RegisterHam(Ham_TraceAttack, "func_breakable", "OnTraceAttack", .Post = 0);
-    RegisterHam(Ham_TraceAttack, "player", "OnTraceAttack", .Post = 0);
-    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 0);
+  RegisterHam(Ham_TraceAttack, "worldspawn", "OnTraceAttack", .Post = 0);
+  RegisterHam(Ham_TraceAttack, "func_wall", "OnTraceAttack", .Post = 0);
+  RegisterHam(Ham_TraceAttack, "func_breakable", "OnTraceAttack", .Post = 0);
+  RegisterHam(Ham_TraceAttack, "player", "OnTraceAttack", .Post = 0);
+  RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 0);
 
-    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
+  RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
 
-    register_concmd("hwn_crits_toggle", "OnClCmd_CritsToggle", ADMIN_CVAR);
+  register_concmd("hwn_crits_toggle", "OnClCmd_CritsToggle", ADMIN_CVAR);
 
-    g_maxPlayers = get_maxplayers();
+  g_maxPlayers = get_maxplayers();
 
-    g_playerCritChance = ArrayCreate(1, g_maxPlayers+1);
-    g_playerLastHit = ArrayCreate(1, g_maxPlayers+1);
-    g_playerLastMiss = ArrayCreate(1, g_maxPlayers+1);
+  g_playerCritChance = ArrayCreate(1, g_maxPlayers+1);
+  g_playerLastHit = ArrayCreate(1, g_maxPlayers+1);
+  g_playerLastMiss = ArrayCreate(1, g_maxPlayers+1);
 
-    for (new id = 0; id <= g_maxPlayers; ++id) {
-      ArrayPushCell(g_playerCritChance, 0);
-      ArrayPushCell(g_playerLastHit, 0);
-      ArrayPushCell(g_playerLastMiss, 0);
-    }
+  for (new id = 0; id <= g_maxPlayers; ++id) {
+    ArrayPushCell(g_playerCritChance, 0);
+    ArrayPushCell(g_playerLastHit, 0);
+    ArrayPushCell(g_playerLastMiss, 0);
+  }
 }
 
 public plugin_end()
@@ -134,17 +134,17 @@ public plugin_natives()
 
 public bool:Native_GetPlayerCrits(plugin_id, argc)
 {
-    new id = get_param(1);
-    
-    return GetPlayerCrits(id);
+  new id = get_param(1);
+  
+  return GetPlayerCrits(id);
 }
 
 public Native_SetPlayerCrits(plugin_id, argc)
 {
-    new id = get_param(1);
-    new bool:value = bool:get_param(2);
-    
-    SetPlayerCrits(id, value);
+  new id = get_param(1);
+  new bool:value = bool:get_param(2);
+  
+  SetPlayerCrits(id, value);
 }
 
 public OnClCmd_CritsToggle(id, level, cid)

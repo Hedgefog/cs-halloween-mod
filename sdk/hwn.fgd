@@ -1,17 +1,17 @@
 
 @BaseClass = Angles
 [
-	angles(string) : "Pitch Yaw Roll (Y Z X)" : "0 0 0"
+    angles(string) : "Pitch Yaw Roll (Y Z X)" : "0 0 0"
 ]
 
 @BaseClass = Target
 [ 
-	target(target_destination) : "Target" 
+    target(target_destination) : "Target" 
 ]
 
 @BaseClass = Targetname
 [ 
-	targetname(target_source) : "Name"
+    targetname(target_source) : "Name"
 ]
 
 @BaseClass = Team
@@ -64,11 +64,11 @@
     color(90 27 122)
     size(-12 -12 0, 12 12 24)
 = hwn_pumpkin_dispenser [
-	delay(string) : "Delay" : "10.0"
-	impulse(string) : "Impulse" : "320.0"
-	spawnflags(flags) = [
-		1 : "Random Drop Direction" : 0
-	]
+    delay(string) : "Delay" : "10.0"
+    impulse(string) : "Impulse" : "320.0"
+    spawnflags(flags) = [
+        1 : "Random Drop Direction" : 0
+    ]
 ]
 
 @PointClass
@@ -79,9 +79,9 @@
 = hwn_prop_jackolantern
 [
     spawnflags(Flags) =
-	[
-		1 : "Disable Dynamic Light" : 1
-	]
+    [
+        1 : "Disable Dynamic Light" : 1
+    ]
 ]
 
 @PointClass
