@@ -30,7 +30,7 @@ public plugin_init()
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
     
     Hwn_Spell_Register("Moon Jump", "OnCast");
-    Hwn_Wof_Spell_Register("Crits", "Invoke", "Revoke");
+    Hwn_Wof_Spell_Register("Moon Jump", "Invoke", "Revoke");
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
