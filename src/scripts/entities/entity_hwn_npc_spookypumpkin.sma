@@ -182,7 +182,12 @@ public OnItemPumpkinKilled(ent, killer, bool:picked)
     MutatePumpkin(ent, false);
 }
 
-public OnItemPumpkinBigKilled(ent, killer, bool:picked) {
+public OnItemPumpkinBigKilled(ent, killer, bool:picked)
+{
+    if (picked) {
+        return;
+    }
+
     MutatePumpkin(ent, true);
 }
 
@@ -317,7 +322,8 @@ public TaskHit(taskID)
     NPC_Hit(ent, fDamage, NPC_HitRange, NPC_HitDelay);
 }
 
-public TaskJump(taskID) {
+public TaskJump(taskID)
+{
     new ent = taskID - TASKID_SUM_JUMP;
 
     new enemy = pev(ent, pev_enemy);

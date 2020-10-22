@@ -151,7 +151,7 @@ public OnBackpackPickup(ent, id)
         return;
     }
 
-    new points = GetPlayerPoints(id) + pev(ent, pev_iuser1);
+    new points = GetPlayerPoints(id) + pev(ent, pev_iuser2);
     SetPlayerPoints(id, points);
 }
 
@@ -190,7 +190,7 @@ public OnPlayerKilled(id)
     new bpEnt = CE_Create(BACKPACK_ENTITY_CLASSNAME, vOrigin);
 
     if (bpEnt) {
-        set_pev(bpEnt, pev_iuser1, points);    
+        set_pev(bpEnt, pev_iuser2, points);    
         dllfunc(DLLFunc_Spawn, bpEnt);
         
         static Float:vVelocity[3];

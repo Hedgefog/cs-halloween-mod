@@ -15,10 +15,13 @@
 #define AUTHOR "Hedgehog Fog"
 
 #define ENTITY_NAME "hwn_item_pumpkin"
+#define ENTITY_NAME_BIG "hwn_item_pumpkin_big"
 
 #define FLASH_RADIUS 16
 #define FLASH_LIFETIME 10
 #define FLASH_DECAY_RATE 16
+#define FLASH_RADIUS_BIG 24
+#define FLASH_DECAY_RATE_BIG 24
 
 enum _:PumpkinType
 {
@@ -39,6 +42,8 @@ new const g_szSndItemPickup[] = "hwn/items/pumpkin/pumpkin_pickup.wav";
 
 new g_cvarPumpkinFlash;
 
+new g_ceHandlerBig;
+
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -58,9 +63,22 @@ public plugin_precache()
         .fRespawnTime = 30.0,
         .preset = CEPreset_Item
     );
+
+    g_ceHandlerBig = CE_Register(
+        .szName = ENTITY_NAME_BIG,
+        .modelIndex = precache_model("models/hwn/items/pumpkin_loot_big_v2.mdl"),
+        .vMins = Float:{-16.0, -16.0, 0.0},
+        .vMaxs = Float:{16.0, 16.0, 32.0},
+        .fLifeTime = 30.0,
+        .fRespawnTime = 30.0,
+        .preset = CEPreset_Item
+    );
     
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "OnPickup");
+
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_BIG, "OnSpawn");
+    CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME_BIG, "OnPickup");
 
     g_cvarPumpkinFlash = get_cvar_pointer("hwn_pumpkin_pickup_flash");
 }
@@ -75,8 +93,13 @@ public OnSpawn(ent)
     set_pev(ent, pev_rendermode, kRenderNormal);
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 4.0);
-    set_pev(ent, pev_rendercolor, g_fLootTypeColor[type]);
-    
+
+    if (isBig(ent)) {
+        set_pev(ent, pev_rendercolor, Float:{HWN_COLOR_GREEN_DARK_F});
+    } else {
+        set_pev(ent, pev_rendercolor, g_fLootTypeColor[type]);
+    }
+
     set_pev(ent, pev_framerate, 1.0);    
     
     emit_sound(ent, CHAN_BODY, g_szSndItemSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
@@ -84,8 +107,7 @@ public OnSpawn(ent)
 
 public OnPickup(ent, id)
 {
-    new type = pev(ent, pev_iuser1);
-    
+    new type = isBig(ent) ? -1 : pev(ent, pev_iuser1);
     switch (type)
     {
         case PumpkinType_Equipment:
@@ -100,12 +122,12 @@ public OnPickup(ent, id)
     }
     
     static Float:vPlayerOrigin[3];
-    pev(ent, pev_origin, vPlayerOrigin);
+    pev(id, pev_origin, vPlayerOrigin);
 
     emit_sound(ent, CHAN_BODY, g_szSndItemPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     if (get_pcvar_num(g_cvarPumpkinFlash) > 0) {
-        FlashEffect(vPlayerOrigin, type);
+        FlashEffect(ent, vPlayerOrigin, type);
     }
 
     return PLUGIN_HANDLED;
@@ -162,12 +184,20 @@ GiveAmmo(id)
     }
 }
 
-FlashEffect(const Float:vOrigin[3], type)
+FlashEffect(ent, const Float:vOrigin[3], type)
 {
-    new color[3];
-    for (new i = 0; i < 3; ++i) {
-        color[i] = floatround(g_fLootTypeColor[type][i]);
-    }
+    if (isBig(ent)) {
+        UTIL_Message_Dlight(vOrigin, FLASH_RADIUS_BIG, {HWN_COLOR_GREEN_DARK}, FLASH_LIFETIME, FLASH_DECAY_RATE_BIG);
+    } else {
+        new color[3];
+        for (new i = 0; i < 3; ++i) {
+            color[i] = floatround(g_fLootTypeColor[type][i]);
+        }
 
-    UTIL_Message_Dlight(vOrigin, FLASH_RADIUS, color, FLASH_LIFETIME, FLASH_DECAY_RATE);
+        UTIL_Message_Dlight(vOrigin, FLASH_RADIUS, color, FLASH_LIFETIME, FLASH_DECAY_RATE);
+    }
+}
+
+bool:isBig(ent) {
+    return CE_GetHandlerByEntity(ent) == g_ceHandlerBig;
 }
