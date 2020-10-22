@@ -120,7 +120,7 @@ public Native_Spell_GetCount(pluginID, argc)
 
 public Native_Roll(pluginID, argc)
 {
-  Roll();
+  StartRoll();
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -131,7 +131,7 @@ public OnClCmd_WofRoll(id, level, cid)
     return PLUGIN_HANDLED;
   }
 
-  Roll();
+  StartRoll();
 
   return PLUGIN_HANDLED;
 }
@@ -161,53 +161,49 @@ public Hwn_Gamemode_Fw_NewRound()
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-public Roll()
+StartRoll()
 {
   if (g_spellIdx >= 0) {
     return;
   }
+
+  if (!g_spellCount) {
+    return;
+  }
+
+  g_spellIdx = random(g_spellCount);
   
   client_cmd(0, "spk %s", g_szSndWofRun);
   ExecuteForward(g_fwRollStart, g_fwResult);
-  set_task(ROLL_TIME, "RollEnd", TASKID_ROLL_END);
+  set_task(ROLL_TIME, "TaskEndRoll", TASKID_ROLL_END);
 }
 
-public RollEnd()
+EndRoll()
 {
   ExecuteForward(g_fwRollEnd, g_fwResult);
   StartEffect();
 }
 
-public StartEffect()
+StartEffect()
 {
-  if (!g_spellCount) {
-    return;
-  }
-
-  if (g_spellIdx >= 0) {
-    return;
-  }
-
-  g_spellIdx = random(g_spellCount);
-
   for (new id = 1; id <= g_maxPlayers; ++id) {
     if (!is_user_connected(id)) {
-      return;
+      continue;
     }
 
     CallInvoke(id);
   }
 
   ExecuteForward(g_fwEffectStart, g_fwResult, g_spellIdx);
-  set_task(get_pcvar_float(g_cvarEffectTime), "EndEffect", TASKID_EFFECT_END);
+  set_task(get_pcvar_float(g_cvarEffectTime), "TaskEndEffect", TASKID_EFFECT_END);
 }
 
-public EndEffect()
+EndEffect()
 {
   if (g_spellIdx >= 0) {
     for (new id = 1; id <= g_maxPlayers; ++id) {
       if (!is_user_connected(id)) {
-        return;
+        continue;
       }
       
       CallRevoke(id);
@@ -283,4 +279,16 @@ Reset()
   g_spellIdx = -1;
   remove_task(TASKID_ROLL_END);
   remove_task(TASKID_EFFECT_END);
+}
+
+/*--------------------------------[ Tasks ]--------------------------------*/
+
+public TaskEndRoll()
+{
+  EndRoll();
+}
+
+public TaskEndEffect()
+{
+  EndEffect();
 }
