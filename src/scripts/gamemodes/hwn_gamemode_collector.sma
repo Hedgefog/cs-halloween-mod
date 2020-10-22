@@ -17,6 +17,8 @@
 #define LOOT_ENTITY_CLASSNAME "hwn_item_pumpkin"
 #define BACKPACK_ENTITY_CLASSNAME "hwn_item_pumpkin_big"
 
+#define TASKID_SUM_WOF_ROLL 1000
+
 #define TEAM_COUNT 4
 
 new g_fwResult;
@@ -29,6 +31,8 @@ new Array:g_teamPoints;
 new g_hGamemode;
 
 new g_cvarTeamPointsLimit;
+new g_cvarWofEnabled;
+new g_cvarWofDelay;
 
 new g_maxPlayers;
 
@@ -68,6 +72,8 @@ public plugin_init()
     }
     
     g_cvarTeamPointsLimit = register_cvar("hwn_collector_teampoints_limit", "50");
+    g_cvarWofEnabled = register_cvar("hwn_collector_wof", "1");
+    g_cvarWofDelay = register_cvar("hwn_collector_wof_delay", "150.0");
     
     g_fwPlayerPointsChanged = CreateMultiForward("Hwn_Collector_Fw_PlayerPoints", ET_IGNORE, FP_CELL);
     g_fwTeamPointsChanged = CreateMultiForward("Hwn_Collector_Fw_TeamPoints", ET_IGNORE, FP_CELL);
@@ -221,7 +227,15 @@ public Hwn_Gamemode_Fw_NewRound()
     }
 
     ResetVariables();
+    ClearWofTasks();
+    SetWofTask();
 }
+
+public Hwn_Wof_Fw_Effect_End()
+{
+    SetWofTask();
+}
+
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
@@ -268,4 +282,26 @@ ResetVariables()
         SetPlayerPoints(id, 0, .silent = true);
         Hwn_Spell_SetPlayerSpell(id, -1, 0);
     }
+}
+
+SetWofTask()
+{
+    if (get_pcvar_num(g_cvarWofEnabled) <= 0) {
+        return;
+    }
+
+    remove_task(TASKID_SUM_WOF_ROLL);
+    set_task(get_pcvar_float(g_cvarWofDelay), "TaskWofRoll", TASKID_SUM_WOF_ROLL);
+}
+
+ClearWofTasks()
+{
+    remove_task(TASKID_SUM_WOF_ROLL);
+}
+
+/*--------------------------------[ Tasks ]--------------------------------*/
+
+public TaskWofRoll()
+{
+    Hwn_Wof_Roll();
 }
