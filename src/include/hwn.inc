@@ -221,3 +221,7 @@ forward Hwn_PEquipment_Fw_Changed(id);
 /*--------------------------------[ Menu ]--------------------------------*/
 
 native Hwn_Menu_AddItem(const szTitle[], const szCallback[]);
+
+/*--------------------------------[ Crits ]--------------------------------*/
+native Hwn_Crits_Get(id);
+native Hwn_Crits_Set(id, bool:value);

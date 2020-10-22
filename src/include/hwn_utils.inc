@@ -432,3 +432,73 @@ stock bool:UTIL_IsStuck(ent)
 
     return isStuck;
 }
+
+stock UTIL_Message_StatusIcon(id, status = 0, const szIcon[], const color[3])
+{
+    static msgid = 0;
+    if(!msgid) {
+        msgid = get_user_msgid("StatusIcon");
+    }
+
+    message_begin(id ? MSG_ONE : MSG_ALL, msgid, _, id);
+    write_byte(status);
+    write_string(szIcon);
+
+    if (status) {
+        write_byte(color[0]);
+        write_byte(color[1]);
+        write_byte(color[2]);
+    }
+
+    message_end();
+}
+
+stock UTIL_Message_StreakSplash(const Float:vOrigin[3], const Float:vDirection[3], color, count, speed, speedNoise = 0)
+{
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_STREAK_SPLASH);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    engfunc(EngFunc_WriteCoord, vDirection[0]);
+    engfunc(EngFunc_WriteCoord, vDirection[1]);
+    engfunc(EngFunc_WriteCoord, vDirection[2]);
+    write_byte(color);
+    write_short(count);
+    write_short(speed);
+    write_short(speedNoise);
+    message_end();
+}
+
+stock UTIL_Message_UserTracer(const Float:vOrigin[3], const Float:vDirection[3], lifeTime, color, length)
+{
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_USERTRACER);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    engfunc(EngFunc_WriteCoord, vDirection[0]);
+    engfunc(EngFunc_WriteCoord, vDirection[1]);
+    engfunc(EngFunc_WriteCoord, vDirection[2]);
+    write_byte(lifeTime);
+    write_byte(color);
+    write_byte(length);
+    message_end();
+}
+
+stock UTIL_Message_Sound(const Float:vOrigin[3], const szSound[], Float:fVolume = VOL_NORM, Float:fAttn = ATTN_NORM, flags = 0, pitch = PITCH_NORM, ent = 0)
+{
+    new sndIndex = engfunc(EngFunc_PrecacheSound, szSound);
+
+    engfunc(EngFunc_MessageBegin, MSG_ALL, SVC_SPAWNSTATICSOUND, vOrigin, 0);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    write_short(sndIndex);
+    write_byte(floatround(fVolume * 255));
+    write_byte(floatround(fAttn * 64));
+    write_short(ent);        
+    write_byte(pitch); 
+    write_byte(flags);
+    message_end();
+}
