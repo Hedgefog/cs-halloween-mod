@@ -17,7 +17,7 @@
 #define ROLL_TIME 6.8
 
 new g_maxPlayers;
-new g_szSndWofRun[] = "sound/hwn/wof/wof_roll.wav";
+new g_szSndWofRun[] = "hwn/wof/wof_roll.wav";
 
 new Trie:g_spells;
 new Array:g_spellName;
