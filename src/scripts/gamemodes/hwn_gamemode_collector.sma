@@ -231,6 +231,11 @@ public Hwn_Gamemode_Fw_NewRound()
     SetWofTask();
 }
 
+public Hwn_Wof_Fw_Roll_Start()
+{
+    ClearWofTasks();
+}
+
 public Hwn_Wof_Fw_Effect_End()
 {
     SetWofTask();
