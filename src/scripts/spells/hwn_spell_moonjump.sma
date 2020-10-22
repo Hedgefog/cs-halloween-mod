@@ -10,9 +10,6 @@
 #define PLUGIN "[Hwn] Moon Jump Spell"
 #define AUTHOR "Hedgehog Fog"
 
-#define GRAVITATIONAL_ACCELERATION_EARTH 9.807
-#define GRAVITATIONAL_ACCELERATION_MOON 1.62
-
 const Float:EffectTime = 25.0;
 
 const EffectRadius = 48;
@@ -70,7 +67,7 @@ public OnCast(id)
 SetGravity(id, bool:value = true)
 {
     if (value) {
-        new Float:fGravityValue = (GRAVITATIONAL_ACCELERATION_MOON / GRAVITATIONAL_ACCELERATION_EARTH);
+        new Float:fGravityValue = (MOON_GRAVIY);
         set_pev(id, pev_gravity, fGravityValue);
     } else {
         set_pev(id, pev_gravity, 1.0);
