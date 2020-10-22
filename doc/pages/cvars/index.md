@@ -15,6 +15,8 @@
 | hwn_bucket_health                  | Required damage to extract pumpkin from bucket           | 300           |
 | hwn_npc_hhh_use_astar              | Use A* algorithm for Horseless Headless Horsemann        | 1             |
 | hwn_collector_teampoints_limit     | Limit of teampoints in Collector Gamemode                | 50            |
+| hwn_collector_wof                  | Enable/Disable Wheel of Fate rolls                       | 1             |
+| hwn_collector_wof_delay            | Delay until the next Wheel of Fate roll                  | 150.0         |
 | hwn_gamemode_change_lighting       | Enable/Disable custom light in default gamemode          | 1             |
 | hwn_gamemode_spell_on_spawn        | Enable/Disable spell on spawn in default gamemode        | 1             |
 | hwn_gamemode_random_events         | Enable/Disable spawn npc/items in default gamemode       | 1             |
@@ -28,3 +30,15 @@
 | hwn_spellbook_max_spell_count      | Max count of spells that are given for spellbook pickup  | 3             |
 | hwn_bucket_collect_flash           | Enable/Disable flash effect on bucket                    | 1             |
 | hwn_pumpkin_pickup_flash           | Enable/Disable flash effect on filling the bucket        | 1             |
+| hwn_wof_effect_time                | Wheel of fate effect time                                | 20.0          |
+| hwn_crits_random                   | Enable/Disable random crits                              | 1             |
+| hwn_crits_random_chance_max        | Maximum crit chance                                      | 12.0          |
+| hwn_crits_random_chance_bonus      | Chance hit bonus                                         | 1.0           |
+| hwn_crits_random_chance_penalty    | Change miss penalty                                      | 4.0           |
+| hwn_crits_effect_trace             | Enable/Disable crit trace effect                         | 1             |
+| hwn_crits_effect_splash            | Enable/Disable crit splash effect                        | 1             |
+| hwn_crits_effect_flash             | Enable/Disable crit flash effect                         | 1             |
+| hwn_crits_effect_status_icon       | Enable/Disable crit status icon                          | 1             |
+| hwn_crits_sound_use                | Enable/Disable crit use sound                            | 1             |
+| hwn_crits_sound_hit                | Enable/Disable crit hit sound                            | 1             |
+| hwn_crits_sound_shoot              | Enable/Disable crit shoot sound                          | 1             |
