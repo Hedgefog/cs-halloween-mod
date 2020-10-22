@@ -108,7 +108,6 @@ public Invoke(id)
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
 
-    UTIL_CS_DamagePlayer(id, FireballDamage, DMG_BURN, 0, 0);
     burn_player(id);
     DetonateEffect(id, vOrigin);
 }
