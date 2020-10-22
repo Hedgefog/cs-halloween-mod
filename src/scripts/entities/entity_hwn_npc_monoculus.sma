@@ -717,7 +717,7 @@ public TaskTeleport(taskID)
 
     static Float:vTargetOrigin[3];
     ArrayGetArray(g_portals, portalIdx, vTargetOrigin);
-    set_pev(ent, pev_origin, vTargetOrigin);
+    engfunc(EngFunc_SetOrigin, ent, vTargetOrigin);
     TeleportEffect(vTargetOrigin);
 
     static Float:vTargetAngles[3];
