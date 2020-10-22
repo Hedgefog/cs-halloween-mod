@@ -41,7 +41,7 @@ public plugin_natives()
 {
     register_library("hwn");
     register_native("Hwn_Spell_Register", "Native_Register");
-    register_native("Hwn_Spell_GetName", "Native_GetName");    
+    register_native("Hwn_Spell_GetName", "Native_GetName");
     register_native("Hwn_Spell_GetCount", "Native_GetCount");
     
     register_native("Hwn_Spell_GetPlayerSpell", "Native_GetPlayerSpell");

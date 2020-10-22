@@ -187,7 +187,7 @@ forward Hwn_Collector_Fw_PlayerPoints(id);
 
 native Hwn_Spell_Register(const szName[], const szCastCallback[]);
 native Hwn_Spell_GetCount();
-native Hwn_Spell_GetName(spell, output[], maxlen);
+native Hwn_Spell_GetName(spell, szOutput[], maxlen);
 
 native Hwn_Spell_GetPlayerSpell(id, &amount = 0);
 native Hwn_Spell_SetPlayerSpell(id, spell, amount = 0);

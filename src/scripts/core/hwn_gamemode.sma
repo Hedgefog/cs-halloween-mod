@@ -585,7 +585,8 @@ bool:IsTeamExtermination()
     return true;
 }
 
-ClearRespawnTasks() {
+ClearRespawnTasks()
+{
     for (new id = 1; id <= g_maxPlayers; ++id) {
         remove_task(id+TASKID_SUM_RESPAWN_PLAYER);
     }
