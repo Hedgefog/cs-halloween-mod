@@ -80,7 +80,7 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_BIG, "OnSpawn");
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME_BIG, "OnPickup");
 
-    g_cvarPumpkinFlash = get_cvar_pointer("hwn_pumpkin_pickup_flash");
+    g_cvarPumpkinFlash = register_cvar("hwn_pumpkin_pickup_flash", "1");
 }
 
 /*------------[ Hooks ]------------*/
