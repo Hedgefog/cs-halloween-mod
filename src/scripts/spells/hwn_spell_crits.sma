@@ -30,6 +30,7 @@ public plugin_init()
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
     
     Hwn_Spell_Register("Crits", "OnCast");
+    Hwn_Wof_Spell_Register("Crits", "Invoke", "Revoke");
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -47,6 +48,17 @@ public OnPlayerKilled(id)
 
 public OnCast(id)
 {   
+    Invoke(id);
+
+    if (task_exists(id)) {
+        remove_task(id);
+    }
+
+    set_task(EffectTime, "Revoke", id);
+}
+
+public Invoke(id)
+{
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
 
@@ -54,17 +66,9 @@ public OnCast(id)
 
     UTIL_Message_Dlight(vOrigin, EffectRadius, EffectColor, 5, 80);
     emit_sound(id, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-
-    if (task_exists(id)) {
-        remove_task(id);
-    }
-
-    set_task(EffectTime, "TaskDisable", id);
 }
 
-/*--------------------------------[ Tasks ]--------------------------------*/
-
-public TaskDisable(id)
+public Revoke(id)
 {
     Hwn_Crits_Set(id, false);
 }

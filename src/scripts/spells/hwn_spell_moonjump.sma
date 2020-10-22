@@ -30,6 +30,7 @@ public plugin_init()
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
     
     Hwn_Spell_Register("Moon Jump", "OnCast");
+    Hwn_Wof_Spell_Register("Crits", "Invoke", "Revoke");
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -46,20 +47,14 @@ public OnPlayerKilled(id)
 }
 
 public OnCast(id)
-{   
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
-
-    SetGravity(id, true);
-
-    UTIL_Message_Dlight(vOrigin, EffectRadius, EffectColor, 5, 80);
-    emit_sound(id, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+{
+    Invoke(id);
 
     if (task_exists(id)) {
         remove_task(id);
     }
 
-    set_task(EffectTime, "TaskRemoveGravity", id);
+    set_task(EffectTime, "Revoke", id);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -76,7 +71,18 @@ SetGravity(id, bool:value = true)
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
-public TaskRemoveGravity(id)
+public Invoke(id)
+{
+    static Float:vOrigin[3];
+    pev(id, pev_origin, vOrigin);
+
+    SetGravity(id, true);
+
+    UTIL_Message_Dlight(vOrigin, EffectRadius, EffectColor, 5, 80);
+    emit_sound(id, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+}
+
+public Revoke(id)
 {
     SetGravity(id, false);
 }

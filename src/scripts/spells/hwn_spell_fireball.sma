@@ -46,6 +46,7 @@ public plugin_init()
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
     
     g_hSpell = Hwn_Spell_Register("Fireball", "OnCast");
+    Hwn_Wof_Spell_Register("Fire", "Invoke", "Revoke");
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
     
@@ -102,6 +103,21 @@ public OnSpellballKilled(ent)
     Detonate(ent);
 }
 
+public Invoke(id)
+{
+    static Float:vOrigin[3];
+    pev(id, pev_origin, vOrigin);
+
+    UTIL_CS_DamagePlayer(id, FireballDamage, DMG_BURN, 0, 0);
+    burn_player(id);
+    DetonateEffect(id, vOrigin);
+}
+
+public Revoke(id)
+{
+    extinguish_player(id);
+}
+
 /*--------------------------------[ Methods ]--------------------------------*/
 
 Detonate(ent)
@@ -111,7 +127,6 @@ Detonate(ent)
     
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
-    
 
     new Array:nearbyEntities = UTIL_FindEntityNearby(vOrigin, EffectRadius);
     new size = ArraySize(nearbyEntities);

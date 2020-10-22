@@ -35,6 +35,7 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
     
     Hwn_Spell_Register("Overheal", "OnCast");
+    Hwn_Wof_Spell_Register("Crits", "OnCast");
 
     g_maxPlayers = get_maxplayers();
 }

@@ -45,6 +45,7 @@ public plugin_init()
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
     
     Hwn_Spell_Register("Invisibility", "OnCast");
+    Hwn_Wof_Spell_Register("Invisibility", "Invoke", "Revoke");
 
     g_maxPlayers = get_maxplayers();
     g_playerInvisibilityStart = ArrayCreate(1, g_maxPlayers+1);
@@ -107,6 +108,21 @@ public OnCast(id)
     ArrayDestroy(users);
 
     DetonateEffect(id, vOrigin);
+}
+
+public Invoke(id)
+{
+    SetInvisible(id, true);
+
+    static Float:vOrigin[3];
+    pev(id, pev_origin, vOrigin);
+
+    DetonateEffect(id, vOrigin);
+}
+
+public Revoke(id)
+{
+    SetInvisible(id, false);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
