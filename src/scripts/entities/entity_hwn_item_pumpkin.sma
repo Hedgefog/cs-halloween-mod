@@ -25,7 +25,7 @@
 
 enum _:PumpkinType
 {
-    PumpkinType_Default,
+    PumpkinType_Crits,
     PumpkinType_Equipment,
     PumpkinType_Health
 };
@@ -110,6 +110,10 @@ public OnPickup(ent, id)
     new type = isBig(ent) ? -1 : pev(ent, pev_iuser1);
     switch (type)
     {
+        case PumpkinType_Crits:
+        {
+            GiveCrits(id, 1.0);
+        }
         case PumpkinType_Equipment:
         {
             GiveAmmo(id);
@@ -134,6 +138,16 @@ public OnPickup(ent, id)
 }
 
 /*------------[ Methods ]------------*/
+
+GiveCrits(id, Float:fTime)
+{
+    if (Hwn_Crits_Get(id)) {
+        return;
+    }
+
+    Hwn_Crits_Set(id, true);
+    set_task(fTime, "TaskDisableCrits", id);
+}
 
 GiveHealth(id, Float:fCount)
 {
@@ -200,4 +214,12 @@ FlashEffect(ent, const Float:vOrigin[3], type)
 
 bool:isBig(ent) {
     return CE_GetHandlerByEntity(ent) == g_ceHandlerBig;
+}
+
+/*------------[ Tasks ]------------*/
+
+public TaskDisableCrits(taskID)
+{
+    new id = taskID;
+    Hwn_Crits_Set(id, false);
 }
