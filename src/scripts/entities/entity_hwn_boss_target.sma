@@ -18,6 +18,6 @@ public plugin_precache()
     CE_Register(
         .szName = "hwn_boss_target",
         .vMins = Float:{-48.0, -48.0, -48.0},
-        .vMaxs = Float:{48.0, 48.0, 48.0},
+        .vMaxs = Float:{48.0, 48.0, 48.0}
     );
 }
