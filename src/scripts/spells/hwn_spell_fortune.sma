@@ -17,4 +17,10 @@ public plugin_init()
     Hwn_Wof_Spell_Register("Dance", "Invoke");
 }
 
-public Invoke() {}
+public Invoke() {
+    set_task(0.1, "TaskAbort");
+}
+
+public TaskAbort() {
+    Hwn_Wof_Abort();
+}
