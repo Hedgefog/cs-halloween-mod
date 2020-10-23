@@ -27,6 +27,7 @@ new Array:g_spellRevokeFuncID;
 new g_spellCount = 0;
 
 new g_spellIdx = -1;
+new bool:g_effectStarted = false;
 new Float:g_fEffectTime;
 
 new g_cvarEffectTime;
@@ -163,12 +164,20 @@ public OnPlayerSpawn(id)
     return;
   }
 
+  if (!g_effectStarted) {
+    return;
+  }
+
   CallInvoke(id);
 }
 
 public OnPlayerKilled(id)
 {
   if (g_spellIdx < 0) {
+    return;
+  }
+
+  if (!g_effectStarted) {
     return;
   }
 
@@ -208,6 +217,7 @@ EndRoll()
 StartEffect()
 {
   g_fEffectTime = get_pcvar_float(g_cvarEffectTime);
+  g_effectStarted = true;
 
   for (new id = 1; id <= g_maxPlayers; ++id) {
     if (!is_user_connected(id)) {
@@ -303,6 +313,7 @@ CallRevoke(id)
 Reset()
 {
   g_spellIdx = -1;
+  g_effectStarted = false;
   remove_task(TASKID_ROLL_END);
   remove_task(TASKID_EFFECT_END);
 }
