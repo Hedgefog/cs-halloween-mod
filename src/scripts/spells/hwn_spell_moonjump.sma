@@ -73,6 +73,10 @@ SetGravity(id, bool:value = true)
 
 public Invoke(id)
 {
+    if (!is_user_alive(id)) {
+        return;
+    }
+
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
 

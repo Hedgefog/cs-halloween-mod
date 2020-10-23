@@ -243,10 +243,6 @@ Register(const szName[], pluginID, invokeFuncID, revokeFuncID)
 
 CallInvoke(id)
 {
-    if (!is_user_alive(id)) {
-        return;
-    }
-
     new pluginID = ArrayGetCell(g_spellPluginID, g_spellIdx);
     new funcID = ArrayGetCell(g_spellInvokeFuncID, g_spellIdx);
     

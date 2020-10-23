@@ -44,6 +44,10 @@ public plugin_init()
 
 public OnCast(id)
 {
+    if (!is_user_alive(id)) {
+        return;
+    }
+
     new team = UTIL_GetPlayerTeam(id);
     
     static Float:vOrigin[3];

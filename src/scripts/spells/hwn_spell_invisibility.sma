@@ -117,6 +117,10 @@ public OnCast(id)
 
 public Invoke(id, Float:fTime)
 {
+    if (!is_user_alive(id)) {
+        return;
+    }
+
     SetInvisible(id, true, fTime);
 
     static Float:vOrigin[3];
