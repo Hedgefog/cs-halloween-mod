@@ -32,6 +32,7 @@
 | hwn_pumpkin_pickup_flash           | Enable/Disable flash effect on filling the bucket        | 1             |
 | hwn_wof_effect_time                | Wheel of fate effect time                                | 20.0          |
 | hwn_crits_random                   | Enable/Disable random crits                              | 1             |
+| hwn_crits_random_chance_initial    | Initial crit chance                                      | 0.0           |
 | hwn_crits_random_chance_max        | Maximum crit chance                                      | 12.0          |
 | hwn_crits_random_chance_bonus      | Chance hit bonus                                         | 1.0           |
 | hwn_crits_random_chance_penalty    | Change miss penalty                                      | 4.0           |

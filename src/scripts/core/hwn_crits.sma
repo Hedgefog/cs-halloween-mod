@@ -32,14 +32,16 @@
 
 new g_flagPlayerCrits;
 new Array:g_playerCritChance;
+new Array:g_playerLastShot;
 new Array:g_playerLastHit;
-new Array:g_playerLastMiss;
+new Array:g_playerLastCrit;
 
 new g_cvarCritsEffectTrace;
 new g_cvarCritsEffectSplash;
 new g_cvarCritsEffectFlash;
 new g_cvarCritsEffectStatucIcon;
 new g_cvarCritsRandom;
+new g_cvarCritsRandomChanceInitial;
 new g_cvarCritsRandomChanceMax;
 new g_cvarCritsRandomChanceBonus;
 new g_cvarCritsRandomChancePenalty;
@@ -77,6 +79,7 @@ public plugin_precache()
   g_cvarCritsSoundHit = register_cvar("hwn_crits_sound_hit", "1");
   g_cvarCritsSoundShoot = register_cvar("hwn_crits_sound_shoot", "1");
   g_cvarCritsRandom = register_cvar("hwn_crits_random", "1");
+  g_cvarCritsRandomChanceInitial = register_cvar("hwn_crits_random_chance_initial", "0.0");
   g_cvarCritsRandomChanceMax = register_cvar("hwn_crits_random_chance_max", "12.0");
   g_cvarCritsRandomChanceBonus = register_cvar("hwn_crits_random_chance_bonus", "1.0");
   g_cvarCritsRandomChancePenalty = register_cvar("hwn_crits_random_chance_penalty", "4.0");
@@ -99,13 +102,15 @@ public plugin_init()
   g_maxPlayers = get_maxplayers();
 
   g_playerCritChance = ArrayCreate(1, g_maxPlayers+1);
+  g_playerLastShot = ArrayCreate(1, g_maxPlayers+1);
   g_playerLastHit = ArrayCreate(1, g_maxPlayers+1);
-  g_playerLastMiss = ArrayCreate(1, g_maxPlayers+1);
+  g_playerLastCrit = ArrayCreate(1, g_maxPlayers+1);
 
   for (new id = 0; id <= g_maxPlayers; ++id) {
     ArrayPushCell(g_playerCritChance, 0);
+    ArrayPushCell(g_playerLastShot, 0);
     ArrayPushCell(g_playerLastHit, 0);
-    ArrayPushCell(g_playerLastMiss, 0);
+    ArrayPushCell(g_playerLastCrit, 0);
   }
 }
 
@@ -119,8 +124,9 @@ public plugin_natives()
 public plugin_end()
 {
   ArrayDestroy(g_playerCritChance);
+  ArrayDestroy(g_playerLastShot);
   ArrayDestroy(g_playerLastHit);
-  ArrayDestroy(g_playerLastMiss);
+  ArrayDestroy(g_playerLastCrit);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -175,7 +181,7 @@ public OnClCmd_CritsToggle(id, level, cid)
 
 public OnPlayerSpawn(id)
 {
-  SetCritChance(id, 0.0);
+  ResetCritChance(id);
   UpdateStatusIcon(id);
 }
 
@@ -185,7 +191,10 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     return HAM_IGNORED;
   }
 
-  if (GetPlayerCrits(attacker) || ProcessRandomCrit(attacker, ent)) {
+  new Float:fGameTime = get_gametime();
+  new bool:isHit = (UTIL_IsPlayer(ent) && !IsTeammate(attacker, ent)) || pev(ent, pev_flags) & FL_MONSTER;
+
+  if (ProcessCrit(attacker, isHit)) {
     if (get_pcvar_num(g_cvarCritsSoundShoot)) {
       emit_sound(attacker, CHAN_BODY, g_szSndCritShot, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
     }
@@ -193,18 +202,26 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     static Float:vAttackerOrigin[3];
     pev(attacker, pev_origin, vAttackerOrigin);  
 
-    static Float:vOrigin[3];
-    get_tr2(trace, TR_vecEndPos, vOrigin);
+    static Float:vHitOrigin[3];
+    get_tr2(trace, TR_vecEndPos, vHitOrigin);
 
-    CritEffect(vOrigin, vAttackerOrigin, vDirection);
+    CritEffect(vHitOrigin, vAttackerOrigin, vDirection);
+
+    if (get_pcvar_num(g_cvarCritsSoundHit)) {
+      UTIL_Message_Sound(vHitOrigin, g_szSndCritHit[random(sizeof(g_szSndCritHit))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    }
+
+    ArraySetCell(g_playerLastCrit, attacker, fGameTime);
 
     SetHamParamFloat(3, fDamage * 3.0);
     SetHamParamInteger(6, damageBits | DMG_ALWAYSGIB);
-
-    if (get_pcvar_num(g_cvarCritsSoundHit)) {
-      UTIL_Message_Sound(vOrigin, g_szSndCritHit[random(sizeof(g_szSndCritHit))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-    }
   }
+
+  if (isHit) {
+    ArraySetCell(g_playerLastHit, attacker, fGameTime);
+  }
+
+  ArraySetCell(g_playerLastShot, attacker, fGameTime);
 
   return HAM_HANDLED;
 }
@@ -235,40 +252,42 @@ SetPlayerCrits(id, bool:value)
   }
 }
 
-ProcessRandomCrit(id, hitEnt)
+ProcessCrit(id, bool:isHit)
 {
+  if (GetPlayerCrits(id)) {
+    return true;
+  }
+
   if (get_pcvar_float(g_cvarCritsRandom) <= 0) {
     return false;
   }
 
-  
-  new Float:fHitChance = GetCritChance(id);
-  new Float:fLastHit = ArrayGetCell(g_playerLastHit, id);
-  new Float:fLastMiss = ArrayGetCell(g_playerLastMiss, id);
-  
-  if (fHitChance && fHitChance >= random_float(0.0, 100.0)) {
-    SetCritChance(id, 0.0);
-    return true;
+  new Float:fLastShot = ArrayGetCell(g_playerLastShot, id);
+  new bool:isNewShot = fLastShot != get_gametime();
+
+  new bool:isCrit = ArrayGetCell(g_playerLastCrit, id) == get_gametime();
+
+  if (isNewShot) { // exclude multiple bullets and wallbangs
+    new Float:fCritChance = GetCritChance(id);
+    if (fCritChance && fCritChance >= random_float(0.0, 100.0)) {
+      ResetCritChance(id);
+      isCrit = true;
+    }
   }
 
-  if ((UTIL_IsPlayer(hitEnt) && !IsTeammate(id, hitEnt)) || pev(hitEnt, pev_flags) & FL_MONSTER) {
-    if (fLastHit != get_gametime()) { // ignore if already hit of if teammate
+  if (isHit) {
+    if (ArrayGetCell(g_playerLastHit, id) != get_gametime()) { // only new hit
       set_task(0.0, "TaskHitBonus", id + TASKID_SUM_HIT_BONUS);
-
-      if (task_exists(id + TASKID_SUM_PENALTY)) {
-        remove_task(id + TASKID_SUM_PENALTY); // remove penalty task on hit
-      }
-
-      ArraySetCell(g_playerLastHit, id, get_gametime());
     }
+
+    remove_task(id + TASKID_SUM_PENALTY); // remove penalty task on hit
   } else {
-    if (fLastMiss != get_gametime() && fLastHit != get_gametime()) { // ignore if already missed or hit
+    if (isNewShot) { // only new shot
       set_task(0.0, "TaskPenalty", id + TASKID_SUM_PENALTY);
-      ArraySetCell(g_playerLastMiss, id, get_gametime());
     }
   }
 
-  return false;
+  return isCrit;
 }
 
 Float:GetCritChance(id)
@@ -276,17 +295,22 @@ Float:GetCritChance(id)
   return ArrayGetCell(g_playerCritChance, id);
 }
 
-SetCritChance(id, Float:fChance)
+ResetCritChance(id)
+{
+  SetCritChance(id, get_pcvar_float(g_cvarCritsRandomChanceInitial));
+}
+
+SetCritChance(id, Float:fValue)
 {
   new Float:fMaxChance = get_pcvar_float(g_cvarCritsRandomChanceMax);
 
-  if (fChance > fMaxChance) {
-    fChance = fMaxChance;
-  } else if (fChance < 0.0) {
-    fChance = 0.0;
+  if (fValue > fMaxChance) {
+    fValue = fMaxChance;
+  } else if (fValue < 0.0) {
+    fValue = 0.0;
   }
 
-  ArraySetCell(g_playerCritChance, id, fChance);
+  ArraySetCell(g_playerCritChance, id, fValue);
 }
 
 ResetCrits(id)
@@ -354,18 +378,18 @@ public TaskHitBonus(taskID)
 {
   new id = taskID - TASKID_SUM_HIT_BONUS;
   
-  new Float:fHitChance = GetCritChance(id);
+  new Float:fCitChance = GetCritChance(id);
   new Float:fHitBonus = get_pcvar_float(g_cvarCritsRandomChanceBonus);
 
-  SetCritChance(id, fHitChance + fHitBonus);
+  SetCritChance(id, fCitChance + fHitBonus);
 }
 
 public TaskPenalty(taskID)
 {
   new id = taskID - TASKID_SUM_PENALTY;
   
-  new Float:fHitChance = GetCritChance(id);
+  new Float:fCitChance = GetCritChance(id);
   new Float:fMissPenalty = get_pcvar_float(g_cvarCritsRandomChancePenalty);
 
-  SetCritChance(id, fHitChance - fMissPenalty);
+  SetCritChance(id, fCitChance - fMissPenalty);
 }

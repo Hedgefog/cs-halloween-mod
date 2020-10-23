@@ -19,6 +19,7 @@
             Added hwn_collector_wof cvar
             Added hwn_collector_wof_delay cvar
             Added hwn_crits_random cvar
+            Added hwn_crits_random_chance_initial cvar
             Added hwn_crits_random_chance_max cvar
             Added hwn_crits_random_chance_bonus cvar
             Added hwn_crits_random_chance_penalty cvar
