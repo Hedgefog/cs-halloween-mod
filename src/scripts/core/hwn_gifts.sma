@@ -7,6 +7,7 @@
 #include <api_player_cosmetic>
 
 #include <hwn>
+#include <hwn_utils>
 
 #define PLUGIN "[Hwn] Gifts"
 #define AUTHOR "Hedgehog Fog"
@@ -29,6 +30,7 @@ public plugin_precache()
 {
     CE_RegisterHook(CEFunction_Spawn, GIFT_TARGET_ENTITY_CLASSNAME, "OnGiftTargetSpawn");
     CE_RegisterHook(CEFunction_Picked, GIFT_ENTITY_CLASSNAME, "OnGiftPicked");
+    CE_RegisterHook(CEFunction_Killed, GIFT_ENTITY_CLASSNAME, "OnGiftKilled");
 
     precache_sound(g_szSndGiftSpawn);
     precache_sound(g_szSndGiftPickup);
@@ -100,6 +102,20 @@ public OnGiftPicked(ent, id)
     client_cmd(id, "spk %s", g_szSndGiftPickup);
 }
 
+public OnGiftKilled(ent)
+{
+    new owner = pev(ent, pev_owner);
+    if (!owner) {
+        return;
+    }
+
+    if (!is_user_connected(owner)) {
+        return;
+    }
+
+    SetupSpawnGiftTask(owner);
+}
+
 /*--------------------------------[ Methods ]--------------------------------*/
 
 SpawnGift(id, const Float:vOrigin[3])
@@ -142,6 +158,4 @@ public TaskSpawnGift(taskID)
             }
         }
     }
-
-    SetupSpawnGiftTask(id);
 }

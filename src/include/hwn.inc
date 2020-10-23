@@ -6,6 +6,7 @@
             Added crits spell
             Added a flash effect when picking up a pumpkin
             Added a flash effect while putting pumpkin into bucket
+            A new gift now appears only after picking up or disappear the old one
             Bosses will now kill the player when intersect while respawning
             Spellballs are now cast from view position
             NPCs can now walk up stairs
