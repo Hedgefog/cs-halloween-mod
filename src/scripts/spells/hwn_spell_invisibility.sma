@@ -21,7 +21,6 @@ const Float:EffectRadius = 128.0;
 new const EffectColor[3] = {255, 255, 255};
 
 new FadeEffectColor[3] = {128, 128, 128};
-new const Float:FadeEffectTimeRatio = 1.2;
 
 new const g_szSndDetonate[] = "hwn/spells/spell_stealth.wav";
 
