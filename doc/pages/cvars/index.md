@@ -44,4 +44,5 @@
 | hwn_crits_sound_hit                | Enable/Disable crit hit sound                            | 1             |
 | hwn_crits_sound_shoot              | Enable/Disable crit shoot sound                          | 1             |
 | hwn_wof_roll                       | Start Wheel of Fate roll (Admin Access)                  |               |
+| hwn_wof_abort                      | Abort Wheel of Fate roll (Admin Access)                  |               |
 | hwn_crits_toggle %playerId%        | Toggle crits for player (Admin Acces)                    | caller        |

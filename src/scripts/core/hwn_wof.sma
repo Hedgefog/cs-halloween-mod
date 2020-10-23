@@ -57,6 +57,7 @@ public plugin_init()
     g_cvarEffectTime = register_cvar("hwn_wof_effect_time", "20.0");
 
     register_concmd("hwn_wof_roll", "OnClCmd_WofRoll", ADMIN_CVAR);
+    register_concmd("hwn_wof_abort", "OnClCmd_WofAbort", ADMIN_CVAR);
     
     g_fwRollStart = CreateMultiForward("Hwn_Wof_Fw_Roll_Start", ET_IGNORE);
     g_fwRollEnd = CreateMultiForward("Hwn_Wof_Fw_Roll_End", ET_IGNORE);
@@ -141,6 +142,17 @@ public OnClCmd_WofRoll(id, level, cid)
   }
 
   StartRoll();
+
+  return PLUGIN_HANDLED;
+}
+
+public OnClCmd_WofAbort(id, level, cid)
+{
+  if(!cmd_access(id, level, cid, 1)) {
+    return PLUGIN_HANDLED;
+  }
+
+  Abort();
 
   return PLUGIN_HANDLED;
 }
