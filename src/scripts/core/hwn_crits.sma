@@ -264,7 +264,6 @@ ProcessCrit(id, bool:isHit)
 
   new Float:fLastShot = ArrayGetCell(g_playerLastShot, id);
   new bool:isNewShot = fLastShot != get_gametime();
-
   new bool:isCrit = ArrayGetCell(g_playerLastCrit, id) == get_gametime();
 
   if (isNewShot) { // exclude multiple bullets and wallbangs
@@ -309,7 +308,7 @@ SetCritChance(id, Float:fValue)
   } else if (fValue < 0.0) {
     fValue = 0.0;
   }
-
+  
   ArraySetCell(g_playerCritChance, id, fValue);
 }
 
@@ -370,7 +369,6 @@ bool:IsTeammate(id, ent)
     && UTIL_IsPlayer(ent)
     && UTIL_GetPlayerTeam(id) == UTIL_GetPlayerTeam(ent);
 }
-
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
