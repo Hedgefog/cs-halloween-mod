@@ -60,5 +60,5 @@ module.exports = (name, options) => {
         resolvedTasks.push(taskName);
     }
 
-    gulp.task(name, gulp.series(...resolvedTasks));
+    gulp.task(name, gulp.parallel(...resolvedTasks));
 };
