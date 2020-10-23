@@ -37,6 +37,7 @@ new g_fwEffectStart;
 new g_fwEffectEnd;
 new g_fwEffectInvoke;
 new g_fwEffectRevoke;
+new g_fwEffectAbort;
 
 new g_fwResult;
 
@@ -63,6 +64,7 @@ public plugin_init()
     g_fwEffectEnd = CreateMultiForward("Hwn_Wof_Fw_Effect_End", ET_IGNORE, FP_CELL);
     g_fwEffectInvoke = CreateMultiForward("Hwn_Wof_Fw_Effect_Invoke", ET_IGNORE, FP_CELL, FP_CELL, FP_CELL);
     g_fwEffectRevoke = CreateMultiForward("Hwn_Wof_Fw_Effect_Revoke", ET_IGNORE, FP_CELL, FP_CELL);
+    g_fwEffectAbort = CreateMultiForward("Hwn_Wof_Fw_Abort", ET_IGNORE);
 }
 
 public plugin_end()
@@ -83,6 +85,7 @@ public plugin_natives()
   register_native("Hwn_Wof_Spell_GetName", "Native_Spell_GetName");
   register_native("Hwn_Wof_Spell_GetCount", "Native_Spell_GetCount");
   register_native("Hwn_Wof_Roll", "Native_Roll");
+  register_native("Hwn_Wof_Abort", "Native_Abort");
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -124,6 +127,11 @@ public Native_Roll(pluginID, argc)
   StartRoll();
 }
 
+public Native_Abort(pluginID, argc)
+{
+  Abort();
+}
+
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnClCmd_WofRoll(id, level, cid)
@@ -157,7 +165,7 @@ public OnPlayerKilled(id)
 
 public Hwn_Gamemode_Fw_NewRound()
 {
-  EndEffect();
+  Abort();
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -216,6 +224,12 @@ EndEffect()
   }
 
   Reset();
+}
+
+Abort()
+{
+  EndEffect();
+  ExecuteForward(g_fwEffectAbort, g_fwResult);
 }
 
 Register(const szName[], pluginID, invokeFuncID, revokeFuncID)

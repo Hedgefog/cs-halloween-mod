@@ -219,6 +219,7 @@ native Hwn_Wof_Spell_Register(const szName[], const szInvokeCallback[], const sz
 native Hwn_Wof_Spell_GetCount();
 native Hwn_Wof_Spell_GetName(spell, szOutput[], maxlen);
 native Hwn_Wof_Roll();
+native Hwn_Wof_Abort();
     
 forward Hwn_Wof_Fw_Roll_Start();
 forward Hwn_Wof_Fw_Roll_End();
@@ -226,6 +227,7 @@ forward Hwn_Wof_Fw_Effect_Start(spellIdx);
 forward Hwn_Wof_Fw_Effect_End(spellIdx);
 forward Hwn_Wof_Fw_Effect_Invoke(id, spellIdx, g_fEffectTime);
 forward Hwn_Wof_Fw_Effect_Revoke(id, spellIdx);
+forward Hwn_Wof_Fw_Abort();
 
 /*--------------------------------[ Cosmetic ]--------------------------------*/
 
