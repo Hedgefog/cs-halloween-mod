@@ -15,6 +15,7 @@
 #define AUTHOR "Hedgehog Fog"
 
 const Float:InvisibilityTime = 10.0;
+const Float:MaxFadeTime = 10.0;
 
 const Float:EffectRadius = 128.0;
 new const EffectColor[3] = {255, 255, 255};
@@ -27,6 +28,7 @@ new const g_szSndDetonate[] = "hwn/spells/spell_stealth.wav";
 new g_sprEffectTrace;
 
 new Array:g_playerInvisibilityStart;
+new Array:g_playerInvisibilityTime;
 
 new g_maxPlayers;
 
@@ -49,17 +51,20 @@ public plugin_init()
 
     g_maxPlayers = get_maxplayers();
     g_playerInvisibilityStart = ArrayCreate(1, g_maxPlayers+1);
+    g_playerInvisibilityTime = ArrayCreate(1, g_maxPlayers+1);
 
     register_message(get_user_msgid("ScreenFade"), "OnMessage_ScreenFade");
 
     for (new i = 0; i <= g_maxPlayers; ++i) {
         ArrayPushCell(g_playerInvisibilityStart, 0.0);
+        ArrayPushCell(g_playerInvisibilityTime, 0.0);
     }
 }
 
 public plugin_end()
 {
     ArrayDestroy(g_playerInvisibilityStart);
+    ArrayDestroy(g_playerInvisibilityTime);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -96,7 +101,7 @@ public OnCast(id)
             continue;
         }        
         
-        SetInvisible(id, true);
+        SetInvisible(id, true, InvisibilityTime);
         
         if (task_exists(id)) {
             remove_task(id);
@@ -110,9 +115,9 @@ public OnCast(id)
     DetonateEffect(id, vOrigin);
 }
 
-public Invoke(id)
+public Invoke(id, Float:fTime)
 {
-    SetInvisible(id, true);
+    SetInvisible(id, true, fTime);
 
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
@@ -127,14 +132,15 @@ public Revoke(id)
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-SetInvisible(id, bool:value = true)
+SetInvisible(id, bool:value = true, Float:time = 0.0)
 {
     if (value) {
         set_pev(id, pev_rendermode, kRenderTransTexture);
         set_pev(id, pev_renderamt, 15.0);
 
         ArraySetCell(g_playerInvisibilityStart, id, get_gametime());
-        FadeEffect(id, InvisibilityTime);
+        ArraySetCell(g_playerInvisibilityTime, id, time);
+        FadeEffect(id, time);
     } else {
         set_pev(id, pev_rendermode, kRenderNormal);
         set_pev(id, pev_renderamt, 0.0);
@@ -146,12 +152,20 @@ SetInvisible(id, bool:value = true)
 
 FadeEffect(id, Float:fTime, bool:external = true)
 {
-    UTIL_ScreenFade(id, FadeEffectColor, fTime*FadeEffectTimeRatio, 0.0, 128, FFADE_IN, .bExternal = external);
+    UTIL_ScreenFade(id, FadeEffectColor, -1.0, fTime > MaxFadeTime ? MaxFadeTime : fTime, 128, FFADE_IN, .bExternal = external);
+
+    if (external) {
+        new iterationCount = floatround(fTime / MaxFadeTime, floatround_ceil);
+        for (new i = 1; i < iterationCount; ++i) {
+            set_task(i * MaxFadeTime, "TaskFixInvisibleEffect", id);
+        }
+    }
 }
 
 RemoveFadeEffect(id)
 {
     UTIL_ScreenFade(id);
+    remove_task(id);
 }
 
 DetonateEffect(ent, const Float:vOrigin[3])
@@ -176,7 +190,8 @@ public TaskRemoveInvisibility(id)
 public TaskFixInvisibleEffect(id)
 {
     new Float:fStart = Float:ArrayGetCell(g_playerInvisibilityStart, id);
-    new Float:fTimeleft =  fStart > 0.0 ? InvisibilityTime - (get_gametime() - fStart) : 0.0;
+    new Float:fTime = Float:ArrayGetCell(g_playerInvisibilityTime, id);
+    new Float:fTimeleft =  fStart > 0.0 ? fTime - (get_gametime() - fStart) : 0.0;
 
     if (fTimeleft > 0.0) {
         FadeEffect(id, fTimeleft, false);
