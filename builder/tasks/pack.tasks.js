@@ -54,7 +54,7 @@ gulp.task('pack:alliedmods', () => {
 
 gulp.task('pack:full', () => {
     const build = config.build.vanilla || config.build.reapi;
-    
+
     if (!build) {
         throw new Error('Building config not found!');
     }
@@ -69,7 +69,7 @@ gulp.task('pack:full', () => {
     };
 
     const tasks = [];
-    
+
     if (config.build.vanilla) {
         const vanillaDistDir = config.build.vanilla.destDir;
 

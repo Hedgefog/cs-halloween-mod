@@ -32,7 +32,7 @@ new const g_szSndExplode[] = "hwn/misc/pumpkin_explode.wav";
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
+
     g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch");
@@ -47,15 +47,15 @@ public plugin_precache()
         .vMaxs = Float:{8.0, 8.0, 8.0},
         .preset = CEPreset_Prop
     );
-    
+
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
-    
+
     g_sprSmoke = precache_model("sprites/black_smoke1.spr");
 
     precache_sound(g_szSndExplode);
-    
+
     g_sprExlplosion = precache_model("sprites/dexplo.spr");
 }
 
@@ -70,7 +70,7 @@ public OnSpawn(ent)
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 4.0);
     set_pev(ent, pev_rendercolor, {HWN_COLOR_PURPLE_F});
-    
+
     TaskThink(ent);
 }
 
@@ -107,7 +107,7 @@ public TaskThink(ent)
     if (!pev_valid(ent)) {
         return;
     }
-    
+
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
@@ -116,10 +116,10 @@ public TaskThink(ent)
         static Float:vSub[3];
         UTIL_GetDirectionVector(ent, vSub, 32.0);
         vSub[2] += 18.0;
-        
+
         xs_vec_sub(vOrigin, vSub, vOrigin);
     }
-    
+
     engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
     write_byte(TE_SMOKE);
     engfunc(EngFunc_WriteCoord, vOrigin[0]);
@@ -129,7 +129,7 @@ public TaskThink(ent)
     write_byte(10);
     write_byte(90);
     message_end();
-    
+
     set_task(g_fThinkDelay, "TaskThink", ent);
 }
 
@@ -151,10 +151,10 @@ RocketRadiusDamage(ent, owner)
         if (ent == target) {
             continue;
         }
-    
+
         if (!pev_valid(target)) {
             continue;
-        }        
+        }
 
         if (pev(target, pev_deadflag) != DEAD_NO) {
             continue;
@@ -163,12 +163,12 @@ RocketRadiusDamage(ent, owner)
         if (pev(target, pev_takedamage) == DAMAGE_NO) {
             continue;
         }
-        
+
         static Float:vTargetOrigin[3];
         pev(target, pev_origin, vTargetOrigin);
-        
+
         new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE);
-        
+
         if (UTIL_IsPlayer(target)) {
             UTIL_CS_DamagePlayer(target, fDamage, DMG_ALWAYSGIB, owner, owner);
         } else {
@@ -182,7 +182,7 @@ ExplosionEffect(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 16.0;
-    
+
     engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
     write_byte(TE_EXPLOSION);
     engfunc(EngFunc_WriteCoord, vOrigin[0]);
@@ -193,7 +193,7 @@ ExplosionEffect(ent)
     write_byte(10);
     write_byte(0);
     message_end();
-    
+
     emit_sound(ent, CHAN_BODY, g_szSndExplode, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PURPLE}, UTIL_DelayToLifeTime(g_fThinkDelay), 0);

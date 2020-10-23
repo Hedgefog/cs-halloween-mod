@@ -105,7 +105,7 @@
     2.2.1
         Orpheu no longer required
         Orpheu replaced to RoundControl
-        Changed color for 'hwn4' sky        
+        Changed color for 'hwn4' sky
         Fixed lighting
         Fixed crashes
 
@@ -122,7 +122,7 @@
         Fixed ce temp storage
 
     2.1.1
-        Fixed buyzone in Default Gamemode    
+        Fixed buyzone in Default Gamemode
 
     2.1.0
         Updated Custom Entities API
@@ -137,7 +137,7 @@
         Fixed drop to bucket effect
         Fixed memory leaks
         Fixed ghost attack origin
-    
+
     2.0.1
         Fixed bug when items duplicate after rejoin
         Fixed round termination problem on Linux Servers
@@ -220,7 +220,7 @@ native Hwn_Wof_Spell_GetCount();
 native Hwn_Wof_Spell_GetName(spell, szOutput[], maxlen);
 native Hwn_Wof_Roll();
 native Hwn_Wof_Abort();
-    
+
 forward Hwn_Wof_Fw_Roll_Start();
 forward Hwn_Wof_Fw_Roll_End();
 forward Hwn_Wof_Fw_Effect_Start(spellIdx);

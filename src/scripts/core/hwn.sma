@@ -34,7 +34,7 @@ LoadConfig()
 {
     new szConfigDir[32];
     get_configsdir(szConfigDir, charsmax(szConfigDir));
-    
+
     server_cmd("exec %s/hwn.cfg", szConfigDir);
     server_exec();
 }

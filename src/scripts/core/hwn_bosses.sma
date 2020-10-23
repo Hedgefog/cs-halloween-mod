@@ -52,23 +52,23 @@ new g_maxPlayers;
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
+
     g_maxPlayers = get_maxplayers();
     g_playerTotalDamage = ArrayCreate(1, g_maxPlayers+1);
     for (new i = 0; i <= g_maxPlayers; ++i) {
         ArrayPushCell(g_playerTotalDamage, 0);
     }
-    
+
     g_cvarBossSpawnDelay = register_cvar("hwn_boss_spawn_delay", "300.0");
     g_cvarBossLifeTime = register_cvar("hwn_boss_life_time", "120.0");
     g_cvarBossMinDamageToWin = register_cvar("hwn_boss_min_damage_to_win", "300");
-    
+
     g_fwBossSpawn = CreateMultiForward("Hwn_Bosses_Fw_BossSpawn", ET_IGNORE, FP_CELL);
     g_fwBossKill = CreateMultiForward("Hwn_Bosses_Fw_BossKill", ET_IGNORE, FP_CELL);
     g_fwBossEscape = CreateMultiForward("Hwn_Bosses_Fw_BossEscape", ET_IGNORE, FP_CELL);
     g_fwBossTeleport = CreateMultiForward("Hwn_Bosses_Fw_BossTeleport", ET_IGNORE, FP_CELL, FP_CELL);
     g_fwWinner = CreateMultiForward("Hwn_Bosses_Fw_Winner", ET_IGNORE, FP_CELL);
-    
+
     register_concmd("hwn_spawn_boss", "OnClCmd_SpawnBoss", ADMIN_CVAR);
 
     CreateBossSpawnTask();
@@ -81,7 +81,7 @@ public plugin_end()
     if (g_bosses != Invalid_Array) {
         ArrayDestroy(g_bosses);
     }
-    
+
     if (g_bossSpawnPoints != Invalid_Array) {
         ArrayDestroy(g_bossSpawnPoints);
     }
@@ -90,12 +90,12 @@ public plugin_end()
 public plugin_precache()
 {
     CE_RegisterHook(CEFunction_Spawn, BOSS_TARGET_ENTITY_CLASSNAME, "OnBossTargetSpawn");
-    
+
     precache_sound(g_szSndBossSpawn);
     precache_sound(g_szSndBossDefeat);
     precache_sound(g_szSndBossEscape);
     precache_sound(g_szSndCongratulations);
-    
+
     RegisterHam(Ham_TakeDamage, "info_target", "OnTargetTakeDamage", .Post = 1);
     RegisterHam(Ham_Touch, "trigger_hurt", "OnHurtTouch", .Post = 0);
 }
@@ -116,10 +116,10 @@ public Native_Register(pluginID, argc)
     if (!g_bosses) {
         g_bosses = ArrayCreate(32);
     }
-    
+
     new idx = ArraySize(g_bosses);
     ArrayPushString(g_bosses, szClassname);
-    
+
     CE_RegisterHook(CEFunction_Remove, szClassname, "OnBossRemove");
 
     return idx;
@@ -151,11 +151,11 @@ public OnBossTargetSpawn(ent)
     if (!g_bossSpawnPoints) {
         g_bossSpawnPoints = ArrayCreate(3);
     }
-    
+
     new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     ArrayPushArray(g_bossSpawnPoints, vOrigin);
-    
+
     CE_Remove(ent);
 }
 
@@ -164,7 +164,7 @@ public OnBossRemove(ent)
     if (g_bossEnt != ent) {
         return;
     }
-    
+
     if (pev(ent, pev_deadflag) != DEAD_NO) {
         client_cmd(0, "spk %s", g_szSndBossDefeat);
         ExecuteForward(g_fwBossKill, g_fwResult, g_bossEnt);
@@ -173,11 +173,11 @@ public OnBossRemove(ent)
         client_cmd(0, "spk %s", g_szSndBossEscape);
         ExecuteForward(g_fwBossEscape, g_fwResult, g_bossEnt);
     }
-    
+
     g_bossEnt = 0;
     g_bossIdx = 0;
     remove_task(TASKID_REMOVE_BOSS);
-    
+
     CreateBossSpawnTask();
 }
 
@@ -190,7 +190,7 @@ public OnTargetTakeDamage(ent, inflictor, attacker, Float:fDamage)
     if (!UTIL_IsPlayer(attacker)) {
         return;
     }
-    
+
     new totalDamage = ArrayGetCell(g_playerTotalDamage, attacker) + floatround(fDamage);
     ArraySetCell(g_playerTotalDamage, attacker, totalDamage);
 }
@@ -200,13 +200,13 @@ public OnHurtTouch(ent, toucher)
     if (toucher != g_bossEnt) {
         return HAM_IGNORED;
     }
-    
+
     static Float:vOrigin[3];
     ArrayGetArray(g_bossSpawnPoints, g_bossSpawnPoint, vOrigin);
     engfunc(EngFunc_SetOrigin, g_bossEnt, vOrigin);
 
     ExecuteForward(g_fwBossTeleport, g_fwResult, g_bossEnt, g_bossIdx);
-    
+
     return HAM_SUPERCEDE;
 }
 
@@ -221,25 +221,25 @@ SpawnBoss()
     if (g_bosses == Invalid_Array) {
         return;
     }
-    
+
     if (g_bossSpawnPoints == Invalid_Array) {
         return;
     }
-    
+
     ResetPlayerTotalDamage();
-    
+
     new bossCount = ArraySize(g_bosses);
     new bossIdx = random(bossCount);
-    
+
     static szClassname[32];
     ArrayGetString(g_bosses, bossIdx, szClassname, charsmax(szClassname));
-    
+
     new targetCount = ArraySize(g_bossSpawnPoints);
     new targetIdx = random(targetCount);
-    
+
     static Float:vOrigin[3];
     ArrayGetArray(g_bossSpawnPoints, targetIdx, vOrigin);
-    
+
     g_bossEnt = CE_Create(szClassname, vOrigin);
 
     if (!g_bossEnt) {
@@ -249,9 +249,9 @@ SpawnBoss()
     g_bossIdx = bossIdx;
 
     dllfunc(DLLFunc_Spawn, g_bossEnt);
-    
+
     g_bossSpawnPoint = targetIdx;
-    
+
     client_cmd(0, "spk %s", g_szSndBossSpawn);
     set_task(get_pcvar_float(g_cvarBossLifeTime), "TaskRemoveBoss", TASKID_REMOVE_BOSS);
 
@@ -270,7 +270,7 @@ IntersectKill()
         if (!is_user_connected(id)) {
             continue;
         }
-        
+
         if (!is_user_alive(id)) {
             continue;
         }
@@ -300,22 +300,22 @@ SelectWinners()
         if (!is_user_connected(id)) {
             continue;
         }
-        
+
         new damage = ArrayGetCell(g_playerTotalDamage, id);
         if (damage >= get_pcvar_num(g_cvarBossMinDamageToWin))
         {
             ExecuteForward(g_fwWinner, g_fwResult, id);
-            
+
             static cvarGiftCosmeticMaxTime;
             if (!cvarGiftCosmeticMaxTime) {
-                cvarGiftCosmeticMaxTime = get_cvar_pointer("hwn_gifts_cosmetic_max_time");    
+                cvarGiftCosmeticMaxTime = get_cvar_pointer("hwn_gifts_cosmetic_max_time");
             }
-            
+
             new count = Hwn_Cosmetic_GetCount();
             new cosmetic = Hwn_Cosmetic_GetCosmetic(random(count));
-            
+
             PCosmetic_Give(id, cosmetic, PCosmetic_Type_Unusual, get_pcvar_num(cvarGiftCosmeticMaxTime));
-            
+
             client_cmd(id, "spk %s", g_szSndCongratulations);
         }
     }

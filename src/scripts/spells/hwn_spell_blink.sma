@@ -40,13 +40,13 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
+
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
-        
+
     g_hSpell = Hwn_Spell_Register("Blink", "OnCast");
-    
+
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
-    
+
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
 }
 
@@ -91,7 +91,7 @@ public OnTouch(ent, target)
 public OnSpellballKilled(ent)
 {
     new spellIdx = pev(ent, pev_iuser1);
-  
+
     if (spellIdx != g_hSpell) {
         return;
     }
@@ -120,7 +120,6 @@ Detonate(ent)
         DetonateEffect(ent, vOrigin);
     }
 }
-
 
 DetonateEffect(ent, const Float:vOrigin[3])
 {

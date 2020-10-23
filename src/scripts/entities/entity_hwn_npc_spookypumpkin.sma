@@ -109,7 +109,7 @@ public plugin_precache()
         .fRespawnTime = ENTITY_RespawnTime,
         .preset = CEPreset_NPC
     );
-    
+
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_SP, "OnSpawn");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME_SP, "OnKilled");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME_SP, "OnRemove");
@@ -125,9 +125,9 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
-    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);    
-    
+
+    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
+
     g_cvarPumpkinMutateChance = register_cvar("hwn_pumpkin_mutate_chance", "20");
 
     g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
@@ -139,10 +139,10 @@ public plugin_init()
 public OnSpawn(ent)
 {
     NPC_Create(ent);
-    
+
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
-    
+
     new Float:fHealth = NPC_Health;
     if (isBig(ent)) {
         fHealth *= SP_BigScaleMul;
@@ -156,7 +156,7 @@ public OnSpawn(ent)
     EmitRandomLaugh(ent);
 
     engfunc(EngFunc_DropToFloor, ent);
-        
+
     RemoveTasks(ent);
     set_task(0.0, "TaskThink", ent);
 }
@@ -198,13 +198,12 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     if (ceHandler != g_ceHandlerSp && ceHandler != g_ceHandlerSpBig) {
         return;
     }
-    
+
     static Float:vEnd[3];
     get_tr2(trace, TR_vecEndPos, vEnd);
 
     UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 103, floatround(fDamage/4));
 }
-
 
 Attack(ent, target, &Action:action)
 {
@@ -265,7 +264,7 @@ bool:Jump(ent, Float:fVelocity, Float:fJumpHeight) {
     vVelocity[2] = fJumpHeight;
 
     set_pev(ent, pev_velocity, vVelocity);
-    
+
     return true;
 }
 
@@ -309,11 +308,11 @@ bool:isBig(ent) {
 public TaskHit(taskID)
 {
     new ent = taskID - TASKID_SUM_HIT;
-    
+
     if (pev(ent, pev_deadflag) != DEAD_NO) {
         return;
     }
-    
+
     new Float:fDamage = NPC_Damage;
     if (isBig(ent)) {
         fDamage *= SP_BigScaleMul;
@@ -332,14 +331,14 @@ public TaskJump(taskID)
         pev(enemy, pev_origin, vTarget);
         NPC_MoveToTarget(ent, vTarget, 0.0);
     }
-    
+
     Jump(ent, NPC_Speed, SP_JumpVelocityZ);
 }
 
 public TaskThink(taskID)
 {
     new ent = taskID;
-    
+
     if (pev(ent, pev_deadflag) != DEAD_NO) {
         return;
     }
@@ -359,7 +358,7 @@ public TaskThink(taskID)
     } else {
         action = Action_JumpFloat;
     }
-    
+
     new bool:supercede = action == Action_JumpStart || action == Action_Attack;
     NPC_PlayAction(ent, g_actions[action], supercede);
 

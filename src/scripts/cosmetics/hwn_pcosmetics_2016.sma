@@ -19,7 +19,7 @@ public plugin_precache()
             .fUnusualColor = UNUSUAL_COLOR
         )
     );
-    
+
     Hwn_Cosmetic_Register(
         PCosmetic_Register(
             .szName = "Devil Horns",
@@ -28,7 +28,7 @@ public plugin_precache()
             .fUnusualColor = UNUSUAL_COLOR
         )
     );
-    
+
     Hwn_Cosmetic_Register(
         PCosmetic_Register(
             .szName = "Devil Tail",
@@ -37,7 +37,7 @@ public plugin_precache()
             .fUnusualColor = UNUSUAL_COLOR
         )
     );
-    
+
     Hwn_Cosmetic_Register(
         PCosmetic_Register(
             .szName = "Devil Wings",
@@ -46,7 +46,7 @@ public plugin_precache()
             .fUnusualColor = UNUSUAL_COLOR
         )
     );
-    
+
     Hwn_Cosmetic_Register(
         PCosmetic_Register(
             .szName = "Garlik Flank Stake",
@@ -55,7 +55,7 @@ public plugin_precache()
             .fUnusualColor = UNUSUAL_COLOR
         )
     );
-    
+
     Hwn_Cosmetic_Register(
         PCosmetic_Register(
             .szName = "Holy Hunter",
@@ -64,7 +64,7 @@ public plugin_precache()
             .fUnusualColor = UNUSUAL_COLOR
         )
     );
-    
+
     Hwn_Cosmetic_Register(
         PCosmetic_Register(
             .szName = "Pumpkin",
@@ -73,7 +73,7 @@ public plugin_precache()
             .fUnusualColor = UNUSUAL_COLOR
         )
     );
-    
+
     Hwn_Cosmetic_Register(
         PCosmetic_Register(
             .szName = "Silver Bullets",
@@ -82,7 +82,7 @@ public plugin_precache()
             .fUnusualColor = UNUSUAL_COLOR
         )
     );
-    
+
     Hwn_Cosmetic_Register(
         PCosmetic_Register(
             .szName = "Skull",
@@ -91,7 +91,7 @@ public plugin_precache()
             .fUnusualColor = UNUSUAL_COLOR
         )
     );
-    
+
     Hwn_Cosmetic_Register(
         PCosmetic_Register(
             .szName = "Spookyhood",

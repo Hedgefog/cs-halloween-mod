@@ -35,7 +35,7 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
+
     Hwn_Spell_Register("Overheal", "OnCast");
     g_hWofSpell = Hwn_Wof_Spell_Register("Overheal", "OnCast");
 
@@ -51,24 +51,24 @@ public OnCast(id)
     }
 
     new team = UTIL_GetPlayerTeam(id);
-    
+
     static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);        
-    
+    pev(id, pev_origin, vOrigin);
+
     new Array:users = UTIL_FindUsersNearby(vOrigin, EffectRadius, .team = team, .maxPlayers = g_maxPlayers);
     new userCount = ArraySize(users);
-    
+
     for (new i = 0; i < userCount; ++i) {
         new id = ArrayGetCell(users, i);
-        
+
         if (team != UTIL_GetPlayerTeam(id)) {
             continue;
         }
-        
+
         set_pev(id, pev_health, 150.0);
         UTIL_ScreenFade(id, {255, 0, 0}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
     }
-    
+
     ArrayDestroy(users);
 
     DetonateEffect(id, vOrigin);

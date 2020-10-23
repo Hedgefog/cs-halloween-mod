@@ -20,14 +20,14 @@ public plugin_init()
 }
 
 public plugin_precache()
-{    
+{
     CE_Register(
         .szName = ENTITY_NAME,
         .vMins = Float:{-12.0, -12.0, -16.0},
         .vMaxs = Float:{12.0, 12.0, 16.0},
         .preset = CEPreset_Prop
     );
-    
+
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
 }
@@ -36,7 +36,7 @@ public OnSpawn(ent)
 {
     set_pev(ent, pev_solid, SOLID_NOT);
     set_pev(ent, pev_movetype, MOVETYPE_BOUNCE);
-    
+
     set_task(2.0, "Birth", ent);
 }
 
@@ -56,7 +56,7 @@ public Birth(ent)
     }
 
     CE_Kill(ent);
-    
+
     if (UTIL_IsStuck(skeletonEnt)) {
         CE_Kill(skeletonEnt);
     }

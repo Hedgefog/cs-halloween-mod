@@ -36,7 +36,7 @@ if (config.build.vanilla) {
         smaConfig: vanillaSmaConfig,
         dest: vanillaDestConfig
     });
-    
+
     buildTaskFactory('watch:vanilla', {
         smaConfig: Object.assign({}, vanillaSmaConfig, {ignoreError: true}),
         dest: vanillaDestConfig,

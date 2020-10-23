@@ -44,7 +44,7 @@ new g_fwResult;
 
 public plugin_precache()
 {
-  precache_sound(g_szSndWofRun);
+    precache_sound(g_szSndWofRun);
 }
 
 public plugin_init()
@@ -59,7 +59,7 @@ public plugin_init()
 
     register_concmd("hwn_wof_roll", "OnClCmd_WofRoll", ADMIN_CVAR);
     register_concmd("hwn_wof_abort", "OnClCmd_WofAbort", ADMIN_CVAR);
-    
+
     g_fwRollStart = CreateMultiForward("Hwn_Wof_Fw_Roll_Start", ET_IGNORE);
     g_fwRollEnd = CreateMultiForward("Hwn_Wof_Fw_Roll_End", ET_IGNORE);
     g_fwEffectStart = CreateMultiForward("Hwn_Wof_Fw_Effect_Start", ET_IGNORE, FP_CELL);
@@ -82,12 +82,12 @@ public plugin_end()
 
 public plugin_natives()
 {
-  register_library("hwn");
-  register_native("Hwn_Wof_Spell_Register", "Native_Spell_Register");
-  register_native("Hwn_Wof_Spell_GetName", "Native_Spell_GetName");
-  register_native("Hwn_Wof_Spell_GetCount", "Native_Spell_GetCount");
-  register_native("Hwn_Wof_Roll", "Native_Roll");
-  register_native("Hwn_Wof_Abort", "Native_Abort");
+    register_library("hwn");
+    register_native("Hwn_Wof_Spell_Register", "Native_Spell_Register");
+    register_native("Hwn_Wof_Spell_GetName", "Native_Spell_GetName");
+    register_native("Hwn_Wof_Spell_GetCount", "Native_Spell_GetCount");
+    register_native("Hwn_Wof_Roll", "Native_Roll");
+    register_native("Hwn_Wof_Abort", "Native_Abort");
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -96,7 +96,7 @@ public Native_Spell_Register(pluginID, argc)
 {
     new szName[32];
     get_string(1, szName, charsmax(szName));
-    
+
     new szCastCallback[32];
     get_string(2, szCastCallback, charsmax(szCastCallback));
     new invokeFuncID = get_func_id(szCastCallback, pluginID);
@@ -110,148 +110,148 @@ public Native_Spell_Register(pluginID, argc)
 
 public Native_Spell_GetName(pluginID, argc)
 {
-    new idx = get_param(1);
-    new maxlen = get_param(3);
-    
-    static szSpellName[32];
-    ArrayGetString(g_spellName, idx, szSpellName, charsmax(szSpellName));
-    
-    set_string(2, szSpellName, maxlen);
+new idx = get_param(1);
+new maxlen = get_param(3);
+
+static szSpellName[32];
+ArrayGetString(g_spellName, idx, szSpellName, charsmax(szSpellName));
+
+set_string(2, szSpellName, maxlen);
 }
 
 public Native_Spell_GetCount(pluginID, argc)
 {
-  return g_spellCount;
+    return g_spellCount;
 }
 
 public Native_Roll(pluginID, argc)
 {
-  StartRoll();
+    StartRoll();
 }
 
 public Native_Abort(pluginID, argc)
 {
-  Abort();
+    Abort();
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnClCmd_WofRoll(id, level, cid)
 {
-  if(!cmd_access(id, level, cid, 1)) {
+    if(!cmd_access(id, level, cid, 1)) {
+        return PLUGIN_HANDLED;
+    }
+
+    StartRoll();
+
     return PLUGIN_HANDLED;
-  }
-
-  StartRoll();
-
-  return PLUGIN_HANDLED;
 }
 
 public OnClCmd_WofAbort(id, level, cid)
 {
-  if(!cmd_access(id, level, cid, 1)) {
+    if(!cmd_access(id, level, cid, 1)) {
+        return PLUGIN_HANDLED;
+    }
+
+    Abort();
+
     return PLUGIN_HANDLED;
-  }
-
-  Abort();
-
-  return PLUGIN_HANDLED;
 }
 
 public OnPlayerSpawn(id)
 {
-  if (g_spellIdx < 0) {
-    return;
-  }
+    if (g_spellIdx < 0) {
+        return;
+    }
 
-  if (!g_effectStarted) {
-    return;
-  }
+    if (!g_effectStarted) {
+        return;
+    }
 
-  CallInvoke(id);
+    CallInvoke(id);
 }
 
 public OnPlayerKilled(id)
 {
-  if (g_spellIdx < 0) {
-    return;
-  }
+    if (g_spellIdx < 0) {
+        return;
+    }
 
-  if (!g_effectStarted) {
-    return;
-  }
+    if (!g_effectStarted) {
+        return;
+    }
 
-  CallRevoke(id);
+    CallRevoke(id);
 }
 
 public Hwn_Gamemode_Fw_NewRound()
 {
-  Abort();
+    Abort();
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
 StartRoll()
 {
-  if (g_spellIdx >= 0) {
-    return;
-  }
+    if (g_spellIdx >= 0) {
+        return;
+    }
 
-  if (!g_spellCount) {
-    return;
-  }
+    if (!g_spellCount) {
+        return;
+    }
 
-  g_spellIdx = random(g_spellCount);
-  
-  client_cmd(0, "spk %s", g_szSndWofRun);
-  set_task(ROLL_TIME, "TaskEndRoll", TASKID_ROLL_END);
-  ExecuteForward(g_fwRollStart, g_fwResult);
+    g_spellIdx = random(g_spellCount);
+
+    client_cmd(0, "spk %s", g_szSndWofRun);
+    set_task(ROLL_TIME, "TaskEndRoll", TASKID_ROLL_END);
+    ExecuteForward(g_fwRollStart, g_fwResult);
 }
 
 EndRoll()
 {
-  ExecuteForward(g_fwRollEnd, g_fwResult);
-  StartEffect();
+    ExecuteForward(g_fwRollEnd, g_fwResult);
+    StartEffect();
 }
 
 StartEffect()
 {
-  g_fEffectTime = get_pcvar_float(g_cvarEffectTime);
-  g_effectStarted = true;
+    g_fEffectTime = get_pcvar_float(g_cvarEffectTime);
+    g_effectStarted = true;
 
-  for (new id = 1; id <= g_maxPlayers; ++id) {
-    if (!is_user_connected(id)) {
-      continue;
+    for (new id = 1; id <= g_maxPlayers; ++id) {
+        if (!is_user_connected(id)) {
+            continue;
+        }
+
+        CallInvoke(id);
     }
 
-    CallInvoke(id);
-  }
-
-  set_task(g_fEffectTime, "TaskEndEffect", TASKID_EFFECT_END);
-  ExecuteForward(g_fwEffectStart, g_fwResult, g_spellIdx);
+    set_task(g_fEffectTime, "TaskEndEffect", TASKID_EFFECT_END);
+    ExecuteForward(g_fwEffectStart, g_fwResult, g_spellIdx);
 }
 
 EndEffect()
 {
-  if (g_spellIdx >= 0) {
-    for (new id = 1; id <= g_maxPlayers; ++id) {
-      if (!is_user_connected(id)) {
-        continue;
-      }
-      
-      CallRevoke(id);
+    if (g_spellIdx >= 0) {
+        for (new id = 1; id <= g_maxPlayers; ++id) {
+            if (!is_user_connected(id)) {
+                continue;
+            }
+
+            CallRevoke(id);
+        }
+
+        ExecuteForward(g_fwEffectEnd, g_fwResult, g_spellIdx);
     }
 
-    ExecuteForward(g_fwEffectEnd, g_fwResult, g_spellIdx);
-  }
-
-  Reset();
+    Reset();
 }
 
 Abort()
 {
-  EndEffect();
-  ExecuteForward(g_fwEffectAbort, g_fwResult);
+    EndEffect();
+    ExecuteForward(g_fwEffectAbort, g_fwResult);
 }
 
 Register(const szName[], pluginID, invokeFuncID, revokeFuncID)
@@ -265,15 +265,15 @@ Register(const szName[], pluginID, invokeFuncID, revokeFuncID)
     }
 
     new effectIdx = g_spellCount;
-    
+
     TrieSetCell(g_spells, szName, effectIdx);
     ArrayPushString(g_spellName, szName);
     ArrayPushCell(g_spellPluginID, pluginID);
     ArrayPushCell(g_spellInvokeFuncID, invokeFuncID);
     ArrayPushCell(g_spellRevokeFuncID, revokeFuncID);
-    
+
     g_spellCount++;
-    
+
     return effectIdx;
 }
 
@@ -281,7 +281,7 @@ CallInvoke(id)
 {
     new pluginID = ArrayGetCell(g_spellPluginID, g_spellIdx);
     new funcID = ArrayGetCell(g_spellInvokeFuncID, g_spellIdx);
-    
+
     if (callfunc_begin_i(funcID, pluginID) == 1) {
         callfunc_push_int(id);
         callfunc_push_float(g_fEffectTime);
@@ -294,38 +294,38 @@ CallInvoke(id)
 
 CallRevoke(id)
 {
-  new pluginID = ArrayGetCell(g_spellPluginID, g_spellIdx);
-  new funcID = ArrayGetCell(g_spellRevokeFuncID, g_spellIdx);
+    new pluginID = ArrayGetCell(g_spellPluginID, g_spellIdx);
+    new funcID = ArrayGetCell(g_spellRevokeFuncID, g_spellIdx);
 
-  if (funcID < 0) {
-    return;
-  }
-  
-  if (callfunc_begin_i(funcID, pluginID) == 1) {
-      callfunc_push_int(id);
+    if (funcID < 0) {
+        return;
+    }
 
-      if (callfunc_end() == PLUGIN_CONTINUE) {
-          ExecuteForward(g_fwEffectRevoke, g_fwResult, id, g_spellIdx);
-      }
-  }
+    if (callfunc_begin_i(funcID, pluginID) == 1) {
+        callfunc_push_int(id);
+
+        if (callfunc_end() == PLUGIN_CONTINUE) {
+            ExecuteForward(g_fwEffectRevoke, g_fwResult, id, g_spellIdx);
+        }
+    }
 }
 
 Reset()
 {
-  g_spellIdx = -1;
-  g_effectStarted = false;
-  remove_task(TASKID_ROLL_END);
-  remove_task(TASKID_EFFECT_END);
+    g_spellIdx = -1;
+    g_effectStarted = false;
+    remove_task(TASKID_ROLL_END);
+    remove_task(TASKID_EFFECT_END);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
 public TaskEndRoll()
 {
-  EndRoll();
+    EndRoll();
 }
 
 public TaskEndEffect()
 {
-  EndEffect();
+    EndEffect();
 }

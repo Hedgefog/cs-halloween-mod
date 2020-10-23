@@ -21,7 +21,7 @@ stock UTIL_HwnSpawnPlayerSpellball
     static Float:vOffset[3];
     velocity_by_aim(owner, 16, vOffset);
     xs_vec_add(vOrigin, vOffset, vOrigin);
-    
+
     new ent = CE_Create(SPELLBALL_ENTITY_CLASSNAME, vOrigin);
 
     if (!ent) {
@@ -30,7 +30,7 @@ stock UTIL_HwnSpawnPlayerSpellball
 
     static Float:vVelocity[3];
     velocity_by_aim(owner, speed, vVelocity);
-    
+
     set_pev(ent, pev_owner, owner);
     set_pev(ent, pev_velocity, vVelocity);
     set_pev(ent, pev_modelindex, modelindex);

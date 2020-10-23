@@ -41,10 +41,10 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
+
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
-    
+
     Hwn_Spell_Register("Invisibility", "OnCast");
     Hwn_Wof_Spell_Register("Invisibility", "Invoke", "Revoke");
 
@@ -86,29 +86,29 @@ public OnPlayerKilled(id)
 public OnCast(id)
 {
     new team = UTIL_GetPlayerTeam(id);
-    
+
     static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);        
-    
+    pev(id, pev_origin, vOrigin);
+
     new Array:users = UTIL_FindUsersNearby(vOrigin, EffectRadius, .team = team, .maxPlayers = g_maxPlayers);
     new userCount = ArraySize(users);
-    
+
     for (new i = 0; i < userCount; ++i) {
         new id = ArrayGetCell(users, i);
-        
+
         if (team != UTIL_GetPlayerTeam(id)) {
             continue;
-        }        
-        
+        }
+
         SetInvisible(id, true, InvisibilityTime);
-        
+
         if (task_exists(id)) {
             remove_task(id);
         }
-        
+
         set_task(InvisibilityTime, "TaskRemoveInvisibility", id);
     }
-    
+
     ArrayDestroy(users);
 
     DetonateEffect(id, vOrigin);

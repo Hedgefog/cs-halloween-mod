@@ -31,7 +31,7 @@ new g_maxPlayers;
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
+
     g_maxPlayers = get_maxplayers();
 
     g_fwCast = CreateMultiForward("Hwn_Spell_Fw_Cast", ET_IGNORE, FP_CELL, FP_CELL);
@@ -43,7 +43,7 @@ public plugin_natives()
     register_native("Hwn_Spell_Register", "Native_Register");
     register_native("Hwn_Spell_GetName", "Native_GetName");
     register_native("Hwn_Spell_GetCount", "Native_GetCount");
-    
+
     register_native("Hwn_Spell_GetPlayerSpell", "Native_GetPlayerSpell");
     register_native("Hwn_Spell_SetPlayerSpell", "Native_SetPlayerSpell");
     register_native("Hwn_Spell_CastPlayerSpell", "Native_CastPlayerSpell");
@@ -71,11 +71,11 @@ public Native_Register(pluginID, argc)
 {
     new szName[32];
     get_string(1, szName, charsmax(szName));
-    
+
     new szCastCallback[32];
     get_string(2, szCastCallback, charsmax(szCastCallback));
     new castFuncID = get_func_id(szCastCallback, pluginID);
-        
+
     return Register(szName, pluginID, castFuncID);
 }
 
@@ -88,21 +88,21 @@ public Native_CastPlayerSpell(pluginID, argc)
 public Native_GetPlayerSpell(pluginID, argc)
 {
     new id = get_param(1);
-    
+
     if (!g_playerSpell) {
         return -1;
     }
-    
-    new amount = ArrayGetCell(g_playerSpellAmount, id);    
+
+    new amount = ArrayGetCell(g_playerSpellAmount, id);
     if (amount <= 0) {
         return -1;
     }
-    
+
     if (argc > 1) {
         set_param_byref(2, amount);
     }
-    
-    return ArrayGetCell(g_playerSpell, id);    
+
+    return ArrayGetCell(g_playerSpell, id);
 }
 
 public Native_SetPlayerSpell(pluginID, argc)
@@ -111,7 +111,7 @@ public Native_SetPlayerSpell(pluginID, argc)
         g_playerSpell = ArrayCreate(1, g_maxPlayers+1);
         g_playerSpellAmount = ArrayCreate(1, g_maxPlayers+1);
         g_playerNextCast = ArrayCreate(1, g_maxPlayers+1);
-        
+
         for (new i = 0; i <= g_maxPlayers; ++i) {
             ArrayPushCell(g_playerSpell, 0);
             ArrayPushCell(g_playerSpellAmount, 0);
@@ -122,7 +122,7 @@ public Native_SetPlayerSpell(pluginID, argc)
     new id = get_param(1);
     new spell = get_param(2);
     new amount = get_param(3);
-    
+
     ArraySetCell(g_playerSpell, id, spell);
     ArraySetCell(g_playerSpellAmount, id, amount);
 }
@@ -136,10 +136,10 @@ public Native_GetName(pluginID, argc)
 {
     new idx = get_param(1);
     new maxlen = get_param(3);
-    
+
     static szSpellName[32];
     ArrayGetString(g_spellName, idx, szSpellName, charsmax(szSpellName));
-    
+
     set_string(2, szSpellName, maxlen);
 }
 
@@ -155,14 +155,14 @@ Register(const szName[], pluginID, castFuncID)
     }
 
     new spellIdx = g_spellCount;
-    
+
     TrieSetCell(g_spells, szName, spellIdx);
     ArrayPushString(g_spellName, szName);
     ArrayPushCell(g_spellPluginID, pluginID);
     ArrayPushCell(g_spellCastFuncID, castFuncID);
-    
+
     g_spellCount++;
-    
+
     return spellIdx;
 }
 
@@ -171,27 +171,27 @@ CastPlayerSpell(id)
     if (g_playerSpell == Invalid_Array) {
         return;
     }
-    
+
     if (!is_user_alive(id)) {
         return;
     }
 
-    new spellAmount = ArrayGetCell(g_playerSpellAmount, id);    
+    new spellAmount = ArrayGetCell(g_playerSpellAmount, id);
     if (spellAmount <= 0) {
         return;
     }
-    
+
     new Float:gametime = get_gametime();
     new Float:nextCast = ArrayGetCell(g_playerNextCast, id);
-    
+
     if (gametime < nextCast) {
         return;
     }
-    
-    new spellIdx = ArrayGetCell(g_playerSpell, id);    
+
+    new spellIdx = ArrayGetCell(g_playerSpell, id);
     new pluginID = ArrayGetCell(g_spellPluginID, spellIdx);
     new funcID = ArrayGetCell(g_spellCastFuncID, spellIdx);
-    
+
     if (callfunc_begin_i(funcID, pluginID) == 1) {
         callfunc_push_int(id);
 

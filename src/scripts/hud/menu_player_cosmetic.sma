@@ -22,11 +22,11 @@ static g_szEmptyCosmeticText[32];
 public plugin_init()
 {
     register_plugin(PLUGIN, VERSION, AUTHOR);
-    
+
     g_hCosmeticItemType = PInv_GetItemTypeHandler("cosmetic");
-    
-    g_maxPlayers = get_maxplayers();    
-    
+
+    g_maxPlayers = get_maxplayers();
+
     g_playerMenu = ArrayCreate(1, g_maxPlayers+1);
     g_playerMenuSlotRefs = ArrayCreate(1, g_maxPlayers+1);
     for (new i = 0; i <= g_maxPlayers; ++i) {
@@ -47,7 +47,7 @@ public plugin_natives()
 public plugin_end()
 {
     ArrayDestroy(g_playerMenu);
-    
+
     for (new i = 1; i <= g_maxPlayers; ++i) {
         new Array:slotRefs = ArrayGetCell(g_playerMenuSlotRefs, i);
         if (slotRefs != Invalid_Array) {
@@ -72,7 +72,7 @@ Open(id)
     if (menu) {
         menu_destroy(menu);
     }
-    
+
     menu = Create(id);
     ArraySetCell(g_playerMenu, id, menu);
 
@@ -80,10 +80,10 @@ Open(id)
 }
 
 Create(id)
-{    
+{
     new callbackDisabled = menu_makecallback("MenuDisabledCallback");
     new menu = menu_create(g_szMenuTitle, "MenuHandler");
-    
+
     new Array:slotRefs = ArrayGetCell(g_playerMenuSlotRefs, id);
     if (slotRefs != Invalid_Array) {
         ArrayClear(slotRefs);
@@ -91,7 +91,7 @@ Create(id)
         slotRefs = ArrayCreate();
         ArraySetCell(g_playerMenuSlotRefs, id, slotRefs);
     }
-    
+
     new size = PInv_Size(id);
 
     for (new i = 0; i < size; ++i)
@@ -99,42 +99,42 @@ Create(id)
         if (g_hCosmeticItemType != PInv_GetItemType(id, i)) {
             continue;
         }
-        
+
         new itemTime = PCosmetic_GetItemTime(id, i);
         if (!itemTime) {
             continue;
         }
-        
+
         ArrayPushCell(slotRefs, i);
-        
+
         new cosmetic = PCosmetic_GetItemCosmetic(id, i);
         new PCosmetic_Type:cosmeticType = PCosmetic_GetItemCosmeticType(id, i);
-        
+
         static szCosmeticName[32];
         PCosmetic_GetCosmeticName(cosmetic, szCosmeticName, charsmax(szCosmeticName));
-        
+
         static text[64];
         format
         (
             text,
-            charsmax(text), 
+            charsmax(text),
             "%s%s%s (%i seconds left)",
             (PCosmetic_IsItemEquiped(id, i) ? "\y" : ""),
             (cosmeticType == PCosmetic_Type_Unusual ? "Unusual " : "^0"),
             szCosmeticName,
             itemTime
         );
-        
+
         menu_additem(menu, text, .callback = PCosmetic_CanBeEquiped(id, cosmetic, i)
             || PCosmetic_IsItemEquiped(id, i)  ? -1 : callbackDisabled);
     }
-    
+
     if (!size) {
         menu_additem(menu, g_szEmptyCosmeticText, .callback = callbackDisabled);
     }
-    
+
     menu_setprop(menu, MPROP_EXIT, MEXIT_ALL);
-    
+
     return menu;
 }
 
@@ -146,7 +146,7 @@ public MenuHandler(id, menu, item)
     {
         new Array:slotRefs = ArrayGetCell(g_playerMenuSlotRefs, id);
         new slotIdx = ArrayGetCell(slotRefs, item);
-        
+
         new PInv_ItemType:itemType = PInv_GetItemType(id, slotIdx);
         if (itemType == g_hCosmeticItemType) {
             if (PCosmetic_IsItemEquiped(id, slotIdx)) {
@@ -156,11 +156,11 @@ public MenuHandler(id, menu, item)
             }
         }
     }
-    
+
     if (is_user_connected(id)) {
-        menu_cancel(id);    
+        menu_cancel(id);
     }
-    
+
     return PLUGIN_HANDLED;
 }
 

@@ -25,16 +25,15 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
+
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
-    
+
     Hwn_Spell_Register("Moon Jump", "OnCast");
     Hwn_Wof_Spell_Register("Moon Jump", "Invoke", "Revoke");
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
-
 
 public OnPlayerSpawn(id)
 {

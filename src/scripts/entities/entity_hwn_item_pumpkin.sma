@@ -73,7 +73,7 @@ public plugin_precache()
         .fRespawnTime = 30.0,
         .preset = CEPreset_Item
     );
-    
+
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "OnPickup");
 
@@ -89,7 +89,7 @@ public OnSpawn(ent)
 {
     new type = random(PumpkinType);
     set_pev(ent, pev_iuser1, type);
-    
+
     set_pev(ent, pev_rendermode, kRenderNormal);
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 4.0);
@@ -100,8 +100,8 @@ public OnSpawn(ent)
         set_pev(ent, pev_rendercolor, g_fLootTypeColor[type]);
     }
 
-    set_pev(ent, pev_framerate, 1.0);    
-    
+    set_pev(ent, pev_framerate, 1.0);
+
     emit_sound(ent, CHAN_BODY, g_szSndItemSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
@@ -120,7 +120,7 @@ public OnPickup(ent, id)
             GiveHealth(id, 30.0);
         }
     }
-    
+
     static Float:vPlayerOrigin[3];
     pev(id, pev_origin, vPlayerOrigin);
 
@@ -139,14 +139,14 @@ GiveHealth(id, Float:fCount)
 {
     new Float:fHealth;
     pev(id, pev_health, fHealth);
-    
+
     if (fHealth < 100.0) {
         fHealth += fCount;
-    
+
         if (fHealth > 100.0) {
             fHealth = 100.0;
         }
-        
+
         set_pev(id, pev_health, fHealth);
     }
 }
@@ -155,14 +155,14 @@ GiveHealth(id, Float:fCount)
 GiveArmor(id, Float:fCount)
 {
     new Float:fArmor = float(pev(id, pev_armorvalue));
-    
+
     if (fArmor < 100.0) {
         fArmor += fCount;
-    
+
         if (fArmor > 100.0) {
             fArmor = 100.0;
         }
-        
+
         set_pev(id, pev_armorvalue, fArmor);
     }
 }
@@ -177,7 +177,7 @@ GiveAmmo(id)
     for (new i = 0; i < weaponCount; ++i) {
         new weapon = weapons[i];
         new ammoType = WeaponAmmo[weapon];
-        
+
         if (ammoType >= 0) {
             give_item(id, AmmoEntityNames[ammoType]);
         }

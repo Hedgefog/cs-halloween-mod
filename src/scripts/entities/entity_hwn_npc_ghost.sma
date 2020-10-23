@@ -50,11 +50,11 @@ public plugin_precache()
     g_isPrecaching = true;
 
     precache_sound(g_szSndDisappeared);
-    
+
     for (new i = 0; i < sizeof(g_szSndAttack); ++i) {
         precache_sound(g_szSndAttack[i]);
     }
-    
+
     for (new i = 0; i < sizeof(g_szSndIdle); ++i) {
         precache_sound(g_szSndIdle[i]);
     }
@@ -68,7 +68,7 @@ public plugin_precache()
         .fRespawnTime = 30.0,
         .preset = CEPreset_NPC
     );
-    
+
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
@@ -79,14 +79,14 @@ public plugin_init()
     g_isPrecaching = false;
 
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
+
     g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
     g_particlesEnabled = get_cvar_num("hwn_enable_particles");
-    
+
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
-    
+
     g_maxPlayers = get_maxplayers();
-    
+
     g_playerKiller = ArrayCreate(1, g_maxPlayers+1);
     for (new i = 0; i <= g_maxPlayers; ++i) {
         ArrayPushCell(g_playerKiller, 0);
@@ -106,20 +106,20 @@ public OnSpawn(ent)
 
     set_pev(ent, pev_solid, SOLID_TRIGGER);
     set_pev(ent, pev_movetype, MOVETYPE_NOCLIP);
-    
+
     set_pev(ent, pev_framerate, 1.0);
 
     set_pev(ent, pev_rendermode, kRenderNormal);
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 1.0);
     set_pev(ent, pev_rendercolor, {HWN_COLOR_PURPLE_F});
-    
+
     set_pev(ent, pev_health, 1);
 
     if (!UTIL_IsPlayer(pev(ent, pev_enemy))) {
         NPC_FindEnemy(ent, .maxplayers = g_maxPlayers, .reachableOnly = false);
     }
-    
+
     TaskThink(ent);
 }
 
@@ -137,7 +137,7 @@ public OnKilled(ent)
 }
 
 public OnPlayerKilled(id, killer)
-{    
+{
     ArraySetCell(g_playerKiller, id, killer);
 }
 
@@ -148,7 +148,7 @@ public TaskThink(ent)
     if (!pev_valid(ent)) {
         return;
     }
-    
+
     if (pev(ent, pev_deadflag) == DEAD_NO)
     {
         UpdateParticles(ent);
@@ -177,7 +177,7 @@ Attack(ent, target)
 
     if (get_distance_f(vOrigin, vTarget) <= NPC_HitRange)
     {
-        if (NPC_CanHit(ent, target, NPC_HitRange)) {                
+        if (NPC_CanHit(ent, target, NPC_HitRange)) {
             NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], .supercede = true);
             NPC_Hit(ent, NPC_Damage, NPC_HitRange, NPC_HitDelay);
         }
@@ -210,7 +210,7 @@ Revenge(ent, target)
     if (killer == target) {
         killer = 0;
     }
-    
+
     set_pev(ent, pev_enemy, killer);
 }
 

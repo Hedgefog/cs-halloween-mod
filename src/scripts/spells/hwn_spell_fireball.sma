@@ -42,14 +42,14 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
+
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
-    
+
     g_hSpell = Hwn_Spell_Register("Fireball", "OnCast");
     Hwn_Wof_Spell_Register("Fire", "Invoke", "Revoke");
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
-    
+
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
 }
 
@@ -95,7 +95,7 @@ public OnTouch(ent, target)
 public OnSpellballKilled(ent)
 {
     new spellIdx = pev(ent, pev_iuser1);
-  
+
     if (spellIdx != g_hSpell) {
         return;
     }
@@ -127,7 +127,7 @@ Detonate(ent)
 {
     new owner = pev(ent, pev_owner);
     new team = UTIL_GetPlayerTeam(owner);
-    
+
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
@@ -144,26 +144,26 @@ Detonate(ent)
         if (pev(target, pev_takedamage) == DAMAGE_NO) {
             continue;
         }
-        
+
         if (target == owner) {
             continue;
         }
-        
+
         static Float:vTargetOrigin[3];
         pev(target, pev_origin, vTargetOrigin);
-        
+
         new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EffectRadius, FireballDamage);
-        
+
         if (UTIL_IsPlayer(target)) {
             if (team == UTIL_GetPlayerTeam(target)) {
                 continue;
             }
-        
+
             static Float:vDirection[3];
             xs_vec_sub(vOrigin, vTargetOrigin, vDirection);
             xs_vec_normalize(vDirection, vDirection);
             xs_vec_mul_scalar(vDirection, -512.0, vDirection);
-            
+
             static Float:vTargetVelocity[3];
             pev(target, pev_velocity, vTargetVelocity);
             xs_vec_add(vTargetVelocity, vDirection, vTargetVelocity);

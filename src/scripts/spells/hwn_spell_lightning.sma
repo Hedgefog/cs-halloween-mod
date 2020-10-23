@@ -45,9 +45,9 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-        
+
     g_hSpell = Hwn_Spell_Register("Lightning", "OnCast");
-    
+
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
     CE_RegisterHook(CEFunction_Remove, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballRemove");
 
@@ -96,7 +96,7 @@ public OnSpellballRemove(ent)
 public OnSpellballKilled(ent)
 {
     new spellIdx = pev(ent, pev_iuser1);
-  
+
     if (spellIdx != g_hSpell) {
         return;
     }
@@ -125,7 +125,7 @@ Detonate(ent)
 {
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
-    
+
     DetonateEffect(ent, vOrigin);
 }
 
@@ -148,7 +148,7 @@ DrawLightingBeam(const Float:vOrigin[3])
     for (new i = 0; i < 3; ++i) {
         vTarget[i] = random_float(-16.0, 16.0);
     }
-    
+
     // normalize generated vector
     xs_vec_normalize(vTarget, vTarget);
 
@@ -166,7 +166,7 @@ DrawLightingBeam(const Float:vOrigin[3])
     engfunc(EngFunc_WriteCoord, vTarget[0]);
     engfunc(EngFunc_WriteCoord, vTarget[1]);
     engfunc(EngFunc_WriteCoord, vTarget[2]);
-    write_short(g_sprLightning); 
+    write_short(g_sprLightning);
     write_byte(0);
     write_byte(30);
     write_byte(5);
@@ -215,11 +215,11 @@ public TaskDamage(taskID)
         if (pev(target, pev_takedamage) == DAMAGE_NO) {
             continue;
         }
-        
+
         if (target == owner) {
             continue;
         }
-        
+
         if (UTIL_IsPlayer(target)) {
             if (team == UTIL_GetPlayerTeam(target)) {
                 continue;
@@ -266,24 +266,24 @@ public TaskThink(ent)
         if (pev(target, pev_takedamage) == DAMAGE_NO) {
             continue;
         }
-        
+
         if (target == owner) {
             continue;
         }
-        
+
         static Float:vTargetOrigin[3];
         pev(target, pev_origin, vTargetOrigin);
-        
+
         if (UTIL_IsPlayer(target)) {
             if (team == UTIL_GetPlayerTeam(target)) {
                 continue;
             }
-        
+
             static Float:vDirection[3];
             xs_vec_sub(vTargetOrigin, vOrigin, vDirection);
             xs_vec_normalize(vDirection, vDirection);
             xs_vec_mul_scalar(vDirection, -512.0, vDirection);
-            
+
             static Float:vTargetVelocity[3];
             pev(target, pev_velocity, vTargetVelocity);
 

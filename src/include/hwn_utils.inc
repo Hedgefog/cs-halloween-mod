@@ -21,7 +21,7 @@ stock UTIL_DelayToLifeTime(Float:fDelay)
     if (!lifeTime) {
         return 1;
     }
-    
+
     return lifeTime;
 }
 
@@ -33,28 +33,28 @@ stock Float:UTIL_FpsToDelay(fps)
 stock UTIL_StrToVec(const string[], Float:vector[3])
 {
     new strOrigin[3][8];
-    
+
     parse(
-        string, 
-        strOrigin[0], 7, 
+        string,
+        strOrigin[0], 7,
         strOrigin[1], 7,
         strOrigin[2], 7
     );
-    
+
     for (new i = 0; i < 3; ++i) {
         vector[i] = str_to_float(strOrigin[i]);
     }
 }
 
 stock Float:UTIL_CalculateRadiusDamage(const Float:vOrigin1[3], const Float:vOrigin2[3], Float:fRadius, Float:fMaxDamage)
-{        
-    new Float:fDistance = get_distance_f(vOrigin1, vOrigin2);        
+{
+    new Float:fDistance = get_distance_f(vOrigin1, vOrigin2);
     new Float:fDamage = fMaxDamage * (fRadius-fDistance)/fRadius;
-    
+
     if (fDamage <= 0) {
         return 0.0;
     }
-    
+
     return fDamage;
 }
 
@@ -70,7 +70,7 @@ stock bool:UTIL_IsInvisible(ent)
 
     new Float:fRenderAmt;
     pev(ent, pev_renderamt, fRenderAmt);
-    
+
     return (fRenderAmt < 50.0);
 }
 
@@ -124,7 +124,6 @@ stock UTIL_SetSequence(ent, sequence)
     set_pev(ent, pev_sequence, sequence);
 }
 
-
 stock UTIL_GetDirectionVector(ent, Float:vOut[3], Float:fLength = 1.0)
 {
     new Float:vAngles[3];
@@ -135,7 +134,7 @@ stock UTIL_GetDirectionVector(ent, Float:vOut[3], Float:fLength = 1.0)
     vOut[2] = -vOut[2];
 }
 
-stock bool:UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {true, false, false}, const Float:fMaxAngle = -1.0) 
+stock bool:UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {true, false, false}, const Float:fMaxAngle = -1.0)
 {
     //Get user origin
     new Float:vOrigin[3];
@@ -151,7 +150,7 @@ stock bool:UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {tr
 
         static Float:vSubAngles[3];
         engfunc(EngFunc_VecToAngles, vSub, vSubAngles);
-        
+
         for (new i = 0; i < 3; ++i) {
             if (lockAxis[i]) {
                 vDiffAngles[i] = 0.0;
@@ -169,7 +168,6 @@ stock bool:UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {tr
             }
         }
     }
-    
 
     new bool:turnResult = true;
     if (fMaxAngle >= 0.0) {
@@ -206,7 +204,7 @@ stock UTIL_Message_BloodSprite(const Float:vOrigin[3], sprBloodSpray, sprBlood, 
 
 stock UTIL_Message_BreakModel
 (
-    const Float:vOrigin[3], 
+    const Float:vOrigin[3],
     const Float:vSize[3] = {16.0, 16.0, 16.0},
     const Float:vVelocity[3] = {0.0, 0.0, 0.0},
     speedNoise = 0,
@@ -289,31 +287,31 @@ stock UTIL_RandomVector(Float:min, Float:max, Float:vOut[3])
 stock Array:UTIL_FindUsersNearby(Float:vOrigin[3], Float:fDistance, team = 0, bool:alive = true, maxPlayers = 32)
 {
     new Array:users = ArrayCreate(1, maxPlayers);
-    
+
     for (new id = 1; id <= maxPlayers; ++id)
     {
         if (!is_user_connected(id)) {
             continue;
         }
-        
+
         if (alive && !is_user_alive(id)) {
             continue;
         }
-        
+
         if (team && team != UTIL_GetPlayerTeam(id)) {
             continue;
         }
-        
+
         static Float:vUserOrigin[3];
         pev(id, pev_origin, vUserOrigin);
-        
+
         if (get_distance_f(vOrigin, vUserOrigin) > fDistance) {
             continue;
         }
-        
+
         ArrayPushCell(users, id);
     }
-    
+
     return users;
 }
 
@@ -501,8 +499,8 @@ stock UTIL_Message_Sound(const Float:vOrigin[3], const szSound[], Float:fVolume 
     write_short(sndIndex);
     write_byte(floatround(fVolume * 255));
     write_byte(floatround(fAttn * 64));
-    write_short(ent);        
-    write_byte(pitch); 
+    write_short(ent);
+    write_byte(pitch);
     write_byte(flags);
     message_end();
 }
