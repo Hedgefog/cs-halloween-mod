@@ -131,6 +131,7 @@ extinguish_player(id)
     g_flagPlayerBurn &= ~(1 << (id & 31));
     
     ArraySetCell(g_playerAttacker, id, 0);
+    emit_sound(id, CHAN_VOICE, g_szSndBurn, VOL_NORM, ATTN_NORM, SND_STOP, PITCH_NORM);
 }
 
 /*----[ Events ]----*/
