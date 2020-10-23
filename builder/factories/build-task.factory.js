@@ -11,7 +11,7 @@ module.exports = (name, options) => {
     }
 
     const gulpMethod = options.watch === true ? watch : gulp.src;
-    const gulpOptions = options.watch === true ? {ignoreInitial: false} : undefined;
+    const gulpOptions = options.watch === true ? {ignoreInitial: !!options.ignoreInitial} : undefined;
 
     const resolvedTasks = [];
 

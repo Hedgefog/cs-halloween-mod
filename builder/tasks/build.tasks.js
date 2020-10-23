@@ -38,12 +38,14 @@ if (config.build.vanilla) {
     });
     
     buildTaskFactory('watch:vanilla', {
-        smaConfig: vanillaSmaConfig,
+        smaConfig: Object.assign({}, vanillaSmaConfig, {ignoreError: true}),
         dest: vanillaDestConfig,
-        watch: true
+        watch: true,
+        ignoreInitial: true
     });
 
     buildTasks.push('build:vanilla');
+    watchTasks.push('build:vanilla');
     watchTasks.push('watch:vanilla');
 }
 
@@ -61,9 +63,10 @@ if (config.build.reapi) {
     }
 
     buildTaskFactory('watch:reapi', {
-        smaConfig: reapiSmaConfig,
+        smaConfig: Object.assign({}, reapiSmaConfig, {ignoreError: true}),
         dest: reapiDestConfig,
-        watch: true
+        watch: true,
+        ignoreInitial: true
     });
 
     buildTaskFactory('build:reapi', {
@@ -72,6 +75,7 @@ if (config.build.reapi) {
     });
 
     buildTasks.push('build:reapi');
+    watchTasks.push('build:reapi');
     watchTasks.push('watch:reapi');
 }
 
