@@ -204,8 +204,8 @@ StartRoll()
   g_spellIdx = random(g_spellCount);
   
   client_cmd(0, "spk %s", g_szSndWofRun);
-  ExecuteForward(g_fwRollStart, g_fwResult);
   set_task(ROLL_TIME, "TaskEndRoll", TASKID_ROLL_END);
+  ExecuteForward(g_fwRollStart, g_fwResult);
 }
 
 EndRoll()
@@ -227,8 +227,8 @@ StartEffect()
     CallInvoke(id);
   }
 
-  ExecuteForward(g_fwEffectStart, g_fwResult, g_spellIdx);
   set_task(g_fEffectTime, "TaskEndEffect", TASKID_EFFECT_END);
+  ExecuteForward(g_fwEffectStart, g_fwResult, g_spellIdx);
 }
 
 EndEffect()
