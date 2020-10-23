@@ -77,7 +77,7 @@ public Hwn_Wof_Fw_Effect_Start(spellIdx)
     new szName[32];
     Hwn_Wof_Spell_GetName(spellIdx, szName, charsmax(szName));
 
-    SetupNotificationMessage(-1.0, 0.15, .holdTime = 0.25);
+    SetupNotificationMessage(-1.0, 0.15);
     show_dhudmessage(0, "Your fate... Is... %s!", szName);
 }
 
