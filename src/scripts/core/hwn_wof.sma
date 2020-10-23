@@ -27,6 +27,7 @@ new Array:g_spellRevokeFuncID;
 new g_spellCount = 0;
 
 new g_spellIdx = -1;
+new Float:g_fEffectTime;
 
 new g_cvarEffectTime;
 
@@ -60,7 +61,7 @@ public plugin_init()
     g_fwRollEnd = CreateMultiForward("Hwn_Wof_Fw_Roll_End", ET_IGNORE);
     g_fwEffectStart = CreateMultiForward("Hwn_Wof_Fw_Effect_Start", ET_IGNORE, FP_CELL);
     g_fwEffectEnd = CreateMultiForward("Hwn_Wof_Fw_Effect_End", ET_IGNORE, FP_CELL);
-    g_fwEffectInvoke = CreateMultiForward("Hwn_Wof_Fw_Effect_Invoke", ET_IGNORE, FP_CELL, FP_CELL);
+    g_fwEffectInvoke = CreateMultiForward("Hwn_Wof_Fw_Effect_Invoke", ET_IGNORE, FP_CELL, FP_CELL, FP_CELL);
     g_fwEffectRevoke = CreateMultiForward("Hwn_Wof_Fw_Effect_Revoke", ET_IGNORE, FP_CELL, FP_CELL);
 }
 
@@ -186,6 +187,8 @@ EndRoll()
 
 StartEffect()
 {
+  g_fEffectTime = get_pcvar_float(g_cvarEffectTime);
+
   for (new id = 1; id <= g_maxPlayers; ++id) {
     if (!is_user_connected(id)) {
       continue;
@@ -195,7 +198,7 @@ StartEffect()
   }
 
   ExecuteForward(g_fwEffectStart, g_fwResult, g_spellIdx);
-  set_task(get_pcvar_float(g_cvarEffectTime), "TaskEndEffect", TASKID_EFFECT_END);
+  set_task(g_fEffectTime, "TaskEndEffect", TASKID_EFFECT_END);
 }
 
 EndEffect()
@@ -249,9 +252,10 @@ CallInvoke(id)
     
     if (callfunc_begin_i(funcID, pluginID) == 1) {
         callfunc_push_int(id);
+        callfunc_push_float(g_fEffectTime);
 
         if (callfunc_end() == PLUGIN_CONTINUE) {
-            ExecuteForward(g_fwEffectInvoke, g_fwResult, id, g_spellIdx);
+            ExecuteForward(g_fwEffectInvoke, g_fwResult, id, g_spellIdx, g_fEffectTime);
         }
     }
 }

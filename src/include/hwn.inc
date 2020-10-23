@@ -223,7 +223,7 @@ forward Hwn_Wof_Fw_Roll_Start();
 forward Hwn_Wof_Fw_Roll_End();
 forward Hwn_Wof_Fw_Effect_Start(spellIdx);
 forward Hwn_Wof_Fw_Effect_End(spellIdx);
-forward Hwn_Wof_Fw_Effect_Invoke(id, spellIdx);
+forward Hwn_Wof_Fw_Effect_Invoke(id, spellIdx, g_fEffectTime);
 forward Hwn_Wof_Fw_Effect_Revoke(id, spellIdx);
 
 /*--------------------------------[ Cosmetic ]--------------------------------*/
