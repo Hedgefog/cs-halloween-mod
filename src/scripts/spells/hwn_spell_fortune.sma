@@ -6,23 +6,23 @@
 #define PLUGIN "[Hwn] Fortune Telling Spell"
 #define AUTHOR "Hedgehog Fog"
 
-new Array:g_spells;
+new Array:g_hSpells;
 
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    g_spells = ArrayCreate(1, 8);
-    ArrayPushCell(g_spells, Hwn_Wof_Spell_Register("Fish", "Invoke"));
-    ArrayPushCell(g_spells, Hwn_Wof_Spell_Register("Being lucky", "Invoke"));
-    ArrayPushCell(g_spells, Hwn_Wof_Spell_Register("Wait for the next roll", "Invoke"));
-    ArrayPushCell(g_spells, Hwn_Wof_Spell_Register("Wait for the next roll", "Invoke"));
-    ArrayPushCell(g_spells, Hwn_Wof_Spell_Register("Dance", "Invoke"));
+    g_hSpells = ArrayCreate(1, 8);
+    ArrayPushCell(g_hSpells, Hwn_Wof_Spell_Register("Fish", "Invoke"));
+    ArrayPushCell(g_hSpells, Hwn_Wof_Spell_Register("Being lucky", "Invoke"));
+    ArrayPushCell(g_hSpells, Hwn_Wof_Spell_Register("Wait for the next roll", "Invoke"));
+    ArrayPushCell(g_hSpells, Hwn_Wof_Spell_Register("Wait for the next roll", "Invoke"));
+    ArrayPushCell(g_hSpells, Hwn_Wof_Spell_Register("Dance", "Invoke"));
 }
 
 public plugin_end()
 {
-    ArrayDestroy(g_spells);
+    ArrayDestroy(g_hSpells);
 }
 
 public Invoke() {}
@@ -36,9 +36,9 @@ public Hwn_Wof_Fw_Effect_Start(spellIdx)
 
 isFortuneSpell(spellIdx)
 {
-    new count = ArraySize(g_spells);
+    new count = ArraySize(g_hSpells);
     for (new i = 0; i < count; ++i) {
-        if (spellIdx == ArrayGetCell(g_spells, i)) {
+        if (spellIdx == ArrayGetCell(g_hSpells, i)) {
             return true;
         }
     }
