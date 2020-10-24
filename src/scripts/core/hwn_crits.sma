@@ -84,7 +84,7 @@ public plugin_precache()
     g_cvarCritsRandomChanceInitial = register_cvar("hwn_crits_random_chance_initial", "0.0");
     g_cvarCritsRandomChanceMax = register_cvar("hwn_crits_random_chance_max", "12.0");
     g_cvarCritsRandomChanceBonus = register_cvar("hwn_crits_random_chance_bonus", "1.0");
-    g_cvarCritsRandomChancePenalty = register_cvar("hwn_crits_random_chance_penalty", "4.0");
+    g_cvarCritsRandomChancePenalty = register_cvar("hwn_crits_random_chance_penalty", "2.0");
 }
 
 public plugin_init()

@@ -73,7 +73,7 @@ public plugin_init()
 
     g_cvarTeamPointsLimit = register_cvar("hwn_collector_teampoints_limit", "50");
     g_cvarWofEnabled = register_cvar("hwn_collector_wof", "1");
-    g_cvarWofDelay = register_cvar("hwn_collector_wof_delay", "150.0");
+    g_cvarWofDelay = register_cvar("hwn_collector_wof_delay", "90.0");
 
     g_fwPlayerPointsChanged = CreateMultiForward("Hwn_Collector_Fw_PlayerPoints", ET_IGNORE, FP_CELL);
     g_fwTeamPointsChanged = CreateMultiForward("Hwn_Collector_Fw_TeamPoints", ET_IGNORE, FP_CELL);

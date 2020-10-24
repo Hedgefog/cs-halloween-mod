@@ -6,7 +6,7 @@
 | hwn_gamemode_respawn_time          | Time to respawn in gamemode with player respawn          | 5.0           |
 | hwn_gamemode_spawn_protection_time | Godmode time after spawn in gamemode with player respawn | 3.0           |
 | hwn_gamemode_new_round_delay       | Delay before the start of a new round                    | 10.0          |
-| hwn_gifts_spawn_delay              | Time before new gift will be spawned                     | 450.0         |
+| hwn_gifts_spawn_delay              | Time before new gift will be spawned                     | 300.0         |
 | hwn_gifts_cosmetic_min_time        | Min time of hat from gift                                | 450.0         |
 | hwn_gifts_cosmetic_max_time        | Max time of hat from gift                                | 1200.0        |
 | hwn_fps                            | FPS for effects                                          | 25            |
@@ -16,7 +16,7 @@
 | hwn_npc_hhh_use_astar              | Use A* algorithm for Horseless Headless Horsemann        | 1             |
 | hwn_collector_teampoints_limit     | Limit of teampoints in Collector Gamemode                | 50            |
 | hwn_collector_wof                  | Enable/Disable Wheel of Fate rolls                       | 1             |
-| hwn_collector_wof_delay            | Delay until the next Wheel of Fate roll                  | 150.0         |
+| hwn_collector_wof_delay            | Delay until the next Wheel of Fate roll                  | 90.0         |
 | hwn_gamemode_change_lighting       | Enable/Disable custom light in default gamemode          | 1             |
 | hwn_gamemode_spell_on_spawn        | Enable/Disable spell on spawn in default gamemode        | 1             |
 | hwn_gamemode_random_events         | Enable/Disable spawn npc/items in default gamemode       | 1             |
@@ -36,7 +36,7 @@
 | hwn_crits_random_chance_initial    | Initial crit chance                                      | 0.0           |
 | hwn_crits_random_chance_max        | Maximum crit chance                                      | 12.0          |
 | hwn_crits_random_chance_bonus      | Chance hit bonus                                         | 1.0           |
-| hwn_crits_random_chance_penalty    | Change miss penalty                                      | 4.0           |
+| hwn_crits_random_chance_penalty    | Change miss penalty                                      | 2.0           |
 | hwn_crits_effect_trace             | Enable/Disable crit trace effect                         | 1             |
 | hwn_crits_effect_splash            | Enable/Disable crit splash effect                        | 1             |
 | hwn_crits_effect_flash             | Enable/Disable crit flash effect                         | 1             |
