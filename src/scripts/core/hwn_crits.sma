@@ -215,7 +215,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
 
         ArraySetCell(g_playerLastCrit, attacker, fGameTime);
 
-        SetHamParamFloat(3, fDamage * get_pcvar_flags(g_cvarCritsDmgMultiplier));
+        SetHamParamFloat(3, fDamage * get_pcvar_float(g_cvarCritsDmgMultiplier));
         SetHamParamInteger(6, damageBits | DMG_ALWAYSGIB);
     }
 
