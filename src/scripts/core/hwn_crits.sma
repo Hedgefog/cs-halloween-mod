@@ -36,6 +36,7 @@ new Array:g_playerLastShot;
 new Array:g_playerLastHit;
 new Array:g_playerLastCrit;
 
+new g_cvarCritsDmgMultiplier;
 new g_cvarCritsEffectTrace;
 new g_cvarCritsEffectSplash;
 new g_cvarCritsEffectFlash;
@@ -71,6 +72,7 @@ public plugin_precache()
     precache_sound(g_szSndCritOn);
     precache_sound(g_szSndCritOff);
 
+    g_cvarCritsDmgMultiplier = register_cvar("hwn_crits_damage_multiplier", "2.2");
     g_cvarCritsEffectTrace = register_cvar("hwn_crits_effect_trace", "1");
     g_cvarCritsEffectSplash = register_cvar("hwn_crits_effect_splash", "1");
     g_cvarCritsEffectFlash = register_cvar("hwn_crits_effect_flash", "1");
@@ -213,7 +215,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
 
         ArraySetCell(g_playerLastCrit, attacker, fGameTime);
 
-        SetHamParamFloat(3, fDamage * 3.0);
+        SetHamParamFloat(3, fDamage * get_pcvar_flags(g_cvarCritsDmgMultiplier));
         SetHamParamInteger(6, damageBits | DMG_ALWAYSGIB);
     }
 

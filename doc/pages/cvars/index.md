@@ -31,6 +31,7 @@
 | hwn_bucket_collect_flash           | Enable/Disable flash effect on bucket                    | 1             |
 | hwn_pumpkin_pickup_flash           | Enable/Disable flash effect on filling the bucket        | 1             |
 | hwn_wof_effect_time                | Wheel of fate effect time                                | 20.0          |
+| hwn_crits_damage_multiplier        | Crit damage multiplier                                   | 2.2           |
 | hwn_crits_random                   | Enable/Disable random crits                              | 1             |
 | hwn_crits_random_chance_initial    | Initial crit chance                                      | 0.0           |
 | hwn_crits_random_chance_max        | Maximum crit chance                                      | 12.0          |
