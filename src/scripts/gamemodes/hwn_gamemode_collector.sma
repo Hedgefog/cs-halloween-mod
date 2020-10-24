@@ -238,6 +238,10 @@ public Hwn_Wof_Fw_Roll_Start()
 
 public Hwn_Wof_Fw_Effect_End()
 {
+    if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
+        return;
+    }
+
     SetWofTask();
 }
 
