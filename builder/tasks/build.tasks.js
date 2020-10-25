@@ -82,4 +82,4 @@ if (config.build.reapi) {
 // final tasks
 
 gulp.task('build', gulp.series(...buildTasks));
-gulp.task('watch', gulp.series(...watchTasks));
+gulp.task('watch', gulp.parallel(...watchTasks));
