@@ -11,6 +11,7 @@
             Spellballs are now cast from view position
             NPCs can now walk up stairs
             Improved small skeletons spawning
+            Added Hungarian translation (by regener)
 
         Cvars:
             Added hwn_spellbook_max_spell_count cvar
@@ -38,7 +39,7 @@
             Fixed blink spell teleportation
             Fixed ru lang
             Fixed small skeletons getting stuck
-            Added Hungarian translation (by regener)
+            Fixed small skeleton hitboxe 
 
     4.0.0
 
