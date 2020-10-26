@@ -24,6 +24,8 @@
 #define HUD_POS_STATIC_PLAYER_SPELL -1.0, 0.85
 #define HUD_POS_NOTIFICATION_INFO -1.0, 0.65
 #define HUD_POS_NOTIFICATION_WOF -1.0, 0.15
+#define HUD_POS_NOTIFICATION_BOSS_SPAWN -1.0, 0.15
+#define HUD_POS_NOTIFICATION_BOSS_ESCAPE -1.0, 0.15
 #define HUD_POS_NOTIFICATION_GIFT_SPAWN -1.0, 0.35
 #define HUD_POS_NOTIFICATION_GIFT_DISAPPEARED -1.0, 0.35
 #define HUD_POS_NOTIFICATION_GIFT_PICKED 0.05, 0.35
@@ -101,6 +103,28 @@ public Hwn_Bosses_Fw_Winner(id)
 
     SetupNotificationMessage(HUD_POS_NOTIFICATION_BOSS_REWARD);
     show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_BOSS_REWARD");
+}
+
+public Hwn_Bosses_Fw_BossSpawn()
+{
+    new bossIdx = Hwn_Bosses_GetCurrent();
+
+    static szName[128];
+    Hwn_Bosses_GetName(bossIdx, szName, charsmax(szName));
+
+    SetupNotificationMessage(HUD_POS_NOTIFICATION_BOSS_SPAWN);
+    show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_BOSS_SPAWN", szName);
+}
+
+public Hwn_Bosses_Fw_BossEscape()
+{
+    new bossIdx = Hwn_Bosses_GetCurrent();
+
+    static szName[128];
+    Hwn_Bosses_GetName(bossIdx, szName, charsmax(szName));
+
+    SetupNotificationMessage(HUD_POS_NOTIFICATION_BOSS_ESCAPE);
+    show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_BOSS_ESCAPE", szName);
 }
 
 public Hwn_Wof_Fw_Roll_Start()
