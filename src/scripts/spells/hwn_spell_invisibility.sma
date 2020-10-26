@@ -14,20 +14,22 @@
 #define PLUGIN "[Hwn] Invisibility Spell"
 #define AUTHOR "Hedgehog Fog"
 
-const Float:InvisibilityTime = 10.0;
-const Float:MaxFadeTime = 10.0;
-
+const Float:EffectTime = 10.0;
 const Float:EffectRadius = 128.0;
 new const EffectColor[3] = {255, 255, 255};
 
+const Float:FadeEffectMaxTime = 10.0;
 new FadeEffectColor[3] = {128, 128, 128};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_stealth.wav";
 
 new g_sprEffectTrace;
 
-new Array:g_playerInvisibilityStart;
-new Array:g_playerInvisibilityTime;
+new Array:g_playerSpellEffect;
+new Array:g_playerSpellEffectStart;
+new Array:g_playerSpellEffectTime;
+
+new g_hWofSpell;
 
 new g_maxPlayers;
 
@@ -42,48 +44,54 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
-    RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
+    RegisterHam(Ham_Killed, "player", "Revoke", .Post = 1);
 
-    Hwn_Spell_Register("Invisibility", "OnCast");
-    Hwn_Wof_Spell_Register("Invisibility", "Invoke", "Revoke");
-
-    g_maxPlayers = get_maxplayers();
-    g_playerInvisibilityStart = ArrayCreate(1, g_maxPlayers+1);
-    g_playerInvisibilityTime = ArrayCreate(1, g_maxPlayers+1);
+    Hwn_Spell_Register("Invisibility", "Cast");
+    g_hWofSpell = Hwn_Wof_Spell_Register("Invisibility", "Invoke", "Revoke");
 
     register_message(get_user_msgid("ScreenFade"), "OnMessage_ScreenFade");
 
+    g_maxPlayers = get_maxplayers();
+
+    g_playerSpellEffect = ArrayCreate(1, g_maxPlayers+1);
+    g_playerSpellEffectStart = ArrayCreate(1, g_maxPlayers+1);
+    g_playerSpellEffectTime = ArrayCreate(1, g_maxPlayers+1);
+
     for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerInvisibilityStart, 0.0);
-        ArrayPushCell(g_playerInvisibilityTime, 0.0);
+        ArrayPushCell(g_playerSpellEffect, false);
+        ArrayPushCell(g_playerSpellEffectStart, 0.0);
+        ArrayPushCell(g_playerSpellEffectTime, 0.0);
     }
 }
 
 public plugin_end()
 {
-    ArrayDestroy(g_playerInvisibilityStart);
-    ArrayDestroy(g_playerInvisibilityTime);
+    ArrayDestroy(g_playerSpellEffect);
+    ArrayDestroy(g_playerSpellEffectStart);
+    ArrayDestroy(g_playerSpellEffectTime);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnMessage_ScreenFade(msg, type, id)
 {
+    if (!GetSpellEffect(id)) {
+        return;
+    }
+
     set_task(0.25, "TaskFixInvisibleEffect", id);
 }
 
-public OnPlayerSpawn(id)
+public Hwn_Gamemode_Fw_NewRound()
 {
-    SetInvisible(id, false);
+    for (new i = 0; i <= g_maxPlayers; ++i) {
+        Revoke(i);
+    }
 }
 
-public OnPlayerKilled(id)
-{
-    SetInvisible(id, false);
-}
+/*--------------------------------[ Methods ]--------------------------------*/
 
-public OnCast(id)
+public Cast(id)
 {
     new team = UTIL_GetPlayerTeam(id);
 
@@ -94,24 +102,22 @@ public OnCast(id)
     new userCount = ArraySize(users);
 
     for (new i = 0; i < userCount; ++i) {
-        new id = ArrayGetCell(users, i);
+        new nearbyUserID = ArrayGetCell(users, i);
 
-        if (team != UTIL_GetPlayerTeam(id)) {
+        if (team != UTIL_GetPlayerTeam(nearbyUserID)) {
             continue;
         }
 
-        SetInvisible(id, true, InvisibilityTime);
+        Revoke(nearbyUserID);
+        SetSpellEffect(nearbyUserID, true, EffectTime);
 
-        if (task_exists(id)) {
-            remove_task(id);
+        if (Hwn_Wof_Effect_GetCurrentSpell() != g_hWofSpell) {
+            set_task(EffectTime, "Revoke", nearbyUserID);
         }
-
-        set_task(InvisibilityTime, "TaskRemoveInvisibility", id);
     }
 
     ArrayDestroy(users);
-
-    DetonateEffect(id, vOrigin);
+    DetonateEffect(id);
 }
 
 public Invoke(id, Float:fTime)
@@ -120,47 +126,59 @@ public Invoke(id, Float:fTime)
         return;
     }
 
-    SetInvisible(id, true, fTime);
-
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
-
-    DetonateEffect(id, vOrigin);
+    Revoke(id);
+    SetSpellEffect(id, true, fTime);
+    DetonateEffect(id);
 }
 
 public Revoke(id)
 {
-    SetInvisible(id, false);
+    if (!GetSpellEffect(id)) {
+        return;
+    }
+
+    remove_task(id);
+    SetSpellEffect(id, false);
 }
 
-/*--------------------------------[ Methods ]--------------------------------*/
+bool:GetSpellEffect(id)
+{
+    return ArrayGetCell(g_playerSpellEffect, id);
+}
 
-SetInvisible(id, bool:value = true, Float:time = 0.0)
+SetSpellEffect(id, bool:value, Float:fTime = 0.0)
 {
     if (value) {
-        set_pev(id, pev_rendermode, kRenderTransTexture);
-        set_pev(id, pev_renderamt, 15.0);
-
-        ArraySetCell(g_playerInvisibilityStart, id, get_gametime());
-        ArraySetCell(g_playerInvisibilityTime, id, time);
-        FadeEffect(id, time);
+        FadeEffect(id, fTime);
+        ArraySetCell(g_playerSpellEffectStart, id, get_gametime());
+        ArraySetCell(g_playerSpellEffectTime, id, fTime);
     } else {
-        set_pev(id, pev_rendermode, kRenderNormal);
-        set_pev(id, pev_renderamt, 0.0);
-
-        ArraySetCell(g_playerInvisibilityStart, id, 0.0);
         RemoveFadeEffect(id);
+    }
+
+    SetInvisibility(id, value);
+    ArraySetCell(g_playerSpellEffect, id, value);
+}
+
+SetInvisibility(ent, bool:value)
+{
+    if (value) {
+        set_pev(ent, pev_rendermode, kRenderTransTexture);
+        set_pev(ent, pev_renderamt, 15.0);
+    } else {
+        set_pev(ent, pev_rendermode, kRenderNormal);
+        set_pev(ent, pev_renderamt, 0.0);
     }
 }
 
 FadeEffect(id, Float:fTime, bool:external = true)
 {
-    UTIL_ScreenFade(id, FadeEffectColor, -1.0, fTime > MaxFadeTime ? MaxFadeTime : fTime, 128, FFADE_IN, .bExternal = external);
+    UTIL_ScreenFade(id, FadeEffectColor, -1.0, fTime > FadeEffectMaxTime ? FadeEffectMaxTime : fTime, 128, FFADE_IN, .bExternal = external);
 
     if (external) {
-        new iterationCount = floatround(fTime / MaxFadeTime, floatround_ceil);
+        new iterationCount = floatround(fTime / FadeEffectMaxTime, floatround_ceil);
         for (new i = 1; i < iterationCount; ++i) {
-            set_task(i * MaxFadeTime, "TaskFixInvisibleEffect", id);
+            set_task(i * FadeEffectMaxTime, "TaskFixInvisibleEffect", id);
         }
     }
 }
@@ -168,11 +186,13 @@ FadeEffect(id, Float:fTime, bool:external = true)
 RemoveFadeEffect(id)
 {
     UTIL_ScreenFade(id);
-    remove_task(id);
 }
 
-DetonateEffect(ent, const Float:vOrigin[3])
+DetonateEffect(ent)
 {
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
     UTIL_HwnSpellDetonateEffect(
       .modelindex = g_sprEffectTrace,
       .vOrigin = vOrigin,
@@ -185,15 +205,10 @@ DetonateEffect(ent, const Float:vOrigin[3])
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
-public TaskRemoveInvisibility(id)
-{
-    SetInvisible(id, false);
-}
-
 public TaskFixInvisibleEffect(id)
 {
-    new Float:fStart = Float:ArrayGetCell(g_playerInvisibilityStart, id);
-    new Float:fTime = Float:ArrayGetCell(g_playerInvisibilityTime, id);
+    new Float:fStart = Float:ArrayGetCell(g_playerSpellEffectStart, id);
+    new Float:fTime = Float:ArrayGetCell(g_playerSpellEffectTime, id);
     new Float:fTimeleft =  fStart > 0.0 ? fTime - (get_gametime() - fStart) : 0.0;
 
     if (fTimeleft > 0.0) {
