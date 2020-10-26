@@ -321,7 +321,10 @@ public OnClCmd_JoinClass(id)
         new joinState = get_pdata_int(id, m_iJoiningState);
     #endif
 
-    if(menu == MENU_CHOOSEAPPEARANCE && joinState == JOIN_CHOOSEAPPEARANCE)
+    new team = UTIL_GetPlayerTeam(id);
+    new bool:inPlayableTeam = team == 1 || team == 2;
+
+    if(menu == MENU_CHOOSEAPPEARANCE && (joinState == JOIN_CHOOSEAPPEARANCE || (!joinState && inPlayableTeam)))
     {
         new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
         if (flags & Hwn_GamemodeFlag_RespawnPlayers)
@@ -333,8 +336,9 @@ public OnClCmd_JoinClass(id)
             engclient_cmd(id, command, arg1);
 
             ExecuteHam(Ham_Player_PreThink, id);
+
             if (!is_user_alive(id)) {
-                set_task(get_pcvar_float(g_cvarRespawnTime), "TaskRespawnPlayer", id+TASKID_SUM_RESPAWN_PLAYER);
+                SetRespawnTask(id);
             }
 
             return PLUGIN_HANDLED;
@@ -403,7 +407,7 @@ public OnPlayerKilled(id)
 
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if ((flags & Hwn_GamemodeFlag_RespawnPlayers) && g_gamestate != GameState_RoundEnd) {
-        set_task(get_pcvar_float(g_cvarRespawnTime), "TaskRespawnPlayer", id+TASKID_SUM_RESPAWN_PLAYER);
+        SetRespawnTask(id);
     }
 }
 
@@ -582,6 +586,12 @@ bool:IsTeamExtermination()
     }
 
     return true;
+}
+
+SetRespawnTask(id)
+{
+    client_print(id, print_chat, "Set Respawn Task");
+    set_task(get_pcvar_float(g_cvarRespawnTime), "TaskRespawnPlayer", id+TASKID_SUM_RESPAWN_PLAYER);
 }
 
 ClearRespawnTasks()
