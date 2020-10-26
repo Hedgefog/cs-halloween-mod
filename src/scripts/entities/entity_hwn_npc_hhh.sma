@@ -90,11 +90,12 @@ new const g_actions[Action][NPC_Action] = {
     {    Sequence_Spawn,            Sequence_Spawn,        2.0    }
 };
 
-new Float:NPC_Health         = 3000.0;
-const Float:NPC_Speed         = 300.0;
-const Float:NPC_Damage         = 80.0;
-const Float:NPC_HitRange     = 96.0;
-const Float:NPC_HitDelay     = 0.75;
+new Float:NPC_Health                = 4000.0;
+new Float:NPC_HealthBonusPerPlayer  = 300.0;
+const Float:NPC_Speed               = 300.0;
+const Float:NPC_Damage              = 80.0;
+const Float:NPC_HitRange            = 96.0;
+const Float:NPC_HitDelay            = 0.75;
 
 new g_sprBlood;
 new g_sprBloodSpray;
@@ -172,7 +173,7 @@ public plugin_init()
 
 public client_putinserver()
 {
-    NPC_Health += 200.0;
+    NPC_Health += NPC_HealthBonusPerPlayer;
 }
 
 #if AMXX_VERSION_NUM < 183
@@ -181,7 +182,7 @@ public client_putinserver()
     public client_disconnected(id)
 #endif
 {
-    NPC_Health -= 200.0;
+    NPC_Health -= NPC_HealthBonusPerPlayer;
 }
 
 public Hwn_Bosses_Fw_BossTeleport(ent, handler)
