@@ -39,12 +39,13 @@ new g_fwBossTeleport;
 new g_fwWinner;
 
 new Array:g_bosses;
+new Array:g_bossesNames;
 new Array:g_bossSpawnPoints;
 
 new Array:g_playerTotalDamage;
 
-new g_bossEnt = 0;
-new g_bossIdx = 0;
+new g_bossEnt = -1;
+new g_bossIdx = -1;
 new g_bossSpawnPoint;
 
 new g_maxPlayers;
@@ -80,6 +81,7 @@ public plugin_end()
 
     if (g_bosses != Invalid_Array) {
         ArrayDestroy(g_bosses);
+        ArrayDestroy(g_bossesNames);
     }
 
     if (g_bossSpawnPoints != Invalid_Array) {
@@ -103,7 +105,9 @@ public plugin_precache()
 public plugin_natives()
 {
     register_library("hwn");
-    register_native("Hwn_Bosses_RegisterBoss", "Native_Register");
+    register_native("Hwn_Bosses_Register", "Native_Register");
+    register_native("Hwn_Bosses_GetCurrent", "Native_GetCurrent");
+    register_native("Hwn_Bosses_GetName", "Native_GetName");
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -113,17 +117,40 @@ public Native_Register(pluginID, argc)
     new szClassname[32];
     get_string(1, szClassname, charsmax(szClassname));
 
+    new szName[32];
+    get_string(2, szName, charsmax(szName));
+
     if (!g_bosses) {
-        g_bosses = ArrayCreate(32);
+        g_bosses = ArrayCreate(32, 8);
+        g_bossesNames = ArrayCreate(32, 8);
     }
 
     new idx = ArraySize(g_bosses);
     ArrayPushString(g_bosses, szClassname);
+    ArrayPushString(g_bossesNames, szName);
 
     CE_RegisterHook(CEFunction_Remove, szClassname, "OnBossRemove");
 
     return idx;
 }
+
+public Native_GetCurrent(pluginID, argc)
+{
+    set_param_byref(1, g_bossEnt);
+    return g_bossIdx;
+}
+
+public Native_GetName(pluginID, argc)
+{
+    new bossIdx = get_param(1);
+    new maxlen = get_param(3);
+
+    new szName[32];
+    ArrayGetString(g_bossesNames, bossIdx, szName, charsmax(szName));
+
+    set_string(2, szName, maxlen);
+}
+
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
@@ -174,8 +201,8 @@ public OnBossRemove(ent)
         ExecuteForward(g_fwBossEscape, g_fwResult, g_bossEnt);
     }
 
-    g_bossEnt = 0;
-    g_bossIdx = 0;
+    g_bossEnt = -1;
+    g_bossIdx = -1;
     remove_task(TASKID_REMOVE_BOSS);
 
     CreateBossSpawnTask();
@@ -214,7 +241,7 @@ public OnHurtTouch(ent, toucher)
 
 SpawnBoss()
 {
-    if (g_bossEnt) {
+    if (g_bossEnt != -1) {
         return;
     }
 
@@ -242,7 +269,7 @@ SpawnBoss()
 
     g_bossEnt = CE_Create(szClassname, vOrigin);
 
-    if (!g_bossEnt) {
+    if (g_bossEnt == -1) {
         return;
     }
 
@@ -262,7 +289,7 @@ SpawnBoss()
 
 IntersectKill()
 {
-    if (!g_bossEnt) {
+    if (g_bossEnt == -1) {
         return;
     }
 

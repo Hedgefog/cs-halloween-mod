@@ -122,7 +122,7 @@ public plugin_precache()
         .preset = CEPreset_NPC
     );
 
-    g_bossHandler = Hwn_Bosses_RegisterBoss(ENTITY_NAME);
+    g_bossHandler = Hwn_Bosses_Register(ENTITY_NAME, "Horseless Headless Horsemann");
 
     g_sprBlood        = precache_model("sprites/blood.spr");
     g_sprBloodSpray    = precache_model("sprites/bloodspray.spr");

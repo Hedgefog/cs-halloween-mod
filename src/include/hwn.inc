@@ -248,7 +248,9 @@ native Hwn_Cosmetic_Register(PCosmetic:hPCosmetic);
 
 /*--------------------------------[ Bosses ]--------------------------------*/
 
-native Hwn_Bosses_RegisterBoss(const szCEClassName[]);
+native Hwn_Bosses_Register(const szCEClassName[], const szName[] = "Boss");
+native Hwn_Bosses_GetCurrent(&ent = 0);
+native Hwn_Bosses_GetName(bossIdx, szOutput[], maxlen);
 
 forward Hwn_Bosses_Fw_BossSpawn(ent);
 forward Hwn_Bosses_Fw_BossKill(ent);
