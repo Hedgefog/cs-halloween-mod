@@ -43,7 +43,8 @@
             Fixed blink spell teleportation
             Fixed ru lang
             Fixed small skeletons getting stuck
-            Fixed small skeleton hitboxe 
+            Fixed small skeleton hitbox
+            Fixed respawn on join
 
     4.0.0
 
