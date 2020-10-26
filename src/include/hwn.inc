@@ -225,6 +225,7 @@ native Hwn_Wof_Spell_GetCount();
 native Hwn_Wof_Spell_GetName(spell, szOutput[], maxlen);
 native Hwn_Wof_Roll();
 native Hwn_Wof_Abort();
+native Hwn_Wof_Effect_GetCurrentSpell();
 
 forward Hwn_Wof_Fw_Roll_Start();
 forward Hwn_Wof_Fw_Roll_End();

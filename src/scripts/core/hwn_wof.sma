@@ -86,6 +86,7 @@ public plugin_natives()
     register_native("Hwn_Wof_Spell_Register", "Native_Spell_Register");
     register_native("Hwn_Wof_Spell_GetName", "Native_Spell_GetName");
     register_native("Hwn_Wof_Spell_GetCount", "Native_Spell_GetCount");
+    register_native("Hwn_Wof_Effect_GetCurrentSpell", "Native_Effect_GetCurrentSpell");
     register_native("Hwn_Wof_Roll", "Native_Roll");
     register_native("Hwn_Wof_Abort", "Native_Abort");
 }
@@ -132,6 +133,15 @@ public Native_Roll(pluginID, argc)
 public Native_Abort(pluginID, argc)
 {
     Abort();
+}
+
+public Native_Effect_GetCurrentSpell(pluginID, argc)
+{
+    if (!g_effectStarted) {
+        return -1;
+    }
+
+    return g_spellIdx;
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
