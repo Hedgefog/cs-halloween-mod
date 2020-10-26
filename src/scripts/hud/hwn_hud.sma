@@ -11,6 +11,7 @@
 #include <api_custom_entities>
 
 #include <hwn>
+#include <hwn_utils>
 
 #define PLUGIN "[Hwn] HUD"
 #define AUTHOR "Hedgehog Fog"
@@ -37,6 +38,8 @@ new g_hudMsgTeamPoints;
 new g_hudMsgPlayerPoints;
 new g_hudMsgPlayerSpell;
 
+new g_cvarCollectorHideMoney;
+new g_cvarCollectorHideTimer;
 new g_cvarTeamPointsLimit;
 
 new g_maxPlayers;
@@ -54,6 +57,9 @@ public plugin_init()
 
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
 
+    register_event("ResetHUD", "OnResetHUD", "b");
+    register_message(get_user_msgid("HideWeapon"), "OnMsgHideWeapon");
+
     CE_RegisterHook(CEFunction_Spawn, "hwn_item_gift", "OnGiftSpawn");
     CE_RegisterHook(CEFunction_Killed, "hwn_item_gift", "OnGiftKilled");
     CE_RegisterHook(CEFunction_Picked, "hwn_item_gift", "OnGiftPicked");
@@ -63,6 +69,8 @@ public plugin_init()
     g_maxPlayers = get_maxplayers();
     g_hGamemodeCollector = Hwn_Gamemode_GetHandler("Collector");
 
+    g_cvarCollectorHideMoney = register_cvar("hwn_hud_collector_hide_money", "1");
+    g_cvarCollectorHideTimer = register_cvar("hwn_hud_collector_hide_timer", "1");
     g_cvarTeamPointsLimit = get_cvar_pointer("hwn_collector_teampoints_limit");
 
     set_task(1.0, "TaskUpdate", _, _, _, "b");
@@ -151,6 +159,24 @@ public OnSpellbookPicked(ent, id)
 
     SetupNotificationMessage(HUD_POS_NOTIFICATION_SPELL_PICKED);
     show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_SPELLBOOK_PICKUP");
+}
+
+public OnResetHUD(id)
+{
+    if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
+        return;
+    }
+
+    UTIL_Message_HideWeapon(id, GetHideWeaponFlags());
+}
+
+public OnMsgHideWeapon()
+{
+    if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
+        return;
+    }
+
+    set_msg_arg_int(1, ARG_BYTE, get_msg_arg_int(1) | GetHideWeaponFlags());
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -246,6 +272,20 @@ SetupNotificationMessage(Float:x = -1.0, Float:y = -1.0, const color[3] = {HUD_C
         .fadeintime = 0.1,
         .fadeouttime = 1.5
     );
+}
+
+GetHideWeaponFlags()
+{
+    new flags = 0;
+    if (get_pcvar_num(g_cvarCollectorHideTimer) > 0) {
+        flags |= HUD_HIDE_TIMER;
+    }
+
+    if (get_pcvar_num(g_cvarCollectorHideMoney) > 0) {
+        flags |= HUD_HIDE_MONEY;
+    }
+
+    return flags;
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/

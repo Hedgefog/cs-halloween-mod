@@ -5,6 +5,9 @@
 #define GRAVITATIONAL_ACCELERATION_MOON 1.62
 #define MOON_GRAVIY GRAVITATIONAL_ACCELERATION_MOON / GRAVITATIONAL_ACCELERATION_EARTH
 
+#define HUD_HIDE_TIMER (1<<4)
+#define HUD_HIDE_MONEY (1<<5)
+
 stock const XO_CMapInfo = 4;
 stock const m_fClientMapZone = 235;
 
@@ -452,6 +455,18 @@ stock UTIL_Message_StatusIcon(id, status = 0, const szIcon[], const color[3])
         write_byte(color[2]);
     }
 
+    message_end();
+}
+
+stock UTIL_Message_HideWeapon(id, flags)
+{
+    static msgid = 0;
+    if(!msgid) {
+        msgid = get_user_msgid("HideWeapon");
+    }
+
+    message_begin(id ? MSG_ONE : MSG_ALL, msgid, _, id);
+    write_byte(flags);
     message_end();
 }
 

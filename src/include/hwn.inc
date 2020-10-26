@@ -12,6 +12,8 @@
             NPCs can now walk up stairs
             Improved small skeletons spawning
             Added Hungarian translation (by regener)
+            Improved HUD
+            Money and Timer HUD in collector gamemode now hidden by default
 
         Cvars:
             Added hwn_spellbook_max_spell_count cvar
@@ -33,6 +35,8 @@
             Added hwn_crits_sound_use cvar
             Added hwn_crits_sound_hit cvar
             Added hwn_crits_sound_shoot cvar
+            Added hwn_hud_collector_hide_money cvar
+            Added hwn_hud_collector_hide_time cvar
 
         Fixes:
             Fixed spellbar display
