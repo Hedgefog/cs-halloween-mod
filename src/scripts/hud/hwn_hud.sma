@@ -58,7 +58,7 @@ public plugin_init()
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
 
     register_event("ResetHUD", "OnResetHUD", "b");
-    register_message(get_user_msgid("HideWeapon"), "OnMsgHideWeapon");
+    register_message(get_user_msgid("HideWeapon"), "OnMessageHideWeapon");
 
     CE_RegisterHook(CEFunction_Spawn, "hwn_item_gift", "OnGiftSpawn");
     CE_RegisterHook(CEFunction_Killed, "hwn_item_gift", "OnGiftKilled");
@@ -170,7 +170,7 @@ public OnResetHUD(id)
     UTIL_Message_HideWeapon(id, GetHideWeaponFlags());
 }
 
-public OnMsgHideWeapon()
+public OnMessageHideWeapon()
 {
     if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
         return;
