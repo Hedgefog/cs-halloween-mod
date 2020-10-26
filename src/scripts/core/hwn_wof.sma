@@ -1,6 +1,7 @@
 #include <amxmodx>
 #include <amxmisc>
 #include <engine>
+#include <fakemeta>
 #include <hamsandwich>
 
 #include <hwn>
@@ -231,6 +232,11 @@ StartEffect()
 
     for (new id = 1; id <= g_maxPlayers; ++id) {
         if (!is_user_connected(id)) {
+            continue;
+        }
+
+        new team = UTIL_GetPlayerTeam(id);
+        if (team != 1 && team != 2) {
             continue;
         }
 
