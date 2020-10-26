@@ -29,6 +29,7 @@
 #define HUD_POS_NOTIFICATION_BOSS_REWARD -1.0, 0.35
 #define HUD_POS_NOTIFICATION_SPELL_PICKED HUD_POS_NOTIFICATION_INFO
 #define HUD_POS_NOTIFICATION_MOD_MENU HUD_POS_NOTIFICATION_INFO
+#define HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED HUD_POS_NOTIFICATION_INFO
 
 new g_hGamemodeCollector;
 
@@ -76,6 +77,11 @@ public Hwn_Collector_Fw_TeamPoints(team)
 
 public Hwn_Collector_Fw_PlayerPoints(id)
 {
+    if (Hwn_Collector_GetPlayerPoints(id) == 1) {
+        SetupNotificationMessage(HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED);
+        show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_FIRST_PUMPKIN_PICKED");
+    }
+
     UpdatePlayerPoints(id);
 }
 

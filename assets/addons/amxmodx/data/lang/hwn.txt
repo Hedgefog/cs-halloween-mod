@@ -6,13 +6,14 @@ HWN_PLAYER_POINTS = Pumpkins collected: %d
 HWN_SPELL = Spell: %s
 HWN_DEFEAT_BOSS = %s defeat the boss!
 HWN_BOSS_REWARD = Boss is defeated!^nMysterious reward is waiting for you in your inventory.
-HWN_SPELLBOOK_PICKUP = You picked spell!^nUse flashlight key ('f' by default) to cast spell.
+HWN_SPELLBOOK_PICKUP = You picked a spell!^nUse flashlight key ('f' by default) to cast spell.
 HWN_MENU_HELP = Use choose team key ('m' by default) to open mod menu.
 HWN_MENU_TITLE = Halloween Mod Menu
 HWN_EQUIPMENT_MENU_TITLE = Equipment
 HWN_COSMETIC_MENU_TITLE = Cosmetic Inventory
 HWN_COSMETIC_MENU_EMPTY = You have no cosmetic items
 HWN_TEAM_PUMPKIN_COLLECTED = Pumpkins in bucket
+HWN_FIRST_PUMPKIN_PICKED = You picked a pumpkin, take it to the team bucket.
 
 [ru]
 HWN_GIFT_SPAWN = Призрачный Подарок таинственно появился в случайном месте!
@@ -29,6 +30,7 @@ HWN_EQUIPMENT_MENU_TITLE = Экипировка
 HWN_COSMETIC_MENU_TITLE = Аксессуары
 HWN_COSMETIC_MENU_EMPTY = У вас нету аксессуаров
 HWN_TEAM_PUMPKIN_COLLECTED = Тыкв в корзине
+HWN_FIRST_PUMPKIN_PICKED = Вы подобрали тыкву, отнесите ее в корзину вашей команды.
 
 [es]
 HWN_GIFT_SPAWN = Un misterioso regalo de ^nHalloween ha aparecido en algun lugar,^nve y encuentralo!
@@ -45,6 +47,7 @@ HWN_EQUIPMENT_MENU_TITLE = Equipment
 HWN_COSMETIC_MENU_TITLE = Cosmetic Inventory
 HWN_COSMETIC_MENU_EMPTY = You have no cosmetic items
 HWN_TEAM_PUMPKIN_COLLECTED = Pumpkins in bucket
+HWN_FIRST_PUMPKIN_PICKED = You picked a pumpkin, take it to the team bucket.
 
 [ro]
 HWN_GIFT_SPAWN = Un Cadou Bantuit de Halloween a^naparut in mod misterios undeva,^nasezat doar pentru tine. Du-te si gaseste-l!
@@ -61,6 +64,7 @@ HWN_EQUIPMENT_MENU_TITLE = Equipment
 HWN_COSMETIC_MENU_TITLE = Cosmetic Inventory
 HWN_COSMETIC_MENU_EMPTY = You have no cosmetic items
 HWN_TEAM_PUMPKIN_COLLECTED = Pumpkins in bucket
+HWN_FIRST_PUMPKIN_PICKED = You picked a pumpkin, take it to the team bucket.
 
 [hu]
 HWN_GIFT_SPAWN = Egy Kísérteties Halloweeni Ajándék^nrejtelmesen megjelent valahol,^ncsak a számodra. Menj és találd meg!
@@ -77,3 +81,4 @@ HWN_EQUIPMENT_MENU_TITLE = Felszerelés
 HWN_COSMETIC_MENU_TITLE = Kozmetikai Leltár
 HWN_COSMETIC_MENU_EMPTY = Nincs kozmetikai tárgyad
 HWN_TEAM_PUMPKIN_COLLECTED = Pumpkins in bucket
+HWN_FIRST_PUMPKIN_PICKED = You picked a pumpkin, take it to the team bucket.
