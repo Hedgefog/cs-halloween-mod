@@ -17,6 +17,8 @@
 #define ENTITY_NAME "hwn_item_pumpkin"
 #define ENTITY_NAME_BIG "hwn_item_pumpkin_big"
 
+#define TASKID_SUM_DISABLE_CRITS 1000
+
 #define FLASH_RADIUS 16
 #define FLASH_LIFETIME 10
 #define FLASH_DECAY_RATE 16
@@ -141,12 +143,13 @@ public OnPickup(ent, id)
 
 GiveCrits(id, Float:fTime)
 {
-    if (Hwn_Crits_Get(id)) {
+    if (Hwn_Crits_Get(id) && !task_exists(id + TASKID_SUM_DISABLE_CRITS)) {
         return;
     }
 
     Hwn_Crits_Set(id, true);
-    set_task(fTime, "TaskDisableCrits", id);
+    remove_task(id + TASKID_SUM_DISABLE_CRITS);
+    set_task(fTime, "TaskDisableCrits", id + TASKID_SUM_DISABLE_CRITS);
 }
 
 GiveHealth(id, Float:fCount)
@@ -220,6 +223,6 @@ bool:isBig(ent) {
 
 public TaskDisableCrits(taskID)
 {
-    new id = taskID;
+    new id = taskID - TASKID_SUM_DISABLE_CRITS;
     Hwn_Crits_Set(id, false);
 }
