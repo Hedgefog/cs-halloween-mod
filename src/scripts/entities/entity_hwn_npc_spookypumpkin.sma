@@ -151,6 +151,10 @@ public OnSpawn(ent)
         UTIL_Message_Dlight(vOrigin, 8, {HWN_COLOR_YELLOW}, 20, 8);
     }
 
+    set_pev(ent, pev_rendermode, kRenderNormal);
+    set_pev(ent, pev_renderfx, kRenderFxGlowShell);
+    set_pev(ent, pev_renderamt, 4.0);
+    set_pev(ent, pev_rendercolor, {HWN_COLOR_ORANGE_DIRTY_F});
     set_pev(ent, pev_health, fHealth);
 
     EmitRandomLaugh(ent);
