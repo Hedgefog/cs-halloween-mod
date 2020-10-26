@@ -590,7 +590,6 @@ bool:IsTeamExtermination()
 
 SetRespawnTask(id)
 {
-    client_print(id, print_chat, "Set Respawn Task");
     set_task(get_pcvar_float(g_cvarRespawnTime), "TaskRespawnPlayer", id+TASKID_SUM_RESPAWN_PLAYER);
 }
 
