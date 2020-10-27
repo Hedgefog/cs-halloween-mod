@@ -13,6 +13,7 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     g_hSpells = ArrayCreate(1, 8);
+
     ArrayPushCell(g_hSpells, Hwn_Wof_Spell_Register("Fish", "Invoke"));
     ArrayPushCell(g_hSpells, Hwn_Wof_Spell_Register("Being lucky", "Invoke"));
     ArrayPushCell(g_hSpells, Hwn_Wof_Spell_Register("Wait for the next roll", "Invoke"));

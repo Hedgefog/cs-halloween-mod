@@ -112,13 +112,13 @@ public Native_Spell_Register(pluginID, argc)
 
 public Native_Spell_GetName(pluginID, argc)
 {
-new idx = get_param(1);
-new maxlen = get_param(3);
+    new idx = get_param(1);
+    new maxlen = get_param(3);
 
-static szSpellName[32];
-ArrayGetString(g_spellName, idx, szSpellName, charsmax(szSpellName));
+    static szSpellName[32];
+    ArrayGetString(g_spellName, idx, szSpellName, charsmax(szSpellName));
 
-set_string(2, szSpellName, maxlen);
+    set_string(2, szSpellName, maxlen);
 }
 
 public Native_Spell_GetCount(pluginID, argc)

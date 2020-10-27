@@ -19,17 +19,17 @@
 #define HUD_COLOR_STATIC HWN_COLOR_PURPLE
 #define HUD_COLOR_NOTIFICATION HWN_COLOR_PURPLE
 
-#define HUD_POS_STATIC_PLAYER_POINTS 0.01, 0.15
+#define HUD_POS_STATIC_PLAYER_POINTS 0.01, 0.175
 #define HUD_POS_STATIC_TEAM_POINTS -1.0, 0.075
 #define HUD_POS_STATIC_PLAYER_SPELL -1.0, 0.85
 #define HUD_POS_NOTIFICATION_INFO -1.0, 0.65
 #define HUD_POS_NOTIFICATION_WOF -1.0, 0.15
 #define HUD_POS_NOTIFICATION_BOSS_SPAWN -1.0, 0.15
 #define HUD_POS_NOTIFICATION_BOSS_ESCAPE -1.0, 0.15
+#define HUD_POS_NOTIFICATION_BOSS_REWARD -1.0, 0.35
 #define HUD_POS_NOTIFICATION_GIFT_SPAWN -1.0, 0.35
 #define HUD_POS_NOTIFICATION_GIFT_DISAPPEARED -1.0, 0.35
 #define HUD_POS_NOTIFICATION_GIFT_PICKED 0.05, 0.35
-#define HUD_POS_NOTIFICATION_BOSS_REWARD -1.0, 0.35
 #define HUD_POS_NOTIFICATION_SPELL_PICKED HUD_POS_NOTIFICATION_INFO
 #define HUD_POS_NOTIFICATION_MOD_MENU HUD_POS_NOTIFICATION_INFO
 #define HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED HUD_POS_NOTIFICATION_INFO
@@ -130,7 +130,7 @@ public Hwn_Bosses_Fw_BossEscape()
 public Hwn_Wof_Fw_Roll_Start()
 {
     SetupNotificationMessage(HUD_POS_NOTIFICATION_WOF);
-    show_dhudmessage(0, "Wheel of Fate roll started...");
+    show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_WOF_ROLL_STARTED");
 }
 
 public Hwn_Wof_Fw_Effect_Start(spellIdx)
@@ -139,7 +139,7 @@ public Hwn_Wof_Fw_Effect_Start(spellIdx)
     Hwn_Wof_Spell_GetName(spellIdx, szName, charsmax(szName));
 
     SetupNotificationMessage(HUD_POS_NOTIFICATION_WOF);
-    show_dhudmessage(0, "Your fate... Is... %s!", szName);
+    show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_WOF_EFFECT_STARTED", szName);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/

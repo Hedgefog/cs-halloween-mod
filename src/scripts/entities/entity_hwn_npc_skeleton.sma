@@ -45,11 +45,11 @@ enum Action
     Action_Spawn
 };
 
-const Float:NPC_Health         = 100.0;
-const Float:NPC_Speed         = 280.0;
-const Float:NPC_Damage         = 12.0;
-const Float:NPC_HitRange     = 48.0;
-const Float:NPC_HitDelay     = 0.35;
+const Float:NPC_Health      = 100.0;
+const Float:NPC_Speed       = 280.0;
+const Float:NPC_Damage      = 12.0;
+const Float:NPC_HitRange    = 48.0;
+const Float:NPC_HitDelay    = 0.35;
 
 new const g_szSndSkeletonIdleList[][] =
 {

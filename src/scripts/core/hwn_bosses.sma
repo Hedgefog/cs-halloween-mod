@@ -203,6 +203,7 @@ public OnBossRemove(ent)
 
     g_bossEnt = -1;
     g_bossIdx = -1;
+
     remove_task(TASKID_REMOVE_BOSS);
 
     CreateBossSpawnTask();
