@@ -36,15 +36,25 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    Hwn_Spell_Register("Overheal", "OnCast");
-    g_hWofSpell = Hwn_Wof_Spell_Register("Overheal", "OnCast");
+    Hwn_Spell_Register("Overheal", "Invoke");
+    g_hWofSpell = Hwn_Wof_Spell_Register("Overheal", "Invoke");
 
     g_maxPlayers = get_maxplayers();
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnCast(id)
+
+public Hwn_Wof_Fw_Effect_Start(spellIdx)
+{
+    if (g_hWofSpell == spellIdx) {
+        Hwn_Wof_Abort();
+    }
+}
+
+/*--------------------------------[ Methods ]--------------------------------*/
+
+public Invoke(id)
 {
     if (!is_user_alive(id)) {
         return;
@@ -73,15 +83,6 @@ public OnCast(id)
 
     DetonateEffect(id, vOrigin);
 }
-
-public Hwn_Wof_Fw_Effect_Start(spellIdx)
-{
-    if (g_hWofSpell == spellIdx) {
-        Hwn_Wof_Abort();
-    }
-}
-
-/*--------------------------------[ Methods ]--------------------------------*/
 
 DetonateEffect(ent, const Float:vOrigin[3])
 {
