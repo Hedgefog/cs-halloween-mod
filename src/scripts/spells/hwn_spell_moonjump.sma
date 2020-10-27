@@ -93,7 +93,10 @@ bool:GetSpellEffect(id)
 
 SetSpellEffect(id, bool:value)
 {
-    SetGravity(id, value);
+    if (is_user_connected(id)) {
+        SetGravity(id, value);
+    }
+
     ArraySetCell(g_playerSpellEffect, id, value);
 }
 

@@ -147,6 +147,23 @@ public Native_Effect_GetCurrentSpell(pluginID, argc)
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
+#if AMXX_VERSION_NUM < 183
+    public client_disconnect(id)
+#else
+    public client_disconnected(id)
+#endif
+{
+    if (g_spellIdx < 0) {
+        return;
+    }
+
+    if (!g_effectStarted) {
+        return;
+    }
+
+    CallRevoke(id);
+}
+
 public OnClCmd_WofRoll(id, level, cid)
 {
     if(!cmd_access(id, level, cid, 1)) {

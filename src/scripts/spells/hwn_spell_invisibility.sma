@@ -156,7 +156,10 @@ SetSpellEffect(id, bool:value, Float:fTime = 0.0)
         RemoveFadeEffect(id);
     }
 
-    SetInvisibility(id, value);
+    if (is_user_connected(id)) {
+        SetInvisibility(id, value);
+    }
+
     ArraySetCell(g_playerSpellEffect, id, value);
 }
 
