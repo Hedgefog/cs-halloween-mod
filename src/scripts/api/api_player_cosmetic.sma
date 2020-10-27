@@ -532,6 +532,10 @@ CreateCosmeticEntity(owner, cosmetic, PCosmetic_Type:type = PCosmetic_Type_Norma
 
 UpdateEquipment(id)
 {
+    if (!g_cosmeticCount) {
+        return;
+    }
+
     new size = PInv_Size(id);
     for (new i = 0; i < size; ++i)
     {
@@ -572,6 +576,10 @@ ClearPlayerTasks(id)
 
 bool:LoadItem(any:item, &cosmetic, &PCosmetic_Type:cosmeticType, &itemTime, &ItemState:itemState)
 {
+    if (!g_cosmeticCount) {
+        return false;
+    }
+
     new szKey[32];
     new szValue[32];
 
@@ -582,6 +590,10 @@ bool:LoadItem(any:item, &cosmetic, &PCosmetic_Type:cosmeticType, &itemTime, &Ite
         nvault_remove(g_hVault, szKey);
 
         if (szValue[0] == '^0') {
+            return false;
+        }
+
+        if (!TrieKeyExists(g_cosmeticIndexes, szValue)) {
             return false;
         }
 
