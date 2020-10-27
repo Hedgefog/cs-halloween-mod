@@ -17,7 +17,7 @@
 #define LOOT_ENTITY_CLASSNAME "hwn_item_pumpkin"
 #define BACKPACK_ENTITY_CLASSNAME "hwn_item_pumpkin_big"
 
-#define TASKID_SUM_WOF_ROLL 1000
+#define TASKID_WOF_ROLL 1000
 
 #define TEAM_COUNT 4
 
@@ -298,13 +298,13 @@ SetWofTask()
         return;
     }
 
-    remove_task(TASKID_SUM_WOF_ROLL);
-    set_task(get_pcvar_float(g_cvarWofDelay), "TaskWofRoll", TASKID_SUM_WOF_ROLL);
+    remove_task(TASKID_WOF_ROLL);
+    set_task(get_pcvar_float(g_cvarWofDelay), "TaskWofRoll", TASKID_WOF_ROLL);
 }
 
 ClearWofTasks()
 {
-    remove_task(TASKID_SUM_WOF_ROLL);
+    remove_task(TASKID_WOF_ROLL);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
