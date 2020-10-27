@@ -27,7 +27,7 @@ new g_sprSpellball;
 new g_sprSpellballTrace;
 
 new g_hSpell;
-
+new g_hWofSpell;
 new g_hCeSpellball;
 
 public plugin_precache()
@@ -45,8 +45,8 @@ public plugin_init()
 
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
 
-    g_hSpell = Hwn_Spell_Register("Fireball", "OnCast");
-    Hwn_Wof_Spell_Register("Fire", "Invoke", "Revoke");
+    g_hSpell = Hwn_Spell_Register("Fireball", "Cast");
+    g_hWofSpell = Hwn_Wof_Spell_Register("Fire", "Invoke");
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 
@@ -54,22 +54,6 @@ public plugin_init()
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
-
-public OnCast(id)
-{
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, g_sprSpellball, EffectColor);
-
-    if (!ent) {
-        return PLUGIN_HANDLED;
-    }
-
-    set_pev(ent, pev_iuser1, g_hSpell);
-    set_pev(ent, pev_movetype, MOVETYPE_FLYMISSILE);
-
-    emit_sound(id, CHAN_BODY, g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-
-    return PLUGIN_CONTINUE;
-}
 
 public OnTouch(ent, target)
 {
@@ -103,7 +87,32 @@ public OnSpellballKilled(ent)
     Detonate(ent);
 }
 
-public Invoke(id)
+public Hwn_Wof_Fw_Effect_Start(spellIdx)
+{
+    if (g_hWofSpell == spellIdx) {
+        Hwn_Wof_Abort();
+    }
+}
+
+/*--------------------------------[ Methods ]--------------------------------*/
+
+public Cast(id)
+{
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, g_sprSpellball, EffectColor);
+
+    if (!ent) {
+        return PLUGIN_HANDLED;
+    }
+
+    set_pev(ent, pev_iuser1, g_hSpell);
+    set_pev(ent, pev_movetype, MOVETYPE_FLYMISSILE);
+
+    emit_sound(id, CHAN_BODY, g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
+    return PLUGIN_CONTINUE;
+}
+
+public Invoke(id, Float:fTime)
 {
     if (!is_user_alive(id)) {
         return;
@@ -112,16 +121,9 @@ public Invoke(id)
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
 
-    burn_player(id);
+    burn_player(id, 0, floatround(fTime));
     DetonateEffect(id, vOrigin);
 }
-
-public Revoke(id)
-{
-    extinguish_player(id);
-}
-
-/*--------------------------------[ Methods ]--------------------------------*/
 
 Detonate(ent)
 {
