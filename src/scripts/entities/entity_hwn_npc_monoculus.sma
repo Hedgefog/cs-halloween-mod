@@ -242,7 +242,7 @@ public OnSpawn(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PURPLE}, 60, 4);
+    UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PRIMARY}, 60, 4);
 
     set_pev(ent, pev_health, NPC_Health);
     set_pev(ent, pev_movetype, MOVETYPE_FLY);
@@ -647,7 +647,7 @@ TeleportEffect(const Float:vOrigin[3])
     write_byte(32); //Speed
     message_end();
 
-    UTIL_Message_Dlight(vOrigin, 48, {HWN_COLOR_PURPLE}, 5, 32);
+    UTIL_Message_Dlight(vOrigin, 48, {HWN_COLOR_PRIMARY}, 5, 32);
 }
 
 ClearTasks(ent) {

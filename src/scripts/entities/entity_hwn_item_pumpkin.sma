@@ -34,7 +34,7 @@ enum _:PumpkinType
 
 new const Float:g_fLootTypeColor[PumpkinType][3] =
 {
-    {HWN_COLOR_PURPLE_F},
+    {HWN_COLOR_PRIMARY_F},
     {HWN_COLOR_YELLOW_F},
     {HWN_COLOR_RED_F}
 };
@@ -97,7 +97,7 @@ public OnSpawn(ent)
     set_pev(ent, pev_renderamt, 4.0);
 
     if (isBig(ent)) {
-        set_pev(ent, pev_rendercolor, Float:{HWN_COLOR_GREEN_DARK_F});
+        set_pev(ent, pev_rendercolor, Float:{HWN_COLOR_SECONDARY_F});
     } else {
         set_pev(ent, pev_rendercolor, g_fLootTypeColor[type]);
     }
@@ -204,7 +204,7 @@ GiveAmmo(id)
 FlashEffect(ent, const Float:vOrigin[3], type)
 {
     if (isBig(ent)) {
-        UTIL_Message_Dlight(vOrigin, FLASH_RADIUS_BIG, {HWN_COLOR_GREEN_DARK}, FLASH_LIFETIME, FLASH_DECAY_RATE_BIG);
+        UTIL_Message_Dlight(vOrigin, FLASH_RADIUS_BIG, {HWN_COLOR_SECONDARY}, FLASH_LIFETIME, FLASH_DECAY_RATE_BIG);
     } else {
         new color[3];
         for (new i = 0; i < 3; ++i) {

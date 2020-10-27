@@ -128,12 +128,12 @@ public OnSpawn(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    UTIL_Message_Dlight(vOrigin, 8, {HWN_COLOR_GREEN_DARK}, 20, 8);
+    UTIL_Message_Dlight(vOrigin, 8, {HWN_COLOR_SECONDARY}, 20, 8);
 
     set_pev(ent, pev_rendermode, kRenderNormal);
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 4.0);
-    set_pev(ent, pev_rendercolor, {HWN_COLOR_GREEN_DARK_F});
+    set_pev(ent, pev_rendercolor, {HWN_COLOR_SECONDARY_F});
     set_pev(ent, pev_health, NPC_Health);
     set_pev(ent, pev_groupinfo, 128);
 
@@ -218,7 +218,7 @@ DisappearEffect(ent)
 
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
-    UTIL_Message_Dlight(vOrigin, 8, {HWN_COLOR_GREEN_DARK}, 10, 32);
+    UTIL_Message_Dlight(vOrigin, 8, {HWN_COLOR_SECONDARY}, 10, 32);
 
     UTIL_Message_BreakModel(vOrigin, Float:{16.0, 16.0, 16.0}, vVelocity, 10, g_mdlGibs, 5, 25, 0);
 

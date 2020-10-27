@@ -24,7 +24,7 @@
 #define CRIT_EFFECT_FLASH_LIFETIME 1
 #define CRIT_EFFECT_FLASH_DECAYRATE 80
 
-#define EFFECT_COLOR_BYTE 7
+#define EFFECT_COLOR_BYTE HWN_COLOR_PRIMARY_PALETTE2
 #define CRIT_STATUS_ICON "dmg_shock"
 
 #define TASKID_SUM_PENALTY 1000
@@ -323,7 +323,7 @@ ResetCrits(id)
 UpdateStatusIcon(id)
 {
         new value = any:(get_pcvar_float(g_cvarCritsEffectStatucIcon) > 0) && GetPlayerCrits(id);
-        UTIL_Message_StatusIcon(id, value, CRIT_STATUS_ICON, {HWN_COLOR_PURPLE});
+        UTIL_Message_StatusIcon(id, value, CRIT_STATUS_ICON, {HWN_COLOR_PRIMARY});
 }
 
 CritEffect(const Float:vOrigin[3], const Float:vAttackerOrigin[3], const Float:vDirection[3])
@@ -362,7 +362,7 @@ SplashEffect(const Float:vStart[3], const Float:vDirection[3], color)
 
 FlashEffect(const Float:vOrigin[3])
 {
-    UTIL_Message_Dlight(vOrigin, CRIT_EFFECT_FLASH_RADIUS, {HWN_COLOR_PURPLE}, CRIT_EFFECT_FLASH_LIFETIME, CRIT_EFFECT_FLASH_DECAYRATE);
+    UTIL_Message_Dlight(vOrigin, CRIT_EFFECT_FLASH_RADIUS, {HWN_COLOR_PRIMARY}, CRIT_EFFECT_FLASH_LIFETIME, CRIT_EFFECT_FLASH_DECAYRATE);
 }
 
 bool:IsTeammate(id, ent)

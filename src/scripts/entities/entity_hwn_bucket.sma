@@ -28,9 +28,9 @@ enum Team
 
 new Float:g_vTeamColor[Team][3] = {
     {0.0, 0.0, 0.0},
-    {128.0, 0.0, 0.0},
-    {0.0, 0.0, 128.0},
-    {128.0, 128.0, 128.0}
+    {HWN_COLOR_RED_F},
+    {HWN_COLOR_BLUE_F},
+    {255.0, 255.0, 255.0}
 };
 
 new Float:g_fNextCollectTime[33];
@@ -106,9 +106,15 @@ public OnSpawn(ent)
     set_pev(ent, pev_takedamage, DAMAGE_AIM);
 
     new team = pev(ent, pev_team);
+
+    new Float:fRenderColor[3];
+    for (new i = 0; i < 3; ++i) {
+        fRenderColor[i] = g_vTeamColor[Team:team][i] * 0.5;
+    }
+
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 0.125);
-    set_pev(ent, pev_rendercolor, g_vTeamColor[Team:team]);
+    set_pev(ent, pev_rendercolor, fRenderColor);
 
     set_pev(ent, pev_health, float(get_pcvar_num(g_cvarBucketHealth)));
 

@@ -168,12 +168,20 @@
 #define HWN_COLOR_PURPLE_F              120.0, 0.0, 200.0
 #define HWN_COLOR_PURPLE                120, 0, 200
 #define HWN_COLOR_RED_F                 255.0, 0.0, 0.0
+#define HWN_COLOR_RED                   255, 0, 0
+#define HWN_COLOR_BLUE_F                 0.0, 0.0, 255.0
+#define HWN_COLOR_BLUE                   0, 0, 255
 #define HWN_COLOR_YELLOW_F              255.0, 200.0, 0.0
 #define HWN_COLOR_YELLOW                255, 200, 0
 #define HWN_COLOR_GREEN_DARK_F          47.0, 95.0, 15.0
 #define HWN_COLOR_GREEN_DARK            47, 95, 15
 #define HWN_COLOR_ORANGE_DIRTY          52, 26, 8
 #define HWN_COLOR_ORANGE_DIRTY_F        52.0, 26.0, 8.0
+#define HWN_COLOR_PRIMARY_F HWN_COLOR_PURPLE_F
+#define HWN_COLOR_PRIMARY HWN_COLOR_PURPLE
+#define HWN_COLOR_PRIMARY_PALETTE2 7
+#define HWN_COLOR_SECONDARY_F HWN_COLOR_GREEN_DARK_F
+#define HWN_COLOR_SECONDARY HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
 #define HWN_VERSION "6.0.0 Beta"

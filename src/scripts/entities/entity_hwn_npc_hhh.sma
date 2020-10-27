@@ -201,12 +201,17 @@ public OnSpawn(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PURPLE}, 60, 4);
+    UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PRIMARY}, 60, 4);
+
+    new Float:fRenderColor[3] = {HWN_COLOR_PRIMARY_F};
+    for (new i = 0; i < 3; ++i) {
+        fRenderColor[i] *= 0.2;
+    }
 
     set_pev(ent, pev_rendermode, kRenderNormal);
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 4.0);
-    set_pev(ent, pev_rendercolor, {24.0, 16.0, 64.0});
+    set_pev(ent, pev_rendercolor, fRenderColor);
 
     set_pev(ent, pev_health, NPC_Health);
 
@@ -233,7 +238,7 @@ public OnRemove(ent)
         new Float:vOrigin[3];
         pev(ent, pev_origin, vOrigin);
 
-        UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PURPLE}, 10, 32);
+        UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PRIMARY}, 10, 32);
     }
 
     AStar_Reset(ent);
@@ -469,7 +474,7 @@ public TaskThink(ent)
             lifeTime = UTIL_DelayToLifeTime(g_fThinkDelay);
         }
 
-        UTIL_Message_Dlight(vOrigin, 4, {HWN_COLOR_PURPLE}, lifeTime, 0);
+        UTIL_Message_Dlight(vOrigin, 4, {HWN_COLOR_PRIMARY}, lifeTime, 0);
 
         engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
         write_byte(TE_ELIGHT);

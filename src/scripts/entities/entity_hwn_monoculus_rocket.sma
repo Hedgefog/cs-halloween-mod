@@ -69,7 +69,7 @@ public OnSpawn(ent)
     set_pev(ent, pev_rendermode, kRenderNormal);
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 4.0);
-    set_pev(ent, pev_rendercolor, {HWN_COLOR_PURPLE_F});
+    set_pev(ent, pev_rendercolor, {HWN_COLOR_PRIMARY_F});
 
     TaskThink(ent);
 }
@@ -196,5 +196,5 @@ ExplosionEffect(ent)
 
     emit_sound(ent, CHAN_BODY, g_szSndExplode, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
-    UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PURPLE}, UTIL_DelayToLifeTime(g_fThinkDelay), 0);
+    UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PRIMARY}, UTIL_DelayToLifeTime(g_fThinkDelay), 0);
 }

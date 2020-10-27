@@ -12,7 +12,7 @@
 
 const Float:EffectTime = 10.0;
 const EffectRadius = 32;
-new const EffectColor[3] = {HWN_COLOR_PURPLE};
+new const EffectColor[3] = {HWN_COLOR_PRIMARY};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_crit.wav";
 

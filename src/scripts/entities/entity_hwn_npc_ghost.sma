@@ -112,7 +112,7 @@ public OnSpawn(ent)
     set_pev(ent, pev_rendermode, kRenderNormal);
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 1.0);
-    set_pev(ent, pev_rendercolor, {HWN_COLOR_PURPLE_F});
+    set_pev(ent, pev_rendercolor, {HWN_COLOR_PRIMARY_F});
 
     set_pev(ent, pev_health, 1);
 
