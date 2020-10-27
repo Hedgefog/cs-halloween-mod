@@ -43,9 +43,8 @@ public plugin_init()
 
     RegisterHam(Ham_Spawn, "player", "on_player_spawn", .Post = 1);
     RegisterHam(Ham_Killed, "player", "on_player_killed", .Post = 0);
-    RegisterHam(Ham_TakeDamage, "player", "on_player_takeDamage", 1);
-
-    RegisterHam(Ham_Touch, "func_water", "on_touch_water", 1);
+    RegisterHam(Ham_TakeDamage, "player", "on_player_takeDamage", .Post = 1);
+    RegisterHam(Ham_Player_PostThink, "player", "on_player_prethink", .Post = 1);
 
     g_maxPlayers = get_maxplayers();
 
@@ -184,9 +183,12 @@ public on_player_takeDamage(victim, inflictor, attacker, Float:damage, damageTyp
     set_pdata_float(victim, m_flVelocityModifier, fPainShock, CBASEPLAYER_LINUX_OFFSET);
 }
 
-public on_touch_water(ent, id)
+public on_player_prethink(id)
 {
-    if(!is_user_connected(id))
+    if (~pev(id, pev_flags) & FL_INWATER)
+        return;
+
+    if (!is_user_alive(id))
         return;
 
     if(is_player_burn(id))
