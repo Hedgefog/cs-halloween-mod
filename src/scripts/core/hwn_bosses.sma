@@ -70,7 +70,7 @@ public plugin_init()
     g_fwBossTeleport = CreateMultiForward("Hwn_Bosses_Fw_BossTeleport", ET_IGNORE, FP_CELL, FP_CELL);
     g_fwWinner = CreateMultiForward("Hwn_Bosses_Fw_Winner", ET_IGNORE, FP_CELL);
 
-    register_concmd("hwn_spawn_boss", "OnClCmd_SpawnBoss", ADMIN_CVAR);
+    register_concmd("hwn_boss_spawn", "OnClCmd_SpawnBoss", ADMIN_CVAR);
 
     CreateBossSpawnTask();
 }
