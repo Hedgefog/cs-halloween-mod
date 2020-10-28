@@ -204,7 +204,7 @@ ProcessPlayerJump(id)
         new Float:fLastJump = ArrayGetCell(g_playerLastJump, id);
         
         if (get_gametime() - fLastJump > JUMP_DELAY) {
-            Jump(id, JUMP_SPEED);
+            Jump(id);
         }
     }
 
@@ -212,7 +212,7 @@ ProcessPlayerJump(id)
     ArraySetCell(g_playerLastJump, id, get_gametime());
 }
 
-Jump(id, Float:fSpeed)
+Jump(id)
 {
     static Float:fMaxSpeed;
     pev(id, pev_maxspeed, fMaxSpeed);
@@ -220,7 +220,7 @@ Jump(id, Float:fSpeed)
     static Float:vVelocity[3];
     GetMoveVector(id, vVelocity);
     xs_vec_mul_scalar(vVelocity, fMaxSpeed, vVelocity);
-    vVelocity[2] = fSpeed;
+    vVelocity[2] = JUMP_SPEED;
     
     set_pev(id, pev_velocity, vVelocity);
 }
