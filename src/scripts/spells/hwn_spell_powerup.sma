@@ -16,12 +16,15 @@
 #define JUMP_DELAY 0.175
 #define JUMP_EFFECT_NOISE 255
 #define JUMP_EFFECT_BRIGHTNESS 255
-#define JUMP_EFFECT_LIFETIME 10
+#define JUMP_EFFECT_LIFETIME 7
 #define SPEED_BOOST 2.0
 
 const Float:EffectTime = 10.0;
 const EffectRadius = 96;
 new const EffectColor[3] = {HWN_COLOR_PRIMARY};
+
+new const g_szSndDetonate[] = "hwn/spells/spell_powerup.wav";
+new const g_szSndJump[] = "hwn/spells/spell_powerup_jump.wav";
 
 new g_sprTrail;
 
@@ -35,6 +38,8 @@ new g_maxPlayers;
 public plugin_precache()
 {
     g_sprTrail = precache_model("sprites/zbeam2.spr");
+    precache_sound(g_szSndDetonate);
+    precache_sound(g_szSndJump);
 }
 
 public plugin_cfg()
@@ -53,8 +58,8 @@ public plugin_init()
 
     register_event("CurWeapon", "OnEventCurWeapon", "b");
 
-    Hwn_Spell_Register("Multi Jump", "Cast");
-    g_hWofSpell = Hwn_Wof_Spell_Register("Death Jump", "Invoke", "Revoke");
+    Hwn_Spell_Register("Power Up", "Cast");
+    g_hWofSpell = Hwn_Wof_Spell_Register("Power Up", "Invoke", "Revoke");
     
     g_maxPlayers = get_maxplayers();
 
@@ -166,6 +171,7 @@ public Invoke(id)
     SetSpellEffect(id, true);
     JumpEffect(id);
     ExecuteHamB(Ham_Item_PreFrame, id);
+    emit_sound(id, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
 public Revoke(id)
@@ -223,6 +229,8 @@ Jump(id)
     vVelocity[2] = JUMP_SPEED;
     
     set_pev(id, pev_velocity, vVelocity);
+
+    emit_sound(id, CHAN_BODY, g_szSndJump, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
 BoostPlayerWeaponSpeed(id)
@@ -259,7 +267,7 @@ JumpEffect(id)
 
     UTIL_Message_BeamDisk(
         vOrigin,
-        float(EffectRadius),
+        float(EffectRadius) * 10 / JUMP_EFFECT_LIFETIME,
         .modelIndex = g_sprTrail,
         .color = EffectColor,
         .brightness = JUMP_EFFECT_BRIGHTNESS,
