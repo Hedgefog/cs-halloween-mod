@@ -16,6 +16,9 @@ stock const m_fClientMapZone = 235;
     stock const m_iTeam = 114;
     stock const m_iJoiningState = 121;
     stock const m_iMenu = 205;
+    stock const m_flNextPrimaryAttack = 46;
+    stock const m_flNextSecondaryAttack = 47;
+    stock const m_pActiveItem = 373;
 #endif
 
 stock UTIL_DelayToLifeTime(Float:fDelay)
@@ -332,6 +335,51 @@ stock UTIL_GetPlayerTeam(id)
     #endif
 }
 
+stock Float:UTIL_GetNextPrimaryAttack(ent)
+{
+    #if defined _reapi_included
+        return get_member(ent, m_flNextPrimaryAttack);
+    #else
+        return get_pdata_float(ent, m_flNextPrimaryAttack, 4);
+    #endif
+}
+
+stock UTIL_SetNextPrimaryAttack(ent, Float:fValue)
+{
+    #if defined _reapi_included
+        set_member(ent, m_flNextPrimaryAttack, fValue);
+    #else
+        set_pdata_float(ent, m_flNextPrimaryAttack, fValue, 4);
+    #endif
+}
+
+stock Float:UTIL_GetNextSecondaryAttack(ent)
+{
+    #if defined _reapi_included
+        return get_member(ent, m_flNextSecondaryAttack);
+    #else
+        return get_pdata_float(ent, m_flNextSecondaryAttack, 4);
+    #endif
+}
+
+stock UTIL_SetNextSecondaryAttack(ent, Float:fValue)
+{
+    #if defined _reapi_included
+        set_member(ent, m_flNextSecondaryAttack, fValue);
+    #else
+        set_pdata_float(ent, m_flNextSecondaryAttack, fValue, 4);
+    #endif
+}
+
+stock UTIL_GetPlayerActiveItem(id)
+{
+    #if defined _reapi_included
+        return get_member(id, m_pActiveItem);
+    #else
+        return get_pdata_cbase(id, m_pActiveItem);
+    #endif
+}
+
 stock Array:UTIL_FindEntityNearby(const Float:vOrigin[3], const Float:fRadius)
 {
     new Array:arr = ArrayCreate();
@@ -519,3 +567,74 @@ stock UTIL_Message_Sound(const Float:vOrigin[3], const szSound[], Float:fVolume 
     write_byte(flags);
     message_end();
 }
+
+stock UTIL_Message_BeamCylinder(
+    const Float:vOrigin[3],
+    Float:fRadius,
+    modelIndex = 0,
+    startFrame = 0,
+    lifeTime = 1,
+    width = 0,
+    noise = 0,
+    const color[3] = {255, 255, 255},
+    brightness = 255,
+    speed = 255
+)
+{
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_BEAMCYLINDER);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2] + fRadius);
+    write_short(modelIndex);
+    write_byte(startFrame);
+    write_byte(0);
+    write_byte(lifeTime);
+    write_byte(width);
+    write_byte(noise);
+    write_byte(color[0]);
+    write_byte(color[1]);
+    write_byte(color[2]);
+    write_byte(brightness);
+    write_byte(speed);
+    message_end();
+}
+
+stock UTIL_Message_BeamDisk(
+    const Float:vOrigin[3],
+    Float:fRadius,
+    modelIndex = 0,
+    startFrame = 0,
+    lifeTime = 1,
+    width = 0,
+    noise = 0,
+    const color[3] = {255, 255, 255},
+    brightness = 255,
+    speed = 255
+)
+{
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_BEAMDISK);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2] + fRadius);
+    write_short(modelIndex);
+    write_byte(startFrame);
+    write_byte(0);
+    write_byte(lifeTime);
+    write_byte(width);
+    write_byte(noise);
+    write_byte(color[0]);
+    write_byte(color[1]);
+    write_byte(color[2]);
+    write_byte(brightness);
+    write_byte(speed);
+    message_end();
+}
+
