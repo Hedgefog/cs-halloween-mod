@@ -16,7 +16,7 @@ new const EffectColor[3] = {HWN_COLOR_PRIMARY};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_crit.wav";
 
-new Array:g_playerSpellEffect;
+new g_playerSpellEffectFlag = 0;
 
 new g_hWofSpell;
 
@@ -37,19 +37,18 @@ public plugin_init()
     g_hWofSpell = Hwn_Wof_Spell_Register("Crits", "Invoke", "Revoke");
 
     g_maxPlayers = get_maxplayers();
-    g_playerSpellEffect = ArrayCreate(1, g_maxPlayers+1);
-
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerSpellEffect, false);
-    }
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_playerSpellEffect);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
+
+#if AMXX_VERSION_NUM < 183
+    public client_disconnect(id)
+#else
+    public client_disconnected(id)
+#endif
+{
+    Revoke(id);
+}
 
 public Hwn_Gamemode_Fw_NewRound()
 {
@@ -92,13 +91,18 @@ public Revoke(id)
 
 bool:GetSpellEffect(id)
 {
-    return ArrayGetCell(g_playerSpellEffect, id);
+    return !!(g_playerSpellEffectFlag & (1 << (id & 31)));
 }
 
 SetSpellEffect(id, bool:value)
 {
+    if (value) {
+        g_playerSpellEffectFlag |= (1 << (id & 31));
+    } else {
+        g_playerSpellEffectFlag &= ~(1 << (id & 31));
+    }
+
     Hwn_Crits_Set(id, value);
-    ArraySetCell(g_playerSpellEffect, id, value);
 }
 
 DetonateEffect(ent)

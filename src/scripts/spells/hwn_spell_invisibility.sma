@@ -25,7 +25,7 @@ new const g_szSndDetonate[] = "hwn/spells/spell_stealth.wav";
 
 new g_sprEffectTrace;
 
-new Array:g_playerSpellEffect;
+new g_playerSpellEffectFlag = 0;
 new Array:g_playerSpellEffectStart;
 new Array:g_playerSpellEffectTime;
 
@@ -53,12 +53,10 @@ public plugin_init()
 
     g_maxPlayers = get_maxplayers();
 
-    g_playerSpellEffect = ArrayCreate(1, g_maxPlayers+1);
     g_playerSpellEffectStart = ArrayCreate(1, g_maxPlayers+1);
     g_playerSpellEffectTime = ArrayCreate(1, g_maxPlayers+1);
 
     for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerSpellEffect, false);
         ArrayPushCell(g_playerSpellEffectStart, 0.0);
         ArrayPushCell(g_playerSpellEffectTime, 0.0);
     }
@@ -66,12 +64,20 @@ public plugin_init()
 
 public plugin_end()
 {
-    ArrayDestroy(g_playerSpellEffect);
     ArrayDestroy(g_playerSpellEffectStart);
     ArrayDestroy(g_playerSpellEffectTime);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
+
+#if AMXX_VERSION_NUM < 183
+    public client_disconnect(id)
+#else
+    public client_disconnected(id)
+#endif
+{
+    Revoke(id);
+}
 
 public OnMessage_ScreenFade(msg, type, id)
 {
@@ -143,7 +149,7 @@ public Revoke(id)
 
 bool:GetSpellEffect(id)
 {
-    return ArrayGetCell(g_playerSpellEffect, id);
+    return !!(g_playerSpellEffectFlag & (1 << (id & 31)));
 }
 
 SetSpellEffect(id, bool:value, Float:fTime = 0.0)
@@ -152,15 +158,15 @@ SetSpellEffect(id, bool:value, Float:fTime = 0.0)
         FadeEffect(id, fTime);
         ArraySetCell(g_playerSpellEffectStart, id, get_gametime());
         ArraySetCell(g_playerSpellEffectTime, id, fTime);
+        g_playerSpellEffectFlag |= (1 << (id & 31));
     } else {
         RemoveFadeEffect(id);
+        g_playerSpellEffectFlag &= ~(1 << (id & 31));
     }
 
     if (is_user_connected(id)) {
         SetInvisibility(id, value);
     }
-
-    ArraySetCell(g_playerSpellEffect, id, value);
 }
 
 SetInvisibility(ent, bool:value)
