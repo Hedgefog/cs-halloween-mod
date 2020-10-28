@@ -21,8 +21,7 @@ new const EffectColor[3] = {0, 0, 255};
 new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
 new const g_szSndDetonate[] = "hwn/spells/spell_teleport.wav";
 
-new g_sprSpellball;
-new g_sprSpellballTrace;
+new g_szSprSpellBall[] = "sprites/xspark1.spr";
 
 new g_hSpell;
 
@@ -30,9 +29,7 @@ new g_hCeSpellball;
 
 public plugin_precache()
 {
-    g_sprSpellball = precache_model("sprites/xspark1.spr");
-    g_sprSpellballTrace = precache_model("sprites/xbeam4.spr");
-
+    precache_model(g_szSprSpellBall);
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
 }
@@ -54,7 +51,7 @@ public plugin_init()
 
 public OnCast(id)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, g_sprSpellball, EffectColor);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor);
 
     if (!ent) {
         return PLUGIN_HANDLED;
@@ -116,19 +113,16 @@ Detonate(ent)
     if (UTIL_FindPlaceToTeleport(owner, vOrigin, vOrigin, hull)) {
         engfunc(EngFunc_SetOrigin, owner, vOrigin);
         UTIL_ScreenFade(owner, {0, 0, 255}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
-        emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-        DetonateEffect(ent, vOrigin);
+        BlinkEffect(owner);
     }
 }
 
-DetonateEffect(ent, const Float:vOrigin[3])
+BlinkEffect(ent)
 {
-    UTIL_HwnSpellDetonateEffect(
-      .modelindex = g_sprSpellballTrace,
-      .vOrigin = vOrigin,
-      .fRadius = EffectRadius,
-      .color = EffectColor
-    );
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
 
     emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    UTIL_Message_Dlight(vOrigin, 32, EffectColor, 5, 64);
+    UTIL_Message_ParticleBurst(vOrigin, 32, 210, 1);
 }

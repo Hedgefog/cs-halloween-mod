@@ -16,6 +16,7 @@
 #define ENTITY_NAME "hwn_item_spellball"
 
 new g_sprSmoke;
+new g_mdlBall;
 
 new Float:g_fThinkDelay;
 
@@ -40,19 +41,23 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
 
     g_sprSmoke = precache_model("sprites/black_smoke1.spr");
+    g_mdlBall = precache_model("models/hwn/effects/spellball.mdl");
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnSpawn(ent)
-{
-    set_pev(ent, pev_rendermode, kRenderTransAdd);
-    set_pev(ent, pev_renderamt, 255.0);
+{        
     set_pev(ent, pev_gravity, 0.25);
     set_pev(ent, pev_health, 1.0);
 
     set_pev(ent, pev_solid, SOLID_TRIGGER);
     set_pev(ent, pev_movetype, MOVETYPE_TOSS);
+
+    set_pev(ent, pev_rendermode, kRenderTransTexture);
+    set_pev(ent, pev_renderfx, kRenderFxGlowShell);
+    set_pev(ent, pev_renderamt, 1.0);
+    set_pev(ent, pev_modelindex, g_mdlBall);
 
     TaskThink(ent);
 }
@@ -80,8 +85,8 @@ public TaskThink(ent)
 
         static Float:vSub[3];
         xs_vec_normalize(vVelocity, vSub);
-        xs_vec_mul_scalar(vSub, 32.0, vSub);
-        vSub[2] += 18.0;
+        xs_vec_mul_scalar(vSub, 8.0, vSub);
+        vSub[2] += 20.0;
 
         xs_vec_sub(vOrigin, vSub, vOrigin);
     }

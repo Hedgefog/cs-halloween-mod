@@ -23,8 +23,7 @@ new const EffectColor[3] = {255, 127, 47};
 new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
 new const g_szSndDetonate[] = "hwn/spells/spell_fireball_impact.wav";
 
-new g_sprSpellball;
-new g_sprSpellballTrace;
+new g_sprEffect;
 
 new g_hSpell;
 new g_hWofSpell;
@@ -32,8 +31,7 @@ new g_hCeSpellball;
 
 public plugin_precache()
 {
-    g_sprSpellball = precache_model("sprites/rjet1.spr");
-    g_sprSpellballTrace = precache_model("sprites/xbeam4.spr");
+    g_sprEffect = precache_model("sprites/plasma.spr");
 
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
@@ -98,7 +96,7 @@ public Hwn_Wof_Fw_Effect_Start(spellIdx)
 
 public Cast(id)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, g_sprSpellball, EffectColor);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor);
 
     if (!ent) {
         return PLUGIN_HANDLED;
@@ -118,11 +116,8 @@ public Invoke(id, Float:fTime)
         return;
     }
 
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
-
     burn_player(id, 0, floatround(fTime));
-    DetonateEffect(id, vOrigin);
+    DetonateEffect(id);
 }
 
 Detonate(ent)
@@ -180,17 +175,14 @@ Detonate(ent)
 
     ArrayDestroy(nearbyEntities);
 
-    DetonateEffect(ent, vOrigin);
+    DetonateEffect(ent);
 }
 
-DetonateEffect(ent, const Float:vOrigin[3])
+DetonateEffect(ent)
 {
-    UTIL_HwnSpellDetonateEffect(
-      .modelindex = g_sprSpellballTrace,
-      .vOrigin = vOrigin,
-      .fRadius = EffectRadius,
-      .color = EffectColor
-    );
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
 
+    UTIL_Message_BeamCylinder(vOrigin, EffectRadius * 3, g_sprEffect, 0, 3, 32, 255, EffectColor, 100, 0);
     emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

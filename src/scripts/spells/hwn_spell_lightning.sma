@@ -23,10 +23,9 @@ new const EffectColor[3] = {32, 128, 192};
 
 new const g_szSndCast[] = "hwn/spells/spell_lightning_cast.wav";
 new const g_szSndDetonate[] = "hwn/spells/spell_lightning_impact.wav";
+new const g_szSprSpellBall[] = "sprites/flare6.spr";
 
-new g_sprSpellball;
-new g_sprSpellballTrace;
-new g_sprLightning;
+new g_sprEffect;
 
 new g_hSpell;
 
@@ -34,9 +33,8 @@ new Float:g_fThinkDelay;
 
 public plugin_precache()
 {
-    g_sprSpellball = precache_model("sprites/flare6.spr");
-    g_sprSpellballTrace = precache_model("sprites/xbeam4.spr");
-    g_sprLightning = precache_model("sprites/lgtning.spr");
+    g_sprEffect = precache_model("sprites/lgtning.spr");
+    precache_model(g_szSprSpellBall);
 
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
@@ -58,7 +56,7 @@ public plugin_init()
 
 public OnCast(id)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, g_sprSpellball, EffectColor, .scale = 0.5);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor);
 
     if (!ent) {
         return PLUGIN_HANDLED;
@@ -123,21 +121,15 @@ CreateKillTask(ent)
 
 Detonate(ent)
 {
+    DetonateEffect(ent);
+}
+
+DetonateEffect(ent)
+{
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    DetonateEffect(ent, vOrigin);
-}
-
-DetonateEffect(ent, const Float:vOrigin[3])
-{
-    UTIL_HwnSpellDetonateEffect(
-      .modelindex = g_sprSpellballTrace,
-      .vOrigin = vOrigin,
-      .fRadius = EffectRadius,
-      .color = EffectColor
-    );
-
+    UTIL_Message_BeamCylinder(vOrigin, EffectRadius * 3, g_sprEffect, 0, 3, 90, 255, EffectColor, 100, 0);
     emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
@@ -166,7 +158,7 @@ DrawLightingBeam(const Float:vOrigin[3])
     engfunc(EngFunc_WriteCoord, vTarget[0]);
     engfunc(EngFunc_WriteCoord, vTarget[1]);
     engfunc(EngFunc_WriteCoord, vTarget[2]);
-    write_short(g_sprLightning);
+    write_short(g_sprEffect);
     write_byte(0);
     write_byte(30);
     write_byte(5);

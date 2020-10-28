@@ -19,7 +19,7 @@ new const EffectColor[3] = {255, 0, 0};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_overheal.wav";
 
-new g_sprEffectTrace;
+new g_sprEffect;
 
 new g_hWofSpell;
 
@@ -27,7 +27,7 @@ new g_maxPlayers;
 
 public plugin_precache()
 {
-    g_sprEffectTrace = precache_model("sprites/xbeam4.spr");
+    g_sprEffect = precache_model("sprites/smoke.spr");
 
     precache_sound(g_szSndDetonate);
 }
@@ -69,29 +69,33 @@ public Invoke(id)
     new userCount = ArraySize(users);
 
     for (new i = 0; i < userCount; ++i) {
-        new id = ArrayGetCell(users, i);
+        new nearbyId = ArrayGetCell(users, i);
 
-        if (team != UTIL_GetPlayerTeam(id)) {
+        if (team != UTIL_GetPlayerTeam(nearbyId)) {
             continue;
         }
 
-        set_pev(id, pev_health, 150.0);
-        UTIL_ScreenFade(id, {255, 0, 0}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
+        set_pev(nearbyId, pev_health, 150.0);
+        UTIL_ScreenFade(nearbyId, {255, 0, 0}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
+        UTIL_Message_BeamEnts(id, nearbyId, g_sprEffect, .lifeTime = 10, .color = EffectColor, .width = 8, .noise = 120);
     }
 
     ArrayDestroy(users);
 
-    DetonateEffect(id, vOrigin);
+    DetonateEffect(id);
 }
 
-DetonateEffect(ent, const Float:vOrigin[3])
+DetonateEffect(ent)
 {
-    UTIL_HwnSpellDetonateEffect(
-      .modelindex = g_sprEffectTrace,
-      .vOrigin = vOrigin,
-      .fRadius = EffectRadius,
-      .color = EffectColor
-    );
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    static Float:vMins[3];
+    pev(ent, pev_mins, vMins);
+
+    vOrigin[2] += vMins[2] + 1.0;
+
+    UTIL_Message_BeamDisk(vOrigin, EffectRadius, g_sprEffect, 0, 10, floatround(EffectRadius/2), 0, EffectColor, 100, 0);
 
     emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

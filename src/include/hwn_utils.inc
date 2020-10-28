@@ -638,3 +638,50 @@ stock UTIL_Message_BeamDisk(
     message_end();
 }
 
+stock UTIL_Message_BeamEnts(
+    ent1,
+    ent2,
+    modelIndex,
+    startFrame = 0,
+    frameRate = 0,
+    lifeTime = 1,
+    width = 0,
+    noise = 0,
+    const color[3] = {255, 255, 255},
+    brightness = 255,
+    speed = 0
+)
+{
+    static Float:vOrigin[3];
+    pev(ent1, pev_origin, vOrigin);
+
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_BEAMENTS);
+    write_short(ent1);
+    write_short(ent2);
+    write_short(modelIndex);
+    write_byte(startFrame);
+    write_byte(frameRate);
+    write_byte(lifeTime);
+    write_byte(width);
+    write_byte(noise);
+    write_byte(color[0]);
+    write_byte(color[1]);
+    write_byte(color[2]);
+    write_byte(brightness);
+    write_byte(speed);
+    message_end();
+}
+
+stock UTIL_Message_ParticleBurst(const Float:vOrigin[3], radius, color, lifeTime = 1)
+{
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_PARTICLEBURST);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    write_short(radius);
+    write_byte(color);
+    write_byte(lifeTime);
+    message_end();
+}

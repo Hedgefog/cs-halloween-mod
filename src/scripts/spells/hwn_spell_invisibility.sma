@@ -15,7 +15,7 @@
 #define AUTHOR "Hedgehog Fog"
 
 const Float:EffectTime = 10.0;
-const Float:EffectRadius = 128.0;
+const Float:EffectRadius = 16.0;
 new const EffectColor[3] = {255, 255, 255};
 
 const Float:FadeEffectMaxTime = 10.0;
@@ -99,31 +99,11 @@ public Hwn_Gamemode_Fw_NewRound()
 
 public Cast(id)
 {
-    new team = UTIL_GetPlayerTeam(id);
+    Invoke(id, EffectTime);
 
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
-
-    new Array:users = UTIL_FindUsersNearby(vOrigin, EffectRadius, .team = team, .maxPlayers = g_maxPlayers);
-    new userCount = ArraySize(users);
-
-    for (new i = 0; i < userCount; ++i) {
-        new nearbyUserID = ArrayGetCell(users, i);
-
-        if (team != UTIL_GetPlayerTeam(nearbyUserID)) {
-            continue;
-        }
-
-        Revoke(nearbyUserID);
-        SetSpellEffect(nearbyUserID, true, EffectTime);
-
-        if (Hwn_Wof_Effect_GetCurrentSpell() != g_hWofSpell) {
-            set_task(EffectTime, "Revoke", nearbyUserID);
-        }
+    if (Hwn_Wof_Effect_GetCurrentSpell() != g_hWofSpell) {
+        set_task(EffectTime, "Revoke", id);
     }
-
-    ArrayDestroy(users);
-    DetonateEffect(id);
 }
 
 public Invoke(id, Float:fTime)
@@ -202,13 +182,12 @@ DetonateEffect(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    UTIL_HwnSpellDetonateEffect(
-      .modelindex = g_sprEffectTrace,
-      .vOrigin = vOrigin,
-      .fRadius = EffectRadius,
-      .color = EffectColor
-    );
+    static Float:vMins[3];
+    pev(ent, pev_mins, vMins);
 
+    vOrigin[2] += vMins[2];
+
+    UTIL_Message_BeamCylinder(vOrigin, EffectRadius * 3, g_sprEffectTrace, 0, 3, 90, 255, EffectColor, 100, 0);
     emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
