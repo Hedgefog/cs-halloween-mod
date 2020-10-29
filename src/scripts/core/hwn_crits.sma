@@ -202,7 +202,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
 
     if (ProcessCrit(attacker, isHit)) {
         if (get_pcvar_num(g_cvarCritsSoundShoot)) {
-            emit_sound(attacker, CHAN_BODY, g_szSndCritShot, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+            emit_sound(attacker, CHAN_STATIC , g_szSndCritShot, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
         }
 
         static Float:vAttackerOrigin[3];

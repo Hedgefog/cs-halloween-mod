@@ -111,5 +111,5 @@ DetonateEffect(ent)
     pev(ent, pev_origin, vOrigin);
 
     UTIL_Message_Dlight(vOrigin, EffectRadius, EffectColor, 5, 80);
-    emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(ent, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

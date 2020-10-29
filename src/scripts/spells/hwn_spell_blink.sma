@@ -59,7 +59,7 @@ public OnCast(id)
 
     set_pev(ent, pev_iuser1, g_hSpell);
 
-    emit_sound(id, CHAN_BODY, g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(id, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     return PLUGIN_CONTINUE;
 }
@@ -122,7 +122,7 @@ BlinkEffect(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(ent, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
     UTIL_Message_Dlight(vOrigin, 32, EffectColor, 5, 64);
     UTIL_Message_ParticleBurst(vOrigin, 32, 210, 1);
 }

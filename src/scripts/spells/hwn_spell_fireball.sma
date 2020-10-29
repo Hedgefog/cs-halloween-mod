@@ -106,7 +106,7 @@ public Cast(id)
     set_pev(ent, pev_iuser1, g_hSpell);
     set_pev(ent, pev_movetype, MOVETYPE_FLYMISSILE);
 
-    emit_sound(id, CHAN_BODY, g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(id, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     return PLUGIN_CONTINUE;
 }

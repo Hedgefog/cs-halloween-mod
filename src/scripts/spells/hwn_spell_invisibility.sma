@@ -188,7 +188,7 @@ DetonateEffect(ent)
     vOrigin[2] += vMins[2];
 
     UTIL_Message_BeamCylinder(vOrigin, EffectRadius * 3, g_sprEffectTrace, 0, 3, 90, 255, EffectColor, 100, 0);
-    emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(ent, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/

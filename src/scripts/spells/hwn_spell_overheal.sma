@@ -97,5 +97,5 @@ DetonateEffect(ent)
 
     UTIL_Message_BeamDisk(vOrigin, EffectRadius, g_sprEffect, 0, 10, floatround(EffectRadius/2), 0, EffectColor, 100, 0);
 
-    emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(ent, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

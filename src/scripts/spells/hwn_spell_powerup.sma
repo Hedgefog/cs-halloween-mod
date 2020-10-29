@@ -175,7 +175,7 @@ public Invoke(id)
     SetSpellEffect(id, true);
     JumpEffect(id);
     ExecuteHamB(Ham_Item_PreFrame, id);
-    emit_sound(id, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(id, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
 public Revoke(id)
@@ -234,7 +234,7 @@ Jump(id)
     
     set_pev(id, pev_velocity, vVelocity);
 
-    emit_sound(id, CHAN_BODY, g_szSndJump, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(id, CHAN_STATIC , g_szSndJump, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
 BoostPlayerWeaponSpeed(id)
