@@ -16,6 +16,7 @@
             Money and Timer HUD in collector gamemode now hidden by default
             Renamed hwn_spawn_boss command to hwn_boss_spawn
             Added Power Up spell
+            Invisibility no longer invokes for nearby teammates
 
         Cvars:
             Added hwn_spellbook_max_spell_count cvar
