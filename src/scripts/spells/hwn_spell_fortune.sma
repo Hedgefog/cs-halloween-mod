@@ -17,8 +17,6 @@ public plugin_init()
     ArrayPushCell(g_hSpells, Hwn_Wof_Spell_Register("Fish", "Invoke"));
     ArrayPushCell(g_hSpells, Hwn_Wof_Spell_Register("Being lucky", "Invoke"));
     ArrayPushCell(g_hSpells, Hwn_Wof_Spell_Register("Wait for the next roll", "Invoke"));
-    ArrayPushCell(g_hSpells, Hwn_Wof_Spell_Register("Wait for the next roll", "Invoke"));
-    ArrayPushCell(g_hSpells, Hwn_Wof_Spell_Register("Dance", "Invoke"));
 }
 
 public plugin_end()
