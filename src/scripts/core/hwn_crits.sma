@@ -30,7 +30,7 @@
 #define TASKID_SUM_PENALTY 1000
 #define TASKID_SUM_HIT_BONUS 2000
 
-new g_flagPlayerCrits;
+new g_playerCritsFlag;
 new Array:g_playerCritChance;
 new Array:g_playerLastShot;
 new Array:g_playerLastHit;
@@ -236,7 +236,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
 
 bool:GetPlayerCrits(id)
 {
-    return !!(g_flagPlayerCrits & (1 << (id & 31)));
+    return !!(g_playerCritsFlag & (1 << (id & 31)));
 }
 
 SetPlayerCrits(id, bool:value)
@@ -248,9 +248,9 @@ SetPlayerCrits(id, bool:value)
     }
 
     if (value) {
-        g_flagPlayerCrits |= (1 << (id & 31));
+        g_playerCritsFlag |= (1 << (id & 31));
     } else {
-        g_flagPlayerCrits &= ~(1 << (id & 31));
+        g_playerCritsFlag &= ~(1 << (id & 31));
     }
 
     if (is_user_connected(id)) {
