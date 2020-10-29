@@ -93,6 +93,10 @@ public OnLightStyle(style, szPattern[])
 
 public OnPlayerSpawn(id)
 {
+    if (!is_user_alive(id)) {
+        return;
+    }
+
     if (Hwn_Gamemode_GetCurrent() != g_hGamemode) {
         return;
     }

@@ -146,6 +146,10 @@ public Hwn_Wof_Fw_Effect_Start(spellIdx)
 
 public OnPlayerSpawn(id)
 {
+    if (!is_user_alive(id)) {
+        return;
+    }
+
     SetupNotificationMessage(HUD_POS_NOTIFICATION_MOD_MENU);
     show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_MENU_HELP");
 }

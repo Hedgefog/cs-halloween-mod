@@ -183,6 +183,10 @@ public OnClCmd_CritsToggle(id, level, cid)
 
 public OnPlayerSpawn(id)
 {
+    if (!is_user_alive(id)) {
+        return;
+    }
+
     ResetCritChance(id);
     UpdateStatusIcon(id);
 }

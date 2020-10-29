@@ -127,6 +127,10 @@ public plugin_end()
 
 public OnPlayerSpawn(id)
 {
+    if (!is_user_alive(id)) {
+        return;
+    }
+
     UpdateEquipment(id);
     SetupPlayerTasks(id);
 }

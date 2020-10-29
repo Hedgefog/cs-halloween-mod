@@ -188,6 +188,10 @@ public OnClCmd_WofAbort(id, level, cid)
 
 public OnPlayerSpawn(id)
 {
+    if (!is_user_alive(id)) {
+        return;
+    }
+
     if (g_spellIdx < 0) {
         return;
     }

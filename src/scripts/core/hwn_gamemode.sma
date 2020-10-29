@@ -364,6 +364,10 @@ public OnMessage_ClCorpse()
 
 public OnPlayerSpawn(id)
 {
+    if (!is_user_alive(id)) {
+        return;
+    }
+
     if (!g_gamemodeCount) {
         return;
     }
