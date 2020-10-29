@@ -17,6 +17,7 @@
             Renamed hwn_spawn_boss command to hwn_boss_spawn
             Added Power Up spell
             Invisibility no longer invokes for nearby teammates
+            Added showing of equipment menu when player respawning the first time
 
         Cvars:
             Added hwn_spellbook_max_spell_count cvar

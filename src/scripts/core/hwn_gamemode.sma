@@ -67,6 +67,7 @@ new Array:g_gamemodeFlags;
 new Array:g_gamemodePluginID;
 new g_gamemodeCount = 0;
 
+new g_playerFirstSpawnFlag = 0;
 new Array:g_playerSpawnPoint;
 new Array:g_eventPoints;
 
@@ -152,6 +153,11 @@ public plugin_end()
     }
 
     ArrayDestroy(g_playerSpawnPoint);
+}
+
+public client_connect(id)
+{
+    g_playerFirstSpawnFlag |= (1 << (id & 31));
 }
 
 #if AMXX_VERSION_NUM < 183
@@ -375,6 +381,11 @@ public OnPlayerSpawn(id)
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if ((flags & Hwn_GamemodeFlag_SpecialEquip)) {
         Hwn_PEquipment_Equip(id);
+
+        if (g_playerFirstSpawnFlag & (1 << (id & 31))) {
+            Hwn_PEquipment_ShowMenu(id);
+            g_playerFirstSpawnFlag &= ~(1 << (id & 31));
+        }
     }
 
     static Float:vOrigin[3];
