@@ -35,6 +35,16 @@ public plugin_init()
     g_maxPlayers = get_maxplayers();
 
     g_fwCast = CreateMultiForward("Hwn_Spell_Fw_Cast", ET_IGNORE, FP_CELL, FP_CELL);
+
+    g_playerSpell = ArrayCreate(1, g_maxPlayers+1);
+    g_playerSpellAmount = ArrayCreate(1, g_maxPlayers+1);
+    g_playerNextCast = ArrayCreate(1, g_maxPlayers+1);
+
+    for (new i = 0; i <= g_maxPlayers; ++i) {
+        ArrayPushCell(g_playerSpell, 0);
+        ArrayPushCell(g_playerSpellAmount, 0);
+        ArrayPushCell(g_playerNextCast, 0);
+    }
 }
 
 public plugin_natives()
@@ -58,11 +68,9 @@ public plugin_end()
         ArrayDestroy(g_spellPluginID);
     }
 
-    if (g_playerSpell) {
-        ArrayDestroy(g_playerSpell);
-        ArrayDestroy(g_playerSpellAmount);
-        ArrayDestroy(g_playerNextCast);
-    }
+    ArrayDestroy(g_playerSpell);
+    ArrayDestroy(g_playerSpellAmount);
+    ArrayDestroy(g_playerNextCast);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -107,24 +115,11 @@ public Native_GetPlayerSpell(pluginID, argc)
 
 public Native_SetPlayerSpell(pluginID, argc)
 {
-    if (!g_playerSpell) {
-        g_playerSpell = ArrayCreate(1, g_maxPlayers+1);
-        g_playerSpellAmount = ArrayCreate(1, g_maxPlayers+1);
-        g_playerNextCast = ArrayCreate(1, g_maxPlayers+1);
-
-        for (new i = 0; i <= g_maxPlayers; ++i) {
-            ArrayPushCell(g_playerSpell, 0);
-            ArrayPushCell(g_playerSpellAmount, 0);
-            ArrayPushCell(g_playerNextCast, 0);
-        }
-    }
-
     new id = get_param(1);
     new spell = get_param(2);
     new amount = get_param(3);
 
-    ArraySetCell(g_playerSpell, id, spell);
-    ArraySetCell(g_playerSpellAmount, id, amount);
+    SetPlayerSpell(id, spell, amount);
 }
 
 public Native_GetCount(pluginID, argc)
@@ -144,6 +139,12 @@ public Native_GetName(pluginID, argc)
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
+
+SetPlayerSpell(id, spell, amount)
+{
+    ArraySetCell(g_playerSpell, id, spell);
+    ArraySetCell(g_playerSpellAmount, id, amount);
+}
 
 Register(const szName[], pluginID, castFuncID)
 {

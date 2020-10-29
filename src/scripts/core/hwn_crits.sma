@@ -165,7 +165,7 @@ public OnClCmd_CritsToggle(id, level, cid)
         return PLUGIN_HANDLED;
     }
 
-    static szArgs[32];
+    static szArgs[4];
     read_args(szArgs, charsmax(szArgs));
 
     new targetId = szArgs[0] == '^0' ? id : str_to_num(szArgs);
