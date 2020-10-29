@@ -1,6 +1,7 @@
 #pragma semicolon 1
 
 #include <amxmodx>
+#include <amxmisc>
 #include <fakemeta>
 #include <hamsandwich>
 
@@ -31,6 +32,8 @@ new g_maxPlayers;
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+
+    register_concmd("hwn_spells_give", "OnClCmd_Give", ADMIN_CVAR);
 
     g_maxPlayers = get_maxplayers();
 
@@ -136,6 +139,32 @@ public Native_GetName(pluginID, argc)
     ArrayGetString(g_spellName, idx, szSpellName, charsmax(szSpellName));
 
     set_string(2, szSpellName, maxlen);
+}
+
+/*--------------------------------[ Hooks ]--------------------------------*/
+
+public OnClCmd_Give(id, level, cid)
+{
+    if(!cmd_access(id, level, cid, 1)) {
+        return PLUGIN_HANDLED;
+    }
+    
+    static szArgs[4];
+    read_args(szArgs, charsmax(szArgs));
+
+    if (szArgs[0] == '^0') {
+        return PLUGIN_HANDLED;
+    }
+
+    new spell = str_to_num(szArgs);
+
+    if (spell < 0 || spell >= g_spellCount) {
+        return PLUGIN_HANDLED;
+    }
+
+    SetPlayerSpell(id, spell, 1);
+
+    return PLUGIN_HANDLED;
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
