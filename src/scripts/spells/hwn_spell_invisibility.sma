@@ -81,7 +81,7 @@ public plugin_end()
 
 public Hwn_Gamemode_Fw_NewRound()
 {
-    for (new i = 0; i <= g_maxPlayers; ++i) {
+    for (new i = 1; i <= g_maxPlayers; ++i) {
         Revoke(i);
     }
 }

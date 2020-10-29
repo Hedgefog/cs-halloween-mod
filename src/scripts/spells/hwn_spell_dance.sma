@@ -82,6 +82,13 @@ public Hwn_Wof_Fw_Effect_Start(spellIdx)
     }
 }
 
+public Hwn_Gamemode_Fw_NewRound()
+{
+    for (new i = 1; i <= g_maxPlayers; ++i) {
+        Revoke(i);
+    }
+}
+
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnPlayerKilled(id)

@@ -65,7 +65,7 @@ public plugin_init()
 
     g_playerLastJump = ArrayCreate(1, g_maxPlayers + 1);
 
-    for (new i = 0; i <= g_maxPlayers; ++i) {
+    for (new i = 1; i <= g_maxPlayers; ++i) {
       ArrayPushCell(g_playerLastJump, 0.0);
     }
 

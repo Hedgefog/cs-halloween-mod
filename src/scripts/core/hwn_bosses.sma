@@ -316,7 +316,7 @@ CreateBossSpawnTask()
 
 ResetPlayerTotalDamage()
 {
-    for (new i = 0; i <= g_maxPlayers; ++i) {
+    for (new i = 1; i <= g_maxPlayers; ++i) {
         ArraySetCell(g_playerTotalDamage, i, 0);
     }
 }
