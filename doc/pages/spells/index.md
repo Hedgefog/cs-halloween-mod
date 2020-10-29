@@ -1,5 +1,5 @@
 # Invisibility
-> Makes caster and teammates in radius invisible for 10 seconds.
+> Makes caster invisible for 10 seconds.
 
 # Overheal
 > Sets health of caster's and teammates in radius to 150 health.
@@ -21,3 +21,14 @@
 
 # Crits
 > Sets crits for caster's for 10 seconds.
+
+# Power Up
+> Increase your speed
+> Increase your fire rate
+> Allows you to do multi-jump
+
+# Dance (Wheel of Fate only)
+> Dance or die
+
+# Fortune (Wheel of Fate only)
+> No effect
