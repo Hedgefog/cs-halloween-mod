@@ -84,7 +84,7 @@ public Native_Equip(pluginID, argc)
 
 public client_connect(id)
 {
-    ArraySetCell(g_playerEquipment, id, random(sizeof(g_weaponIndexes)));
+    ArraySetCell(g_playerEquipment, id, 0);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
