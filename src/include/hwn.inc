@@ -6,18 +6,19 @@
             Added crits spell
             Added a flash effect when picking up a pumpkin
             Added a flash effect while putting pumpkin into bucket
+            Added Power Up spell
             A new gift now appears only after picking up or disappear the old one
             Bosses will now kill the player when intersect while respawning
+            Added showing of equipment menu when player respawning the first time
             Spellballs are now cast from view position
             NPCs can now walk up stairs
             Improved small skeletons spawning
-            Added Hungarian translation (by regener)
             Improved HUD
+            Improved spells effects
             Money and Timer HUD in collector gamemode now hidden by default
-            Renamed hwn_spawn_boss command to hwn_boss_spawn
-            Added Power Up spell
             Invisibility no longer invokes for nearby teammates
-            Added showing of equipment menu when player respawning the first time
+            Renamed hwn_spawn_boss command to hwn_boss_spawn
+            Added Hungarian translation (by regener)
 
         Cvars:
             Added hwn_spellbook_max_spell_count cvar
@@ -41,6 +42,11 @@
             Added hwn_crits_sound_shoot cvar
             Added hwn_hud_collector_hide_money cvar
             Added hwn_hud_collector_hide_time cvar
+            Added hwn_boss_spawn command
+            Added hwn_wof_roll command
+            Added hwn_wof_abort command
+            Added hwn_spells_give command
+            Added hwn_crits_toggle command
 
         Fixes:
             Fixed spellbar display
