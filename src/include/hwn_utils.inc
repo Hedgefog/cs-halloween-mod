@@ -160,17 +160,8 @@ stock bool:UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {tr
         for (new i = 0; i < 3; ++i) {
             if (lockAxis[i]) {
                 vDiffAngles[i] = 0.0;
-                continue;
-            }
-
-            new Float:fDiff = vSubAngles[i] - vAngles[i];
-            new direction = fDiff > 0 ? 1 : -1;
-            new Float:fAbs = fDiff * direction;
-
-            if (fAbs > 180.0) {
-                vDiffAngles[i] = (180.0 - (fAbs - 180.0)) * -direction;
             } else {
-                vDiffAngles[i] = fDiff;
+                vDiffAngles[i] = UTIL_NormalizeAngle(vSubAngles[i] - vAngles[i]);
             }
         }
     }
@@ -187,11 +178,30 @@ stock bool:UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {tr
 
     xs_vec_add(vAngles, vDiffAngles, vAngles);
 
+    for (new i = 0; i < 3; ++i) {
+        vAngles[i] = UTIL_NormalizeAngle(vAngles[i]);
+    }
+
     //Apply new angles
     set_pev(ent, pev_angles, vAngles);
     set_pev(ent, pev_v_angle, vAngles);
 
     return turnResult;
+}
+
+stock Float:UTIL_NormalizeAngle(Float:fAngle)
+{
+    new direction = fAngle > 0 ? 1 : -1;
+    new Float:fAbsAngle = fAngle * direction;
+
+    new Float:fFixedAngle = (fAbsAngle - (360.0 * floatround(fAbsAngle / 360.0, floatround_floor)));
+    if (fFixedAngle > 180.0) {
+      fFixedAngle -= 360.0;
+    }
+
+    fFixedAngle *= direction;
+
+    return fFixedAngle;
 }
 
 stock UTIL_Message_BloodSprite(const Float:vOrigin[3], sprBloodSpray, sprBlood, color, scale)
