@@ -42,7 +42,7 @@ public plugin_init()
     g_maxPlayers = get_maxplayers();
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
+/*--------------------------------[ Forwards ]--------------------------------*/
 
 
 public Hwn_Wof_Fw_Effect_Start(spellIdx)

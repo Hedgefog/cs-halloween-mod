@@ -64,7 +64,7 @@ public plugin_end()
 }
 
 
-/*--------------------------------[ Methods ]--------------------------------*/
+/*--------------------------------[ Forwards ]--------------------------------*/
 
 #if AMXX_VERSION_NUM < 183
     public client_disconnect(id)
@@ -75,16 +75,18 @@ public plugin_end()
     Revoke(id);
 }
 
-public OnPlayerKilled(id)
-{
-    Revoke(id);
-}
-
 public Hwn_Wof_Fw_Effect_Start(spellIdx)
 {
     if (g_hWofSpell == spellIdx) {
         Hwn_Wof_Abort();
     }
+}
+
+/*--------------------------------[ Hooks ]--------------------------------*/
+
+public OnPlayerKilled(id)
+{
+    Revoke(id);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/

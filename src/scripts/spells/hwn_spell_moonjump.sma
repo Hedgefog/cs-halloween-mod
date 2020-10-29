@@ -39,7 +39,7 @@ public plugin_init()
     g_maxPlayers = get_maxplayers();
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
+/*--------------------------------[ Forwards ]--------------------------------*/
 
 #if AMXX_VERSION_NUM < 183
     public client_disconnect(id)

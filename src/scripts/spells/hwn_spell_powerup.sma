@@ -76,7 +76,7 @@ public plugin_end()
     ArrayDestroy(g_playerLastJump);
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
+/*--------------------------------[ Forwards ]--------------------------------*/
 
 #if AMXX_VERSION_NUM < 183
     public client_disconnect(id)
@@ -86,6 +86,8 @@ public plugin_end()
 {
     Revoke(id);
 }
+
+/*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnEventCurWeapon(id)
 {

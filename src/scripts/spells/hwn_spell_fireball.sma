@@ -53,6 +53,15 @@ public plugin_init()
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
 }
 
+/*--------------------------------[ Forwards ]--------------------------------*/
+
+public Hwn_Wof_Fw_Effect_Start(spellIdx)
+{
+    if (g_hWofSpell == spellIdx) {
+        Hwn_Wof_Abort();
+    }
+}
+
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnTouch(ent, target)
@@ -85,13 +94,6 @@ public OnSpellballKilled(ent)
     }
 
     Detonate(ent);
-}
-
-public Hwn_Wof_Fw_Effect_Start(spellIdx)
-{
-    if (g_hWofSpell == spellIdx) {
-        Hwn_Wof_Abort();
-    }
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/

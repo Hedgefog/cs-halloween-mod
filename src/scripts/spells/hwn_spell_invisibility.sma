@@ -68,7 +68,7 @@ public plugin_end()
     ArrayDestroy(g_playerSpellEffectTime);
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
+/*--------------------------------[ Forwards ]--------------------------------*/
 
 #if AMXX_VERSION_NUM < 183
     public client_disconnect(id)
@@ -79,6 +79,15 @@ public plugin_end()
     Revoke(id);
 }
 
+public Hwn_Gamemode_Fw_NewRound()
+{
+    for (new i = 0; i <= g_maxPlayers; ++i) {
+        Revoke(i);
+    }
+}
+
+/*--------------------------------[ Hooks ]--------------------------------*/
+
 public OnMessage_ScreenFade(msg, type, id)
 {
     if (!GetSpellEffect(id)) {
@@ -86,13 +95,6 @@ public OnMessage_ScreenFade(msg, type, id)
     }
 
     set_task(0.25, "TaskFixInvisibleEffect", id);
-}
-
-public Hwn_Gamemode_Fw_NewRound()
-{
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        Revoke(i);
-    }
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
