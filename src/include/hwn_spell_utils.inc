@@ -2,7 +2,15 @@
 
 #define SPELLBALL_ENTITY_CLASSNAME "hwn_item_spellball"
 
-stock UTIL_HwnSpawnPlayerSpellball(owner, const color[3], speed = 512)
+stock UTIL_HwnSpawnPlayerSpellball(
+    owner,
+    const color[3],
+    speed = 512,
+    const szEffectSprite[] = "",
+    Float:fEffectAmt = 255.0,
+    Float:fEffectScale = 1.0,
+    Float:fEffectFrameRate = 0.0
+)
 {
     static Float:vOrigin[3];
     pev(owner, pev_origin, vOrigin);
@@ -35,6 +43,38 @@ stock UTIL_HwnSpawnPlayerSpellball(owner, const color[3], speed = 512)
     set_pev(ent, pev_rendercolor, fColor);
 
     dllfunc(DLLFunc_Spawn, ent);
+
+    if (szEffectSprite[0] != '^0') {
+        UTIL_HwnSpawnSpellballEffect(ent, szEffectSprite, fColor, fEffectAmt, fEffectScale, fEffectFrameRate);
+    }
+
+    return ent;
+}
+
+stock UTIL_HwnSpawnSpellballEffect(spellballEnt, const szSprite[], const Float:fColor[3], Float:fAmt, Float:fScale, Float:fFramerate)
+{
+    static allocClassname;
+    if (!allocClassname) {
+        allocClassname = engfunc(EngFunc_AllocString, "env_sprite");
+    }
+
+    new ent = engfunc(EngFunc_CreateNamedEntity, allocClassname);
+    set_pev(ent, pev_solid, SOLID_NOT);
+    set_pev(ent, pev_movetype, MOVETYPE_NONE);
+    set_pev(ent, pev_rendermode, kRenderTransAdd);
+    engfunc(EngFunc_SetModel, ent, szSprite);
+    set_pev(ent, pev_renderamt, fAmt);
+    set_pev(ent, pev_rendercolor, fColor);
+    set_pev(ent, pev_scale, fScale);
+    set_pev(ent, pev_animtime, get_gametime());
+    set_pev(ent, pev_framerate, fFramerate);
+    set_pev(ent, pev_spawnflags, SF_SPRITE_STARTON);
+
+    dllfunc(DLLFunc_Spawn, ent);
+
+    set_pev(ent, pev_aiment, spellballEnt);
+    set_pev(ent, pev_movetype, MOVETYPE_FOLLOW);
+    set_pev(spellballEnt, pev_euser1, ent);
 
     return ent;
 }

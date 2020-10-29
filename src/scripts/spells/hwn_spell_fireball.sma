@@ -22,6 +22,7 @@ new const EffectColor[3] = {255, 127, 47};
 
 new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
 new const g_szSndDetonate[] = "hwn/spells/spell_fireball_impact.wav";
+new const g_szSprFireball[] = "sprites/xsmoke1.spr";
 
 new g_sprEffect;
 
@@ -32,6 +33,7 @@ new g_hCeSpellball;
 public plugin_precache()
 {
     g_sprEffect = precache_model("sprites/plasma.spr");
+    precache_model(g_szSprFireball);
 
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
@@ -96,8 +98,7 @@ public Hwn_Wof_Fw_Effect_Start(spellIdx)
 
 public Cast(id)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor);
-
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, _, g_szSprFireball, _, 0.5, 10.0);
     if (!ent) {
         return PLUGIN_HANDLED;
     }

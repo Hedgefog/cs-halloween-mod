@@ -56,7 +56,7 @@ public plugin_init()
 
 public OnCast(id)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, _, g_szSprSpellBall, _, 1.0, 10.0);
 
     if (!ent) {
         return PLUGIN_HANDLED;

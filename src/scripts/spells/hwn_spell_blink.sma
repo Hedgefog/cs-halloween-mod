@@ -21,7 +21,7 @@ new const EffectColor[3] = {0, 0, 255};
 new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
 new const g_szSndDetonate[] = "hwn/spells/spell_teleport.wav";
 
-new g_szSprSpellBall[] = "sprites/xspark1.spr";
+new g_szSprSpellBall[] = "sprites/enter1.spr";
 
 new g_hSpell;
 
@@ -51,7 +51,7 @@ public plugin_init()
 
 public OnCast(id)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, _, g_szSprSpellBall, _, 0.75, 10.0);
 
     if (!ent) {
         return PLUGIN_HANDLED;

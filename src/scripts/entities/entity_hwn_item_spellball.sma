@@ -16,7 +16,7 @@
 #define ENTITY_NAME "hwn_item_spellball"
 
 new g_sprSmoke;
-new g_mdlBall;
+new g_sprNull;
 
 new Float:g_fThinkDelay;
 
@@ -41,7 +41,7 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
 
     g_sprSmoke = precache_model("sprites/black_smoke1.spr");
-    g_mdlBall = precache_model("models/hwn/effects/spellball.mdl");
+    g_sprNull = precache_model("sprites/white.spr");
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -54,19 +54,23 @@ public OnSpawn(ent)
     set_pev(ent, pev_solid, SOLID_TRIGGER);
     set_pev(ent, pev_movetype, MOVETYPE_TOSS);
 
-    set_pev(ent, pev_rendermode, kRenderTransTexture);
-    set_pev(ent, pev_renderfx, kRenderFxGlowShell);
-    set_pev(ent, pev_renderamt, 1.0);
-    set_pev(ent, pev_modelindex, g_mdlBall);
+    set_pev(ent, pev_rendermode, kRenderTransTexture);\
+    set_pev(ent, pev_renderamt, 0.0);
+    set_pev(ent, pev_modelindex, g_sprNull);
 
     TaskThink(ent);
 }
 
 public OnRemove(ent)
 {
+    for (new euser = pev_euser1; euser <= pev_euser4; ++euser) {
+        if (pev(ent, euser)) {
+            engfunc(EngFunc_RemoveEntity, pev(ent, euser));
+        }
+    }
+
     remove_task(ent);
 }
-
 /*--------------------------------[ Tasks ]--------------------------------*/
 
 public TaskThink(ent)
@@ -83,9 +87,11 @@ public TaskThink(ent)
         static Float:vVelocity[3];
         pev(ent, pev_velocity, vVelocity);
 
+        new Float:fSpeed = xs_vec_len(vVelocity);
+
         static Float:vSub[3];
         xs_vec_normalize(vVelocity, vSub);
-        xs_vec_mul_scalar(vSub, 8.0, vSub);
+        xs_vec_mul_scalar(vSub, fSpeed / 16.0, vSub); // origin prediction
         vSub[2] += 20.0;
 
         xs_vec_sub(vOrigin, vSub, vOrigin);
