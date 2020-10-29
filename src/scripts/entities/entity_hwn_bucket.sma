@@ -148,7 +148,7 @@ public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
         return HAM_SUPERCEDE;
     }
 
-    return HAM_IGNORED;
+    return HAM_HANDLED;
 }
 
 public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)

@@ -225,7 +225,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
 
     ArraySetCell(g_playerLastShot, attacker, fGameTime);
 
-    return HAM_HANDLED;
+    return HAM_OVERRIDE;
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/

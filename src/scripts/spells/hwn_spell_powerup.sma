@@ -103,11 +103,11 @@ public OnEventCurWeapon(id)
 public OnPlayerPreThink(id)
 {
     if (!is_user_alive(id)) {
-        return;
+        return HAM_IGNORED;
     }
 
     if (!GetSpellEffect(id)) {
-        return;
+        return HAM_IGNORED;
     }
 
     new button = pev(id, pev_button);
@@ -116,19 +116,23 @@ public OnPlayerPreThink(id)
     if ((button & IN_JUMP) && (~oldButton & IN_JUMP)) {
         ProcessPlayerJump(id);
     }
+
+    return HAM_HANDLED;
 }
 
 public OnPlayerItemPreFrame(id)
 {
     if (!is_user_alive(id)) {
-        return;
+        return HAM_IGNORED;
     }
 
     if (!GetSpellEffect(id)) {
-        return;
+        return HAM_IGNORED;
     }
 
     BoostPlayerSpeed(id);
+
+    return HAM_HANDLED;
 }
 
 public OnPlayerTakeDamage(id, inflictor, attacker, Float:fDamage, damageBits)
@@ -141,12 +145,12 @@ public OnPlayerTakeDamage(id, inflictor, attacker, Float:fDamage, damageBits)
         return HAM_IGNORED;
     }
 
-    if (damageBits & DMG_FALL) {
-        SetHamParamFloat(4, 0.0);
-        return HAM_HANDLED;
+    if (~damageBits & DMG_FALL) {
+        return HAM_IGNORED;
     }
 
-    return HAM_IGNORED;
+    SetHamParamFloat(4, 0.0);
+    return HAM_OVERRIDE;
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/

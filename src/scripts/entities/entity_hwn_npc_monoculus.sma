@@ -324,7 +324,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
         NPC_EmitVoice(ent, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
     }
 
-    return HAM_IGNORED;
+    return HAM_HANDLED;
 }
 
 public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
