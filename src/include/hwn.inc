@@ -195,7 +195,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.0.0 Beta"
+#define HWN_VERSION "6.0.0"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
