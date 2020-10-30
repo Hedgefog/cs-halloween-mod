@@ -39,18 +39,18 @@ static g_szMenuTitle[32];
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
+
     g_maxPlayers = get_maxplayers();
-    
+
     g_playerEquipment = ArrayCreate(1, g_maxPlayers+1);
     for (new i = 0; i <= g_maxPlayers; ++i) {
         ArrayPushCell(g_playerEquipment, 0);
     }
-    
+
     g_fwEquipmentChanged = CreateMultiForward("Hwn_PEquipment_Event_Changed", ET_IGNORE, FP_CELL);
-    
+
     format(g_szMenuTitle, charsmax(g_szMenuTitle), "%L", LANG_SERVER, "HWN_EQUIPMENT_MENU_TITLE");
-    
+
     SetupMenu();
 }
 
@@ -84,7 +84,7 @@ public Native_Equip(pluginID, argc)
 
 public client_connect(id)
 {
-    ArraySetCell(g_playerEquipment, id, random(sizeof(g_weaponIndexes)));
+    ArraySetCell(g_playerEquipment, id, 0);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -98,8 +98,8 @@ SetupMenu()
 
     g_weaponMenu = menu_create(g_szMenuTitle, "MenuHandler");
     new callback = menu_makecallback("MenuCallback");
-    
-    for(new i = 0; i < sizeof(g_weaponIndexes); ++i) {
+
+    for (new i = 0; i < sizeof(g_weaponIndexes); ++i) {
         menu_additem(g_weaponMenu, "", "", _, callback);
     }
     menu_setprop(g_weaponMenu, MPROP_EXIT, MEXIT_ALL);
@@ -112,15 +112,15 @@ Equip(id)
     }
 
     strip_user_weapons(id);
-    
+
     give_item(id, WeaponEntityNames[CSW_KNIFE]);
-    
+
     give_item(id, WeaponEntityNames[CSW_GLOCK18]);
     cs_set_user_bpammo(id, CSW_MP5NAVY, WeaponMaxBPAmmo[CSW_MP5NAVY]);
-    
+
     new equipment = ArrayGetCell(g_playerEquipment, id);
     new wpnIdx = g_weaponIndexes[equipment];
-    
+
     if (wpnIdx) {
         give_item(id, WeaponEntityNames[wpnIdx]);
         cs_set_user_bpammo(id, wpnIdx, WeaponMaxBPAmmo[wpnIdx]);
@@ -143,11 +143,11 @@ public MenuHandler(id, menu, item)
         ArraySetCell(g_playerEquipment, id, item);
         ExecuteForward(g_fwEquipmentChanged, g_fwResult, id);
     }
-    
+
     if(is_user_connected(id)) {
         menu_cancel(id);
     }
-        
+
     return PLUGIN_HANDLED;
 }
 
@@ -162,8 +162,8 @@ public MenuCallback(id, menu, item)
     } else {
         format(szText, charsmax(szText), "%s", WeaponNames[weaponIndex]);
     }
-        
+
     menu_item_setname(menu, item, szText);
-    
+
     return ITEM_ENABLED;
 }

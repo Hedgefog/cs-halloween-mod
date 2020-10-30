@@ -7,6 +7,7 @@
 #include <api_player_cosmetic>
 
 #include <hwn>
+#include <hwn_utils>
 
 #define PLUGIN "[Hwn] Gifts"
 #define AUTHOR "Hedgehog Fog"
@@ -29,7 +30,8 @@ public plugin_precache()
 {
     CE_RegisterHook(CEFunction_Spawn, GIFT_TARGET_ENTITY_CLASSNAME, "OnGiftTargetSpawn");
     CE_RegisterHook(CEFunction_Picked, GIFT_ENTITY_CLASSNAME, "OnGiftPicked");
-    
+    CE_RegisterHook(CEFunction_Killed, GIFT_ENTITY_CLASSNAME, "OnGiftKilled");
+
     precache_sound(g_szSndGiftSpawn);
     precache_sound(g_szSndGiftPickup);
 }
@@ -37,10 +39,10 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
-    g_cvarGiftSpawnDelay = register_cvar("hwn_gifts_spawn_delay", "450.0");
-    g_cvarGiftCosmeticMinTime = register_cvar("hwn_gifts_cosmetic_min_time", "300");
-    g_cvarGiftCosmeticMaxTime = register_cvar("hwn_gifts_cosmetic_max_time", "600");
+
+    g_cvarGiftSpawnDelay = register_cvar("hwn_gifts_spawn_delay", "300.0");
+    g_cvarGiftCosmeticMinTime = register_cvar("hwn_gifts_cosmetic_min_time", "450");
+    g_cvarGiftCosmeticMaxTime = register_cvar("hwn_gifts_cosmetic_max_time", "1200");
 }
 
 public plugin_end()
@@ -73,11 +75,11 @@ public OnGiftTargetSpawn(ent)
     if (g_giftTargets == Invalid_Array) {
         g_giftTargets = ArrayCreate(3);
     }
-    
+
     new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     ArrayPushArray(g_giftTargets, vOrigin);
-    
+
     CE_Remove(ent);
 }
 
@@ -86,18 +88,32 @@ public OnGiftPicked(ent, id)
     new count = Hwn_Cosmetic_GetCount();
     new cosmetic = Hwn_Cosmetic_GetCosmetic(random(count));
     new time = random_num(
-        get_pcvar_num(g_cvarGiftCosmeticMinTime), 
+        get_pcvar_num(g_cvarGiftCosmeticMinTime),
         get_pcvar_num(g_cvarGiftCosmeticMaxTime)
     );
-    
+
     new PCosmetic_Type:type = PCosmetic_Type_Normal;
     if (random(100) >= 20 && random(100) <= 40) { //Find random number two times
         type = PCosmetic_Type_Unusual;
     }
-    
+
     PCosmetic_Give(id, cosmetic, type, time);
 
     client_cmd(id, "spk %s", g_szSndGiftPickup);
+}
+
+public OnGiftKilled(ent)
+{
+    new owner = pev(ent, pev_owner);
+    if (!owner) {
+        return;
+    }
+
+    if (!is_user_connected(owner)) {
+        return;
+    }
+
+    SetupSpawnGiftTask(owner);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -126,19 +142,20 @@ SetupSpawnGiftTask(id)
 public TaskSpawnGift(taskID)
 {
     new id = taskID - TASKID_SUM_SPAWN_GIFT;
-    
-    static Float:vOrigin[3];
-    if (g_giftTargets != Invalid_Array) {
-        new targetCount = ArraySize(g_giftTargets);
-        new targetIdx = random(targetCount);
-        
-        ArrayGetArray(g_giftTargets, targetIdx, vOrigin);            
-        SpawnGift(id, vOrigin);
-    } else {
-        if (Hwn_Gamemode_FindEventPoint(vOrigin)) {
+
+    new team = UTIL_GetPlayerTeam(id);
+    if (team == 1 || team == 2) {
+        static Float:vOrigin[3];
+        if (g_giftTargets != Invalid_Array) {
+            new targetCount = ArraySize(g_giftTargets);
+            new targetIdx = random(targetCount);
+
+            ArrayGetArray(g_giftTargets, targetIdx, vOrigin);
             SpawnGift(id, vOrigin);
+        } else {
+            if (Hwn_Gamemode_FindEventPoint(vOrigin)) {
+                SpawnGift(id, vOrigin);
+            }
         }
     }
-    
-    SetupSpawnGiftTask(id);
 }

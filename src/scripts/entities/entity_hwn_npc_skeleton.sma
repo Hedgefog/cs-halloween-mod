@@ -21,12 +21,12 @@
 enum _:Sequence
 {
     Sequence_Idle = 0,
-    
+
     Sequence_Run,
-    
+
     Sequence_Attack,
     Sequence_RunAttack,
-    
+
     Sequence_Spawn1,
     Sequence_Spawn2,
     Sequence_Spawn3,
@@ -45,11 +45,11 @@ enum Action
     Action_Spawn
 };
 
-const Float:NPC_Health         = 100.0;
-const Float:NPC_Speed         = 280.0;
-const Float:NPC_Damage         = 12.0;
-const Float:NPC_HitRange     = 48.0;
-const Float:NPC_HitDelay     = 0.35;
+const Float:NPC_Health      = 100.0;
+const Float:NPC_Speed       = 280.0;
+const Float:NPC_Damage      = 12.0;
+const Float:NPC_HitRange    = 48.0;
+const Float:NPC_HitDelay    = 0.35;
 
 new const g_szSndSkeletonIdleList[][] =
 {
@@ -89,7 +89,7 @@ public plugin_precache()
 
     precache_sound(g_szSndBreak);
 
-    for(new i = 0; i < sizeof(g_szSndSkeletonIdleList); ++i) {
+    for (new i = 0; i < sizeof(g_szSndSkeletonIdleList); ++i) {
         precache_sound(g_szSndSkeletonIdleList[i]);
     }
 
@@ -104,16 +104,16 @@ public plugin_precache()
     );
 
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");    
+    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
 }
 
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
-    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);    
-    
+
+    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
+
     g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
     g_maxPlayers = get_maxplayers();
 }
@@ -126,18 +126,18 @@ public OnSpawn(ent)
 
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
-    
-    UTIL_Message_Dlight(vOrigin, 16, {HWN_COLOR_GREEN_DARK}, 20, 8);
-    
+
+    UTIL_Message_Dlight(vOrigin, 16, {HWN_COLOR_SECONDARY}, 20, 8);
+
     set_pev(ent, pev_rendermode, kRenderNormal);
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 4.0);
-    set_pev(ent, pev_rendercolor, {HWN_COLOR_GREEN_DARK_F});    
-    set_pev(ent, pev_health, NPC_Health);    
+    set_pev(ent, pev_rendercolor, {HWN_COLOR_SECONDARY_F});
+    set_pev(ent, pev_health, NPC_Health);
     set_pev(ent, pev_groupinfo, 128);
 
     engfunc(EngFunc_DropToFloor, ent);
-    
+
     RemoveTasks(ent);
 
     NPC_PlayAction(ent, g_actions[Action_Spawn]);
@@ -147,20 +147,24 @@ public OnSpawn(ent)
 public OnKilled(ent, killer)
 {
     DisappearEffect(ent);
-    
+
     if (killer)
     {
         static Float:vOrigin[3];
         pev(ent, pev_origin, vOrigin);
-        
+
         for (new i = 0; i < 2; ++i) {
             new eggEnt = CE_Create("hwn_skeleton_egg", vOrigin);
-    
+
             if (!eggEnt) {
                 continue;
             }
-            
+
             dllfunc(DLLFunc_Spawn, eggEnt);
+
+            static Float:vVelocity[3];
+            xs_vec_set(vVelocity, random_float(-96.0, 96.0), random_float(-96.0, 96.0), 128.0);
+            set_pev(eggEnt, pev_velocity, vVelocity);
         }
     }
 }
@@ -177,7 +181,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
         return;
     }
-    
+
     static Float:vEnd[3];
     get_tr2(trace, TR_vecEndPos, vEnd);
 
@@ -199,18 +203,18 @@ Action:Attack(ent, target, &Action:action)
     {
         if (get_distance_f(vOrigin, vTarget) >= NPC_HitRange - 4.0) {
             action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
-            
+
             if (pev(ent, pev_sequence) == Sequence_Attack) {
                 set_pev(ent, pev_sequence, Sequence_RunAttack);
             }
         } else {
-            set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});    
+            set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
         }
-        
+
         if (random(100) < 10) {
             NPC_EmitVoice(ent, g_szSndSkeletonIdleList[random(sizeof(g_szSndSkeletonIdleList))]);
-        }            
-        
+        }
+
         NPC_MoveToTarget(ent, vTarget, NPC_Speed);
     }
     else
@@ -233,7 +237,7 @@ DisappearEffect(ent)
 
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
-    UTIL_Message_Dlight(vOrigin, 16, {HWN_COLOR_GREEN_DARK}, 10, 32);
+    UTIL_Message_Dlight(vOrigin, 16, {HWN_COLOR_SECONDARY}, 10, 32);
 
     UTIL_Message_BreakModel(vOrigin, Float:{16.0, 16.0, 16.0}, vVelocity, 10, g_mdlGibs, 5, 25, 0);
     emit_sound(ent, CHAN_BODY, g_szSndBreak, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
@@ -244,18 +248,18 @@ DisappearEffect(ent)
 public TaskHit(taskID)
 {
     new ent = taskID - TASKID_SUM_HIT;
-    
+
     if (pev(ent, pev_deadflag) != DEAD_NO) {
         return;
     }
-    
-    NPC_Hit(ent, NPC_Damage, NPC_HitRange, NPC_HitDelay);    
+
+    NPC_Hit(ent, NPC_Damage, NPC_HitRange, NPC_HitDelay);
 }
 
 public TaskThink(taskID)
 {
     new ent = taskID;
-    
+
     if (pev(ent, pev_deadflag) != DEAD_NO) {
         return;
     }
@@ -263,17 +267,17 @@ public TaskThink(taskID)
     if (!pev_valid(ent)) {
         return;
     }
-    
+
     new Action:action = Action_Idle;
 
     new enemy = pev(ent, pev_enemy);
-    if (NPC_IsValidEnemy(enemy)) {    
+    if (NPC_IsValidEnemy(enemy)) {
         Attack(ent, enemy, action);
     } else {
         NPC_FindEnemy(ent, g_maxPlayers);
     }
-    
+
     NPC_PlayAction(ent, g_actions[action]);
-    
+
     set_task(g_fThinkDelay, "TaskThink", ent);
 }

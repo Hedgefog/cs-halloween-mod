@@ -41,11 +41,11 @@ new g_customLigthStyle[] = "e";
 public plugin_precache()
 {
     g_customSkyIdx = random(sizeof(g_customSkies));
-    
+
     new szPath[32];
     for (new i = 0; i < sizeof(g_szSkySufixes); ++i) {
         format(szPath, charsmax(szPath), "gfx/env/%s%s.tga", g_customSkies[g_customSkyIdx][CustomSky_Name], g_szSkySufixes[i]);
-        precache_generic(szPath);    
+        precache_generic(szPath);
     }
 
     g_cvarChangeLighting = register_cvar("hwn_gamemode_change_lighting", "1");
@@ -54,17 +54,17 @@ public plugin_precache()
         .szName = "Default",
         .flags = Hwn_GamemodeFlag_Default
     );
-    
+
     register_forward(FM_LightStyle, "OnLightStyle", 0);
 }
 
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
+
     g_cvarSpellOnSpawn = register_cvar("hwn_gamemode_spell_on_spawn", "1");
-    g_cvarRandomEvents = register_cvar("hwn_gamemode_random_events", "1");    
-    
+    g_cvarRandomEvents = register_cvar("hwn_gamemode_random_events", "1");
+
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
 
     set_task(3.0, "TaskUpdateLighting", _, _, _, "b");
@@ -80,10 +80,10 @@ public OnLightStyle(style, szPattern[])
     if (style) {
         return;
     }
-    
+
     g_defaultLigthStyle[0] = szPattern[0];
     g_lightStyle[0] = szPattern[0];
-    
+
     if (get_pcvar_num(g_cvarChangeLighting)) {
         if (g_lightStyle[0] > g_customLigthStyle[0]) {
             g_lightStyle[0] = g_customLigthStyle[0];
@@ -93,6 +93,10 @@ public OnLightStyle(style, szPattern[])
 
 public OnPlayerSpawn(id)
 {
+    if (!is_user_alive(id)) {
+        return;
+    }
+
     if (Hwn_Gamemode_GetCurrent() != g_hGamemode) {
         return;
     }
@@ -111,8 +115,8 @@ UpdateSky()
 {
     if (Hwn_Gamemode_GetCurrent() != g_hGamemode) {
         return;
-    }        
-    
+    }
+
     if (get_pcvar_num(g_cvarChangeLighting) > 0) {
         set_cvar_string("sv_skyname", g_customSkies[g_customSkyIdx][CustomSky_Name]);
         set_cvar_num("sv_skycolor_r", g_customSkies[g_customSkyIdx][CustomSky_Color][0]);
@@ -135,7 +139,7 @@ CreateEventTask()
 public TaskEvent()
 {
     CreateEventTask();
-    
+
     if (!get_pcvar_num(g_cvarRandomEvents)) {
         return;
     }
@@ -146,7 +150,7 @@ public TaskEvent()
     }
 
     new ent = 0;
-    
+
     switch (random(3)) {
         case 0: {
             ent = CE_Create("hwn_npc_ghost", vOrigin);
@@ -157,8 +161,8 @@ public TaskEvent()
         case 2: {
             ent = CE_Create("hwn_item_spellbook", vOrigin);
         }
-    } 
-    
+    }
+
     if (ent) {
         dllfunc(DLLFunc_Spawn, ent);
     }

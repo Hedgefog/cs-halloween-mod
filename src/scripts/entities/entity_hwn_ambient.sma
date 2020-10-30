@@ -37,9 +37,9 @@ public plugin_precache()
     CE_Register(
         .szName = ENTITY_NAME
     );
-    
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");    
-    
+
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
+
     for (new i = 0; i < sizeof(g_szSndAimbent); ++i) {
         precache_sound(g_szSndAimbent[i]);
     }
@@ -53,9 +53,9 @@ public OnSpawn(ent)
 public TaskPlayAmbient(taskID)
 {
     new ent = taskID - TASKID_SUM_PLAY_AMBIENT;
-    
+
     emit_sound(ent, CHAN_VOICE, g_szSndAimbent[random(sizeof(g_szSndAimbent))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-    
+
     SetupTask(ent);
 }
 

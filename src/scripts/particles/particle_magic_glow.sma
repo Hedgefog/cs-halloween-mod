@@ -20,7 +20,7 @@ public plugin_precache()
     ArrayPushCell(g_sprites, precache_model("sprites/muz6.spr"));
     ArrayPushCell(g_sprites, precache_model("sprites/muz7.spr"));
     ArrayPushCell(g_sprites, precache_model("sprites/muz8.spr"));
-    
+
     Particles_Register(
         .szName = "magic_glow",
         .szTransformCallback = "Transform",

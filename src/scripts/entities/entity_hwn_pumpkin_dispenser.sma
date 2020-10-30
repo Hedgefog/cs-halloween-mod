@@ -32,7 +32,7 @@ public plugin_precache()
     CE_Register(
         .szName = ENTITY_NAME
     );
-    
+
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_KVD, ENTITY_NAME, "OnKeyValue");
 }
@@ -67,19 +67,19 @@ public OnSpawn(ent)
         g_dispenserDelay = ArrayCreate(1);
         g_dispenserImpulse = ArrayCreate(1);
     }
-    
+
     new index = g_dispenserCount;
-    ArrayPushCell(g_dispensers, ent);    
+    ArrayPushCell(g_dispensers, ent);
     if (g_lastEnt == ent) {
         ArrayPushCell(g_dispenserDelay, g_fLastDelay);
         ArrayPushCell(g_dispenserImpulse, g_fLastImpulse);
     } else {
-        ArrayPushCell(g_dispenserDelay, 0);    
-        ArrayPushCell(g_dispenserImpulse, 0);    
+        ArrayPushCell(g_dispenserDelay, 0);
+        ArrayPushCell(g_dispenserImpulse, 0);
     }
-    
+
     set_pev(ent, pev_iuser1, index);
-    
+
     g_dispenserCount++;
 }
 
@@ -88,14 +88,14 @@ public OnRoundStart()
     if (!g_dispenserCount) {
         return;
     }
-    
+
     for (new i = 0; i < g_dispenserCount; ++i) {
         new ent = ArrayGetCell(g_dispensers, i);
         new idx = pev(ent, pev_iuser1);
         new Float:fDelay = ArrayGetCell(g_dispenserDelay, idx);
-        
+
         remove_task(ent+TASKID_SUM_DROP);
-        
+
         if (fDelay > 0.0) {
             set_task(fDelay, "TaskDrop", ent+TASKID_SUM_DROP, _, _, "b");
         } else {
@@ -125,7 +125,7 @@ public OnKeyValue(ent, const szKey[], const szValue[])
 Drop(ent)
 {
     new idx = pev(ent, pev_iuser1);
-    
+
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
@@ -149,12 +149,12 @@ Drop(ent)
             angle_vector(vVelocity, ANGLEVECTOR_FORWARD, vVelocity);
             xs_vec_mul_scalar(vVelocity, fImpulse, vVelocity);
         }
-        
+
         new Float:fAbsErr = fImpulse * DROP_ACCURACY;
         for (new i = 0; i < 2; ++i) {
             vVelocity[i] += random_float(-fAbsErr, fAbsErr);
         }
-        
+
         set_pev(spawnedEnt, pev_velocity, vVelocity);
     }
 

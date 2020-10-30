@@ -1,4 +1,63 @@
 /*
+    6.0.0
+        Additions and improvements:
+            Added Wheel of Fate (random spell effects)
+            Added crits
+            Added crits spell
+            Added a flash effect when picking up a pumpkin
+            Added a flash effect while putting pumpkin into bucket
+            Added Power Up spell
+            Added Boss PVE
+            Added showing of equipment menu when player respawning the first time
+            Invisibility no longer invokes for nearby teammates
+            Bosses will now kill the player when intersect while respawning
+            Spellballs are now cast from view position
+            Improved small skeletons spawning
+            A new gift now appears only after picking up or disappear the old one
+            NPCs can now walk up stairs
+            Improved spells effects
+            Improved HUD
+            Money and Timer HUD in collector gamemode now hidden by default
+            Added Hungarian translation (by regener)
+            Renamed hwn_spawn_boss command to hwn_boss_spawn
+
+        Cvars:
+            Added hwn_spellbook_max_spell_count cvar
+            Added hwn_bucket_collect_flash cvar
+            Added hwn_pumpkin_pickup_flash cvar
+            Added hwn_wof_effect_time cvar
+            Added hwn_collector_wof cvar
+            Added hwn_collector_wof_delay cvar
+            Added hwn_crits_damage_multiplier cvar
+            Added hwn_crits_random cvar
+            Added hwn_crits_random_chance_initial cvar
+            Added hwn_crits_random_chance_max cvar
+            Added hwn_crits_random_chance_bonus cvar
+            Added hwn_crits_random_chance_penalty cvar
+            Added hwn_crits_effect_trace cvar
+            Added hwn_crits_effect_splash cvar
+            Added hwn_crits_effect_flash cvar
+            Added hwn_crits_effect_status_icon cvar
+            Added hwn_crits_sound_use cvar
+            Added hwn_crits_sound_hit cvar
+            Added hwn_crits_sound_shoot cvar
+            Added hwn_hud_collector_hide_money cvar
+            Added hwn_hud_collector_hide_time cvar
+            Added hwn_boss_pve cvar
+            Added hwn_boss_spawn command
+            Added hwn_wof_roll command
+            Added hwn_wof_abort command
+            Added hwn_spells_give command
+            Added hwn_crits_toggle command
+
+        Fixes:
+            Fixed spellbar display
+            Fixed blink spell teleportation
+            Fixed ru lang
+            Fixed small skeletons getting stuck
+            Fixed small skeleton hitbox
+            Fixed respawn on join
+
     4.0.0
 
         Additions and improvements:
@@ -66,7 +125,7 @@
     2.2.1
         Orpheu no longer required
         Orpheu replaced to RoundControl
-        Changed color for 'hwn4' sky        
+        Changed color for 'hwn4' sky
         Fixed lighting
         Fixed crashes
 
@@ -83,7 +142,7 @@
         Fixed ce temp storage
 
     2.1.1
-        Fixed buyzone in Default Gamemode    
+        Fixed buyzone in Default Gamemode
 
     2.1.0
         Updated Custom Entities API
@@ -98,7 +157,7 @@
         Fixed drop to bucket effect
         Fixed memory leaks
         Fixed ghost attack origin
-    
+
     2.0.1
         Fixed bug when items duplicate after rejoin
         Fixed round termination problem on Linux Servers
@@ -117,16 +176,26 @@
 
 /*--------------------------------[ Constants ]--------------------------------*/
 
-#define HWN_COLOR_PURPLE_F             120.0, 0.0, 200.0
-#define HWN_COLOR_PURPLE            120, 0, 200
-#define HWN_COLOR_RED_F             255.0, 0.0, 0.0
-#define HWN_COLOR_YELLOW_F             255.0, 200.0, 0.0
-#define HWN_COLOR_YELLOW             255, 200, 0
-#define HWN_COLOR_GREEN_DARK_F         47.0, 95.0, 15.0
-#define HWN_COLOR_GREEN_DARK         47, 95, 15
+#define HWN_COLOR_PURPLE_F              120.0, 0.0, 200.0
+#define HWN_COLOR_PURPLE                120, 0, 200
+#define HWN_COLOR_RED_F                 255.0, 0.0, 0.0
+#define HWN_COLOR_RED                   255, 0, 0
+#define HWN_COLOR_BLUE_F                 0.0, 0.0, 255.0
+#define HWN_COLOR_BLUE                   0, 0, 255
+#define HWN_COLOR_YELLOW_F              255.0, 200.0, 0.0
+#define HWN_COLOR_YELLOW                255, 200, 0
+#define HWN_COLOR_GREEN_DARK_F          47.0, 95.0, 15.0
+#define HWN_COLOR_GREEN_DARK            47, 95, 15
+#define HWN_COLOR_ORANGE_DIRTY          52, 26, 8
+#define HWN_COLOR_ORANGE_DIRTY_F        52.0, 26.0, 8.0
+#define HWN_COLOR_PRIMARY_F             HWN_COLOR_PURPLE_F
+#define HWN_COLOR_PRIMARY               HWN_COLOR_PURPLE
+#define HWN_COLOR_PRIMARY_PALETTE2      7
+#define HWN_COLOR_SECONDARY_F           HWN_COLOR_GREEN_DARK_F
+#define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "4.0.0"
+#define HWN_VERSION "6.0.0"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
@@ -167,13 +236,29 @@ forward Hwn_Collector_Fw_PlayerPoints(id);
 
 native Hwn_Spell_Register(const szName[], const szCastCallback[]);
 native Hwn_Spell_GetCount();
-native Hwn_Spell_GetName(spell, output[], maxlen);
+native Hwn_Spell_GetName(spell, szOutput[], maxlen);
 
 native Hwn_Spell_GetPlayerSpell(id, &amount = 0);
 native Hwn_Spell_SetPlayerSpell(id, spell, amount = 0);
 native Hwn_Spell_CastPlayerSpell(id);
 
 forward Hwn_Spell_Fw_Cast(id, spellIdx);
+
+/*--------------------------------[ Wheel of Fate ]--------------------------------*/
+native Hwn_Wof_Spell_Register(const szName[], const szInvokeCallback[], const szRevokeCallback[] = "");
+native Hwn_Wof_Spell_GetCount();
+native Hwn_Wof_Spell_GetName(spell, szOutput[], maxlen);
+native Hwn_Wof_Roll();
+native Hwn_Wof_Abort();
+native Hwn_Wof_Effect_GetCurrentSpell();
+
+forward Hwn_Wof_Fw_Roll_Start();
+forward Hwn_Wof_Fw_Roll_End();
+forward Hwn_Wof_Fw_Effect_Start(spellIdx);
+forward Hwn_Wof_Fw_Effect_End(spellIdx);
+forward Hwn_Wof_Fw_Effect_Invoke(id, spellIdx, g_fEffectTime);
+forward Hwn_Wof_Fw_Effect_Revoke(id, spellIdx);
+forward Hwn_Wof_Fw_Abort();
 
 /*--------------------------------[ Cosmetic ]--------------------------------*/
 
@@ -183,7 +268,9 @@ native Hwn_Cosmetic_Register(PCosmetic:hPCosmetic);
 
 /*--------------------------------[ Bosses ]--------------------------------*/
 
-native Hwn_Bosses_RegisterBoss(const szCEClassName[]);
+native Hwn_Bosses_Register(const szCEClassName[], const szName[] = "Boss");
+native Hwn_Bosses_GetCurrent(&ent = 0);
+native Hwn_Bosses_GetName(bossIdx, szOutput[], maxlen);
 
 forward Hwn_Bosses_Fw_BossSpawn(ent);
 forward Hwn_Bosses_Fw_BossKill(ent);
@@ -201,3 +288,7 @@ forward Hwn_PEquipment_Fw_Changed(id);
 /*--------------------------------[ Menu ]--------------------------------*/
 
 native Hwn_Menu_AddItem(const szTitle[], const szCallback[]);
+
+/*--------------------------------[ Crits ]--------------------------------*/
+native Hwn_Crits_Get(id);
+native Hwn_Crits_Set(id, bool:value);

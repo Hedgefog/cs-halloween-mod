@@ -36,14 +36,16 @@ if (config.build.vanilla) {
         smaConfig: vanillaSmaConfig,
         dest: vanillaDestConfig
     });
-    
+
     buildTaskFactory('watch:vanilla', {
-        smaConfig: vanillaSmaConfig,
+        smaConfig: Object.assign({}, vanillaSmaConfig, {ignoreError: true}),
         dest: vanillaDestConfig,
-        watch: true
+        watch: true,
+        ignoreInitial: true
     });
 
     buildTasks.push('build:vanilla');
+    watchTasks.push('build:vanilla');
     watchTasks.push('watch:vanilla');
 }
 
@@ -61,9 +63,10 @@ if (config.build.reapi) {
     }
 
     buildTaskFactory('watch:reapi', {
-        smaConfig: reapiSmaConfig,
+        smaConfig: Object.assign({}, reapiSmaConfig, {ignoreError: true}),
         dest: reapiDestConfig,
-        watch: true
+        watch: true,
+        ignoreInitial: true
     });
 
     buildTaskFactory('build:reapi', {
@@ -72,10 +75,11 @@ if (config.build.reapi) {
     });
 
     buildTasks.push('build:reapi');
+    watchTasks.push('build:reapi');
     watchTasks.push('watch:reapi');
 }
 
 // final tasks
 
 gulp.task('build', gulp.series(...buildTasks));
-gulp.task('watch', gulp.series(...watchTasks));
+gulp.task('watch', gulp.parallel(...watchTasks));

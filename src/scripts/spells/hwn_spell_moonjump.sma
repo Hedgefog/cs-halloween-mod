@@ -10,15 +10,17 @@
 #define PLUGIN "[Hwn] Moon Jump Spell"
 #define AUTHOR "Hedgehog Fog"
 
-#define GRAVITATIONAL_ACCELERATION_EARTH 9.807
-#define GRAVITATIONAL_ACCELERATION_MOON 1.62
-
 const Float:EffectTime = 25.0;
-
 const EffectRadius = 48;
 new const EffectColor[3] = {32, 32, 32};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_moonjump.wav";
+
+new g_playerSpellEffectFlag = 0;
+
+new g_hWofSpell;
+
+new g_maxPlayers;
 
 public plugin_precache()
 {
@@ -28,58 +30,98 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
-    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
-    RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
-    
-    Hwn_Spell_Register("Moon Jump", "OnCast");
+
+    RegisterHam(Ham_Killed, "player", "Revoke", .Post = 1);
+
+    Hwn_Spell_Register("Moon Jump", "Cast");
+    g_hWofSpell = Hwn_Wof_Spell_Register("Moon Jump", "Invoke", "Revoke");
+
+    g_maxPlayers = get_maxplayers();
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
+/*--------------------------------[ Forwards ]--------------------------------*/
 
-
-public OnPlayerSpawn(id)
+#if AMXX_VERSION_NUM < 183
+    public client_disconnect(id)
+#else
+    public client_disconnected(id)
+#endif
 {
-    SetGravity(id, false);
+    Revoke(id);
 }
 
-public OnPlayerKilled(id)
+public Hwn_Gamemode_Fw_NewRound()
 {
-    SetGravity(id, false);
-}
-
-public OnCast(id)
-{   
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
-
-    SetGravity(id, true);
-
-    UTIL_Message_Dlight(vOrigin, EffectRadius, EffectColor, 5, 80);
-    emit_sound(id, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-
-    if (task_exists(id)) {
-        remove_task(id);
+    for (new i = 1; i <= g_maxPlayers; ++i) {
+        Revoke(i);
     }
-
-    set_task(EffectTime, "TaskRemoveGravity", id);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-SetGravity(id, bool:value = true)
+public Cast(id)
+{
+    Invoke(id);
+
+    if (Hwn_Wof_Effect_GetCurrentSpell() != g_hWofSpell) {
+        set_task(EffectTime, "Revoke", id);
+    }
+}
+
+public Invoke(id)
+{
+    if (!is_user_alive(id)) {
+        return;
+    }
+
+    Revoke(id);
+    SetSpellEffect(id, true);
+    DetonateEffect(id);
+}
+
+public Revoke(id)
+{
+    if (!GetSpellEffect(id)) {
+        return;
+    }
+
+    remove_task(id);
+    SetSpellEffect(id, false);
+}
+
+bool:GetSpellEffect(id)
+{
+    return !!(g_playerSpellEffectFlag & (1 << (id & 31)));
+}
+
+SetSpellEffect(id, bool:value)
+{
+    if (is_user_connected(id)) {
+        SetGravity(id, value);
+    }
+
+    if (value) {
+        g_playerSpellEffectFlag |= (1 << (id & 31));
+    } else {
+        g_playerSpellEffectFlag &= ~(1 << (id & 31));
+    }
+}
+
+SetGravity(id, bool:value)
 {
     if (value) {
-        new Float:fGravityValue = (GRAVITATIONAL_ACCELERATION_MOON / GRAVITATIONAL_ACCELERATION_EARTH);
+        new Float:fGravityValue = (MOON_GRAVIY);
         set_pev(id, pev_gravity, fGravityValue);
     } else {
         set_pev(id, pev_gravity, 1.0);
     }
 }
 
-/*--------------------------------[ Tasks ]--------------------------------*/
-
-public TaskRemoveGravity(id)
+DetonateEffect(ent)
 {
-    SetGravity(id, false);
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    UTIL_Message_Dlight(vOrigin, EffectRadius, EffectColor, 5, 80);
+    emit_sound(ent, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
