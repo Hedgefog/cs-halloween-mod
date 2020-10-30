@@ -1,9 +1,10 @@
 #pragma semicolon 1
 
 #include <amxmodx>
-#include <fun>
 #include <fakemeta>
 #include <hamsandwich>
+#include <cstrike>
+#include <fun>
 #include <xs>
 
 #include <hwn>
@@ -56,7 +57,17 @@ public plugin_init()
     RegisterHam(Ham_TakeDamage, "player", "OnPlayerTakeDamage", .Post = 0);
     RegisterHam(Ham_Killed, "player", "Revoke", .Post = 1);
 
-    register_event("CurWeapon", "OnEventCurWeapon", "b");
+    for (new i = CSW_NONE + 1; i <= CSW_LAST_WEAPON; ++i) {
+        if ((1 << i) & ~(CSW_ALL_GUNS | (1 << CSW_KNIFE))) {
+            continue;
+        }
+
+        static szWeaponName[32];
+        get_weaponname(i, szWeaponName, charsmax(szWeaponName));
+
+        RegisterHam(Ham_Weapon_PrimaryAttack, szWeaponName, "OnWeaponAttack", .Post = 1);
+        RegisterHam(Ham_Weapon_SecondaryAttack, szWeaponName, "OnWeaponAttack", .Post = 1);
+    }
 
     Hwn_Spell_Register("Power Up", "Cast");
     g_hWofSpell = Hwn_Wof_Spell_Register("Power Up", "Invoke", "Revoke");
@@ -89,17 +100,21 @@ public plugin_end()
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnEventCurWeapon(id)
+public OnWeaponAttack(ent)
 {
+    new id = UTIL_GetItemPlayer(ent);
+
     if (!is_user_alive(id)) {
-        return;
+        return HAM_IGNORED;
     }
 
     if (!GetSpellEffect(id)) {
-        return;
+        return HAM_IGNORED;
     }
 
-    BoostPlayerWeaponSpeed(id);
+    BoostWeaponShootSpeed(ent);
+
+    return HAM_HANDLED;
 }
 
 public OnPlayerPreThink(id)
@@ -239,20 +254,15 @@ Jump(id)
     emit_sound(id, CHAN_STATIC , g_szSndJump, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
-BoostPlayerWeaponSpeed(id)
+public BoostWeaponShootSpeed(ent)
 {
-    new weaponEnt = UTIL_GetPlayerActiveItem(id);
-    if (weaponEnt <= 0) {
-        return;
-    }
-
     new Float:fMultiplier =  1.0 / SPEED_BOOST;
 
-    new Float:fNextPrimaryAttack = UTIL_GetNextPrimaryAttack(weaponEnt);
-    new Float:fNextSecondaryAttack = UTIL_GetNextSecondaryAttack(weaponEnt);
+    new Float:fNextPrimaryAttack = UTIL_GetNextPrimaryAttack(ent);
+    new Float:fNextSecondaryAttack = UTIL_GetNextSecondaryAttack(ent);
 
-    UTIL_SetNextPrimaryAttack(weaponEnt, fNextPrimaryAttack * fMultiplier);
-    UTIL_SetNextSecondaryAttack(weaponEnt, fNextSecondaryAttack * fMultiplier);
+    UTIL_SetNextPrimaryAttack(ent, fNextPrimaryAttack * fMultiplier);
+    UTIL_SetNextSecondaryAttack(ent, fNextSecondaryAttack * fMultiplier);
 }
 
 BoostPlayerSpeed(id)
