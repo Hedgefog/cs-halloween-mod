@@ -98,6 +98,13 @@ public plugin_end()
     Revoke(id);
 }
 
+public Hwn_Gamemode_Fw_NewRound()
+{
+    for (new i = 1; i <= g_maxPlayers; ++i) {
+        Revoke(i);
+    }
+}
+
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnWeaponAttack(ent)
