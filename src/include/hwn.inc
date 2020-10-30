@@ -51,7 +51,7 @@
             Added hwn_crits_toggle command
 
         Fixes:
-            Fixed spellbar display
+            Fixed boss healthbar display
             Fixed blink spell teleportation
             Fixed ru lang
             Fixed small skeletons getting stuck
