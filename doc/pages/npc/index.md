@@ -1,4 +1,4 @@
-# NPC 
+# NPC
 
 - [Ghost](./ghost.md)
 - [Headless Horseless Horsemann](./hhh.md)

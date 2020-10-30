@@ -24,6 +24,8 @@ new const g_szSndPickup[] = "hwn/spells/spell_pickup.wav";
 
 new bool:g_isPrecaching;
 
+new g_cvarMaxSpellCount;
+
 new g_ceHandler;
 
 public plugin_init()
@@ -50,24 +52,26 @@ public plugin_precache()
         .vMins = Float:{-16.0, -12.0, 0.0},
         .vMaxs = Float:{16.0, 12.0, 24.0},
         .fLifeTime = 30.0,
-		.fRespawnTime = 30.0,
+        .fRespawnTime = 30.0,
         .preset = CEPreset_Item
     );
-    
+
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "OnPickup");
+
+    g_cvarMaxSpellCount = register_cvar("hwn_spellbook_max_spell_count", "3");
 }
 
 public OnSpawn(ent)
 {
     set_pev(ent, pev_framerate, 1.0);
-    
+
     static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);    
+    pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 32.0;
-    
+
     engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
     write_byte(TE_SPRITETRAIL);
     engfunc(EngFunc_WriteCoord, vOrigin[0]);
@@ -83,16 +87,16 @@ public OnSpawn(ent)
     write_byte(16); //Speed Noise
     write_byte(32); //Speed
     message_end();
-    
-    emit_sound(ent, CHAN_BODY, g_szSndSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);    
-    
+
+    emit_sound(ent, CHAN_BODY, g_szSndSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
     TaskThink(ent);
 }
 
 public OnRemove(ent)
 {
     remove_task(ent);
-    
+
     RemoveParticles(ent);
 }
 
@@ -108,13 +112,15 @@ public OnPickup(ent, id)
     }
 
     new count = Hwn_Spell_GetCount();
-    if (count) {
+    new maxSpellCount = get_pcvar_num(g_cvarMaxSpellCount);
+
+    if (count && maxSpellCount > 0) {
         new idx = random(count);
-        Hwn_Spell_SetPlayerSpell(id, idx, random(2)+1);
+        Hwn_Spell_SetPlayerSpell(id, idx, random(maxSpellCount) + 1);
     }
-    
+
     emit_sound(ent, CHAN_BODY, g_szSndPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-    
+
     return PLUGIN_HANDLED;
 }
 
@@ -127,23 +133,23 @@ public TaskThink(ent)
     if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
         return;
     }
-    
+
     if (pev(ent, pev_deadflag) != DEAD_NO) {
         return;
     }
-    
+
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 32.0;
-    
+
     if (g_particlesEnabled)
     {
-        new particlesEnt = pev(ent, pev_iuser1);    
-    
+        new particlesEnt = pev(ent, pev_iuser1);
+
         if (particlesEnt)
         {
             if (pev_valid(particlesEnt)) {
-                engfunc(EngFunc_SetOrigin, particlesEnt, vOrigin);    
+                engfunc(EngFunc_SetOrigin, particlesEnt, vOrigin);
             } else {
                 set_pev(ent, pev_iuser1, 0);
             }
@@ -154,7 +160,7 @@ public TaskThink(ent)
             set_pev(ent, pev_iuser1, particlesEnt);
         }
     }
-    
+
     set_task(1.0, "TaskThink", ent);
 }
 
@@ -163,7 +169,7 @@ RemoveParticles(ent)
     if (!pev(ent, pev_iuser1)) {
         return;
     }
-    
+
     Particles_Remove(pev(ent, pev_iuser1));
     set_pev(ent, pev_iuser1, 0);
 }

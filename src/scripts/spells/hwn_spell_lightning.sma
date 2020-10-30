@@ -11,7 +11,7 @@
 #include <hwn_utils>
 #include <hwn_spell_utils>
 
-#define PLUGIN "[Hwn] Blink Spell"
+#define PLUGIN "[Hwn] Lightning Spell"
 #define AUTHOR "Hedgehog Fog"
 
 #define TASKID_SUM_DAMAGE 1000
@@ -23,10 +23,9 @@ new const EffectColor[3] = {32, 128, 192};
 
 new const g_szSndCast[] = "hwn/spells/spell_lightning_cast.wav";
 new const g_szSndDetonate[] = "hwn/spells/spell_lightning_impact.wav";
+new const g_szSprSpellBall[] = "sprites/flare6.spr";
 
-new g_sprSpellball;
-new g_sprSpellballTrace;
-new g_sprLightning;
+new g_sprEffect;
 
 new g_hSpell;
 
@@ -34,9 +33,8 @@ new Float:g_fThinkDelay;
 
 public plugin_precache()
 {
-    g_sprSpellball = precache_model("sprites/flare6.spr");
-    g_sprSpellballTrace = precache_model("sprites/xbeam4.spr");
-    g_sprLightning = precache_model("sprites/lgtning.spr");
+    g_sprEffect = precache_model("sprites/lgtning.spr");
+    precache_model(g_szSprSpellBall);
 
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
@@ -45,9 +43,9 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-        
+
     g_hSpell = Hwn_Spell_Register("Lightning", "OnCast");
-    
+
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
     CE_RegisterHook(CEFunction_Remove, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballRemove");
 
@@ -58,7 +56,7 @@ public plugin_init()
 
 public OnCast(id)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, g_sprSpellball, EffectColor, .scale = 0.5);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, _, g_szSprSpellBall, _, 1.0, 10.0);
 
     if (!ent) {
         return PLUGIN_HANDLED;
@@ -81,7 +79,7 @@ public OnCast(id)
     CreateDamageTask(ent);
     CreateKillTask(ent);
 
-    emit_sound(id, CHAN_BODY, g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(id, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     return PLUGIN_CONTINUE;
 }
@@ -96,7 +94,7 @@ public OnSpellballRemove(ent)
 public OnSpellballKilled(ent)
 {
     new spellIdx = pev(ent, pev_iuser1);
-  
+
     if (spellIdx != g_hSpell) {
         return;
     }
@@ -123,21 +121,15 @@ CreateKillTask(ent)
 
 Detonate(ent)
 {
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-    
-    DetonateEffect(ent, vOrigin);
+    DetonateEffect(ent);
 }
 
-DetonateEffect(ent, const Float:vOrigin[3])
+DetonateEffect(ent)
 {
-    UTIL_HwnSpellDetonateEffect(
-      .modelindex = g_sprSpellballTrace,
-      .vOrigin = vOrigin,
-      .fRadius = EffectRadius,
-      .color = EffectColor
-    );
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
 
+    UTIL_Message_BeamCylinder(vOrigin, EffectRadius * 3, g_sprEffect, 0, 3, 90, 255, EffectColor, 100, 0);
     emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
@@ -148,7 +140,7 @@ DrawLightingBeam(const Float:vOrigin[3])
     for (new i = 0; i < 3; ++i) {
         vTarget[i] = random_float(-16.0, 16.0);
     }
-    
+
     // normalize generated vector
     xs_vec_normalize(vTarget, vTarget);
 
@@ -166,7 +158,7 @@ DrawLightingBeam(const Float:vOrigin[3])
     engfunc(EngFunc_WriteCoord, vTarget[0]);
     engfunc(EngFunc_WriteCoord, vTarget[1]);
     engfunc(EngFunc_WriteCoord, vTarget[2]);
-    write_short(g_sprLightning); 
+    write_short(g_sprEffect);
     write_byte(0);
     write_byte(30);
     write_byte(5);
@@ -215,11 +207,11 @@ public TaskDamage(taskID)
         if (pev(target, pev_takedamage) == DAMAGE_NO) {
             continue;
         }
-        
+
         if (target == owner) {
             continue;
         }
-        
+
         if (UTIL_IsPlayer(target)) {
             if (team == UTIL_GetPlayerTeam(target)) {
                 continue;
@@ -266,24 +258,24 @@ public TaskThink(ent)
         if (pev(target, pev_takedamage) == DAMAGE_NO) {
             continue;
         }
-        
+
         if (target == owner) {
             continue;
         }
-        
+
         static Float:vTargetOrigin[3];
         pev(target, pev_origin, vTargetOrigin);
-        
+
         if (UTIL_IsPlayer(target)) {
             if (team == UTIL_GetPlayerTeam(target)) {
                 continue;
             }
-        
+
             static Float:vDirection[3];
             xs_vec_sub(vTargetOrigin, vOrigin, vDirection);
             xs_vec_normalize(vDirection, vDirection);
             xs_vec_mul_scalar(vDirection, -512.0, vDirection);
-            
+
             static Float:vTargetVelocity[3];
             pev(target, pev_velocity, vTargetVelocity);
 

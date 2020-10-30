@@ -21,7 +21,7 @@ public plugin_init()
 }
 
 public plugin_precache()
-{    
+{
     CE_Register(
         .szName = ENTITY_NAME,
         .modelIndex = precache_model("models/hwn/props/vortex.mdl"),
@@ -29,7 +29,7 @@ public plugin_precache()
         .vMaxs = Float:{256.0, 256.0, 32.0},
         .preset = CEPreset_Prop
     );
-    
+
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
 }
 

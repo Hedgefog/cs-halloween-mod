@@ -22,18 +22,18 @@ new const EffectColor[3] = {255, 127, 47};
 
 new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
 new const g_szSndDetonate[] = "hwn/spells/spell_fireball_impact.wav";
+new const g_szSprFireball[] = "sprites/xsmoke1.spr";
 
-new g_sprSpellball;
-new g_sprSpellballTrace;
+new g_sprEffect;
 
 new g_hSpell;
-
+new g_hWofSpell;
 new g_hCeSpellball;
 
 public plugin_precache()
 {
-    g_sprSpellball = precache_model("sprites/rjet1.spr");
-    g_sprSpellballTrace = precache_model("sprites/xbeam4.spr");
+    g_sprEffect = precache_model("sprites/plasma.spr");
+    precache_model(g_szSprFireball);
 
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
@@ -42,33 +42,27 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
+
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
-    
-    g_hSpell = Hwn_Spell_Register("Fireball", "OnCast");
+
+    g_hSpell = Hwn_Spell_Register("Fireball", "Cast");
+    g_hWofSpell = Hwn_Wof_Spell_Register("Fire", "Invoke");
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
-    
+
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
+/*--------------------------------[ Forwards ]--------------------------------*/
 
-public OnCast(id)
+public Hwn_Wof_Fw_Effect_Start(spellIdx)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, g_sprSpellball, EffectColor);
-
-    if (!ent) {
-        return PLUGIN_HANDLED;
+    if (g_hWofSpell == spellIdx) {
+        Hwn_Wof_Abort();
     }
-
-    set_pev(ent, pev_iuser1, g_hSpell);
-    set_pev(ent, pev_movetype, MOVETYPE_FLYMISSILE);
-
-    emit_sound(id, CHAN_BODY, g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-
-    return PLUGIN_CONTINUE;
 }
+
+/*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnTouch(ent, target)
 {
@@ -94,7 +88,7 @@ public OnTouch(ent, target)
 public OnSpellballKilled(ent)
 {
     new spellIdx = pev(ent, pev_iuser1);
-  
+
     if (spellIdx != g_hSpell) {
         return;
     }
@@ -104,14 +98,38 @@ public OnSpellballKilled(ent)
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
+public Cast(id)
+{
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, _, g_szSprFireball, _, 0.5, 10.0);
+    if (!ent) {
+        return PLUGIN_HANDLED;
+    }
+
+    set_pev(ent, pev_iuser1, g_hSpell);
+    set_pev(ent, pev_movetype, MOVETYPE_FLYMISSILE);
+
+    emit_sound(id, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
+    return PLUGIN_CONTINUE;
+}
+
+public Invoke(id, Float:fTime)
+{
+    if (!is_user_alive(id)) {
+        return;
+    }
+
+    burn_player(id, 0, floatround(fTime));
+    DetonateEffect(id);
+}
+
 Detonate(ent)
 {
     new owner = pev(ent, pev_owner);
     new team = UTIL_GetPlayerTeam(owner);
-    
+
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
-    
 
     new Array:nearbyEntities = UTIL_FindEntityNearby(vOrigin, EffectRadius);
     new size = ArraySize(nearbyEntities);
@@ -126,26 +144,26 @@ Detonate(ent)
         if (pev(target, pev_takedamage) == DAMAGE_NO) {
             continue;
         }
-        
+
         if (target == owner) {
             continue;
         }
-        
+
         static Float:vTargetOrigin[3];
         pev(target, pev_origin, vTargetOrigin);
-        
+
         new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EffectRadius, FireballDamage);
-        
+
         if (UTIL_IsPlayer(target)) {
             if (team == UTIL_GetPlayerTeam(target)) {
                 continue;
             }
-        
+
             static Float:vDirection[3];
             xs_vec_sub(vOrigin, vTargetOrigin, vDirection);
             xs_vec_normalize(vDirection, vDirection);
             xs_vec_mul_scalar(vDirection, -512.0, vDirection);
-            
+
             static Float:vTargetVelocity[3];
             pev(target, pev_velocity, vTargetVelocity);
             xs_vec_add(vTargetVelocity, vDirection, vTargetVelocity);
@@ -160,17 +178,14 @@ Detonate(ent)
 
     ArrayDestroy(nearbyEntities);
 
-    DetonateEffect(ent, vOrigin);
+    DetonateEffect(ent);
 }
 
-DetonateEffect(ent, const Float:vOrigin[3])
+DetonateEffect(ent)
 {
-    UTIL_HwnSpellDetonateEffect(
-      .modelindex = g_sprSpellballTrace,
-      .vOrigin = vOrigin,
-      .fRadius = EffectRadius,
-      .color = EffectColor
-    );
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
 
+    UTIL_Message_BeamCylinder(vOrigin, EffectRadius * 3, g_sprEffect, 0, 3, 32, 255, EffectColor, 100, 0);
     emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

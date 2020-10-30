@@ -7,7 +7,7 @@
 #define PLUGIN "[Hwn] Player Cosmetic 2017"
 #define AUTHOR "Hedgehog Fog"
 
-#define UNUSUAL_COLOR Float:{HWN_COLOR_GREEN_DARK_F}
+#define UNUSUAL_COLOR Float:{HWN_COLOR_SECONDARY_F}
 
 public plugin_precache()
 {

@@ -17,6 +17,8 @@
 #define LOOT_ENTITY_CLASSNAME "hwn_item_pumpkin"
 #define BACKPACK_ENTITY_CLASSNAME "hwn_item_pumpkin_big"
 
+#define TASKID_WOF_ROLL 1000
+
 #define TEAM_COUNT 4
 
 new g_fwResult;
@@ -29,11 +31,13 @@ new Array:g_teamPoints;
 new g_hGamemode;
 
 new g_cvarTeamPointsLimit;
+new g_cvarWofEnabled;
+new g_cvarWofDelay;
 
 new g_maxPlayers;
 
 public plugin_precache()
-{    
+{
     CE_RegisterHook(CEFunction_Spawn, BUCKET_ENTITY_CLASSNAME, "OnBucketSpawn");
     CE_RegisterHook(CEFunction_Picked, LOOT_ENTITY_CLASSNAME, "OnLootPickup");
     CE_RegisterHook(CEFunction_Picked, BACKPACK_ENTITY_CLASSNAME, "OnBackpackPickup");
@@ -49,26 +53,28 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    
+
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
     RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "OnTargetKilled", .Post = 1);
-    
+
     register_message(get_user_msgid("StatusIcon"), "OnMessageStatusIcon");
-    
+
     g_maxPlayers = get_maxplayers();
-    
+
     g_playerPoints = ArrayCreate(1, g_maxPlayers+1);
     for (new i = 0; i <= g_maxPlayers; ++i) {
         ArrayPushCell(g_playerPoints, 0);
     }
-    
+
     g_teamPoints = ArrayCreate(1, TEAM_COUNT);
     for (new i = 0; i < TEAM_COUNT; ++i) {
         ArrayPushCell(g_teamPoints, 0);
     }
-    
+
     g_cvarTeamPointsLimit = register_cvar("hwn_collector_teampoints_limit", "50");
-    
+    g_cvarWofEnabled = register_cvar("hwn_collector_wof", "1");
+    g_cvarWofDelay = register_cvar("hwn_collector_wof_delay", "90.0");
+
     g_fwPlayerPointsChanged = CreateMultiForward("Hwn_Collector_Fw_PlayerPoints", ET_IGNORE, FP_CELL);
     g_fwTeamPointsChanged = CreateMultiForward("Hwn_Collector_Fw_TeamPoints", ET_IGNORE, FP_CELL);
 }
@@ -93,7 +99,7 @@ public plugin_end()
 public Native_GetPlayerPoints(pluginID, argc)
 {
     new id = get_param(1);
-    
+
     return GetPlayerPoints(id);
 }
 
@@ -101,14 +107,14 @@ public Native_SetPlayerPoints(pluginID, argc)
 {
     new id = get_param(1);
     new count = get_param(2);
-    
+
     SetPlayerPoints(id, count);
 }
 
 public Native_GetTeamPoints(pluginID, argc)
 {
     new team = get_param(1);
-    
+
     return GetTeamPoints(team);
 }
 
@@ -116,7 +122,7 @@ public Native_SetTeamPoints(pluginID, argc)
 {
     new team = get_param(1);
     new count = get_param(2);
-    
+
     SetTeamPoints(team, count);
 }
 
@@ -145,7 +151,7 @@ public OnBackpackPickup(ent, id)
         return;
     }
 
-    new points = GetPlayerPoints(id) + pev(ent, pev_iuser1);
+    new points = GetPlayerPoints(id) + pev(ent, pev_iuser2);
     SetPlayerPoints(id, points);
 }
 
@@ -157,12 +163,12 @@ public OnMessageStatusIcon(msg, dest, id)
 
     new szIcon[8];
     get_msg_arg_string(2, szIcon, 7);
-    
+
     if (equal(szIcon, "buyzone") && get_msg_arg_int(1)) {
         set_pdata_int(id, m_fClientMapZone, get_pdata_int(id, m_fClientMapZone) & ~(1<<0));
         return PLUGIN_HANDLED;
     }
-    
+
     return PLUGIN_CONTINUE;
 }
 
@@ -173,25 +179,25 @@ public OnPlayerKilled(id)
     }
 
     new points = GetPlayerPoints(id);
-    
+
     if (!points) {
         return;
     }
-    
+
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
-    
+
     new bpEnt = CE_Create(BACKPACK_ENTITY_CLASSNAME, vOrigin);
 
     if (bpEnt) {
-        set_pev(bpEnt, pev_iuser1, points);    
+        set_pev(bpEnt, pev_iuser2, points);
         dllfunc(DLLFunc_Spawn, bpEnt);
-        
+
         static Float:vVelocity[3];
-        UTIL_RandomVector(256.0, 256.0, vVelocity);    
+        UTIL_RandomVector(256.0, 256.0, vVelocity);
         set_pev(bpEnt, pev_velocity, vVelocity);
     }
-    
+
     SetPlayerPoints(id, 0);
 }
 
@@ -204,7 +210,7 @@ public OnTargetKilled(ent)
     if (pev(ent, pev_flags) & FL_MONSTER) { //Monster kill reward
         static Float:vOrigin[3];
         pev(ent, pev_origin, vOrigin);
-        
+
         new pumpkinEnt = CE_Create(LOOT_ENTITY_CLASSNAME, vOrigin);
         if (pumpkinEnt) {
             dllfunc(DLLFunc_Spawn, pumpkinEnt);
@@ -221,6 +227,22 @@ public Hwn_Gamemode_Fw_NewRound()
     }
 
     ResetVariables();
+    ClearWofTasks();
+    SetWofTask();
+}
+
+public Hwn_Wof_Fw_Roll_Start()
+{
+    ClearWofTasks();
+}
+
+public Hwn_Wof_Fw_Effect_End()
+{
+    if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
+        return;
+    }
+
+    SetWofTask();
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -233,7 +255,7 @@ GetPlayerPoints(id)
 SetPlayerPoints(id, count, bool:silent = false)
 {
     ArraySetCell(g_playerPoints, id, count);
-    
+
     if (!silent) {
         ExecuteForward(g_fwPlayerPointsChanged, g_fwResult, id);
     }
@@ -247,12 +269,12 @@ GetTeamPoints(team)
 SetTeamPoints(team, count, bool:silent = false)
 {
     ArraySetCell(g_teamPoints, team, count);
-    
+
     new teamPointsLimit = get_pcvar_num(g_cvarTeamPointsLimit);
     if (count >= teamPointsLimit) {
         Hwn_Gamemode_DispatchWin(team);
     }
-    
+
     if (!silent) {
         ExecuteForward(g_fwTeamPointsChanged, g_fwResult, team);
     }
@@ -263,9 +285,31 @@ ResetVariables()
     for (new team = 0; team < TEAM_COUNT; ++team) {
         SetTeamPoints(team, 0, .silent = true);
     }
-    
+
     for (new id = 1; id <= g_maxPlayers; ++id) {
         SetPlayerPoints(id, 0, .silent = true);
         Hwn_Spell_SetPlayerSpell(id, -1, 0);
     }
+}
+
+SetWofTask()
+{
+    if (get_pcvar_num(g_cvarWofEnabled) <= 0) {
+        return;
+    }
+
+    remove_task(TASKID_WOF_ROLL);
+    set_task(get_pcvar_float(g_cvarWofDelay), "TaskWofRoll", TASKID_WOF_ROLL);
+}
+
+ClearWofTasks()
+{
+    remove_task(TASKID_WOF_ROLL);
+}
+
+/*--------------------------------[ Tasks ]--------------------------------*/
+
+public TaskWofRoll()
+{
+    Hwn_Wof_Roll();
 }

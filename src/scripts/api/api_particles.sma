@@ -29,7 +29,7 @@ new g_ptrParticleClassname;
 public plugin_precache()
 {
     g_ptrTargetClassname = engfunc(EngFunc_AllocString, "info_target");
-    g_ptrParticleClassname = engfunc(EngFunc_AllocString, "env_sprite");    
+    g_ptrParticleClassname = engfunc(EngFunc_AllocString, "env_sprite");
 }
 
 public plugin_init()
@@ -67,8 +67,8 @@ public Native_Register(pluginID, argc)
 
     new szTransformCallback[32];
     get_string(2, szTransformCallback, charsmax(szTransformCallback));
-    new funcID = get_func_id(szTransformCallback, pluginID);    
-    
+    new funcID = get_func_id(szTransformCallback, pluginID);
+
     new Array:sprites = any:get_param(3);
     new Float:fLifeTime = get_param_f(4);
     new Float:fScale = get_param_f(5);
@@ -83,12 +83,12 @@ public Native_Spawn(pluginID, argc)
 {
     new szName[32];
     get_string(1, szName, charsmax(szName));
-    
+
     new Float:vOrigin[3];
     get_array_f(2, vOrigin, sizeof(vOrigin));
-    
+
     new Float:fPlayTime = get_param_f(3);
-    
+
     return SpawnParticles(szName, vOrigin, fPlayTime);
 }
 
@@ -123,9 +123,9 @@ RegisterParticle(const szName[], pluginID, funcID, Array:sprites, Float:fLifeTim
     ArrayPushCell(g_particleRenderAmt, fRenderAmt);
     ArrayPushCell(g_particleSpawnCount, spawnCount);
     ArrayPushCell(g_particleSprites, sprites);
-    
+
     g_particleCount++;
-    
+
     return index;
 }
 
@@ -143,15 +143,15 @@ SpawnParticles(const szName[], const Float:vOrigin[3], Float:fPlayTime)
     new ent = engfunc(EngFunc_CreateNamedEntity, g_ptrTargetClassname);
     engfunc(EngFunc_SetOrigin, ent, vOrigin);
     dllfunc(DLLFunc_Spawn, ent);
-    
+
     set_pev(ent, pev_iuser1, index);
-    
+
     set_task(0.04, "TaskTargetTick", ent+TASKID_SUM_TARGET_TICK, _, _, "b");
-    
+
     if (fPlayTime > 0.0) {
-        set_task(fPlayTime, "TaskRemoveTarget", ent+TASKID_SUM_REMOVE_TARGET);    
+        set_task(fPlayTime, "TaskRemoveTarget", ent+TASKID_SUM_REMOVE_TARGET);
     }
-    
+
     return ent;
 }
 
@@ -184,28 +184,28 @@ public TaskTargetTick(taskID)
 
     static Float:vOrigin[3];
     static Float:vVelocity[3];
-    
+
     for (new i = 0; i < spawnCount; ++i)
     {
         pev(ent, pev_origin, vOrigin);
         xs_vec_set(vVelocity, 0.0, 0.0, 0.0);
-        
+
         if (callfunc_begin_i(funcID, pluginID) == 1) {
             callfunc_push_array(_:vOrigin, 3);
             callfunc_push_array(_:vVelocity, 3);
             callfunc_end();
         }
-        
+
         static modelindex;
         {
             new size = ArraySize(sprites);
             modelindex = ArrayGetCell(sprites, random(size));
         }
-        
+
         static particleEnt;
         {
             particleEnt = engfunc(EngFunc_CreateNamedEntity, g_ptrParticleClassname);
-            engfunc(EngFunc_SetOrigin, particleEnt, vOrigin);    
+            engfunc(EngFunc_SetOrigin, particleEnt, vOrigin);
             set_pev(particleEnt, pev_velocity, vVelocity);
             set_pev(particleEnt, pev_modelindex, modelindex);
             set_pev(particleEnt, pev_solid, SOLID_TRIGGER);
@@ -213,7 +213,7 @@ public TaskTargetTick(taskID)
             set_pev(particleEnt, pev_rendermode, renderMode);
             set_pev(particleEnt, pev_renderamt, fRenderAmt);
             set_pev(particleEnt, pev_scale, fScale);
-            
+
             set_task(fLifeTime, "TaskRemoveParticle", particleEnt+TASKID_SUM_REMOVE_PARTICLE);
         }
     }

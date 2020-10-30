@@ -37,7 +37,7 @@
 | scale      | Scale of spellball sprite.                                                        | Float             | 0.25          |
 
 ---
- 
+
 ### UTIL_HwnSpellDetonateEffect
 > Create detonation effect.
 

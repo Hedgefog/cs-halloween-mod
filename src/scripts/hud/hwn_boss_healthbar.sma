@@ -87,7 +87,7 @@ public Hwn_Bosses_Fw_BossSpawn(ent)
     }
 
     g_bossEnt = ent;
-    
+
     pev(ent, pev_health, g_fBossHealth);
 
     static Float:vMaxs[3];
@@ -118,7 +118,7 @@ ResetBoss()
 SpawnHealthBar()
 {
     if (!g_healthBarEnt) {
-        g_healthBarEnt = engfunc(EngFunc_CreateNamedEntity, g_ptrInfoTargetClassname);    
+        g_healthBarEnt = engfunc(EngFunc_CreateNamedEntity, g_ptrInfoTargetClassname);
         dllfunc(DLLFunc_Spawn, g_healthBarEnt);
     }
 
@@ -147,5 +147,5 @@ public TaskThink()
     static Float:vBarOrigin[3];
     pev(g_bossEnt, pev_origin, vBarOrigin);
     vBarOrigin[2] += g_fHealthBarOffsetZ;
-    set_pev(g_healthBarEnt, pev_origin, vBarOrigin);
+    engfunc(EngFunc_SetOrigin, g_healthBarEnt, vBarOrigin);
 }

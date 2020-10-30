@@ -1,6 +1,6 @@
 {
   "name": "halloween-mod",
-  "version": "4.0.0",
+  "version": "6.0.0",
   "description": "Halloween Mod",
   "scripts": {
     "gulp": "gulp",
@@ -15,7 +15,7 @@
     "gulp": "^4.0.2",
     "gulp-file": "^0.4.0",
     "gulp-flatten": "^0.4.0",
-    "gulp-sma": "^1.0.6",
+    "gulp-sma": "^1.0.7",
     "gulp-watch": "^5.0.1",
     "gulp-zip": "^5.0.2",
     "merge2": "^1.2.0"

@@ -29,7 +29,7 @@ public plugin_init()
 }
 
 public plugin_precache()
-{    
+{
     CE_Register(
         .szName = ENTITY_NAME,
         .modelIndex = precache_model("models/hwn/props/pumpkin_explode_v2.mdl"),
@@ -38,12 +38,12 @@ public plugin_precache()
         .fRespawnTime = 30.0,
         .preset = CEPreset_Prop
     );
-    
+
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
-    
+
     precache_sound(g_szSndExplode);
-    
+
     g_sprExlplosion = precache_model("sprites/dexplo.spr");
     g_mdlGibs = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
 }
@@ -57,7 +57,7 @@ public OnSpawn(ent)
 }
 
 public OnKilled(ent, attacker)
-{    
+{
     ExplosionEffect(ent);
     PumpkinRadiusDamage(ent, attacker);
 }
@@ -80,10 +80,10 @@ PumpkinRadiusDamage(ent, owner)
         if (ent == target) {
             continue;
         }
-    
+
         if (!pev_valid(target)) {
             continue;
-        }        
+        }
 
         if (pev(target, pev_deadflag) != DEAD_NO) {
             continue;
@@ -96,12 +96,12 @@ PumpkinRadiusDamage(ent, owner)
         if (target == owner) {
             owner = 0;
         }
-        
+
         static Float:vTargetOrigin[3];
         pev(target, pev_origin, vTargetOrigin);
-        
+
         new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE);
-        
+
         if (UTIL_IsPlayer(target)) {
             UTIL_CS_DamagePlayer(target, fDamage, DMG_ALWAYSGIB, owner, ent);
         } else {
@@ -115,7 +115,7 @@ ExplosionEffect(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 16.0;
-    
+
     engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
     write_byte(TE_EXPLOSION);
     engfunc(EngFunc_WriteCoord, vOrigin[0]);
@@ -126,11 +126,11 @@ ExplosionEffect(ent)
     write_byte(10);
     write_byte(0);
     message_end();
-    
+
     static Float:vVelocity[3];
     UTIL_RandomVector(-128.0, 128.0, vVelocity);
-    
+
     UTIL_Message_BreakModel(vOrigin, Float:{16.0, 16.0, 16.0}, vVelocity, 32, g_mdlGibs, 4, 25, 0);
-    
+
     emit_sound(ent, CHAN_BODY, g_szSndExplode, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

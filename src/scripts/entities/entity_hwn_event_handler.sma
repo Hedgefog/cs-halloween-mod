@@ -136,3 +136,38 @@ public Hwn_Spell_Fw_Cast(id)
 {
     Dispatch("spell_cast", id);
 }
+
+public Hwn_Wof_Fw_Roll_Start()
+{
+    Dispatch("wof_roll_start");
+}
+
+public Hwn_Wof_Fw_Roll_End()
+{
+    Dispatch("wof_roll_end");
+}
+
+public Hwn_Wof_Fw_Effect_Start()
+{
+    Dispatch("wof_effect_start");
+}
+
+public Hwn_Wof_Fw_Effect_End()
+{
+    Dispatch("wof_effect_end");
+}
+
+public Hwn_Wof_Fw_Effect_Invoke(id)
+{
+    Dispatch("wof_effect_invoke", id);
+}
+
+public Hwn_Wof_Fw_Effect_Revoke(id)
+{
+    Dispatch("wof_effect_revoke", id);
+}
+
+public Hwn_Wof_Fw_Abort()
+{
+    Dispatch("wof_abort");
+}

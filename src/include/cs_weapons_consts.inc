@@ -10,8 +10,8 @@ stock const WeaponMaxBPAmmo[] =
 {
     -1, 52, -1, 90, 1, 32, 1, 100,
     90, 1, 120, 100, 100, 90,
-    90, 90, 100, 120, 30, 120, 200, 
-    32, 90, 120, 90, 2, 35, 90, 
+    90, 90, 100, 120, 30, 120, 200,
+    32, 90, 120, 90, 2, 35, 90,
     90, -1, 100
 };
 
@@ -26,10 +26,10 @@ stock const WeaponEntityNames[][] =
 
 stock const WeaponNames[][] =
 {
-    "None", "P228 Compact", "Tactical Shield", "SSG-08", "Hegrenade", "XM1014 M4", "C4", "MAC-10", 
-    "AUG", "Smokegreande", "Dual Elites", "FiveseveN", "UMP 45", "SG-550", 
+    "None", "P228 Compact", "Tactical Shield", "SSG-08", "Hegrenade", "XM1014 M4", "C4", "MAC-10",
+    "AUG", "Smokegreande", "Dual Elites", "FiveseveN", "UMP 45", "SG-550",
     "Galil", "Famas", "USP", "Glock 18C", "AWP", "MP5 Navy", "M249",
-    "M3 Super 90", "M4A1", "TMP", "G3SG1", "Flashbang", "Desert Eagle", "SG-552", 
+    "M3 Super 90", "M4A1", "TMP", "G3SG1", "Flashbang", "Desert Eagle", "SG-552",
     "AK-47", "Knife", "P90"
 };
 
@@ -45,16 +45,16 @@ stock const WeaponModels[][] =
 stock const WeaponAmmo[] =
 {
     -1, 9, -1, 2, 12, 5, 14, 6,
-    4, 13, 10, 7, 6,  4, 
-    4, 4, 6, 10, 1, 10, 3, 
-    5, 4, 10, 2, 11, 8, 4, 
+    4, 13, 10, 7, 6,  4,
+    4, 4, 6, 10, 1, 10, 3,
+    5, 4, 10, 2, 11, 8, 4,
     2, -1, 7
 };
 
 stock const AmmoEntityNames[AMMOTYPE_COUNT][] =
 {
     "", "ammo_338magnum", "ammo_762nato", "ammo_556natobox",
-    "ammo_556nato", "ammo_buckshot", "ammo_45acp", "ammo_57mm", 
-    "ammo_50ae", "ammo_357sig", "ammo_9mm", "", 
+    "ammo_556nato", "ammo_buckshot", "ammo_45acp", "ammo_57mm",
+    "ammo_50ae", "ammo_357sig", "ammo_9mm", "",
     "", "", ""
 };
