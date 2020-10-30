@@ -30,6 +30,7 @@ new const g_szSndCongratulations[] = "hwn/misc/congratulations.wav";
 new g_cvarBossSpawnDelay;
 new g_cvarBossLifeTime;
 new g_cvarBossMinDamageToWin;
+new g_cvarBossPve;
 
 new g_fwResult;
 new g_fwBossSpawn;
@@ -54,6 +55,10 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
+    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTargetTakeDamage", .Post = 1);
+    RegisterHam(Ham_Touch, "trigger_hurt", "OnHurtTouch", .Post = 0);
+    RegisterHam(Ham_TakeDamage, "player", "OnPlayerTakeDamage", .Post = 0);
+
     g_maxPlayers = get_maxplayers();
     g_playerTotalDamage = ArrayCreate(1, g_maxPlayers+1);
     for (new i = 0; i <= g_maxPlayers; ++i) {
@@ -63,6 +68,7 @@ public plugin_init()
     g_cvarBossSpawnDelay = register_cvar("hwn_boss_spawn_delay", "300.0");
     g_cvarBossLifeTime = register_cvar("hwn_boss_life_time", "120.0");
     g_cvarBossMinDamageToWin = register_cvar("hwn_boss_min_damage_to_win", "300");
+    g_cvarBossPve = register_cvar("hwn_boss_pve", "0");
 
     g_fwBossSpawn = CreateMultiForward("Hwn_Bosses_Fw_BossSpawn", ET_IGNORE, FP_CELL);
     g_fwBossKill = CreateMultiForward("Hwn_Bosses_Fw_BossKill", ET_IGNORE, FP_CELL);
@@ -97,9 +103,6 @@ public plugin_precache()
     precache_sound(g_szSndBossDefeat);
     precache_sound(g_szSndBossEscape);
     precache_sound(g_szSndCongratulations);
-
-    RegisterHam(Ham_TakeDamage, "info_target", "OnTargetTakeDamage", .Post = 1);
-    RegisterHam(Ham_Touch, "trigger_hurt", "OnHurtTouch", .Post = 0);
 }
 
 public plugin_natives()
@@ -212,15 +215,38 @@ public OnBossRemove(ent)
 public OnTargetTakeDamage(ent, inflictor, attacker, Float:fDamage)
 {
     if (ent != g_bossEnt) {
-        return;
+        return HAM_IGNORED;
     }
 
     if (!UTIL_IsPlayer(attacker)) {
-        return;
+        return HAM_IGNORED;
     }
 
     new totalDamage = ArrayGetCell(g_playerTotalDamage, attacker) + floatround(fDamage);
     ArraySetCell(g_playerTotalDamage, attacker, totalDamage);
+
+    return HAM_HANDLED;
+}
+
+public OnPlayerTakeDamage(id, inflictor, attacker, Float:fDamage)
+{
+    if (g_bossIdx == -1) {
+        return HAM_IGNORED;
+    }
+
+    if (!UTIL_IsPlayer(id)) {
+        return HAM_IGNORED;
+    }
+
+    if (!UTIL_IsPlayer(attacker)) {
+        return HAM_IGNORED;
+    }
+
+    if (get_pcvar_num(g_cvarBossPve) > 0) {
+        return HAM_SUPERCEDE;
+    }
+
+    return HAM_IGNORED;
 }
 
 public OnHurtTouch(ent, toucher)

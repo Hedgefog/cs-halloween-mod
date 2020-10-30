@@ -42,6 +42,7 @@
             Added hwn_crits_sound_shoot cvar
             Added hwn_hud_collector_hide_money cvar
             Added hwn_hud_collector_hide_time cvar
+            Added hwn_boss_pve cvar
             Added hwn_boss_spawn command
             Added hwn_wof_roll command
             Added hwn_wof_abort command
