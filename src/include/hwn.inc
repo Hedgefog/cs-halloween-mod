@@ -7,6 +7,7 @@
             Added a flash effect when picking up a pumpkin
             Added a flash effect while putting pumpkin into bucket
             Added Power Up spell
+            Added Boss PVE
             A new gift now appears only after picking up or disappear the old one
             Bosses will now kill the player when intersect while respawning
             Added showing of equipment menu when player respawning the first time
