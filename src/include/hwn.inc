@@ -8,18 +8,18 @@
             Added a flash effect while putting pumpkin into bucket
             Added Power Up spell
             Added Boss PVE
-            A new gift now appears only after picking up or disappear the old one
-            Bosses will now kill the player when intersect while respawning
             Added showing of equipment menu when player respawning the first time
-            Spellballs are now cast from view position
-            NPCs can now walk up stairs
-            Improved small skeletons spawning
-            Improved HUD
-            Improved spells effects
-            Money and Timer HUD in collector gamemode now hidden by default
             Invisibility no longer invokes for nearby teammates
-            Renamed hwn_spawn_boss command to hwn_boss_spawn
+            Bosses will now kill the player when intersect while respawning
+            Spellballs are now cast from view position
+            Improved small skeletons spawning
+            A new gift now appears only after picking up or disappear the old one
+            NPCs can now walk up stairs
+            Improved spells effects
+            Improved HUD
+            Money and Timer HUD in collector gamemode now hidden by default
             Added Hungarian translation (by regener)
+            Renamed hwn_spawn_boss command to hwn_boss_spawn
 
         Cvars:
             Added hwn_spellbook_max_spell_count cvar
