@@ -19,6 +19,7 @@
 #define JUMP_EFFECT_BRIGHTNESS 255
 #define JUMP_EFFECT_LIFETIME 7
 #define SPEED_BOOST 2.0
+#define WEAPON_SPEED_BOOST 1.25
 
 const Float:EffectTime = 10.0;
 const EffectRadius = 96;
@@ -263,7 +264,7 @@ Jump(id)
 
 public BoostWeaponShootSpeed(ent)
 {
-    new Float:fMultiplier =  1.0 / SPEED_BOOST;
+    new Float:fMultiplier =  1.0 / WEAPON_SPEED_BOOST;
 
     new Float:fNextPrimaryAttack = UTIL_GetNextPrimaryAttack(ent);
     new Float:fNextSecondaryAttack = UTIL_GetNextSecondaryAttack(ent);
