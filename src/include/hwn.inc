@@ -1,4 +1,12 @@
 /*
+    6.0.1
+        Additions and improvements:
+            Reduced the fire rate boost for the powerup spell
+            Added Portuguese translation (by artYY)
+            Updated Hungarian translation (by regener)
+        Fixes:
+            Fixed powerup spell effect duration
+
     6.0.0
         Additions and improvements:
             Added Wheel of Fate (random spell effects)
@@ -195,7 +203,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.0.0"
+#define HWN_VERSION "6.0.1"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
