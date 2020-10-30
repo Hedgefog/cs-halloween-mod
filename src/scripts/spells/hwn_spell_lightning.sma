@@ -11,7 +11,7 @@
 #include <hwn_utils>
 #include <hwn_spell_utils>
 
-#define PLUGIN "[Hwn] Blink Spell"
+#define PLUGIN "[Hwn] Lightning Spell"
 #define AUTHOR "Hedgehog Fog"
 
 #define TASKID_SUM_DAMAGE 1000
