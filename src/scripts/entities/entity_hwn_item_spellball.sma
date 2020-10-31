@@ -23,8 +23,6 @@ new Float:g_fThinkDelay;
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 }
 
 public plugin_precache()
@@ -42,6 +40,13 @@ public plugin_precache()
 
     g_sprSmoke = precache_model("sprites/black_smoke1.spr");
     g_sprNull = precache_model("sprites/white.spr");
+}
+
+/*--------------------------------[ Forwards ]--------------------------------*/
+
+public Hwn_Fw_ConfigLoaded()
+{
+    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/

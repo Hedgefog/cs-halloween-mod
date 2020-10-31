@@ -11,17 +11,25 @@
 #define PLUGIN "Halloween Mod"
 #define AUTHOR "Hedgehog Fog"
 
-public plugin_init()
-{
-    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-}
+new g_fwConfigLoaded;
+new g_fwResult;
 
 public plugin_precache()
 {
     register_cvar("hwn_fps", "25");
     register_cvar("hwn_npc_fps", "25");
     register_cvar("hwn_enable_particles", "1");
+}
 
+public plugin_init()
+{
+    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+
+    g_fwConfigLoaded = CreateMultiForward("Hwn_Fw_ConfigLoaded", ET_IGNORE);
+}
+
+public plugin_cfg()
+{
     LoadConfig();
 }
 
@@ -37,4 +45,6 @@ LoadConfig()
 
     server_cmd("exec %s/hwn.cfg", szConfigDir);
     server_exec();
+    
+    ExecuteForward(g_fwConfigLoaded, g_fwResult);
 }

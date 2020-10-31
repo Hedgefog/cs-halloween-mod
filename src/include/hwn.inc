@@ -213,6 +213,10 @@ enum Hwn_GamemodeFlags (<<=1)
     Hwn_GamemodeFlag_SpecialEquip
 };
 
+/*--------------------------------[ Core ]--------------------------------*/
+
+forward Hwn_Fw_ConfigLoaded();
+
 /*--------------------------------[ Gamemode ]--------------------------------*/
 
 native Hwn_Gamemode_Register(const szName[], Hwn_GamemodeFlags:flags = Hwn_GamemodeFlag_None);

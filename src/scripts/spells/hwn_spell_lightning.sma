@@ -48,7 +48,12 @@ public plugin_init()
 
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
     CE_RegisterHook(CEFunction_Remove, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballRemove");
+}
 
+/*--------------------------------[ Forwards ]--------------------------------*/
+
+public Hwn_Fw_ConfigLoaded()
+{
     g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 }
 

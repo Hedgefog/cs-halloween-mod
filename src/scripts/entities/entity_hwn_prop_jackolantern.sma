@@ -20,8 +20,6 @@ new Float:g_fThinkDelay;
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 }
 
 public plugin_precache()
@@ -36,6 +34,11 @@ public plugin_precache()
 
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
+}
+
+public Hwn_Fw_ConfigLoaded()
+{
+    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 }
 
 public OnSpawn(ent)
@@ -53,8 +56,6 @@ public OnRemove(ent)
 {
     remove_task(ent);
 }
-
-/*------------[ Tasks ]------------*/
 
 public TaskThink(ent)
 {

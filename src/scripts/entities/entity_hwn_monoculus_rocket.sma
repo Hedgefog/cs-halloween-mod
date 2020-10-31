@@ -33,8 +33,6 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
-
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch");
 }
 
@@ -57,6 +55,13 @@ public plugin_precache()
     precache_sound(g_szSndExplode);
 
     g_sprExlplosion = precache_model("sprites/dexplo.spr");
+}
+
+/*--------------------------------[ Forwards ]--------------------------------*/
+
+public Hwn_Fw_ConfigLoaded()
+{
+    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
