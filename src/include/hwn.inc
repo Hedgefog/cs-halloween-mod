@@ -1,9 +1,15 @@
 /*
-    6.0.1
+    6.1.0
         Additions and improvements:
             Reduced the fire rate boost for the powerup spell
+            Added cvar to specify the number of spells on spawn
+            New config loader implementation
             Added Portuguese translation (by artYY)
             Updated Hungarian translation (by regener)
+
+        Cvars:
+            Removed hwn_gamemode_spell_on_spawn cvar
+            Added hwn_gamemode_spells_on_spawn cvar
         Fixes:
             Fixed powerup spell effect duration
 
@@ -203,7 +209,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.0.1"
+#define HWN_VERSION "6.1.0"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
