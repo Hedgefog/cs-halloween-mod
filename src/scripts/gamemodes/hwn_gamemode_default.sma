@@ -28,7 +28,7 @@ new const g_customSkies[][CustomSky] = {
 
 new g_hGamemode;
 
-new g_cvarSpellOnSpawn;
+new g_cvarSpellsOnSpawn;
 new g_cvarRandomEvents;
 new g_cvarChangeLighting;
 
@@ -62,7 +62,7 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    g_cvarSpellOnSpawn = register_cvar("hwn_gamemode_spell_on_spawn", "1");
+    g_cvarSpellsOnSpawn = register_cvar("hwn_gamemode_spells_on_spawn", "1");
     g_cvarRandomEvents = register_cvar("hwn_gamemode_random_events", "1");
 
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
@@ -101,10 +101,12 @@ public OnPlayerSpawn(id)
         return;
     }
 
-    if (get_pcvar_num(g_cvarSpellOnSpawn) > 0) {
+    new spellsOnSpawn = get_pcvar_num(g_cvarSpellsOnSpawn);
+
+    if (spellsOnSpawn > 0) {
         new spellCount = Hwn_Spell_GetCount();
         if (spellCount) {
-            Hwn_Spell_SetPlayerSpell(id, random(spellCount), 1);
+            Hwn_Spell_SetPlayerSpell(id, random(spellCount), spellsOnSpawn);
         }
     }
 }
