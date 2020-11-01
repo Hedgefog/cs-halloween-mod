@@ -220,6 +220,15 @@ public OnTargetKilled(ent)
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
+public Hwn_Fw_ConfigLoaded()
+{
+    if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
+        return;
+    }
+
+    SetWofTask();
+}
+
 public Hwn_Gamemode_Fw_NewRound()
 {
     if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
@@ -231,11 +240,6 @@ public Hwn_Gamemode_Fw_NewRound()
     SetWofTask();
 }
 
-public Hwn_Wof_Fw_Roll_Start()
-{
-    ClearWofTasks();
-}
-
 public Hwn_Wof_Fw_Effect_End()
 {
     if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
@@ -243,6 +247,11 @@ public Hwn_Wof_Fw_Effect_End()
     }
 
     SetWofTask();
+}
+
+public Hwn_Wof_Fw_Roll_Start()
+{
+    ClearWofTasks();
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/

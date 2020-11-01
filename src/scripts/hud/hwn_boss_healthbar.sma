@@ -45,11 +45,8 @@ public plugin_init()
     }
 
     g_ptrInfoTargetClassname = engfunc(EngFunc_AllocString, "info_target");
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 
     RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTargetTakeDamage", .Post = 1);
-
-    set_task(g_fThinkDelay, "TaskThink", 0, _, _, "b");
 }
 
 public plugin_precache()
@@ -58,26 +55,10 @@ public plugin_precache()
     g_sprBossHealthBar = precache_model("sprites/hwn/boss_healthbar.spr");
 }
 
-public OnTargetTakeDamage(ent, inflictor, attacker, Float:fDamage)
+public Hwn_Fw_ConfigLoaded()
 {
-    if (ent != g_bossEnt) {
-        return;
-    }
-
-    if (!UTIL_IsPlayer(attacker)) {
-        return;
-    }
-
-    static Float:fHealth;
-    pev(g_bossEnt, pev_health, fHealth);
-
-    new Float:fMultiplier = (1.0 - fHealth/g_fBossHealth);
-    if (fMultiplier > 1.0) {
-        fMultiplier = 1.0;
-    }
-
-    new Float:fFrame = (HEALTHBAR_FRAME_COUNT - 1) * fMultiplier;
-    set_pev(g_healthBarEnt, pev_frame, fFrame);
+    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
+    set_task(g_fThinkDelay, "TaskThink", 0, _, _, "b");
 }
 
 public Hwn_Bosses_Fw_BossSpawn(ent)
@@ -105,6 +86,28 @@ public Hwn_Bosses_Fw_BossKill()
 public Hwn_Bosses_Fw_BossEscape()
 {
     ResetBoss();
+}
+
+public OnTargetTakeDamage(ent, inflictor, attacker, Float:fDamage)
+{
+    if (ent != g_bossEnt) {
+        return;
+    }
+
+    if (!UTIL_IsPlayer(attacker)) {
+        return;
+    }
+
+    static Float:fHealth;
+    pev(g_bossEnt, pev_health, fHealth);
+
+    new Float:fMultiplier = (1.0 - fHealth/g_fBossHealth);
+    if (fMultiplier > 1.0) {
+        fMultiplier = 1.0;
+    }
+
+    new Float:fFrame = (HEALTHBAR_FRAME_COUNT - 1) * fMultiplier;
+    set_pev(g_healthBarEnt, pev_frame, fFrame);
 }
 
 ResetBoss()

@@ -23,8 +23,6 @@ new Float:g_fThinkDelay;
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 }
 
 public plugin_precache()
@@ -44,11 +42,18 @@ public plugin_precache()
     g_sprNull = precache_model("sprites/white.spr");
 }
 
+/*--------------------------------[ Forwards ]--------------------------------*/
+
+public Hwn_Fw_ConfigLoaded()
+{
+    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
+}
+
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnSpawn(ent)
 {        
-    set_pev(ent, pev_gravity, 0.25);
+    set_pev(ent, pev_gravity, 0.20);
     set_pev(ent, pev_health, 1.0);
 
     set_pev(ent, pev_solid, SOLID_TRIGGER);
@@ -82,6 +87,16 @@ public TaskThink(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
+    static color[3];
+    {
+        pev(ent, pev_rendercolor, color);
+        for (new i = 0; i < 3; ++i) {
+            color[i] = floatround(Float:color[i]);
+        }
+    }
+
+    UTIL_Message_Dlight(vOrigin, 16, color, UTIL_DelayToLifeTime(g_fThinkDelay), 0);
+
     //Fix for smoke origin
     {
         static Float:vVelocity[3];
@@ -96,9 +111,6 @@ public TaskThink(ent)
 
         xs_vec_sub(vOrigin, vSub, vOrigin);
     }
-
-    static color[3];
-    pev(ent, pev_rendercolor, color);
 
     engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
     write_byte(TE_SMOKE);

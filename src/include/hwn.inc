@@ -1,4 +1,21 @@
 /*
+    6.1.0
+        Additions and improvements:
+            Reduced the fire rate boost for the powerup spell
+            Added cvar to specify the number of spells on spawn
+            New config loader implementation
+            Increased flying range of blink spell ball 
+            Added Portuguese translation (by artYY)
+            Updated Hungarian translation (by regener)
+
+        Cvars:
+            Removed hwn_gamemode_spell_on_spawn cvar
+            Added hwn_gamemode_spells_on_spawn cvar
+
+        Fixes:
+            Fixed powerup spell effect duration
+            Fixed spellball light
+
     6.0.0
         Additions and improvements:
             Added Wheel of Fate (random spell effects)
@@ -195,7 +212,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.0.0"
+#define HWN_VERSION "6.1.0"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
@@ -204,6 +221,10 @@ enum Hwn_GamemodeFlags (<<=1)
     Hwn_GamemodeFlag_RespawnPlayers,
     Hwn_GamemodeFlag_SpecialEquip
 };
+
+/*--------------------------------[ Core ]--------------------------------*/
+
+forward Hwn_Fw_ConfigLoaded();
 
 /*--------------------------------[ Gamemode ]--------------------------------*/
 

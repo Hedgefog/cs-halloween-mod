@@ -130,8 +130,14 @@ public plugin_init()
 
     g_cvarPumpkinMutateChance = register_cvar("hwn_pumpkin_mutate_chance", "20");
 
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
     g_maxPlayers = get_maxplayers();
+}
+
+/*--------------------------------[ Forwards ]--------------------------------*/
+
+public Hwn_Fw_ConfigLoaded()
+{
+    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/

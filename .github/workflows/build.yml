@@ -73,6 +73,16 @@
             release_name: ${{ steps.buildvars.outputs.releasename }}
             draft: false
             prerelease: false
+        - name: Upload Release Addons Src
+          id: upload-release-addons
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
+            asset_path: ./dist/bundles/alliedmods/hwn-${{ steps.buildvars.outputs.tagversion }}-addons.zip
+            asset_name: hwn-${{ steps.buildvars.outputs.tagversion }}-addons-src.zip
+            asset_content_type: application/zip
         - name: Upload Release Addons
           id: upload-release-addons
           uses: actions/upload-release-asset@v1
