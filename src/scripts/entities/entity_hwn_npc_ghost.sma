@@ -80,9 +80,6 @@ public plugin_init()
 
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
-    g_particlesEnabled = get_cvar_num("hwn_enable_particles");
-
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
 
     g_maxPlayers = get_maxplayers();
@@ -96,6 +93,14 @@ public plugin_init()
 public plugin_end()
 {
     ArrayDestroy(g_playerKiller);
+}
+
+/*--------------------------------[ Forwards ]--------------------------------*/
+
+public Hwn_Fw_ConfigLoaded()
+{
+    g_particlesEnabled = get_cvar_num("hwn_enable_particles");
+    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/

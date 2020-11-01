@@ -40,7 +40,6 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, VERSION, AUTHOR);
-    register_logevent("OnRoundStart", 2, "1=Round_Start");
 }
 
 public plugin_end()
@@ -52,6 +51,29 @@ public plugin_end()
     ArrayDestroy(g_dispensers);
     ArrayDestroy(g_dispenserDelay);
     ArrayDestroy(g_dispenserImpulse);
+}
+
+/*--------------------------------[ Forwards ]--------------------------------*/
+
+public Hwn_Gamemode_Fw_RoundStart()
+{
+    if (!g_dispenserCount) {
+        return;
+    }
+
+    for (new i = 0; i < g_dispenserCount; ++i) {
+        new ent = ArrayGetCell(g_dispensers, i);
+        new idx = pev(ent, pev_iuser1);
+        new Float:fDelay = ArrayGetCell(g_dispenserDelay, idx);
+
+        remove_task(ent+TASKID_SUM_DROP);
+
+        if (fDelay > 0.0) {
+            set_task(fDelay, "TaskDrop", ent+TASKID_SUM_DROP, _, _, "b");
+        } else {
+            Drop(ent);
+        }
+    }
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -81,27 +103,6 @@ public OnSpawn(ent)
     set_pev(ent, pev_iuser1, index);
 
     g_dispenserCount++;
-}
-
-public OnRoundStart()
-{
-    if (!g_dispenserCount) {
-        return;
-    }
-
-    for (new i = 0; i < g_dispenserCount; ++i) {
-        new ent = ArrayGetCell(g_dispensers, i);
-        new idx = pev(ent, pev_iuser1);
-        new Float:fDelay = ArrayGetCell(g_dispenserDelay, idx);
-
-        remove_task(ent+TASKID_SUM_DROP);
-
-        if (fDelay > 0.0) {
-            set_task(fDelay, "TaskDrop", ent+TASKID_SUM_DROP, _, _, "b");
-        } else {
-            Drop(ent);
-        }
-    }
 }
 
 public OnKeyValue(ent, const szKey[], const szValue[])

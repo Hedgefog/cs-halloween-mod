@@ -20,6 +20,8 @@
 #define SOUND_DURATION 4.0
 #define DANCE_CHECK_DELAY 0.25
 #define HEALTH_TO_DIE 150.0
+#define DANCE_MIN_MOVE_ANGLE 45.0
+#define DANCE_MIN_VIEW_ANGLE 5.0
 #define EFFECT_DAMAGE HEALTH_TO_DIE / EffectTime * DANCE_CHECK_DELAY
 
 const Float:EffectTime = 8.0;
@@ -169,8 +171,8 @@ public CheckDance(id)
 
     if (xs_vec_len(vLastAngles) > 0
         && xs_vec_len(vLastViewAngles) > 0
-        && get_distance_f(vLastAngles, vAngles) <= 45
-        && get_distance_f(vLastViewAngles, vViewAngles) <= 5
+        && get_distance_f(vLastAngles, vAngles) <= DANCE_MIN_MOVE_ANGLE
+        && get_distance_f(vLastViewAngles, vViewAngles) <= DANCE_MIN_VIEW_ANGLE
         && pev(id, pev_flags) & FL_ONGROUND
     ) {
         UTIL_CS_DamagePlayer(id, EFFECT_DAMAGE);

@@ -1,23 +1,26 @@
 {
   "name": "halloween-mod",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "description": "Halloween Mod",
   "scripts": {
     "gulp": "gulp",
     "build": "gulp",
     "watch": "gulp watch",
     "pack": "gulp pack",
-    "update-version": "node ./scripts/update-version.js"
+    "update-version": "node ./scripts/update-version.js",
+    "update-config": "node ./scripts/update-config.js"
   },
   "author": "Hedgehog Fog",
   "license": "MIT",
   "devDependencies": {
+    "glob": "^7.1.6",
     "gulp": "^4.0.2",
     "gulp-file": "^0.4.0",
     "gulp-flatten": "^0.4.0",
     "gulp-sma": "^1.0.7",
     "gulp-watch": "^5.0.1",
     "gulp-zip": "^5.0.2",
+    "lodash": "^4.17.20",
     "merge2": "^1.2.0"
   }
 }

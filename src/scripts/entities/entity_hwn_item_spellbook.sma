@@ -17,7 +17,7 @@
 
 new g_sprSparkle;
 
-new g_particlesEnabled;
+new g_particlesEnabled = false;
 
 new const g_szSndSpawn[] = "hwn/items/spellbook/spellbook_spawn.wav";
 new const g_szSndPickup[] = "hwn/spells/spell_pickup.wav";
@@ -33,8 +33,6 @@ public plugin_init()
     g_isPrecaching = false;
 
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-
-    g_particlesEnabled = get_cvar_num("hwn_enable_particles");
 }
 
 public plugin_precache()
@@ -62,6 +60,11 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "OnPickup");
 
     g_cvarMaxSpellCount = register_cvar("hwn_spellbook_max_spell_count", "3");
+}
+
+public Hwn_Fw_ConfigLoaded()
+{
+    g_particlesEnabled = get_cvar_num("hwn_enable_particles");
 }
 
 public OnSpawn(ent)

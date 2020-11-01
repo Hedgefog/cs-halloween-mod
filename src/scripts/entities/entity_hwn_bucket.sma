@@ -80,12 +80,15 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
-
     g_maxPlayers = get_maxplayers();
 }
 
 /*------------[ Forward ]------------*/
+
+public Hwn_Fw_ConfigLoaded()
+{
+    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
+}
 
 public Hwn_Gamemode_Fw_RoundStart()
 {

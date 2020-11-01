@@ -102,3 +102,24 @@ HWN_BOSS_SPAWN = %s megjelent!
 HWN_BOSS_ESCAPE = %s eltűnt!
 HWN_WOF_ROLL_STARTED = A Sors Kereke éppen sorsol...
 HWN_WOF_EFFECT_STARTED = A sorsod pedig... %s!
+
+[bp]
+HWN_GIFT_SPAWN = Um misterioso Presente de Halloween caiu^nem algum lugar,^n somente para você. Corra e encontre!
+HWN_GIFT_DISAPPEARED = O Presente Misterioso de Halloween sumiu!
+HWN_GIFT_FOUND = %s encontrou o Presente de Halloween!
+HWN_PLAYER_POINTS = Pontos: %d 
+HWN_SPELL = Magia: %s
+HWN_DEFEAT_BOSS = %s derrote o monstro!
+HWN_BOSS_REWARD = O monstro foi derrotado!^nUma recompensa misteriosa está esperando por você em seu inventário.
+HWN_SPELLBOOK_PICKUP = Você pegou magia!^nUse a tecla 'f' para lançar magia.
+HWN_MENU_HELP = Use a tecla 'm' para abrir o mod menu.
+HWN_MENU_TITLE = Halloween Mod Menu
+HWN_EQUIPMENT_MENU_TITLE = Equipamento
+HWN_COSMETIC_MENU_TITLE = Inventário de Cosméticos
+HWN_COSMETIC_MENU_EMPTY = Você não tem itens cosméticos 
+HWN_TEAM_PUMPKIN_COLLECTED = Pumpkins in bucket
+HWN_FIRST_PUMPKIN_PICKED = You picked a pumpkin, take it to the team bucket.
+HWN_BOSS_SPAWN = %s has appeared!
+HWN_BOSS_ESCAPE = %s has gone!
+HWN_WOF_ROLL_STARTED = Wheel of Fate roll started...
+HWN_WOF_EFFECT_STARTED = Your fate... is... %s!

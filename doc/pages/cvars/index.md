@@ -22,7 +22,7 @@
 | hwn_enable_particles               | Enable/Disable custom particles                          | 1             |
 | hwn_bucket_health                  | Required damage to extract pumpkin from bucket           | 300           |
 | hwn_gamemode_change_lighting       | Enable/Disable custom light in default gamemode          | 1             |
-| hwn_gamemode_spell_on_spawn        | Enable/Disable spell on spawn in default gamemode        | 1             |
+| hwn_gamemode_spells_on_spawn       | Number of spells on spawn in default gamemode            | 1             |
 | hwn_gamemode_random_events         | Enable/Disable spawn npc/items in default gamemode       | 1             |
 | hwn_collector_teampoints_limit     | Limit of teampoints in Collector Gamemode                | 50            |
 | hwn_collector_wof                  | Enable/Disable Wheel of Fate rolls                       | 1             |

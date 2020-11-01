@@ -195,8 +195,6 @@ public plugin_init()
     g_cvarJumpTimeMin = register_cvar("hwn_npc_monoculus_jump_time_min", "10.0");
     g_cvarJumpTimeMax = register_cvar("hwn_npc_monoculus_jump_time_max", "20.0");
 
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
-
     g_maxPlayers = get_maxplayers();
 }
 
@@ -209,6 +207,11 @@ public plugin_end()
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
+
+public Hwn_Fw_ConfigLoaded()
+{
+    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
+}
 
 public Hwn_Bosses_Fw_BossTeleport(ent, handler)
 {

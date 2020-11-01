@@ -164,8 +164,6 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
-
     g_maxPlayers = get_maxplayers();
 }
 
@@ -183,6 +181,11 @@ public client_putinserver()
 #endif
 {
     NPC_Health -= NPC_HealthBonusPerPlayer;
+}
+
+public Hwn_Fw_ConfigLoaded()
+{
+    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
 }
 
 public Hwn_Bosses_Fw_BossTeleport(ent, handler)
