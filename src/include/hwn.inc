@@ -12,6 +12,7 @@
             Added hwn_gamemode_spells_on_spawn cvar
         Fixes:
             Fixed powerup spell effect duration
+            Fixed spellball light
 
     6.0.0
         Additions and improvements:

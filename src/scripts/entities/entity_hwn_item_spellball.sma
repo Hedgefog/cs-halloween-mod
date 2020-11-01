@@ -87,6 +87,16 @@ public TaskThink(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
+    static color[3];
+    {
+        pev(ent, pev_rendercolor, color);
+        for (new i = 0; i < 3; ++i) {
+            color[i] = floatround(Float:color[i]);
+        }
+    }
+
+    UTIL_Message_Dlight(vOrigin, 16, color, UTIL_DelayToLifeTime(g_fThinkDelay), 0);
+
     //Fix for smoke origin
     {
         static Float:vVelocity[3];
@@ -101,9 +111,6 @@ public TaskThink(ent)
 
         xs_vec_sub(vOrigin, vSub, vOrigin);
     }
-
-    static color[3];
-    pev(ent, pev_rendercolor, color);
 
     engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
     write_byte(TE_SMOKE);
