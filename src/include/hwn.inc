@@ -10,6 +10,7 @@
         Cvars:
             Removed hwn_gamemode_spell_on_spawn cvar
             Added hwn_gamemode_spells_on_spawn cvar
+
         Fixes:
             Fixed powerup spell effect duration
             Fixed spellball light
