@@ -53,7 +53,7 @@ public Hwn_Fw_ConfigLoaded()
 
 public OnSpawn(ent)
 {        
-    set_pev(ent, pev_gravity, 0.25);
+    set_pev(ent, pev_gravity, 0.20);
     set_pev(ent, pev_health, 1.0);
 
     set_pev(ent, pev_solid, SOLID_TRIGGER);

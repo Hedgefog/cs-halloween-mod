@@ -4,6 +4,7 @@
             Reduced the fire rate boost for the powerup spell
             Added cvar to specify the number of spells on spawn
             New config loader implementation
+            Increased flying range of blink spell ball 
             Added Portuguese translation (by artYY)
             Updated Hungarian translation (by regener)
 
