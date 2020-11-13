@@ -19,6 +19,9 @@
             Added hwn_bucket_bonus_ammo cvar
             Added hwn_collector_npc_drop_chance_spell cvar
 
+        Fixes:
+            Fixed team score calculation for reapi version
+
     6.1.0
         Additions and improvements:
             Reduced the fire rate boost for the powerup spell

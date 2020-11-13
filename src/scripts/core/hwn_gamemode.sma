@@ -625,6 +625,7 @@ DispatchWin(team)
         }
 
         rg_round_end(fDelay, winstatus, event);
+        rg_update_teamscores(team == 2 ? 1 : 0, team == 1 ? 1 : 0);
     #else
         RoundEndForceControl(winstatus, fDelay);
     #endif
