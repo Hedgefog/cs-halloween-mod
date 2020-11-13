@@ -234,10 +234,14 @@ native Hwn_Gamemode_DispatchWin(team);
 native Hwn_Gamemode_GetCurrent();
 native bool:Hwn_Gamemode_IsPlayerOnSpawn(id);
 native Hwn_Gamemode_GetHandler(const szName[]);
+native Hwn_Gamemode_SetRoundTime(time);
+native Hwn_Gamemode_GetRoundTime();
+native Hwn_Gamemode_GetRoundTimeLeft();
 
 forward Hwn_Gamemode_Fw_NewRound();
 forward Hwn_Gamemode_Fw_RoundStart();
 forward Hwn_Gamemode_Fw_RoundEnd();
+forward Hwn_Gamemode_Fw_RoundExpired();
 
 /*--------------------------------[ Default Gamemode ]--------------------------------*/
 

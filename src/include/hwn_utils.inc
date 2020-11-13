@@ -740,3 +740,15 @@ stock UTIL_Message_ParticleBurst(const Float:vOrigin[3], radius, color, lifeTime
     write_byte(lifeTime);
     message_end();
 }
+
+stock UTIL_Message_RoundTime(id, time)
+{
+    static msgid = 0;
+    if(!msgid) {
+        msgid = get_user_msgid("RoundTime");
+    }
+
+    message_begin(id ? MSG_ONE : MSG_ALL, msgid);
+    write_short(time);
+    message_end();
+}
