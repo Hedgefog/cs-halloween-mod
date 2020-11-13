@@ -15,7 +15,7 @@
 
 #define ENTITY_NAME "hwn_prop_explosive_pumpkin"
 
-#define EXPLOSION_RADIUS 96.0
+#define EXPLOSION_RADIUS 128.0
 #define EXPLOSION_DAMAGE 130.0
 #define EXPLOSION_SPRITE_SIZE 80.0
 
