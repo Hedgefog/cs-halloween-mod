@@ -14,6 +14,7 @@
             Added drop forward flag to hwn_pumpkin_dispenser entity
             Removed drop direction flag from hwn_pumpkin_dispenser entity
             Added onhit mode for crit effects
+            Improved explosion effect
 
         Cvars:
             Added hwn_collector_roundtime cvar
