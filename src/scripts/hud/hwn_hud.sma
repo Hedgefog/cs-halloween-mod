@@ -72,7 +72,7 @@ public plugin_init()
     g_hGamemodeCollector = Hwn_Gamemode_GetHandler("Collector");
 
     g_cvarCollectorHideMoney = register_cvar("hwn_hud_collector_hide_money", "1");
-    g_cvarCollectorHideTimer = register_cvar("hwn_hud_collector_hide_timer", "1");
+    g_cvarCollectorHideTimer = register_cvar("hwn_hud_collector_hide_timer", "0");
     g_cvarTeamPointsLimit = get_cvar_pointer("hwn_collector_teampoints_limit");
 
     set_task(1.0, "TaskUpdate", _, _, _, "b");
