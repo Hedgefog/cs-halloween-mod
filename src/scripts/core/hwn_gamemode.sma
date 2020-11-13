@@ -619,9 +619,9 @@ DispatchWin(team)
     #if defined _reapi_included
         new ScenarioEventEndRound:event = ROUND_END_DRAW;
         if (team == 1) {
-            event = ROUND_CTS_WIN;
-        } else if (team == 2) {
             event = ROUND_TERRORISTS_WIN;
+        } else if (team == 2) {
+            event = ROUND_CTS_WIN;
         }
 
         rg_round_end(fDelay, winstatus, event);
