@@ -287,8 +287,7 @@ public Hwn_Gamemode_Fw_RoundExpired()
         return;
     }
 
-    new roundTime = floatround(get_pcvar_float(g_cvarRoundTime) * 60);
-    if (roundTime <= 0) {
+    if (get_pcvar_float(g_cvarRoundTime) <= 0.0) {
         return;
     }
 
