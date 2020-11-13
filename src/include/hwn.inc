@@ -253,9 +253,11 @@ native Hwn_Collector_GetPlayerPoints(id);
 native Hwn_Collector_SetPlayerPoints(id, count);
 native Hwn_Collector_GetTeamPoints(team);
 native Hwn_Collector_SetTeamPoints(team, count);
+native bool:Hwn_Collector_IsOvertime();
 
 forward Hwn_Collector_Fw_TeamPoints(team);
 forward Hwn_Collector_Fw_PlayerPoints(id);
+forward Hwn_Collector_Fw_Overtime();
 
 /*--------------------------------[ Spells ]--------------------------------*/
 

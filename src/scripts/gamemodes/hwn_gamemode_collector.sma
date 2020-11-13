@@ -25,9 +25,11 @@
 new g_fwResult;
 new g_fwPlayerPointsChanged;
 new g_fwTeamPointsChanged;
+new g_fwOvertime;
 
 new Array:g_playerPoints;
 new Array:g_teamPoints;
+new bool:g_isOvertime;
 
 new g_hGamemode;
 
@@ -84,6 +86,7 @@ public plugin_init()
 
     g_fwPlayerPointsChanged = CreateMultiForward("Hwn_Collector_Fw_PlayerPoints", ET_IGNORE, FP_CELL);
     g_fwTeamPointsChanged = CreateMultiForward("Hwn_Collector_Fw_TeamPoints", ET_IGNORE, FP_CELL);
+    g_fwOvertime = CreateMultiForward("Hwn_Collector_Fw_Overtime", ET_IGNORE);
 }
 
 public plugin_natives()
@@ -93,6 +96,7 @@ public plugin_natives()
     register_native("Hwn_Collector_SetPlayerPoints", "Native_SetPlayerPoints");
     register_native("Hwn_Collector_GetTeamPoints", "Native_GetTeamPoints");
     register_native("Hwn_Collector_SetTeamPoints", "Native_SetTeamPoints");
+    register_native("Hwn_Collector_IsOvertime", "Native_IsOvertime");
 }
 
 public plugin_end()
@@ -131,6 +135,11 @@ public Native_SetTeamPoints(pluginID, argc)
     new count = get_param(2);
 
     SetTeamPoints(team, count);
+}
+
+public bool:Native_IsOvertime(pluginID, argc)
+{
+    return g_isOvertime;
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -258,6 +267,8 @@ public Hwn_Gamemode_Fw_NewRound()
     ResetVariables();
     ClearWofTasks();
     SetWofTask();
+
+    g_isOvertime = false;
 }
 
 public Hwn_Gamemode_Fw_RoundStart()
@@ -289,6 +300,10 @@ public Hwn_Gamemode_Fw_RoundExpired()
         if (overtime > 0) {
             new roundTime = Hwn_Gamemode_GetRoundTime() + overtime;
             Hwn_Gamemode_SetRoundTime(roundTime);
+
+            g_isOvertime = true;
+
+            ExecuteForward(g_fwOvertime, g_fwResult);
         } else {
             Hwn_Gamemode_DispatchWin(3);
         }
