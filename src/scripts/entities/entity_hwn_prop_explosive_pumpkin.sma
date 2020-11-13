@@ -17,6 +17,7 @@
 
 #define EXPLOSION_RADIUS 96.0
 #define EXPLOSION_DAMAGE 130.0
+#define EXPLOSION_SPRITE_SIZE 80.0
 
 new g_mdlGibs;
 new g_sprExlplosion;
@@ -44,7 +45,7 @@ public plugin_precache()
 
     precache_sound(g_szSndExplode);
 
-    g_sprExlplosion = precache_model("sprites/dexplo.spr");
+    g_sprExlplosion = precache_model("sprites/eexplo.spr");
     g_mdlGibs = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
 }
 
@@ -122,8 +123,8 @@ ExplosionEffect(ent)
     engfunc(EngFunc_WriteCoord, vOrigin[1]);
     engfunc(EngFunc_WriteCoord, vOrigin[2]);
     write_short(g_sprExlplosion);
-    write_byte(32);
-    write_byte(10);
+    write_byte(floatround(((EXPLOSION_RADIUS * 2) / EXPLOSION_SPRITE_SIZE) * 10));
+    write_byte(24);
     write_byte(0);
     message_end();
 
