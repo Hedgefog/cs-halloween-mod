@@ -176,7 +176,6 @@ public OnClCmd_SpawnBoss(id, level, cid)
         return PLUGIN_HANDLED;
     }
 
-    remove_task(TASKID_SPAWN_BOSS);
     SpawnBoss();
 
     return PLUGIN_HANDLED;
@@ -315,6 +314,7 @@ SpawnBoss()
 
     new Float:fLifeTime = get_pcvar_float(g_cvarBossLifeTime);
 
+    remove_task(TASKID_SPAWN_BOSS);
     set_task(fLifeTime, "TaskRemoveBoss", TASKID_REMOVE_BOSS);
     ExecuteForward(g_fwBossSpawn, g_fwResult, g_bossEnt, fLifeTime);
 }
@@ -342,6 +342,7 @@ IntersectKill()
 
 CreateBossSpawnTask()
 {
+    remove_task(TASKID_SPAWN_BOSS);
     set_task(get_pcvar_float(g_cvarBossSpawnDelay), "TaskSpawnBoss", TASKID_SPAWN_BOSS);
 }
 
