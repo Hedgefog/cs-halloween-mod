@@ -32,6 +32,8 @@ new Array:g_teamPoints;
 new g_hGamemode;
 
 new g_cvarTeamPointsLimit;
+new g_cvarRoundTime;
+new g_cvarRoundTimeOvertime;
 new g_cvarWofEnabled;
 new g_cvarWofDelay;
 new g_cvarNpcDropChanceSpell;
@@ -74,6 +76,8 @@ public plugin_init()
     }
 
     g_cvarTeamPointsLimit = register_cvar("hwn_collector_teampoints_limit", "50");
+    g_cvarRoundTime = register_cvar("hwn_collector_round_time", "10.0");
+    g_cvarRoundTimeOvertime = register_cvar("hwn_collector_round_time_overtime", "30");
     g_cvarWofEnabled = register_cvar("hwn_collector_wof", "1");
     g_cvarWofDelay = register_cvar("hwn_collector_wof_delay", "90.0");
     g_cvarNpcDropChanceSpell = register_cvar("hwn_collector_npc_drop_chance_spell", "10.0");
@@ -254,6 +258,44 @@ public Hwn_Gamemode_Fw_NewRound()
     ResetVariables();
     ClearWofTasks();
     SetWofTask();
+}
+
+public Hwn_Gamemode_Fw_RoundStart()
+{
+    if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
+        return;
+    }
+    
+    new roundTime = floatround(get_pcvar_float(g_cvarRoundTime) * 60);
+    Hwn_Gamemode_SetRoundTime(roundTime);
+}
+
+public Hwn_Gamemode_Fw_RoundExpired()
+{
+    if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
+        return;
+    }
+
+    new roundTime = floatround(get_pcvar_float(g_cvarRoundTime) * 60);
+    if (roundTime <= 0) {
+        return;
+    }
+
+    new tTeamPoints = GetTeamPoints(1);
+    new ctTeamPoints = GetTeamPoints(2);
+
+    if (tTeamPoints == ctTeamPoints) {
+        new overtime = get_pcvar_num(g_cvarRoundTimeOvertime);
+        if (overtime > 0) {
+            new roundTime = Hwn_Gamemode_GetRoundTime() + overtime;
+            Hwn_Gamemode_SetRoundTime(roundTime);
+        } else {
+            Hwn_Gamemode_DispatchWin(3);
+        }
+    } else {
+        new winnerTeam = tTeamPoints > ctTeamPoints ? 1 : 2;
+        Hwn_Gamemode_DispatchWin(winnerTeam);
+    }
 }
 
 public Hwn_Wof_Fw_Effect_End()
