@@ -109,6 +109,7 @@ public plugin_natives()
 {
     register_library("hwn");
     register_native("Hwn_Bosses_Register", "Native_Register");
+    register_native("Hwn_Bosses_Spawn", "Native_Spawn");
     register_native("Hwn_Bosses_GetCurrent", "Native_GetCurrent");
     register_native("Hwn_Bosses_GetName", "Native_GetName");
 }
@@ -141,6 +142,11 @@ public Native_GetCurrent(pluginID, argc)
 {
     set_param_byref(1, g_bossEnt);
     return g_bossIdx;
+}
+
+public Native_Spawn(pluginID, argc)
+{
+    SpawnBoss();
 }
 
 public Native_GetName(pluginID, argc)

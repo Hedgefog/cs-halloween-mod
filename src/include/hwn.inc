@@ -3,6 +3,7 @@
         Additions and improvements:
             Added round time for collector gamemode
             Added objectives blocking while the boss is alive
+            Added boss spawning on team points collect
             Added bonuses for team bucket filling
             Crit damage now applies only to players and NPCs
             Added a chance to drop a spellbook from an NPC on kill
@@ -19,6 +20,7 @@
             Added hwn_bucket_bonus_armor cvar
             Added hwn_bucket_bonus_ammo cvar
             Added hwn_collector_npc_drop_chance_spell cvar
+            Added hwn_collector_teampoints_to_boss_spawn cvar
 
         Fixes:
             Fixed team score calculation for reapi version
@@ -321,6 +323,7 @@ native Hwn_Cosmetic_Register(PCosmetic:hPCosmetic);
 /*--------------------------------[ Bosses ]--------------------------------*/
 
 native Hwn_Bosses_Register(const szCEClassName[], const szName[] = "Boss");
+native Hwn_Bosses_Spawn();
 native Hwn_Bosses_GetCurrent(&ent = 0);
 native Hwn_Bosses_GetName(bossIdx, szOutput[], maxlen);
 

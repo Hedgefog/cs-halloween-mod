@@ -29,6 +29,7 @@ new g_fwOvertime;
 
 new Array:g_playerPoints;
 new Array:g_teamPoints;
+new g_teamPointsToSpawnBoss;
 new bool:g_isOvertime;
 
 new g_hGamemode;
@@ -39,6 +40,7 @@ new g_cvarRoundTimeOvertime;
 new g_cvarWofEnabled;
 new g_cvarWofDelay;
 new g_cvarNpcDropChanceSpell;
+new g_cvarTeamPointsToBossSpawn;
 
 new g_maxPlayers;
 
@@ -83,6 +85,7 @@ public plugin_init()
     g_cvarWofEnabled = register_cvar("hwn_collector_wof", "1");
     g_cvarWofDelay = register_cvar("hwn_collector_wof_delay", "90.0");
     g_cvarNpcDropChanceSpell = register_cvar("hwn_collector_npc_drop_chance_spell", "10.0");
+    g_cvarTeamPointsToBossSpawn = register_cvar("hwn_collector_teampoints_to_boss_spawn", "20");
 
     g_fwPlayerPointsChanged = CreateMultiForward("Hwn_Collector_Fw_PlayerPoints", ET_IGNORE, FP_CELL);
     g_fwTeamPointsChanged = CreateMultiForward("Hwn_Collector_Fw_TeamPoints", ET_IGNORE, FP_CELL);
@@ -361,6 +364,19 @@ GetTeamPoints(team)
 
 SetTeamPoints(team, count, bool:silent = false)
 {
+    new teamPointsToBossSpawn = get_pcvar_num(g_cvarTeamPointsToBossSpawn);
+    if (teamPointsToBossSpawn > 0) {
+        new countDiff = count - ArrayGetCell(g_teamPoints, team);
+        if (countDiff > 0) {
+            g_teamPointsToSpawnBoss += countDiff;
+
+            if (g_teamPointsToSpawnBoss >= teamPointsToBossSpawn) {
+                g_teamPointsToSpawnBoss = 0;
+                Hwn_Bosses_Spawn();
+            }
+        }
+    }
+
     ArraySetCell(g_teamPoints, team, count);
 
     new teamPointsLimit = get_pcvar_num(g_cvarTeamPointsLimit);
@@ -377,6 +393,7 @@ ResetVariables()
 {
     for (new team = 0; team < TEAM_COUNT; ++team) {
         SetTeamPoints(team, 0, .silent = true);
+        g_teamPointsToSpawnBoss = 0;
     }
 
     for (new id = 1; id <= g_maxPlayers; ++id) {
