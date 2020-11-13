@@ -12,8 +12,8 @@
             Added onhit mode for crit effects
 
         Cvars:
-            Added hwn_collector_round_time cvar
-            Added hwn_collector_round_time_overtime cvar
+            Added hwn_collector_roundtime cvar
+            Added hwn_collector_roundtime_overtime cvar
             Added hwn_bucket_bonus_health cvar
             Added hwn_bucket_bonus_armor cvar
             Added hwn_bucket_bonus_ammo cvar

@@ -78,8 +78,8 @@ public plugin_init()
     }
 
     g_cvarTeamPointsLimit = register_cvar("hwn_collector_teampoints_limit", "50");
-    g_cvarRoundTime = register_cvar("hwn_collector_round_time", "10.0");
-    g_cvarRoundTimeOvertime = register_cvar("hwn_collector_round_time_overtime", "30");
+    g_cvarRoundTime = register_cvar("hwn_collector_roundtime", "10.0");
+    g_cvarRoundTimeOvertime = register_cvar("hwn_collector_roundtime_overtime", "30");
     g_cvarWofEnabled = register_cvar("hwn_collector_wof", "1");
     g_cvarWofDelay = register_cvar("hwn_collector_wof_delay", "90.0");
     g_cvarNpcDropChanceSpell = register_cvar("hwn_collector_npc_drop_chance_spell", "10.0");

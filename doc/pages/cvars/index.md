@@ -28,8 +28,8 @@
 | hwn_gamemode_change_lighting        | Enable/Disable custom light in default gamemode                       | 1             |
 | hwn_gamemode_spells_on_spawn        | Number of spells on spawn in default gamemode                         | 1             |
 | hwn_gamemode_random_events          | Enable/Disable spawn npc/items in default gamemode                    | 1             |
-| hwn_collector_round_time            | Round time in Collector Gamemode (in minutes) (0 - to disable)        | 10            |
-| hwn_collector_round_time_overtime   | Overtime time in Collector Gamemode (in seconds) (0 - to disable)     | 30            |
+| hwn_collector_roundtime            | Round time in Collector Gamemode (in minutes) (0 - to disable)         | 10            |
+| hwn_collector_roundtime_overtime   | Overtime time in Collector Gamemode (in seconds) (0 - to disable)      | 30            |
 | hwn_collector_teampoints_limit      | Limit of teampoints in Collector Gamemode                             | 50            |
 | hwn_collector_wof                   | Enable/Disable Wheel of Fate rolls                                    | 1             |
 | hwn_collector_wof_delay             | Delay until the next Wheel of Fate roll                               | 90.0          |
