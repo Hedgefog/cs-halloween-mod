@@ -151,19 +151,28 @@ public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
         return HAM_SUPERCEDE;
     }
 
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    if (!UTIL_IsPointVisibleByEnt(inflictor, vOrigin)) { // block wallbangs
+        return HAM_SUPERCEDE;
+    }
+
     return HAM_HANDLED;
 }
 
 public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
 {
     if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
-        return;
+        return HAM_IGNORED;
     }
 
     static Float:vEnd[3];
     get_tr2(trace, TR_vecEndPos, vEnd);
 
     UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 103, floatround(fDamage/4));
+
+    return HAM_HANDLED;
 }
 
 public OnKill(ent)

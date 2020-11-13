@@ -508,6 +508,26 @@ stock bool:UTIL_IsOpenHull(const Float:vOrigin[3], hull, ignoreEnt = 0)
     return isVacant;
 }
 
+stock bool:UTIL_IsPointVisibleByEnt(ent, const Float:vTarget[3])
+{
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    static Float:vViewOfs[3];
+    pev(ent, pev_view_ofs, vViewOfs);
+    xs_vec_add(vOrigin, vViewOfs, vOrigin);
+
+    new trace = create_tr2();
+    engfunc(EngFunc_TraceLine, vOrigin, vTarget, IGNORE_MONSTERS, ent, trace);
+    
+    static Float:fFraction;
+    get_tr2(trace, TR_flFraction, fFraction);
+
+    free_tr2(trace);
+
+    return fFraction == 1.0;
+}
+
 stock bool:UTIL_IsStuck(ent)
 {
     static Float:vOrigin[3];
