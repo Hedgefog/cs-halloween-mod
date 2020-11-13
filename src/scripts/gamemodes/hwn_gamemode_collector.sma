@@ -76,7 +76,7 @@ public plugin_init()
     g_cvarTeamPointsLimit = register_cvar("hwn_collector_teampoints_limit", "50");
     g_cvarWofEnabled = register_cvar("hwn_collector_wof", "1");
     g_cvarWofDelay = register_cvar("hwn_collector_wof_delay", "90.0");
-    g_cvarNpcDropChanceSpell = register_cvar("hwn_collector_npc_drop_spell_chance", "10.0");
+    g_cvarNpcDropChanceSpell = register_cvar("hwn_collector_npc_drop_chance_spell", "10.0");
 
     g_fwPlayerPointsChanged = CreateMultiForward("Hwn_Collector_Fw_PlayerPoints", ET_IGNORE, FP_CELL);
     g_fwTeamPointsChanged = CreateMultiForward("Hwn_Collector_Fw_TeamPoints", ET_IGNORE, FP_CELL);
@@ -220,9 +220,11 @@ public OnTargetKilled(ent)
         new Float:fSpellChance = get_pcvar_float(g_cvarNpcDropChanceSpell);
 
         new ent = CE_Create(
-            fSpellChance && fSpellChance >= random_float(0.0, 100.0)
-                ? SPELLBOOK_ENTITY_CLASSNAME
-                : LOOT_ENTITY_CLASSNAME,
+            (
+                fSpellChance && fSpellChance >= random_float(0.0, 100.0)
+                    ? SPELLBOOK_ENTITY_CLASSNAME
+                    : LOOT_ENTITY_CLASSNAME
+            ),
             vOrigin
         );
 
