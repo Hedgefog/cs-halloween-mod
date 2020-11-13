@@ -24,6 +24,7 @@ public plugin_init()
 
     new pluginID = register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
     register_clcmd("chooseteam", "OnClCmd_ChooseTeam");
+    register_clcmd("hwn_menu", "OnClCmd_Menu");
 
     format(g_szMenuTitle, charsmax(g_szMenuTitle), "%L", LANG_SERVER, "HWN_MENU_TITLE");
 
@@ -78,6 +79,12 @@ public OnClCmd_ChooseTeam(id)
 
     g_chooseTeamOverride |= (1<<(id&31));
     return PLUGIN_CONTINUE;
+}
+
+public OnClCmd_Menu(id)
+{
+    ShowMenu(id);
+    return PLUGIN_HANDLED;
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
