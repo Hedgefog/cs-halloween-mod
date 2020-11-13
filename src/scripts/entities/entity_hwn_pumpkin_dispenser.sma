@@ -139,7 +139,7 @@ Drop(ent)
     if (fImpulse > 0.0) {
         static Float:vVelocity[3];
 
-        if (pev(ent, pev_spawnflags) & (1<<0)) {
+        if (~pev(ent, pev_spawnflags) & (1<<1)) {
             vVelocity[0] = random_float(-1.0, 1.0);
             vVelocity[1] = random_float(-1.0, 1.0);
 

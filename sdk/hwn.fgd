@@ -67,7 +67,7 @@
     delay(string) : "Delay" : "10.0"
     impulse(string) : "Impulse" : "320.0"
     spawnflags(flags) = [
-        1 : "Random Drop Direction" : 0
+        2 : "Drop Forward" : 0
     ]
 ]
 
