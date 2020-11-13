@@ -84,7 +84,8 @@ public Native_Equip(pluginID, argc)
 
 public client_connect(id)
 {
-    ArraySetCell(g_playerEquipment, id, 0);
+    new equipment = is_user_bot(id) ? random(sizeof(g_weaponIndexes)) : 0;
+    ArraySetCell(g_playerEquipment, id, equipment);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
