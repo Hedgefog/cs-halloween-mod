@@ -86,7 +86,7 @@ public plugin_init()
 
     g_fwPlayerPointsChanged = CreateMultiForward("Hwn_Collector_Fw_PlayerPoints", ET_IGNORE, FP_CELL);
     g_fwTeamPointsChanged = CreateMultiForward("Hwn_Collector_Fw_TeamPoints", ET_IGNORE, FP_CELL);
-    g_fwOvertime = CreateMultiForward("Hwn_Collector_Fw_Overtime", ET_IGNORE);
+    g_fwOvertime = CreateMultiForward("Hwn_Collector_Fw_Overtime", ET_IGNORE, FP_CELL);
 }
 
 public plugin_natives()
@@ -303,7 +303,7 @@ public Hwn_Gamemode_Fw_RoundExpired()
 
             g_isOvertime = true;
 
-            ExecuteForward(g_fwOvertime, g_fwResult);
+            ExecuteForward(g_fwOvertime, g_fwResult, overtime);
         } else {
             Hwn_Gamemode_DispatchWin(3);
         }

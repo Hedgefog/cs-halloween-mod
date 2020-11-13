@@ -257,7 +257,7 @@ native bool:Hwn_Collector_IsOvertime();
 
 forward Hwn_Collector_Fw_TeamPoints(team);
 forward Hwn_Collector_Fw_PlayerPoints(id);
-forward Hwn_Collector_Fw_Overtime();
+forward Hwn_Collector_Fw_Overtime(time);
 
 /*--------------------------------[ Spells ]--------------------------------*/
 
