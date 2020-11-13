@@ -15,6 +15,7 @@
 
 #define BUCKET_ENTITY_CLASSNAME "hwn_bucket"
 #define LOOT_ENTITY_CLASSNAME "hwn_item_pumpkin"
+#define SPELLBOOK_ENTITY_CLASSNAME "hwn_item_spellbook"
 #define BACKPACK_ENTITY_CLASSNAME "hwn_item_pumpkin_big"
 
 #define TASKID_WOF_ROLL 1000
@@ -33,6 +34,7 @@ new g_hGamemode;
 new g_cvarTeamPointsLimit;
 new g_cvarWofEnabled;
 new g_cvarWofDelay;
+new g_cvarNpcDropChanceSpell;
 
 new g_maxPlayers;
 
@@ -74,6 +76,7 @@ public plugin_init()
     g_cvarTeamPointsLimit = register_cvar("hwn_collector_teampoints_limit", "50");
     g_cvarWofEnabled = register_cvar("hwn_collector_wof", "1");
     g_cvarWofDelay = register_cvar("hwn_collector_wof_delay", "90.0");
+    g_cvarNpcDropChanceSpell = register_cvar("hwn_collector_npc_drop_spell_chance", "10.0");
 
     g_fwPlayerPointsChanged = CreateMultiForward("Hwn_Collector_Fw_PlayerPoints", ET_IGNORE, FP_CELL);
     g_fwTeamPointsChanged = CreateMultiForward("Hwn_Collector_Fw_TeamPoints", ET_IGNORE, FP_CELL);
@@ -207,13 +210,24 @@ public OnTargetKilled(ent)
         return;
     }
 
-    if (pev(ent, pev_flags) & FL_MONSTER) { //Monster kill reward
+    static bossEnt;
+    Hwn_Bosses_GetCurrent(bossEnt);
+
+    if (ent != bossEnt && pev(ent, pev_flags) & FL_MONSTER) { // Monster kill reward
         static Float:vOrigin[3];
         pev(ent, pev_origin, vOrigin);
 
-        new pumpkinEnt = CE_Create(LOOT_ENTITY_CLASSNAME, vOrigin);
-        if (pumpkinEnt) {
-            dllfunc(DLLFunc_Spawn, pumpkinEnt);
+        new Float:fSpellChance = get_pcvar_float(g_cvarNpcDropChanceSpell);
+
+        new ent = CE_Create(
+            fSpellChance && fSpellChance >= random_float(0.0, 100.0)
+                ? SPELLBOOK_ENTITY_CLASSNAME
+                : LOOT_ENTITY_CLASSNAME,
+            vOrigin
+        );
+
+        if (ent) {
+            dllfunc(DLLFunc_Spawn, ent);
         }
     }
 }
