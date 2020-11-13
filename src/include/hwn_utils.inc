@@ -68,14 +68,17 @@ stock UTIL_StrToVec(const string[], Float:vector[3])
     }
 }
 
-stock Float:UTIL_CalculateRadiusDamage(const Float:vOrigin1[3], const Float:vOrigin2[3], Float:fRadius, Float:fMaxDamage)
+stock Float:UTIL_CalculateRadiusDamage(const Float:vOrigin1[3], const Float:vOrigin2[3], Float:fRadius, Float:fMaxDamage, bool:ignoreObstacles = false)
 {
-    new Float:fDistance = get_distance_f(vOrigin1, vOrigin2);
-    new Float:fDamage = fMaxDamage * (fRadius-fDistance)/fRadius;
-
-    if (fDamage <= 0) {
+    if (!ignoreObstacles && !UTIL_IsPointVisible(vOrigin1, vOrigin2)) {
         return 0.0;
     }
+
+    new Float:fDistance = get_distance_f(vOrigin1, vOrigin2);
+
+    new Float:fMultiplier = floatclamp((1.0 - ((fDistance - fRadius) / fRadius)), 0.0, 1.0);
+
+    new Float:fDamage = fMaxDamage * fMultiplier;
 
     return fDamage;
 }
@@ -132,6 +135,19 @@ stock Float:UTIL_GetDistanceToFloor(const Float:vOrigin[3], ignoreEnt = 0)
     free_tr2(trace);
 
     return (vOrigin[2] - vTarget[2]);
+}
+
+stock bool:UTIL_IsPointVisible(const Float:vOrigin1[3], const Float:vOrigin2[3], ignoreEnt = 0)
+{
+    new trace = create_tr2();
+    engfunc(EngFunc_TraceLine, vOrigin1, vOrigin2, IGNORE_MONSTERS, ignoreEnt, trace);
+
+    static Float:fFraction;
+    get_tr2(trace, TR_flFraction, fFraction);
+
+    free_tr2(trace);
+
+    return fFraction == 1.0;
 }
 
 stock UTIL_SetSequence(ent, sequence)

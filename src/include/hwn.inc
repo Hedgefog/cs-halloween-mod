@@ -5,6 +5,8 @@
             Added objectives blocking while the boss is alive
             Added boss spawning on team points collect
             Added bonuses for team bucket filling
+            Explosions now take obstacles into account
+            Improved radius damage calculation
             Crit damage now applies only to players and NPCs
             Added a chance to drop a spellbook from an NPC on kill
             Buckets now ignore wallbang damage

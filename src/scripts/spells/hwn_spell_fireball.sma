@@ -17,7 +17,7 @@
 
 const Float:FireballDamage = 30.0;
 
-const Float:EffectRadius = 128.0;
+const Float:EffectRadius = 64.0;
 new const EffectColor[3] = {255, 127, 47};
 
 new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
@@ -131,7 +131,7 @@ Detonate(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    new Array:nearbyEntities = UTIL_FindEntityNearby(vOrigin, EffectRadius);
+    new Array:nearbyEntities = UTIL_FindEntityNearby(vOrigin, EffectRadius * 2);
     new size = ArraySize(nearbyEntities);
 
     for (new i = 0; i < size; ++i) {
