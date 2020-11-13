@@ -303,6 +303,9 @@ forward Hwn_Bosses_Fw_Winner(id);
 
 native Hwn_PEquipment_ShowMenu(id);
 native Hwn_PEquipment_Equip(id);
+native Hwn_PEquipment_GiveHealth(id, amount);
+native Hwn_PEquipment_GiveArmor(id, amount);
+native Hwn_PEquipment_GiveAmmo(id, amount = 1);
 
 forward Hwn_PEquipment_Fw_Changed(id);
 

@@ -59,6 +59,9 @@ public plugin_natives()
     register_library("hwn");
     register_native("Hwn_PEquipment_ShowMenu", "Native_ShowMenu");
     register_native("Hwn_PEquipment_Equip", "Native_Equip");
+    register_native("Hwn_PEquipment_GiveHealth", "Native_GiveHealth");
+    register_native("Hwn_PEquipment_GiveArmor", "Native_GiveArmor");
+    register_native("Hwn_PEquipment_GiveAmmo", "Native_GiveAmmo");
 }
 
 public plugin_end()
@@ -78,6 +81,27 @@ public Native_Equip(pluginID, argc)
 {
     new id = get_param(1);
     Equip(id);
+}
+
+public Native_GiveHealth(pluginID, argc)
+{
+    new id = get_param(1);
+    new amount = get_param(2);
+    GiveHealth(id, amount);
+}
+
+public Native_GiveArmor(pluginID, argc)
+{
+    new id = get_param(1);
+    new amount = get_param(2);
+    GiveArmor(id, amount);
+}
+
+public Native_GiveAmmo(pluginID, argc)
+{
+    new id = get_param(1);
+    new amount = get_param(2);
+    GiveAmmo(id, amount);
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -128,6 +152,57 @@ Equip(id)
     }
 
     cs_set_user_armor(id, 100, CS_ARMOR_VESTHELM);
+}
+
+GiveHealth(id, amount)
+{
+    new Float:fHealth;
+    pev(id, pev_health, fHealth);
+
+    if (fHealth < 100.0) {
+        fHealth += float(amount);
+
+        if (fHealth > 100.0) {
+            fHealth = 100.0;
+        }
+
+        set_pev(id, pev_health, fHealth);
+    }
+}
+
+
+GiveArmor(id, amount)
+{
+    new Float:fArmor = float(pev(id, pev_armorvalue));
+
+    if (fArmor < 100.0) {
+        fArmor += float(amount);
+
+        if (fArmor > 100.0) {
+            fArmor = 100.0;
+        }
+
+        set_pev(id, pev_armorvalue, fArmor);
+    }
+}
+
+GiveAmmo(id, amount)
+{
+    new weapons[32];
+    new weaponCount = 0;
+
+    get_user_weapons(id, weapons, weaponCount);
+
+    for (new i = 0; i < weaponCount; ++i) {
+        new weapon = weapons[i];
+        new ammoType = WeaponAmmo[weapon];
+
+        if (ammoType >= 0) {
+            for (new i = 0; i < amount; ++i) {
+                give_item(id, AmmoEntityNames[ammoType]);
+            }
+        }
+    }
 }
 
 ShowMenu(id)
