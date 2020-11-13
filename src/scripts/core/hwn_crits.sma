@@ -211,7 +211,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
         static Float:vHitOrigin[3];
         get_tr2(trace, TR_vecEndPos, vHitOrigin);
 
-        CritEffect(vHitOrigin, vAttackerOrigin, vDirection);
+        CritEffect(vHitOrigin, vAttackerOrigin, vDirection, isHit);
 
         if (get_pcvar_num(g_cvarCritsSoundHit)) {
             UTIL_Message_Sound(vHitOrigin, g_szSndCritHit[random(sizeof(g_szSndCritHit))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
@@ -219,8 +219,8 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
 
         ArraySetCell(g_playerLastCrit, attacker, fGameTime);
 
-        // apply crit only for players and monsters
-        if (UTIL_IsPlayer(ent) || pev(ent, pev_flags) & FL_MONSTER) {
+        // apply crit only on hit
+        if (isHit) {
             SetHamParamFloat(3, fDamage * get_pcvar_float(g_cvarCritsDmgMultiplier));
             SetHamParamInteger(6, damageBits | DMG_ALWAYSGIB | DMG_SHOCK);
         }
@@ -333,19 +333,22 @@ UpdateStatusIcon(id)
         UTIL_Message_StatusIcon(id, value, CRIT_STATUS_ICON, {HWN_COLOR_PRIMARY});
 }
 
-CritEffect(const Float:vOrigin[3], const Float:vAttackerOrigin[3], const Float:vDirection[3])
+CritEffect(const Float:vOrigin[3], const Float:vAttackerOrigin[3], const Float:vDirection[3], bool:isHit)
 {
     new color = EFFECT_COLOR_BYTE;
 
-    if (get_pcvar_float(g_cvarCritsEffectTrace) > 0) {
+    if (get_pcvar_num(g_cvarCritsEffectTrace) > 0
+        && (get_pcvar_num(g_cvarCritsEffectTrace) != 2 || isHit)) {
         TraceEffect(vAttackerOrigin, vOrigin, color);
     }
 
-    if (get_pcvar_float(g_cvarCritsEffectSplash) > 0) {
+    if (get_pcvar_num(g_cvarCritsEffectSplash) > 0
+        && (get_pcvar_num(g_cvarCritsEffectSplash) != 2 || isHit)) {
         SplashEffect(vOrigin, vDirection, color);
     }
 
-    if (get_pcvar_float(g_cvarCritsEffectFlash) > 0) {
+    if (get_pcvar_num(g_cvarCritsEffectFlash) > 0
+        && (get_pcvar_num(g_cvarCritsEffectFlash) != 2 || isHit)) {
         FlashEffect(vOrigin);
     }
 }
