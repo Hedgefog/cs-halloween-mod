@@ -84,7 +84,7 @@ public plugin_init()
     g_cvarRoundTimeOvertime = register_cvar("hwn_collector_roundtime_overtime", "30");
     g_cvarWofEnabled = register_cvar("hwn_collector_wof", "1");
     g_cvarWofDelay = register_cvar("hwn_collector_wof_delay", "90.0");
-    g_cvarNpcDropChanceSpell = register_cvar("hwn_collector_npc_drop_chance_spell", "10.0");
+    g_cvarNpcDropChanceSpell = register_cvar("hwn_collector_npc_drop_chance_spell", "7.5");
     g_cvarTeamPointsToBossSpawn = register_cvar("hwn_collector_teampoints_to_boss_spawn", "20");
 
     g_fwPlayerPointsChanged = CreateMultiForward("Hwn_Collector_Fw_PlayerPoints", ET_IGNORE, FP_CELL);
