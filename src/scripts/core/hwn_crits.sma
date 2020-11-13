@@ -219,8 +219,11 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
 
         ArraySetCell(g_playerLastCrit, attacker, fGameTime);
 
-        SetHamParamFloat(3, fDamage * get_pcvar_float(g_cvarCritsDmgMultiplier));
-        SetHamParamInteger(6, damageBits | DMG_ALWAYSGIB);
+        // apply crit only for players and monsters
+        if (UTIL_IsPlayer(ent) || pev(ent, pev_flags) & FL_MONSTER) {
+            SetHamParamFloat(3, fDamage * get_pcvar_float(g_cvarCritsDmgMultiplier));
+            SetHamParamInteger(6, damageBits | DMG_ALWAYSGIB | DMG_SHOCK);
+        }
     }
 
     if (isHit) {
