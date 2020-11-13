@@ -42,6 +42,9 @@ new const g_szSndPointCollected[] = "hwn/misc/collected.wav";
 
 new g_cvarBucketHealth;
 new g_cvarBucketCollectFlash;
+new g_cvarBucketBonusHealth;
+new g_cvarBucketBonusArmor;
+new g_cvarBucketBonusAmmo;
 
 new Float:g_fThinkDelay;
 
@@ -74,6 +77,9 @@ public plugin_precache()
 
     g_cvarBucketHealth = register_cvar("hwn_bucket_health", "300");
     g_cvarBucketCollectFlash = register_cvar("hwn_bucket_collect_flash", "1");
+    g_cvarBucketBonusHealth = register_cvar("hwn_bucket_bonus_health", "10");
+    g_cvarBucketBonusArmor = register_cvar("hwn_bucket_bonus_armor", "10");
+    g_cvarBucketBonusAmmo = register_cvar("hwn_bucket_bonus_ammo", "1");
 }
 
 public plugin_init()
@@ -235,7 +241,12 @@ public TaskThink(ent)
                 free_tr2(trace);
 
                 if (fraction == 1.0 && fGametime >= g_fNextCollectTime[id]) {
-                    TakePlayerPoint(ent, id);
+                    if (TakePlayerPoint(ent, id)) {
+                        Hwn_PEquipment_GiveHealth(id, get_pcvar_num(g_cvarBucketBonusHealth));
+                        Hwn_PEquipment_GiveArmor(id, get_pcvar_num(g_cvarBucketBonusArmor));
+                        Hwn_PEquipment_GiveAmmo(id, get_pcvar_num(g_cvarBucketBonusAmmo));
+                    }
+
                     g_fNextCollectTime[id] = fGametime + 1.0;
                 }
             }
@@ -247,11 +258,11 @@ public TaskThink(ent)
 
 /*------------[ Private ]------------*/
 
-TakePlayerPoint(ent, id)
+bool:TakePlayerPoint(ent, id)
 {
     new playerPoints = Hwn_Collector_GetPlayerPoints(id);
     if (playerPoints <= 0) {
-        return;
+        return false;
     }
 
     new team = UTIL_GetPlayerTeam(id);
@@ -293,6 +304,8 @@ TakePlayerPoint(ent, id)
     if (get_pcvar_num(g_cvarBucketCollectFlash) > 0) {
         FlashEffect(vOrigin, team);
     }
+
+    return true;
 }
 
 ExtractPoints(ent, count = 1)
