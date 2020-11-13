@@ -23,6 +23,7 @@
 #define HUD_POS_STATIC_TEAM_POINTS -1.0, 0.075
 #define HUD_POS_STATIC_PLAYER_SPELL -1.0, 0.85
 #define HUD_POS_NOTIFICATION_INFO -1.0, 0.65
+#define HUD_POS_NOTIFICATION_OVERTIME -1.0, 0.030
 #define HUD_POS_NOTIFICATION_WOF -1.0, 0.15
 #define HUD_POS_NOTIFICATION_BOSS_SPAWN -1.0, 0.225
 #define HUD_POS_NOTIFICATION_BOSS_ESCAPE -1.0, 0.225
@@ -140,6 +141,12 @@ public Hwn_Wof_Fw_Effect_Start(spellIdx)
 
     SetupNotificationMessage(HUD_POS_NOTIFICATION_WOF);
     show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_WOF_EFFECT_STARTED", szName);
+}
+
+public Hwn_Collector_Fw_Overtime(overtime)
+{
+    SetupNotificationMessage(HUD_POS_NOTIFICATION_OVERTIME, .holdTime = float(overtime));
+    show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_OVERTIME");
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/

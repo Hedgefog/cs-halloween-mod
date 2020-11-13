@@ -18,6 +18,7 @@ HWN_BOSS_SPAWN = %s has appeared!
 HWN_BOSS_ESCAPE = %s has gone!
 HWN_WOF_ROLL_STARTED = Wheel of Fate roll started...
 HWN_WOF_EFFECT_STARTED = Your fate... is... %s!
+HWN_OVERTIME = Overtime
 
 [ru]
 HWN_GIFT_SPAWN = Призрачный Подарок таинственно появился в случайном месте!
@@ -39,6 +40,7 @@ HWN_BOSS_SPAWN = %s появился!
 HWN_BOSS_ESCAPE = %s ушел!
 HWN_WOF_ROLL_STARTED = Колесо судьбы начало свое вращение...
 HWN_WOF_EFFECT_STARTED = Ваша судьба... это... %s!
+HWN_OVERTIME = Дополнительное время
 
 [es]
 HWN_GIFT_SPAWN = Un misterioso regalo de ^nHalloween ha aparecido en algun lugar,^nve y encuentralo!
@@ -60,6 +62,7 @@ HWN_BOSS_SPAWN = %s has appeared!
 HWN_BOSS_ESCAPE = %s has gone!
 HWN_WOF_ROLL_STARTED = Wheel of Fate roll started...
 HWN_WOF_EFFECT_STARTED = Your fate... is... %s!
+HWN_OVERTIME = Overtime
 
 [ro]
 HWN_GIFT_SPAWN = Un Cadou Bantuit de Halloween a^naparut in mod misterios undeva,^nasezat doar pentru tine. Du-te si gaseste-l!
@@ -81,6 +84,7 @@ HWN_BOSS_SPAWN = %s has appeared!
 HWN_BOSS_ESCAPE = %s has gone!
 HWN_WOF_ROLL_STARTED = Wheel of Fate roll started...
 HWN_WOF_EFFECT_STARTED = Your fate... is... %s!
+HWN_OVERTIME = Overtime
 
 [hu]
 HWN_GIFT_SPAWN = Egy Kísérteties Halloweeni Ajándék^nrejtelmesen megjelent valahol,^ncsak a számodra. Menj és találd meg!
@@ -102,6 +106,7 @@ HWN_BOSS_SPAWN = %s megjelent!
 HWN_BOSS_ESCAPE = %s eltűnt!
 HWN_WOF_ROLL_STARTED = A Sors Kereke éppen sorsol...
 HWN_WOF_EFFECT_STARTED = A sorsod pedig... %s!
+HWN_OVERTIME = Overtime
 
 [bp]
 HWN_GIFT_SPAWN = Um misterioso Presente de Halloween caiu^nem algum lugar,^n somente para você. Corra e encontre!
@@ -123,3 +128,4 @@ HWN_BOSS_SPAWN = %s has appeared!
 HWN_BOSS_ESCAPE = %s has gone!
 HWN_WOF_ROLL_STARTED = Wheel of Fate roll started...
 HWN_WOF_EFFECT_STARTED = Your fate... is... %s!
+HWN_OVERTIME = Overtime
