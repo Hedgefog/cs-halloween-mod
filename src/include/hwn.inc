@@ -2,6 +2,7 @@
     6.2.0
         Additions and improvements:
             Added round time for collector gamemode
+            Added objectives blocking while the boss is alive
             Added bonuses for team bucket filling
             Crit damage now applies only to players and NPCs
             Added a chance to drop a spellbook from an NPC on kill
@@ -277,6 +278,7 @@ native Hwn_Collector_SetPlayerPoints(id, count);
 native Hwn_Collector_GetTeamPoints(team);
 native Hwn_Collector_SetTeamPoints(team, count);
 native bool:Hwn_Collector_IsOvertime();
+native bool:Hwn_Collector_ObjectiveBlocked();
 
 forward Hwn_Collector_Fw_TeamPoints(team);
 forward Hwn_Collector_Fw_PlayerPoints(id);
@@ -322,7 +324,7 @@ native Hwn_Bosses_Register(const szCEClassName[], const szName[] = "Boss");
 native Hwn_Bosses_GetCurrent(&ent = 0);
 native Hwn_Bosses_GetName(bossIdx, szOutput[], maxlen);
 
-forward Hwn_Bosses_Fw_BossSpawn(ent);
+forward Hwn_Bosses_Fw_BossSpawn(ent, Float:fLifeTime);
 forward Hwn_Bosses_Fw_BossKill(ent);
 forward Hwn_Bosses_Fw_BossEscape(ent);
 forward Hwn_Bosses_Fw_BossTeleport(ent, handler);

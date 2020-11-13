@@ -260,6 +260,10 @@ public TaskThink(ent)
 
 bool:TakePlayerPoint(ent, id)
 {
+    if (Hwn_Collector_ObjectiveBlocked()) {
+        return false;
+    }
+
     new playerPoints = Hwn_Collector_GetPlayerPoints(id);
     if (playerPoints <= 0) {
         return false;
@@ -308,10 +312,14 @@ bool:TakePlayerPoint(ent, id)
     return true;
 }
 
-ExtractPoints(ent, count = 1)
+bool:ExtractPoints(ent, count = 1)
 {
+    if (Hwn_Collector_ObjectiveBlocked()) {
+        return false;
+    }
+
     if (count <= 0) {
-        return;
+        return false;
     }
 
     new team = pev(ent, pev_team);
@@ -346,6 +354,8 @@ ExtractPoints(ent, count = 1)
             dllfunc(DLLFunc_Spawn, pumpkinEnt);
         }
     }
+
+    return true;
 }
 
 FlashEffect(const Float:vOrigin[3], team)

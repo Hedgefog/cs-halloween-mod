@@ -97,6 +97,7 @@ public plugin_natives()
     register_native("Hwn_Collector_GetTeamPoints", "Native_GetTeamPoints");
     register_native("Hwn_Collector_SetTeamPoints", "Native_SetTeamPoints");
     register_native("Hwn_Collector_IsOvertime", "Native_IsOvertime");
+    register_native("Hwn_Collector_ObjectiveBlocked", "Native_ObjectiveBlocked");
 }
 
 public plugin_end()
@@ -140,6 +141,11 @@ public Native_SetTeamPoints(pluginID, argc)
 public bool:Native_IsOvertime(pluginID, argc)
 {
     return g_isOvertime;
+}
+
+public bool:Native_ObjectiveBlocked(pluginID, argc)
+{
+    return Hwn_Bosses_GetCurrent() != -1;
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/

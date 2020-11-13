@@ -70,7 +70,7 @@ public plugin_init()
     g_cvarBossMinDamageToWin = register_cvar("hwn_boss_min_damage_to_win", "300");
     g_cvarBossPve = register_cvar("hwn_boss_pve", "0");
 
-    g_fwBossSpawn = CreateMultiForward("Hwn_Bosses_Fw_BossSpawn", ET_IGNORE, FP_CELL);
+    g_fwBossSpawn = CreateMultiForward("Hwn_Bosses_Fw_BossSpawn", ET_IGNORE, FP_CELL, FP_CELL);
     g_fwBossKill = CreateMultiForward("Hwn_Bosses_Fw_BossKill", ET_IGNORE, FP_CELL);
     g_fwBossEscape = CreateMultiForward("Hwn_Bosses_Fw_BossEscape", ET_IGNORE, FP_CELL);
     g_fwBossTeleport = CreateMultiForward("Hwn_Bosses_Fw_BossTeleport", ET_IGNORE, FP_CELL, FP_CELL);
@@ -301,17 +301,16 @@ SpawnBoss()
     }
 
     g_bossIdx = bossIdx;
-
-    dllfunc(DLLFunc_Spawn, g_bossEnt);
-
     g_bossSpawnPoint = targetIdx;
 
+    dllfunc(DLLFunc_Spawn, g_bossEnt);
     client_cmd(0, "spk %s", g_szSndBossSpawn);
-    set_task(get_pcvar_float(g_cvarBossLifeTime), "TaskRemoveBoss", TASKID_REMOVE_BOSS);
-
     IntersectKill();
 
-    ExecuteForward(g_fwBossSpawn, g_fwResult, g_bossEnt);
+    new Float:fLifeTime = get_pcvar_float(g_cvarBossLifeTime);
+
+    set_task(fLifeTime, "TaskRemoveBoss", TASKID_REMOVE_BOSS);
+    ExecuteForward(g_fwBossSpawn, g_fwResult, g_bossEnt, fLifeTime);
 }
 
 IntersectKill()
