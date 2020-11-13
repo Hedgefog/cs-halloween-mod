@@ -1,4 +1,24 @@
 /*
+    6.2.0
+        Additions and improvements:
+            Added round time for collector gamemode
+            Added bonuses for team bucket filling
+            Crit damage now applies only to players and NPCs
+            Added a chance to drop a spellbook from an NPC on kill
+            Buckets now ignore wallbang damage
+            Added random equipment for bots
+            Added drop forward flag to hwn_pumpkin_dispenser entity
+            Removed drop direction flag from hwn_pumpkin_dispenser entity
+            Added onhit mode for crit effects
+
+        Cvars:
+            Added hwn_collector_round_time cvar
+            Added hwn_collector_round_time_overtime cvar
+            Added hwn_bucket_bonus_health cvar
+            Added hwn_bucket_bonus_armor cvar
+            Added hwn_bucket_bonus_ammo cvar
+            Added hwn_collector_npc_drop_chance_spell cvar
+
     6.1.0
         Additions and improvements:
             Reduced the fire rate boost for the powerup spell
@@ -212,7 +232,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.1.0"
+#define HWN_VERSION "6.2.0"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
