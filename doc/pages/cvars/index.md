@@ -58,3 +58,5 @@
 | hwn_crits_toggle %playerId%             | Toggle crits for player (Admin Acces)                                 | caller        |
 | hwn_hud_collector_hide_timer            | Enable/Disable hide timer hud in collector gamemode                   | 1             |
 | hwn_hud_collector_hide_money            | Enable/Disable hide money hud in collector gamemode                   | 1             |
+| hwn_bots_spells                         | Enable/Disable spells for bots                                        | 1             |
+| hwn_bots_cosmetics                      | Number of cosmetic items for bots                                     | 3             |
