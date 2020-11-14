@@ -40,6 +40,15 @@ public client_connect(id)
     g_playerFirstSpawnFlag |= (1 << (id & 31));
 }
 
+#if AMXX_VERSION_NUM < 183
+    public client_disconnect(id)
+#else
+    public client_disconnected(id)
+#endif
+{
+    g_playerFirstSpawnFlag &= ~(1 << (id & 31));
+}
+
 public OnPlayerSpawn(id)
 {
     if (!is_user_bot(id)) {
