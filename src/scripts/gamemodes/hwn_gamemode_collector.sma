@@ -339,6 +339,7 @@ public Hwn_Bosses_Fw_BossSpawn(ent, Float:fLifeTime)
 {
     new roundTime = Hwn_Gamemode_GetRoundTime() + floatround(fLifeTime);
     Hwn_Gamemode_SetRoundTime(roundTime);
+    g_teamPointsToSpawnBoss = 0;
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
