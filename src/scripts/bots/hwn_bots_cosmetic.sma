@@ -1,0 +1,91 @@
+#include <amxmodx>
+#include <hamsandwich>
+
+#include <hwn>
+#include <api_player_inventory>
+#include <api_player_cosmetic>
+
+#define PLUGIN "[Hwn] Bots Cosmetics"
+#define AUTHOR "Hedgehog Fog"
+
+new g_cvarCosmeticCount;
+
+new g_playerFirstSpawnFlag = 0;
+new PInv_ItemType:g_hItemTypeCosmetic;
+
+public plugin_precache()
+{
+    g_cvarCosmeticCount = register_cvar("hwn_bots_cosmetics", "3");
+}
+
+public plugin_init()
+{
+    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+
+    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
+
+    g_hItemTypeCosmetic = PInv_GetItemTypeHandler("cosmetic");
+}
+
+public client_connect(id)
+{
+    if (get_pcvar_num(g_cvarCosmeticCount) <= 0) {
+        return;
+    }
+
+    if (!is_user_bot(id)) {
+        return;
+    }
+
+    g_playerFirstSpawnFlag |= (1 << (id & 31));
+}
+
+public OnPlayerSpawn(id)
+{
+    if (!is_user_bot(id)) {
+        return HAM_IGNORED;
+    }
+
+    if (g_playerFirstSpawnFlag & (1 << (id & 31))) {
+        EquipRandomCosmetics(id);
+        g_playerFirstSpawnFlag &= ~(1 << (id & 31));
+
+        return HAM_HANDLED;
+    }
+
+    return HAM_IGNORED;
+}
+
+EquipRandomCosmetics(id)
+{
+    new count = Hwn_Cosmetic_GetCount();
+
+    for (new i = 0; i < count; ++i) {
+        new cosmetic = Hwn_Cosmetic_GetCosmetic(i);
+        PCosmetic_Give(id, cosmetic, random(2) == 1 ? PCosmetic_Type_Unusual : PCosmetic_Type_Normal, 999999);
+    }
+
+    new total = 0;
+    new invSize = PInv_Size(id);
+    for (new i = 0; i < invSize; ++i) {
+        if (PInv_GetItemType(id, i) != g_hItemTypeCosmetic) {
+            continue;
+        }
+
+        new cosmetic = PCosmetic_GetItemCosmetic(id, i);
+        if (!PCosmetic_CanBeEquiped(id, cosmetic)) {
+            continue;
+        }
+    
+        if (random(100) > 50) {
+            continue;
+        }
+
+        PCosmetic_Equip(id, i);
+        total++;
+
+        if (total >= get_pcvar_num(g_cvarCosmeticCount)) {
+            break;
+        }
+    }
+}
