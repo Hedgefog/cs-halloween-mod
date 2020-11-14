@@ -5,6 +5,8 @@
             Added objectives blocking while the boss is alive
             Added boss spawning on team points collect
             Added bonuses for team bucket filling
+            Bots now use spells
+            Bots are now equipped with random cosmetics
             Explosions now take obstacles into account
             Improved radius damage calculation
             Crit damage now applies only to players and NPCs
@@ -24,6 +26,8 @@
             Added hwn_bucket_bonus_ammo cvar
             Added hwn_collector_npc_drop_chance_spell cvar
             Added hwn_collector_teampoints_to_boss_spawn cvar
+            Added hwn_bots_spells cvar
+            Added hwn_bots_cosmetics cvar
 
         Fixes:
             Fixed team score calculation for reapi version
