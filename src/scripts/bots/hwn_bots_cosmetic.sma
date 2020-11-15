@@ -57,6 +57,7 @@ public OnPlayerSpawn(id)
 
     if (g_playerFirstSpawnFlag & (1 << (id & 31))) {
         GiveAllCosmetic(id);
+        UnequipAllCosmetic(id)
         EquipRandomCosmetics(id);
         g_playerFirstSpawnFlag &= ~(1 << (id & 31));
 
@@ -69,6 +70,7 @@ public OnPlayerSpawn(id)
 EquipRandomCosmetics(id)
 {
     new cosmeticLimit = get_pcvar_num(g_cvarCosmeticCount);
+
     new invSize = PInv_Size(id);
     new total = 0;
 
@@ -92,6 +94,19 @@ EquipRandomCosmetics(id)
         if (total >= cosmeticLimit) {
             break;
         }
+    }
+}
+
+UnequipAllCosmetic(id)
+{
+    new invSize = PInv_Size(id);
+
+    for (new i = 0; i < invSize; ++i) {
+        if (PInv_GetItemType(id, i) != g_hItemTypeCosmetic) {
+            continue;
+        }
+
+        PCosmetic_Unequip(id, i);
     }
 }
 
