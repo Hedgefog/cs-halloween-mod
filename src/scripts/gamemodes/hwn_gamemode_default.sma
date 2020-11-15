@@ -35,8 +35,10 @@ new g_cvarChangeLighting;
 new g_customSkyIdx = -1;
 
 new g_defaultLigthStyle[] = "0";
-new g_lightStyle[] = "0";
 new g_customLigthStyle[] = "e";
+new g_defaultSkyName[32];
+new g_defaultSkyColor[3];
+new g_prevChangeLightingCvarVal;
 
 public plugin_precache()
 {
@@ -66,11 +68,16 @@ public plugin_init()
     g_cvarRandomEvents = register_cvar("hwn_gamemode_random_events", "1");
 
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
+}
 
-    set_task(3.0, "TaskUpdateLighting", _, _, _, "b");
+/*--------------------------------[ Forwards ]--------------------------------*/
 
+public Hwn_Fw_ConfigLoaded()
+{
     CreateEventTask();
     UpdateSky();
+
+    set_task(3.0, "TaskUpdateLighting", _, _, _, "b");
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -82,13 +89,10 @@ public OnLightStyle(style, szPattern[])
     }
 
     g_defaultLigthStyle[0] = szPattern[0];
-    g_lightStyle[0] = szPattern[0];
-
-    if (get_pcvar_num(g_cvarChangeLighting)) {
-        if (g_lightStyle[0] > g_customLigthStyle[0]) {
-            g_lightStyle[0] = g_customLigthStyle[0];
-        }
-    }
+    g_defaultSkyColor[0] = get_cvar_num("sv_skycolor_r");
+    g_defaultSkyColor[1] = get_cvar_num("sv_skycolor_g");
+    g_defaultSkyColor[2] = get_cvar_num("sv_skycolor_b");
+    get_cvar_string("sv_skyname", g_defaultSkyName, charsmax(g_defaultSkyName));
 }
 
 public OnPlayerSpawn(id)
@@ -124,6 +128,11 @@ UpdateSky()
         set_cvar_num("sv_skycolor_r", g_customSkies[g_customSkyIdx][CustomSky_Color][0]);
         set_cvar_num("sv_skycolor_g", g_customSkies[g_customSkyIdx][CustomSky_Color][1]);
         set_cvar_num("sv_skycolor_b", g_customSkies[g_customSkyIdx][CustomSky_Color][2]);
+    } else {
+        set_cvar_string("sv_skyname", g_defaultSkyName);
+        set_cvar_num("sv_skycolor_r", g_defaultSkyColor[0]);
+        set_cvar_num("sv_skycolor_g", g_defaultSkyColor[1]);
+        set_cvar_num("sv_skycolor_b", g_defaultSkyColor[2]);
     }
 }
 
@@ -176,5 +185,16 @@ public TaskUpdateLighting()
         return;
     }
 
-    engfunc(EngFunc_LightStyle, 0, g_lightStyle);
+    new changeLighting = get_pcvar_num(g_cvarChangeLighting);
+
+    new bool:useCustom = changeLighting > 0
+        && g_defaultLigthStyle[0] > g_customLigthStyle[0];
+
+    engfunc(EngFunc_LightStyle, 0, useCustom ? g_customLigthStyle : g_defaultLigthStyle);
+
+    if (g_prevChangeLightingCvarVal != changeLighting) {
+        UpdateSky();
+    }
+
+    g_prevChangeLightingCvarVal = changeLighting;
 }
