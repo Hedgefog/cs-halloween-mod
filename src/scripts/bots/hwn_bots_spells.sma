@@ -8,8 +8,8 @@
 #define PLUGIN "[Hwn] Bots Spells"
 #define AUTHOR "Hedgehog Fog"
 
-#define SPELL_CHECK_DELAY 0.25
-#define SPELL_CAST_CHANCE 100.0
+#define SPELL_CHECK_DELAY 0.5
+#define SPELL_CAST_CHANCE 50.0
 #define SPELL_CHECK_RADIUS 1024.0
 #define SPELL_CHECK_DISTANCE 2048.0
 #define SPELL_CAST_DELAY 10.0
