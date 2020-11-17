@@ -659,7 +659,7 @@ stock UTIL_Message_BeamCylinder(
     engfunc(EngFunc_WriteCoord, vOrigin[2]);
     engfunc(EngFunc_WriteCoord, 0.0);
     engfunc(EngFunc_WriteCoord, 0.0);
-    engfunc(EngFunc_WriteCoord, fRadius);
+    engfunc(EngFunc_WriteCoord, vOrigin[2] + fRadius);
     write_short(modelIndex);
     write_byte(startFrame);
     write_byte(0);
@@ -694,7 +694,7 @@ stock UTIL_Message_BeamTorus(
     engfunc(EngFunc_WriteCoord, vOrigin[2]);
     engfunc(EngFunc_WriteCoord, 0.0);
     engfunc(EngFunc_WriteCoord, 0.0);
-    engfunc(EngFunc_WriteCoord, fRadius);
+    engfunc(EngFunc_WriteCoord, vOrigin[2] + fRadius);
     write_short(modelIndex);
     write_byte(startFrame);
     write_byte(0);
@@ -729,7 +729,7 @@ stock UTIL_Message_BeamDisk(
     engfunc(EngFunc_WriteCoord, vOrigin[2]);
     engfunc(EngFunc_WriteCoord, 0.0);
     engfunc(EngFunc_WriteCoord, 0.0);
-    engfunc(EngFunc_WriteCoord, fRadius);
+    engfunc(EngFunc_WriteCoord, vOrigin[2] + fRadius);
     write_short(modelIndex);
     write_byte(startFrame);
     write_byte(0);
