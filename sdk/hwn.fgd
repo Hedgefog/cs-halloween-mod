@@ -130,7 +130,7 @@
     base(Targetname, Angles)
     color(90 27 122)
     size(-8 -8 -16, 8 8 16)
-    Studio("models/hwn/npc/skeleton_small_v2.mdl")
+    Studio("models/hwn/npc/skeleton_small_v3.mdl")
 = hwn_npc_skeleton_small []
 
 @PointClass
