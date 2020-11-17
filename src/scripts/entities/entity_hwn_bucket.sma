@@ -15,6 +15,25 @@
 
 #define TASKID_SUM_BOIL_SOUND 1000
 
+#define RANGE 256.0
+
+#define ACTION_POP_DURATION 0.33
+
+#define EFFECT_MAGIC_SPLASH_PARTICLE_COUNT 32
+#define EFFECT_MAGIC_SPLASH_PARTICLE_LIFETIME 1
+#define EFFECT_MAGIC_SPLASH_PARTICLE_SCALE 1
+#define EFFECT_MAGIC_SPLASH_PARTICLE_SPEED 16
+#define EFFECT_MAGIC_SPLASH_PARTICLE_NOISE 32
+#define EFFECT_SPELL_DROPS_SCALE 15
+#define EFFECT_SPELL_DROPS_COLOR 242
+#define EFFECT_WAVE_RADIUS RANGE - 1.0
+#define EFFECT_WAVE_LIFETIME 5
+#define EFFECT_WAVE_WIDTH 32
+#define EFFECT_WAVE_BRIGHTNESS 100
+#define EFFECT_WAVE_DISK_BRIGHTNESS 60
+#define EFFECT_SPLASH_LIFETIME 10
+#define EFFECT_SPLASH_ALPHA 50
+
 #define ENTITY_NAME "hwn_bucket"
 #define LIQUID_ENTITY_NAME "hwn_bucket_liquid"
 
@@ -154,7 +173,7 @@ public Hwn_Collector_Fw_WinnerTeam(team)
         }
 
         set_pev(ent, pev_body, 1);
-        MagicSplashEffect(ent, 32);
+        MagicSplashEffect(ent);
     }
 }
 
@@ -164,17 +183,12 @@ public OnSpawn(ent)
 {
     new team = pev(ent, pev_team);
 
-    new Float:fRenderColor[3];
-    for (new i = 0; i < 3; ++i) {
-        fRenderColor[i] = g_vTeamColor[Team:team][i] * 1.0;
-    }
-
     set_pev(ent, pev_solid, SOLID_BBOX);
     set_pev(ent, pev_movetype, MOVETYPE_FLY);
     set_pev(ent, pev_takedamage, DAMAGE_AIM);
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 0.0);
-    set_pev(ent, pev_rendercolor, fRenderColor);
+    set_pev(ent, pev_rendercolor, g_vTeamColor[Team:team]);
     set_pev(ent, pev_health, float(get_pcvar_num(g_cvarBucketHealth)));
     set_pev(ent, pev_body, 0);
 
@@ -315,7 +329,7 @@ public TaskThink(ent)
         static Float:vPlayerOrigin[3];
         pev(id, pev_origin, vPlayerOrigin);
 
-        if (get_distance_f(vOrigin, vPlayerOrigin) > 256.0) {
+        if (get_distance_f(vOrigin, vPlayerOrigin) > RANGE) {
             continue;
         }
 
@@ -369,7 +383,7 @@ bool:TakePlayerPoint(ent, id)
 
     ExecuteHamB(Ham_AddPoints, id, 1, false);
 
-    PlayActionSequence(ent, 2, 0.33);
+    PlayActionSequence(ent, 2, ACTION_POP_DURATION);
     TakePlayerPointEffect(ent, id);
     client_cmd(id, "spk %s", g_szSndPointCollected);
 
@@ -498,8 +512,31 @@ PotionWaveEffect(ent)
     pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 1.0;
 
-    UTIL_Message_BeamCylinder(vOrigin, 255.0, g_sprPotionBeam, 0, 5, 32, 0, {HWN_COLOR_GREEN_DARK}, 100, 0);
-    UTIL_Message_BeamDisk(vOrigin, 255.0, g_sprPotionBeam, 0, 5, 32, 0, {HWN_COLOR_GREEN_DARK}, 60, 0);
+    UTIL_Message_BeamCylinder(
+        vOrigin,
+        EFFECT_WAVE_RADIUS,
+        g_sprPotionBeam,
+        0,
+        EFFECT_WAVE_LIFETIME,
+        EFFECT_WAVE_WIDTH,
+        0,
+        {HWN_COLOR_GREEN_DARK},
+        EFFECT_WAVE_BRIGHTNESS,
+        0
+    );
+
+    UTIL_Message_BeamDisk(
+        vOrigin,
+        EFFECT_WAVE_RADIUS,
+        g_sprPotionBeam,
+        0,
+        EFFECT_WAVE_LIFETIME,
+        EFFECT_WAVE_WIDTH,
+        0,
+        {HWN_COLOR_GREEN_DARK},
+        EFFECT_WAVE_DISK_BRIGHTNESS,
+        0
+    );
 }
 
 PotionSplashEffect(ent)
@@ -508,7 +545,7 @@ PotionSplashEffect(ent)
     pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 32.0;
 
-    UTIL_Message_Sprite(vOrigin, g_sprPotionSplash, 10, 50);
+    UTIL_Message_Sprite(vOrigin, g_sprPotionSplash, EFFECT_SPLASH_LIFETIME, EFFECT_SPLASH_ALPHA);
 }
 
 HitEffect(ent, attacker, const Float:vHitOrigin[3])
@@ -526,10 +563,10 @@ LiquidSplashEffect(ent)
     pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 42.0;
 
-    UTIL_Message_BloodSprite(vOrigin, 0, g_sprBlood, 242, 15);
+    UTIL_Message_BloodSprite(vOrigin, 0, g_sprBlood, EFFECT_SPELL_DROPS_COLOR, EFFECT_SPELL_DROPS_SCALE);
 }
 
-MagicSplashEffect(ent, count)
+MagicSplashEffect(ent)
 {
     static Float:vStart[3];
     pev(ent, pev_origin, vStart);
@@ -539,5 +576,14 @@ MagicSplashEffect(ent, count)
     xs_vec_copy(vStart, vEnd);
     vEnd[2] += 16.0;
 
-    UTIL_Message_SpriteTrail(vStart, vEnd, g_sprSparkle, count, 1, 1, 16, 32);
+    UTIL_Message_SpriteTrail(
+        vStart,
+        vEnd,
+        g_sprSparkle,
+        EFFECT_MAGIC_SPLASH_PARTICLE_COUNT,
+        EFFECT_MAGIC_SPLASH_PARTICLE_LIFETIME,
+        EFFECT_MAGIC_SPLASH_PARTICLE_SCALE,
+        EFFECT_MAGIC_SPLASH_PARTICLE_SPEED,
+        EFFECT_MAGIC_SPLASH_PARTICLE_NOISE
+    );
 }
