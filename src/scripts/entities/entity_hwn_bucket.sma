@@ -339,7 +339,7 @@ public TaskThink(ent)
 
 public TaskBoilSound(taskID)
 {
-    if (Hwn_Collector_ObjectiveBlocked()) {
+    if (!g_roundStarted ||Hwn_Collector_ObjectiveBlocked()) {
         return;
     }
 
