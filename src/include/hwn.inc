@@ -19,6 +19,7 @@
             Added onhit mode for crit effects
             Improved explosion effect
             Improved custom lighting for default gamemode
+            Improved overheal spell effect
 
         Cvars:
             Added hwn_collector_roundtime cvar
