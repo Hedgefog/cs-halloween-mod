@@ -1,6 +1,7 @@
 /*
     6.2.0
         Additions and improvements:
+            New team bucket
             Added round time for collector gamemode
             Added objectives blocking while the boss is alive
             Added boss spawning on team points collect
@@ -17,6 +18,7 @@
             Removed drop direction flag from hwn_pumpkin_dispenser entity
             Added onhit mode for crit effects
             Improved explosion effect
+            Improved custom lighting for default gamemode
 
         Cvars:
             Added hwn_collector_roundtime cvar
@@ -31,6 +33,7 @@
 
         Fixes:
             Fixed team score calculation for reapi version
+            Fixed crit trace origin
 
     6.1.0
         Additions and improvements:
