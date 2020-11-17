@@ -447,7 +447,7 @@ UpdateAction(ent)
         return;
     }
 
-    UTIL_SetSequence(ent, Hwn_Collector_ObjectiveBlocked() ? 0 : 1);
+    UTIL_SetSequence(ent, !g_roundStarted || Hwn_Collector_ObjectiveBlocked() ? 0 : 1);
 }
 
 TakePlayerPointEffect(ent, id)
