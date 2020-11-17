@@ -56,7 +56,7 @@
     base(Targetname, Angles, Team)
     color(90 27 122)
     size(-28 -28 0, 28 28 56)
-    Studio("models/hwn/props/pumpkin_bucket.mdl")
+    Studio("models/hwn/props/cauldron.mdl")
 = hwn_bucket []
 
 @PointClass

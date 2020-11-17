@@ -26,6 +26,7 @@ new g_fwResult;
 new g_fwPlayerPointsChanged;
 new g_fwTeamPointsChanged;
 new g_fwOvertime;
+new g_fwWinnerTeam;
 
 new Array:g_playerPoints;
 new Array:g_teamPoints;
@@ -90,6 +91,7 @@ public plugin_init()
     g_fwPlayerPointsChanged = CreateMultiForward("Hwn_Collector_Fw_PlayerPoints", ET_IGNORE, FP_CELL);
     g_fwTeamPointsChanged = CreateMultiForward("Hwn_Collector_Fw_TeamPoints", ET_IGNORE, FP_CELL);
     g_fwOvertime = CreateMultiForward("Hwn_Collector_Fw_Overtime", ET_IGNORE, FP_CELL);
+    g_fwWinnerTeam = CreateMultiForward("Hwn_Collector_Fw_WinnerTeam", ET_IGNORE, FP_CELL);
 }
 
 public plugin_natives()
@@ -313,11 +315,10 @@ public Hwn_Gamemode_Fw_RoundExpired()
 
             ExecuteForward(g_fwOvertime, g_fwResult, overtime);
         } else {
-            Hwn_Gamemode_DispatchWin(3);
+            DispatchWin(3);
         }
     } else {
-        new winnerTeam = tTeamPoints > ctTeamPoints ? 1 : 2;
-        Hwn_Gamemode_DispatchWin(winnerTeam);
+        DispatchWin(tTeamPoints > ctTeamPoints ? 1 : 2);
     }
 }
 
@@ -382,7 +383,7 @@ SetTeamPoints(team, count, bool:silent = false)
 
     new teamPointsLimit = get_pcvar_num(g_cvarTeamPointsLimit);
     if (count >= teamPointsLimit) {
-        Hwn_Gamemode_DispatchWin(team);
+        DispatchWin(team);
     }
 
     if (!silent) {
@@ -416,6 +417,12 @@ SetWofTask()
 ClearWofTasks()
 {
     remove_task(TASKID_WOF_ROLL);
+}
+
+DispatchWin(team)
+{
+    Hwn_Gamemode_DispatchWin(team);
+    ExecuteForward(g_fwWinnerTeam, g_fwResult, team);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/

@@ -292,6 +292,7 @@ native bool:Hwn_Collector_ObjectiveBlocked();
 forward Hwn_Collector_Fw_TeamPoints(team);
 forward Hwn_Collector_Fw_PlayerPoints(id);
 forward Hwn_Collector_Fw_Overtime(time);
+forward Hwn_Collector_Fw_WinnerTeam(team);
 
 /*--------------------------------[ Spells ]--------------------------------*/
 

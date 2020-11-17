@@ -657,9 +657,44 @@ stock UTIL_Message_BeamCylinder(
     engfunc(EngFunc_WriteCoord, vOrigin[0]);
     engfunc(EngFunc_WriteCoord, vOrigin[1]);
     engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    engfunc(EngFunc_WriteCoord, 0.0);
+    engfunc(EngFunc_WriteCoord, 0.0);
+    engfunc(EngFunc_WriteCoord, fRadius);
+    write_short(modelIndex);
+    write_byte(startFrame);
+    write_byte(0);
+    write_byte(lifeTime);
+    write_byte(width);
+    write_byte(noise);
+    write_byte(color[0]);
+    write_byte(color[1]);
+    write_byte(color[2]);
+    write_byte(brightness);
+    write_byte(speed);
+    message_end();
+}
+
+stock UTIL_Message_BeamTorus(
+    const Float:vOrigin[3],
+    Float:fRadius,
+    modelIndex = 0,
+    startFrame = 0,
+    lifeTime = 1,
+    width = 0,
+    noise = 0,
+    const color[3] = {255, 255, 255},
+    brightness = 255,
+    speed = 255
+)
+{
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_BEAMTORUS);
     engfunc(EngFunc_WriteCoord, vOrigin[0]);
     engfunc(EngFunc_WriteCoord, vOrigin[1]);
-    engfunc(EngFunc_WriteCoord, vOrigin[2] + fRadius);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    engfunc(EngFunc_WriteCoord, 0.0);
+    engfunc(EngFunc_WriteCoord, 0.0);
+    engfunc(EngFunc_WriteCoord, fRadius);
     write_short(modelIndex);
     write_byte(startFrame);
     write_byte(0);
@@ -692,9 +727,9 @@ stock UTIL_Message_BeamDisk(
     engfunc(EngFunc_WriteCoord, vOrigin[0]);
     engfunc(EngFunc_WriteCoord, vOrigin[1]);
     engfunc(EngFunc_WriteCoord, vOrigin[2]);
-    engfunc(EngFunc_WriteCoord, vOrigin[0]);
-    engfunc(EngFunc_WriteCoord, vOrigin[1]);
-    engfunc(EngFunc_WriteCoord, vOrigin[2] + fRadius);
+    engfunc(EngFunc_WriteCoord, 0.0);
+    engfunc(EngFunc_WriteCoord, 0.0);
+    engfunc(EngFunc_WriteCoord, fRadius);
     write_short(modelIndex);
     write_byte(startFrame);
     write_byte(0);
@@ -766,5 +801,78 @@ stock UTIL_Message_RoundTime(id, time)
 
     message_begin(id ? MSG_ONE : MSG_ALL, msgid);
     write_short(time);
+    message_end();
+}
+
+stock UTIL_Message_Blood(const Float:vOrigin[3], const Float:vDirection[3], color = 0, speed = 255)
+{
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_BLOOD);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    engfunc(EngFunc_WriteCoord, vDirection[0]);
+    engfunc(EngFunc_WriteCoord, vDirection[1]);
+    engfunc(EngFunc_WriteCoord, vDirection[2]);
+    write_byte(color);
+    write_byte(speed);
+    message_end();
+}
+
+stock UTIL_Message_Sprite(const Float:vOrigin[3], modelIndex, scale, alpha)
+{
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_SPRITE);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    write_short(modelIndex);
+    write_byte(scale);
+    write_byte(alpha);
+    message_end();
+}
+
+stock UTIL_Message_Sparks(const Float:vOrigin[3])
+{
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_SPARKS);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    message_end();
+}
+
+stock UTIL_Message_SpriteTrail(const Float:vStart[3], const Float:vEnd[3], modelIndex, count, lifeTime, scale, speed, noise)
+{
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vStart, 0);
+    write_byte(TE_SPRITETRAIL);
+    engfunc(EngFunc_WriteCoord, vStart[0]);
+    engfunc(EngFunc_WriteCoord, vStart[1]);
+    engfunc(EngFunc_WriteCoord, vStart[2]);
+    engfunc(EngFunc_WriteCoord, vEnd[0]);
+    engfunc(EngFunc_WriteCoord, vEnd[1]);
+    engfunc(EngFunc_WriteCoord, vEnd[2]);
+    write_short(modelIndex);
+    write_byte(count);
+    write_byte(lifeTime);
+    write_byte(scale);
+    write_byte(speed);
+    write_byte(noise);
+    message_end();
+}
+
+stock UTILS_Message_Projectile(const Float:vOrigin[3], const Float:vVelocity[3], modelIndex, lifeTime, owner)
+{
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_PROJECTILE);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    engfunc(EngFunc_WriteCoord, vVelocity[0]);
+    engfunc(EngFunc_WriteCoord, vVelocity[1]);
+    engfunc(EngFunc_WriteCoord, vVelocity[2]);
+    write_short(modelIndex);
+    write_byte(lifeTime);
+    write_byte(owner);
     message_end();
 }
