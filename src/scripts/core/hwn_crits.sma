@@ -208,10 +208,14 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
         static Float:vAttackerOrigin[3];
         pev(attacker, pev_origin, vAttackerOrigin);
 
+        static Float:vViewOrigin[3];
+        pev(attacker, pev_view_ofs, vViewOrigin);
+        xs_vec_add(vAttackerOrigin, vViewOrigin, vViewOrigin);
+
         static Float:vHitOrigin[3];
         get_tr2(trace, TR_vecEndPos, vHitOrigin);
 
-        CritEffect(vHitOrigin, vAttackerOrigin, vDirection, isHit);
+        CritEffect(vHitOrigin, vViewOrigin, vDirection, isHit);
 
         if (get_pcvar_num(g_cvarCritsSoundHit)) {
             UTIL_Message_Sound(vHitOrigin, g_szSndCritHit[random(sizeof(g_szSndCritHit))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
@@ -222,7 +226,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
         // apply crit only on hit
         if (isHit) {
             SetHamParamFloat(3, fDamage * get_pcvar_float(g_cvarCritsDmgMultiplier));
-            SetHamParamInteger(6, damageBits | DMG_ALWAYSGIB | DMG_SHOCK);
+            SetHamParamInteger(6, damageBits | DMG_ALWAYSGIB);
         }
     }
 
