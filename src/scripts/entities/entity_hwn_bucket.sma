@@ -459,19 +459,15 @@ bool:DropPumpkin(const Float:vOrigin[3])
 
 PlayActionSequence(ent, sequence, Float:fDuration)
 {
-    static Float:fPrevDuration;
-    pev(ent, pev_fuser1, fPrevDuration);
+    static Float:fNextAction;
+    pev(ent, pev_fuser1, fNextAction);
 
-    static Float:fPrevAnimtime;
-    pev(ent, pev_animtime, fPrevAnimtime);
-
-    new Float:fTimeLeft = (fPrevAnimtime + fPrevDuration) - get_gametime();
-    if (fTimeLeft > 0) {
+    if (fNextAction > get_gametime()) {
         return false;
     }
 
     UTIL_SetSequence(ent, sequence);
-    set_pev(ent, pev_fuser1, fDuration);
+    set_pev(ent, pev_fuser1, get_gametime() + fDuration);
 
     return true;
 }
