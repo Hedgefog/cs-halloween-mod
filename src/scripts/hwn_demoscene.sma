@@ -15,6 +15,7 @@
     12. Set Looping Options to "Forever"
     13. Turn off transparency
     14. Export video as gif
+    15. Use hwn_demoscene_reset command to stop script
 */
 
 #pragma semicolon 1
@@ -44,6 +45,8 @@ public plugin_init()
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
     RegisterHam(Ham_Think, CAMERA_CLASSNAME, "OnCameraThink", .Post = 0);
     RegisterHam(Ham_Player_PreThink, "player", "OnPlayerPreThink", .Post = 0);
+
+    register_clcmd("hwn_demoscene_reset", "ResetAll");
 }
 
 public plugin_precache()
