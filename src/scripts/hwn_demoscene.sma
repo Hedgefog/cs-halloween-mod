@@ -56,6 +56,7 @@ public plugin_precache()
 public Hwn_Fw_ConfigLoaded()
 {
     set_cvar_num("hwn_collector_npc_drop_chance_spell", 0);
+    set_cvar_num("hwn_crits_random_chance_max", 0);
 }
 
 public OnPlayerSpawn(id)
