@@ -1,5 +1,22 @@
 // Output GIF: 960x256, 24 fps
 
+/*
+    1. Set resolution to 1920x1080
+    2. Launch hwn_demoscene map
+    3. Start recording
+    4. Join team
+    5. Stop the video at end of the scene
+    6. Open recorded video in Photoshop
+    7. Cut video
+    8. Set canvas size to 1920x512
+    9. Set video fps to 24
+    10. Open Save for Web (Legacy)
+    11. Set image size to 50%
+    12. Set Looping Options to "Forever"
+    13. Turn off transparency
+    14. Export video as gif
+*/
+
 #pragma semicolon 1
 
 #include <amxmodx>
