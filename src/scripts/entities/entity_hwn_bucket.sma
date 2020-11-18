@@ -42,6 +42,14 @@
 #define FLASH_DECAY_RATE 28
 #define BOIL_SOUND_DURATION 2.2
 
+enum _:Sequence
+{
+    Sequence_Idle = 0,
+    Sequence_Bubbling,
+    Sequence_Pop,
+    Sequence_BigPop
+};
+
 enum Team
 {
     Team_Undefined = 0,
@@ -312,6 +320,7 @@ public TaskThink(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
+    new bool:isCollected = false;
     for (new id = 1; id <= g_maxPlayers; ++id)
     {
         if (!is_user_alive(id)) {
@@ -345,15 +354,22 @@ public TaskThink(ent)
         Hwn_PEquipment_GiveArmor(id, get_pcvar_num(g_cvarBucketBonusArmor));
         Hwn_PEquipment_GiveAmmo(id, get_pcvar_num(g_cvarBucketBonusAmmo));
 
+        isCollected = true;
         g_fNextCollectTime[id] = fGametime + 1.0;
     }
 
-    UpdateAction(ent);
+    if (isCollected) {
+        CollectEffect(ent);
+        PlayActionSequence(ent, Sequence_Pop, ACTION_POP_DURATION);
+    } else {
+        new sequence = !g_roundStarted || Hwn_Collector_ObjectiveBlocked() ? Sequence_Idle : Sequence_Bubbling;
+        PlayActionSequence(ent, sequence, 0.0);
+    }
 }
 
 public TaskBoilSound(taskID)
 {
-    if (!g_roundStarted ||Hwn_Collector_ObjectiveBlocked()) {
+    if (!g_roundStarted || Hwn_Collector_ObjectiveBlocked()) {
         return;
     }
 
@@ -383,8 +399,7 @@ bool:TakePlayerPoint(ent, id)
 
     ExecuteHamB(Ham_AddPoints, id, 1, false);
 
-    PlayActionSequence(ent, 2, ACTION_POP_DURATION);
-    TakePlayerPointEffect(ent, id);
+    BucketThrowEffect(ent, id);
     client_cmd(id, "spk %s", g_szSndPointCollected);
 
     return true;
@@ -418,7 +433,7 @@ bool:ExtractPoints(ent, count = 1)
         DropPumpkin(vOrigin);
     }
 
-    PlayActionSequence(ent, 2, 0.7);
+    PlayActionSequence(ent, Sequence_Pop, ACTION_POP_DURATION);
 
     return true;
 }
@@ -442,31 +457,27 @@ bool:DropPumpkin(const Float:vOrigin[3])
     return true;
 }
 
-PlayActionSequence(ent, seq, Float:fDuration)
+PlayActionSequence(ent, sequence, Float:fDuration)
 {
-    UTIL_SetSequence(ent, seq);
-    set_pev(ent, pev_fuser1, fDuration);
-}
+    static Float:fPrevDuration;
+    pev(ent, pev_fuser1, fPrevDuration);
 
-UpdateAction(ent)
-{
-    static Float:fDuration;
-    pev(ent, pev_fuser1, fDuration);
+    static Float:fPrevAnimtime;
+    pev(ent, pev_animtime, fPrevAnimtime);
 
-    static Float:fAnimtime;
-    pev(ent, pev_animtime, fAnimtime);
-
-    new Float:fTimeLeft = (fAnimtime + fDuration) - get_gametime();
+    new Float:fTimeLeft = (fPrevAnimtime + fPrevDuration) - get_gametime();
     if (fTimeLeft > 0) {
-        return;
+        return false;
     }
 
-    UTIL_SetSequence(ent, !g_roundStarted || Hwn_Collector_ObjectiveBlocked() ? 0 : 1);
+    UTIL_SetSequence(ent, sequence);
+    set_pev(ent, pev_fuser1, fDuration);
+
+    return true;
 }
 
-TakePlayerPointEffect(ent, id)
+CollectEffect(ent)
 {
-    BucketThrowEffect(ent, id);
     PotionSplashEffect(ent);
     PotionWaveEffect(ent);
 
@@ -479,7 +490,7 @@ BucketThrowEffect(ent, id)
 {
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
-    vOrigin[2] += 24.0;
+    vOrigin[2] += 42.0;
     
     static Float:vUserOrigin[3];
     pev(id, pev_origin, vUserOrigin);
