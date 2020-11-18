@@ -124,9 +124,6 @@ public plugin_precache()
         .preset = CEPreset_Prop
     );
 
-    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTakeDamage", .Post = 0);
-    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
-
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "OnKill");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
@@ -144,6 +141,9 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+
+    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTakeDamage", .Post = 0);
+    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
 
     g_maxPlayers = get_maxplayers();
 }
@@ -181,7 +181,7 @@ public Hwn_Collector_Fw_WinnerTeam(team)
         }
 
         set_pev(ent, pev_body, 1);
-        MagicSplashEffect(ent);
+        PotionExplodeEffect(ent);
     }
 }
 
@@ -192,7 +192,7 @@ public OnSpawn(ent)
     new team = pev(ent, pev_team);
 
     set_pev(ent, pev_solid, SOLID_BBOX);
-    set_pev(ent, pev_movetype, MOVETYPE_FLY);
+    set_pev(ent, pev_movetype, MOVETYPE_PUSHSTEP);
     set_pev(ent, pev_takedamage, DAMAGE_AIM);
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 0.0);
@@ -216,6 +216,35 @@ public OnSpawn(ent)
     set_task(BOIL_SOUND_DURATION, "TaskBoilSound", ent + TASKID_SUM_BOIL_SOUND, _, _, "b");
 }
 
+public OnKill(ent)
+{
+    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
+        return HAM_IGNORED;
+    }
+
+    static Float:fHealth;
+    pev(ent, pev_health, fHealth);
+
+    new extractCount = 1;
+    if (fHealth < 0) {
+        extractCount += -floatround(fHealth)/get_pcvar_num(g_cvarBucketHealth);
+    }
+
+    set_pev(ent, pev_health, float(get_pcvar_num(g_cvarBucketHealth)));
+    ExtractPoints(ent, extractCount);
+
+    return PLUGIN_HANDLED;
+}
+
+public OnRemove(ent)
+{
+    new liquidEnt = pev(ent, pev_iuser1);
+    CE_Remove(liquidEnt);
+
+    remove_task(ent);
+    remove_task(ent + TASKID_SUM_BOIL_SOUND);
+}
+
 public OnLiquidSpawn(ent)
 {
     new owner = pev(ent, pev_owner);
@@ -227,15 +256,6 @@ public OnLiquidSpawn(ent)
     static Float:vOrigin[3];
     pev(owner, pev_origin, vOrigin);
     engfunc(EngFunc_SetOrigin, ent, vOrigin);
-}
-
-public OnRemove(ent)
-{
-    new liquidEnt = pev(ent, pev_iuser1);
-    CE_Remove(liquidEnt);
-
-    remove_task(ent);
-    remove_task(ent + TASKID_SUM_BOIL_SOUND);
 }
 
 public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
@@ -281,26 +301,6 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     emit_sound(ent, CHAN_BODY, g_szSndHit[random(sizeof(g_szSndHit))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     return HAM_HANDLED;
-}
-
-public OnKill(ent)
-{
-    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
-        return HAM_IGNORED;
-    }
-
-    static Float:fHealth;
-    pev(ent, pev_health, fHealth);
-
-    new extractCount = 1;
-    if (fHealth < 0) {
-        extractCount += -floatround(fHealth)/get_pcvar_num(g_cvarBucketHealth);
-    }
-
-    set_pev(ent, pev_health, float(get_pcvar_num(g_cvarBucketHealth)));
-    ExtractPoints(ent, extractCount);
-
-    return PLUGIN_HANDLED;
 }
 
 /*------------[ Tasks ]------------*/
@@ -399,7 +399,7 @@ bool:TakePlayerPoint(ent, id)
 
     ExecuteHamB(Ham_AddPoints, id, 1, false);
 
-    BucketThrowEffect(ent, id);
+    PumpkinThrowEffect(ent, id);
     client_cmd(id, "spk %s", g_szSndPointCollected);
 
     return true;
@@ -472,17 +472,7 @@ PlayActionSequence(ent, sequence, Float:fDuration)
     return true;
 }
 
-CollectEffect(ent)
-{
-    PotionSplashEffect(ent);
-    PotionWaveEffect(ent);
-
-    if (get_pcvar_num(g_cvarBucketCollectFlash) > 0) {
-        FlashEffect(ent);
-    }
-}
-
-BucketThrowEffect(ent, id)
+PumpkinThrowEffect(ent, id)
 {
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
@@ -504,6 +494,25 @@ BucketThrowEffect(ent, id)
     UTILS_Message_Projectile(vUserOrigin, vVelocity, modelIndex, 10, id);
 }
 
+CollectEffect(ent)
+{
+    PotionSplashEffect(ent);
+    WaveEffect(ent);
+
+    if (get_pcvar_num(g_cvarBucketCollectFlash) > 0) {
+        FlashEffect(ent);
+    }
+}
+
+PotionSplashEffect(ent)
+{
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+    vOrigin[2] += 32.0;
+
+    UTIL_Message_Sprite(vOrigin, g_sprPotionSplash, EFFECT_SPLASH_LIFETIME, EFFECT_SPLASH_ALPHA);
+}
+
 FlashEffect(ent)
 {
     static Float:vOrigin[3];
@@ -513,7 +522,7 @@ FlashEffect(ent)
     UTIL_Message_Dlight(vOrigin, FLASH_RADIUS, {HWN_COLOR_SECONDARY}, FLASH_LIFETIME, FLASH_DECAY_RATE);
 }
 
-PotionWaveEffect(ent)
+WaveEffect(ent)
 {
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
@@ -546,25 +555,16 @@ PotionWaveEffect(ent)
     );
 }
 
-PotionSplashEffect(ent)
-{
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-    vOrigin[2] += 32.0;
-
-    UTIL_Message_Sprite(vOrigin, g_sprPotionSplash, EFFECT_SPLASH_LIFETIME, EFFECT_SPLASH_ALPHA);
-}
-
 HitEffect(ent, attacker, const Float:vHitOrigin[3])
 {
     UTIL_Message_Sparks(vHitOrigin);
 
-    if (UTIL_IsPlayer(attacker) && UTIL_GetPlayerTeam(attacker) != pev(ent, pev_team)) {
-        LiquidSplashEffect(ent);
+    if (!Hwn_Collector_ObjectiveBlocked() && UTIL_IsPlayer(attacker) && UTIL_GetPlayerTeam(attacker) != pev(ent, pev_team)) {
+        LiquidHitEffect(ent);
     }
 }
 
-LiquidSplashEffect(ent)
+LiquidHitEffect(ent)
 {
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
@@ -573,7 +573,7 @@ LiquidSplashEffect(ent)
     UTIL_Message_BloodSprite(vOrigin, 0, g_sprBlood, EFFECT_SPELL_DROPS_COLOR, EFFECT_SPELL_DROPS_SCALE);
 }
 
-MagicSplashEffect(ent)
+PotionExplodeEffect(ent)
 {
     static Float:vStart[3];
     pev(ent, pev_origin, vStart);
