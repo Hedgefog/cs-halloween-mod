@@ -1,4 +1,4 @@
-// Output GIF: 1920x512, 24 fps
+// Output GIF: 960x256, 24 fps
 
 #pragma semicolon 1
 
