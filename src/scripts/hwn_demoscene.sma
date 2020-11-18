@@ -73,7 +73,7 @@ public OnPlayerSpawn(id)
     set_task(2.0, "MoveStart", id);
     set_task(4.8, "CastSpell", id);
     set_task(5.75, "AttackStart", id);
-    set_task(6.75, "AttackEnd", id);
+    set_task(6.5, "AttackEnd", id);
 }
 
 public OnPlayerPreThink(id)
