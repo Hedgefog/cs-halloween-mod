@@ -14,10 +14,13 @@
 #define AUTHOR "Hedgehog Fog"
 
 #define TASKID_SUM_BOIL_SOUND 1000
+#define TASKID_SUM_REMOVE_LID 2000
 
 #define RANGE 256.0
 
 #define ACTION_POP_DURATION 0.33
+#define ACTION_BIG_POP_DURATION 0.365
+#define ACTION_BIG_POP_FRAMERATE 0.5
 
 #define EFFECT_MAGIC_SPLASH_PARTICLE_COUNT 32
 #define EFFECT_MAGIC_SPLASH_PARTICLE_LIFETIME 1
@@ -180,8 +183,12 @@ public Hwn_Collector_Fw_WinnerTeam(team)
             continue;
         }
 
-        set_pev(ent, pev_body, 1);
+        new Float:fDuration = ACTION_BIG_POP_DURATION * (1.0 / ACTION_BIG_POP_FRAMERATE);
+        PlayActionSequence(ent, Sequence_BigPop, fDuration);
+        set_pev(ent, pev_framerate, ACTION_BIG_POP_FRAMERATE);
         PotionExplodeEffect(ent);
+
+        set_task(fDuration, "TaskRemoveLid", ent + TASKID_SUM_REMOVE_LID);
     }
 }
 
@@ -212,6 +219,8 @@ public OnSpawn(ent)
 
     ArrayPushCell(g_buckets, ent);
 
+    ClearTasks(ent);
+
     set_task(g_fThinkDelay, "TaskThink", ent, _, _, "b");
     set_task(BOIL_SOUND_DURATION, "TaskBoilSound", ent + TASKID_SUM_BOIL_SOUND, _, _, "b");
 }
@@ -241,8 +250,7 @@ public OnRemove(ent)
     new liquidEnt = pev(ent, pev_iuser1);
     CE_Remove(liquidEnt);
 
-    remove_task(ent);
-    remove_task(ent + TASKID_SUM_BOIL_SOUND);
+    ClearTasks(ent);
 }
 
 public OnLiquidSpawn(ent)
@@ -378,7 +386,21 @@ public TaskBoilSound(taskID)
     emit_sound(ent, CHAN_STATIC, g_szSndBoil, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
+public TaskRemoveLid(taskID)
+{
+    new ent = taskID - TASKID_SUM_REMOVE_LID;
+
+    set_pev(ent, pev_body, 1);
+}
+
 /*------------[ Private ]------------*/
+
+ClearTasks(ent)
+{
+    remove_task(ent);
+    remove_task(ent + TASKID_SUM_BOIL_SOUND);
+    remove_task(ent + TASKID_SUM_REMOVE_LID);
+}
 
 bool:TakePlayerPoint(ent, id)
 {
