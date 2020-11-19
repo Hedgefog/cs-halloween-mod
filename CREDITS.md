@@ -14,3 +14,4 @@
 - Benoist - Spooky Pumpkin NPC idea
 - Maxxy - Spooky Pumpkin NPC Model
 - Chillax - Spooky Pumpkin NPC Animation
+- Seba - Cauldon Model
