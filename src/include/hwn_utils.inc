@@ -52,22 +52,6 @@ stock Float:UTIL_FpsToDelay(fps)
     return (100/fps) * 0.01;
 }
 
-stock UTIL_StrToVec(const string[], Float:vector[3])
-{
-    new strOrigin[3][8];
-
-    parse(
-        string,
-        strOrigin[0], 7,
-        strOrigin[1], 7,
-        strOrigin[2], 7
-    );
-
-    for (new i = 0; i < 3; ++i) {
-        vector[i] = str_to_float(strOrigin[i]);
-    }
-}
-
 stock Float:UTIL_CalculateRadiusDamage(const Float:vOrigin1[3], const Float:vOrigin2[3], Float:fRadius, Float:fMaxDamage, bool:ignoreObstacles = false)
 {
     if (!ignoreObstacles && !UTIL_IsPointVisible(vOrigin1, vOrigin2)) {
@@ -534,22 +518,6 @@ stock UTIL_GetViewOrigin(id, Float:vOut[3])
 
     xs_vec_copy(vStart, vOut);
     vOut[2] += vViewOfs[2];
-}
-
-stock bool:UTIL_IsPointVisibleByEnt(ent, const Float:vTarget[3])
-{
-    static Float:vOrigin[3];
-    UTIL_GetViewOrigin(ent, vOrigin);
-
-    new trace = create_tr2();
-    engfunc(EngFunc_TraceLine, vOrigin, vTarget, IGNORE_MONSTERS, ent, trace);
-    
-    static Float:fFraction;
-    get_tr2(trace, TR_flFraction, fFraction);
-
-    free_tr2(trace);
-
-    return fFraction == 1.0;
 }
 
 stock bool:UTIL_IsStuck(ent)
