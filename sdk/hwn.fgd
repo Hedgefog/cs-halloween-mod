@@ -16,8 +16,9 @@
 
 @BaseClass = Team
 [
-    team(choices) : "Team" : 1 =
+    team(choices) : "Team" : 0 =
     [
+        0: "None"
         1: "Terrorists"
         2: "Counter-Terrorists"
     ]

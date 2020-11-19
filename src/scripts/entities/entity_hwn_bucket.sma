@@ -62,7 +62,7 @@ enum Team
 };
 
 new Float:g_vTeamColor[Team][3] = {
-    {0.0, 0.0, 0.0},
+    {HWN_COLOR_GREEN_DARK_F},
     {HWN_COLOR_RED_F},
     {HWN_COLOR_BLUE_F},
     {255.0, 255.0, 255.0}
@@ -180,8 +180,9 @@ public Hwn_Collector_Fw_WinnerTeam(team)
     new count = ArraySize(g_buckets);
     for (new i = 0; i < count; ++i) {
         new ent = ArrayGetCell(g_buckets, i);
+        new bucketTeam = pev(ent, pev_team);
 
-        if (pev(ent, pev_team) != team) {
+        if (bucketTeam && bucketTeam != team) {
             continue;
         }
 
@@ -343,7 +344,8 @@ public OnTakeDamage(ent, inflictor, attacker, Float:fDamage, dmgBits)
         return HAM_IGNORED;
     }
 
-    if (!Hwn_Collector_ObjectiveBlocked() && UTIL_IsPlayer(attacker) && UTIL_GetPlayerTeam(attacker) != pev(ent, pev_team)) {
+    new team = pev(ent, pev_team);
+    if (!Hwn_Collector_ObjectiveBlocked() && UTIL_IsPlayer(attacker) && team && UTIL_GetPlayerTeam(attacker) != team) {
         DamageEffect(ent);
     }
 
@@ -378,7 +380,8 @@ public TaskThink(ent)
             continue;
         }
 
-        if (UTIL_GetPlayerTeam(id) != pev(ent, pev_team)) {
+        new team = pev(ent, pev_team);
+        if (team && UTIL_GetPlayerTeam(id) != team) {
             continue;
         }
 
