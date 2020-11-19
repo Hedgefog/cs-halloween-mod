@@ -145,7 +145,9 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTakeDamage", .Post = 0);
+    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTakeDamagePre", .Post = 0);
+    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttackPre", .Post = 0);
+    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTakeDamage", .Post = 1);
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
 
     g_maxPlayers = get_maxplayers();
@@ -242,7 +244,7 @@ public OnKill(ent)
     set_pev(ent, pev_health, float(get_pcvar_num(g_cvarBucketHealth)));
     ExtractPoints(ent, extractCount);
 
-    return PLUGIN_HANDLED;
+    return HAM_HANDLED;
 }
 
 public OnRemove(ent)
@@ -266,31 +268,20 @@ public OnLiquidSpawn(ent)
     engfunc(EngFunc_SetOrigin, ent, vOrigin);
 }
 
-public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
+public OnTraceAttackPre(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
 {
-    if (!attacker) {
-        return HAM_IGNORED;
-    }
-
     if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
         return HAM_IGNORED;
     }
 
-    new team = pev(ent, pev_team);
-    if (team == UTIL_GetPlayerTeam(attacker)) {
-        return HAM_SUPERCEDE;
-    }
+    static Float:vStart[3];
+    UTIL_GetViewOrigin(attacker, vStart);
 
-    new teamPoints = Hwn_Collector_GetTeamPoints(team);
-    if (teamPoints <= 0) {
-        return HAM_SUPERCEDE;
-    }
+    static Float:vEnd[3];
+    get_tr2(trace, TR_vecEndPos, vEnd);
 
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-
-    if (!UTIL_IsPointVisibleByEnt(inflictor, vOrigin)) { // block wallbangs
-        return HAM_SUPERCEDE;
+    if (!UTIL_IsPointVisible(vStart, vEnd, ent)) {
+        return HAM_SUPERCEDE; // ignore wallbang damage
     }
 
     return HAM_HANDLED;
@@ -305,8 +296,56 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     static Float:vEnd[3];
     get_tr2(trace, TR_vecEndPos, vEnd);
 
-    HitEffect(ent, attacker, vEnd);
+    UTIL_Message_Sparks(vEnd);
     emit_sound(ent, CHAN_BODY, g_szSndHit[random(sizeof(g_szSndHit))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
+    return HAM_HANDLED;
+}
+
+public OnTakeDamagePre(ent, inflictor, attacker, Float:fDamage, dmgBits)
+{
+    if (!attacker) {
+        return HAM_IGNORED;
+    }
+
+    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
+        return HAM_IGNORED;
+    }
+
+    if (~dmgBits & DMG_BULLET) { // explosions, etc.
+        static Float:vStart[3];
+        pev(inflictor, pev_origin, vStart);
+
+        static Float:vEnd[3];
+        pev(ent, pev_origin, vEnd);
+
+        if (!UTIL_IsPointVisible(vStart, vEnd, ent)) {
+            return HAM_SUPERCEDE; // ignore wallbang damage
+        }
+    }
+
+    new team = pev(ent, pev_team);
+    if (team == UTIL_GetPlayerTeam(attacker)) {
+        return HAM_SUPERCEDE;
+    }
+
+    new teamPoints = Hwn_Collector_GetTeamPoints(team);
+    if (teamPoints <= 0) {
+        return HAM_SUPERCEDE;
+    }
+
+    return HAM_HANDLED;
+}
+
+public OnTakeDamage(ent, inflictor, attacker, Float:fDamage, dmgBits)
+{
+    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
+        return HAM_IGNORED;
+    }
+
+    if (!Hwn_Collector_ObjectiveBlocked() && UTIL_IsPlayer(attacker) && UTIL_GetPlayerTeam(attacker) != pev(ent, pev_team)) {
+        DamageEffect(ent);
+    }
 
     return HAM_HANDLED;
 }
@@ -577,16 +616,7 @@ WaveEffect(ent)
     );
 }
 
-HitEffect(ent, attacker, const Float:vHitOrigin[3])
-{
-    UTIL_Message_Sparks(vHitOrigin);
-
-    if (!Hwn_Collector_ObjectiveBlocked() && UTIL_IsPlayer(attacker) && UTIL_GetPlayerTeam(attacker) != pev(ent, pev_team)) {
-        LiquidHitEffect(ent);
-    }
-}
-
-LiquidHitEffect(ent)
+DamageEffect(ent)
 {
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
