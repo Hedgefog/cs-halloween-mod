@@ -205,12 +205,8 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
             emit_sound(attacker, CHAN_STATIC , g_szSndCritShot, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
         }
 
-        static Float:vAttackerOrigin[3];
-        pev(attacker, pev_origin, vAttackerOrigin);
-
         static Float:vViewOrigin[3];
-        pev(attacker, pev_view_ofs, vViewOrigin);
-        xs_vec_add(vAttackerOrigin, vViewOrigin, vViewOrigin);
+        UTIL_GetViewOrigin(attacker, vViewOrigin);
 
         static Float:vHitOrigin[3];
         get_tr2(trace, TR_vecEndPos, vHitOrigin);

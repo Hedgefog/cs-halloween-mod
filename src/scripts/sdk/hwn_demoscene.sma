@@ -28,6 +28,7 @@
 #include <xs>
 
 #include <hwn>
+#include <hwn_utils>
 #include <api_custom_entities>
 
 #define CAMERA_CLASSNAME "trigger_camera"
@@ -121,11 +122,7 @@ public OnCameraThink(ent)
     }
 
     static Float:vPlayerOrigin[3];
-    pev(owner, pev_origin, vPlayerOrigin);
-
-    static Float:vViewOfs[3];
-    pev(owner, pev_view_ofs, vViewOfs);
-    vPlayerOrigin[2] += vViewOfs[2];
+    UTIL_GetViewOrigin(owner, vPlayerOrigin);
 
     static Float:vViewAngle[3];
     pev(owner, pev_v_angle, vViewAngle);

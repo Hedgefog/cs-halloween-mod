@@ -148,11 +148,7 @@ bool:CheckSpellCast(id)
 bool:IsLookingAroundEnemy(id)
 {
     static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
-
-    static Float:vViewOffset[3];
-    pev(id, pev_view_ofs, vViewOffset);
-    xs_vec_add(vOrigin, vViewOffset, vOrigin);
+    UTIL_GetViewOrigin(id, vOrigin);
 
     static Float:vTarget[3];
     velocity_by_aim(id, floatround(SPELL_CHECK_DISTANCE), vTarget);
