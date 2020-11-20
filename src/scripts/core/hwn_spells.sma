@@ -46,7 +46,7 @@ public plugin_init()
     g_playerNextCast = ArrayCreate(1, g_maxPlayers+1);
 
     for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerSpell, 0);
+        ArrayPushCell(g_playerSpell, -1);
         ArrayPushCell(g_playerSpellAmount, 0);
         ArrayPushCell(g_playerNextCast, 0);
     }
@@ -160,6 +160,15 @@ public Native_GetHandler(pluginID, argc)
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
+
+#if AMXX_VERSION_NUM < 183
+    public client_disconnect(id)
+#else
+    public client_disconnected(id)
+#endif
+{
+    SetPlayerSpell(id, -1, 0);
+}
 
 public OnClCmd_Give(id, level, cid)
 {
