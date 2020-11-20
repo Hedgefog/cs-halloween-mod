@@ -136,8 +136,8 @@ public Hwn_Wof_Fw_Roll_Start()
 
 public Hwn_Wof_Fw_Effect_Start(spellIdx)
 {
-    new szName[32];
-    Hwn_Wof_Spell_GetName(spellIdx, szName, charsmax(szName));
+    new szName[128];
+    Hwn_Wof_Spell_GetName(spellIdx, szName, charsmax(szName), LANG_PLAYER);
 
     SetupNotificationMessage(HUD_POS_NOTIFICATION_WOF);
     show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_WOF_EFFECT_STARTED", szName);
@@ -277,8 +277,8 @@ UpdatePlayerSpell(id)
         return;
     }
 
-    static szSpellName[32];
-    Hwn_Spell_GetName(userSpell, szSpellName, charsmax(szSpellName));
+    static szSpellName[128];
+    Hwn_Spell_GetName(userSpell, szSpellName, charsmax(szSpellName), id);
     
     set_hudmessage
     (
@@ -289,7 +289,7 @@ UpdatePlayerSpell(id)
         .channel = -1
     );
 
-    ShowSyncHudMsg(id, g_hudMsgPlayerSpell, "%L x%i", LANG_PLAYER, "HWN_SPELL", szSpellName, amount);
+    ShowSyncHudMsg(id, g_hudMsgPlayerSpell, "%L x%i", id, "HWN_SPELL", szSpellName, amount);
 }
 
 SetupNotificationMessage(Float:x = -1.0, Float:y = -1.0, const color[3] = {HUD_COLOR_NOTIFICATION}, Float:holdTime = 3.0)

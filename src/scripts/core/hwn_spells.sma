@@ -8,6 +8,7 @@
 #include <api_custom_entities>
 
 #include <hwn>
+#include <hwn_utils>
 
 #define PLUGIN "[Hwn] Spells"
 #define AUTHOR "Hedgehog Fog"
@@ -16,6 +17,7 @@ const Float:SpellCooldown = 1.0;
 
 new Trie:g_spells;
 new Array:g_spellName;
+new Array:g_spellDictKey;
 new Array:g_spellPluginID;
 new Array:g_spellCastFuncID;
 new g_spellCount = 0;
@@ -68,6 +70,7 @@ public plugin_end()
     if (g_spellCount) {
         TrieDestroy(g_spells);
         ArrayDestroy(g_spellName);
+        ArrayDestroy(g_spellDictKey);
         ArrayDestroy(g_spellCastFuncID);
         ArrayDestroy(g_spellPluginID);
     }
@@ -133,11 +136,12 @@ public Native_GetCount(pluginID, argc)
 
 public Native_GetName(pluginID, argc)
 {
-    new idx = get_param(1);
+    new spellIdx = get_param(1);
     new maxlen = get_param(3);
+    new lang = get_param(4);
 
-    static szSpellName[32];
-    ArrayGetString(g_spellName, idx, szSpellName, charsmax(szSpellName));
+    static szSpellName[128];
+    GetLocalizedName(spellIdx, lang, szSpellName, charsmax(szSpellName));
 
     set_string(2, szSpellName, maxlen);
 }
@@ -194,14 +198,19 @@ Register(const szName[], pluginID, castFuncID)
     if (!g_spellCount) {
         g_spells = TrieCreate();
         g_spellName = ArrayCreate(32);
+        g_spellDictKey = ArrayCreate(48);
         g_spellCastFuncID = ArrayCreate();
         g_spellPluginID = ArrayCreate();
     }
 
     new spellIdx = g_spellCount;
 
+    new szDictKey[48];
+    UTIL_CreateDictKey(szName, "HWN_SPELL_", szDictKey, charsmax(szDictKey));
+
     TrieSetCell(g_spells, szName, spellIdx);
     ArrayPushString(g_spellName, szName);
+    ArrayPushString(g_spellDictKey, szDictKey);
     ArrayPushCell(g_spellPluginID, pluginID);
     ArrayPushCell(g_spellCastFuncID, castFuncID);
 
@@ -246,4 +255,15 @@ CastPlayerSpell(id)
             ExecuteForward(g_fwCast, g_fwResult, id, spellIdx);
         }
     }
+}
+
+GetLocalizedName(spellIdx, lang, szOut[], len)
+{
+    static szSpellName[32];
+    ArrayGetString(g_spellName, spellIdx, szSpellName, charsmax(szSpellName));
+
+    static szDictKey[48];
+    ArrayGetString(g_spellDictKey, spellIdx, szDictKey, charsmax(szDictKey));
+
+    UTIL_GetLocalizedString(szDictKey, lang, szOut, len, szSpellName);
 }

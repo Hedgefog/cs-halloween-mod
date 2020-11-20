@@ -22,6 +22,7 @@ new g_szSndWofRun[] = "hwn/wof/wof_roll.wav";
 
 new Trie:g_spells;
 new Array:g_spellName;
+new Array:g_spellDictKey;
 new Array:g_spellPluginID;
 new Array:g_spellInvokeFuncID;
 new Array:g_spellRevokeFuncID;
@@ -75,6 +76,7 @@ public plugin_end()
     if (g_spellCount) {
         TrieDestroy(g_spells);
         ArrayDestroy(g_spellName);
+        ArrayDestroy(g_spellDictKey);
         ArrayDestroy(g_spellInvokeFuncID);
         ArrayDestroy(g_spellRevokeFuncID);
         ArrayDestroy(g_spellPluginID);
@@ -113,11 +115,12 @@ public Native_Spell_Register(pluginID, argc)
 
 public Native_Spell_GetName(pluginID, argc)
 {
-    new idx = get_param(1);
+    new spellIdx = get_param(1);
     new maxlen = get_param(3);
+    new lang = get_param(4);
 
-    static szSpellName[32];
-    ArrayGetString(g_spellName, idx, szSpellName, charsmax(szSpellName));
+    static szSpellName[128];
+    GetLocalizedName(spellIdx, lang, szSpellName, charsmax(szSpellName));
 
     set_string(2, szSpellName, maxlen);
 }
@@ -310,22 +313,27 @@ Register(const szName[], pluginID, invokeFuncID, revokeFuncID)
     if (!g_spellCount) {
         g_spells = TrieCreate();
         g_spellName = ArrayCreate(32);
+        g_spellDictKey = ArrayCreate(48);
         g_spellInvokeFuncID = ArrayCreate();
         g_spellRevokeFuncID = ArrayCreate();
         g_spellPluginID = ArrayCreate();
     }
 
-    new effectIdx = g_spellCount;
+    new spellIdx = g_spellCount;
+    
+    new szDictKey[48];
+    UTIL_CreateDictKey(szName, "HWN_WOF_SPELL_", szDictKey, charsmax(szDictKey));
 
-    TrieSetCell(g_spells, szName, effectIdx);
+    TrieSetCell(g_spells, szName, spellIdx);
     ArrayPushString(g_spellName, szName);
+    ArrayPushString(g_spellDictKey, szDictKey);
     ArrayPushCell(g_spellPluginID, pluginID);
     ArrayPushCell(g_spellInvokeFuncID, invokeFuncID);
     ArrayPushCell(g_spellRevokeFuncID, revokeFuncID);
 
     g_spellCount++;
 
-    return effectIdx;
+    return spellIdx;
 }
 
 CallInvoke(id)
@@ -367,6 +375,17 @@ Reset()
     g_effectStarted = false;
     remove_task(TASKID_ROLL_END);
     remove_task(TASKID_EFFECT_END);
+}
+
+GetLocalizedName(spellIdx, lang, szOut[], len)
+{
+    static szSpellName[32];
+    ArrayGetString(g_spellName, spellIdx, szSpellName, charsmax(szSpellName));
+
+    static szDictKey[48];
+    ArrayGetString(g_spellDictKey, spellIdx, szDictKey, charsmax(szDictKey));
+
+    UTIL_GetLocalizedString(szDictKey, lang, szOut, len, szSpellName);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/

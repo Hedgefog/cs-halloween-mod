@@ -302,7 +302,7 @@ forward Hwn_Collector_Fw_WinnerTeam(team);
 
 native Hwn_Spell_Register(const szName[], const szCastCallback[]);
 native Hwn_Spell_GetCount();
-native Hwn_Spell_GetName(spell, szOutput[], maxlen);
+native Hwn_Spell_GetName(spell, szOutput[], maxlen, lang = LANG_SERVER);
 native Hwn_Spell_GetHandler(const szName[]);
 
 native Hwn_Spell_GetPlayerSpell(id, &amount = 0);
@@ -314,7 +314,7 @@ forward Hwn_Spell_Fw_Cast(id, spellIdx);
 /*--------------------------------[ Wheel of Fate ]--------------------------------*/
 native Hwn_Wof_Spell_Register(const szName[], const szInvokeCallback[], const szRevokeCallback[] = "");
 native Hwn_Wof_Spell_GetCount();
-native Hwn_Wof_Spell_GetName(spell, szOutput[], maxlen);
+native Hwn_Wof_Spell_GetName(spell, szOutput[], maxlen, lang = LANG_SERVER);
 native Hwn_Wof_Spell_GetHandler(const szName[]);
 native Hwn_Wof_Roll();
 native Hwn_Wof_Abort();

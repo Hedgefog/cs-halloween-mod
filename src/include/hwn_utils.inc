@@ -852,3 +852,20 @@ stock UTILS_Message_Projectile(const Float:vOrigin[3], const Float:vVelocity[3],
     write_byte(owner);
     message_end();
 }
+
+stock UTIL_CreateDictKey(const szName[], const szPrefix[] = "", szOut[], len)
+{
+    copy(szOut, len, szName);
+    strtoupper(szOut);
+    replace_all(szOut, len, " ", "_");
+    format(szOut, len, "%s%s", szPrefix, szOut);
+}
+
+stock UTIL_GetLocalizedString(const szKey[], lang, szOut[], len, const szDefault[] = "")
+{
+    format(szOut, len, "%L", lang, szKey);
+
+    if (equali(szOut, "ML_NOTFOUND:", 12)) {
+        copy(szOut, len, szDefault);
+    }
+}
