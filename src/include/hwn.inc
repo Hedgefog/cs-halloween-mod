@@ -38,6 +38,7 @@
             Fixed team score calculation for reapi version
             Fixed crit trace origin
             Fixed explosive pumpkin damage
+            Reduced Monoculus damages
 
     6.1.0
         Additions and improvements:
