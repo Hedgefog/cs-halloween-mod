@@ -94,17 +94,13 @@ PumpkinRadiusDamage(ent, owner)
             continue;
         }
 
-        if (target == owner) {
-            owner = 0;
-        }
-
         static Float:vTargetOrigin[3];
         pev(target, pev_origin, vTargetOrigin);
 
         new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE);
 
         if (UTIL_IsPlayer(target)) {
-            UTIL_CS_DamagePlayer(target, fDamage, DMG_ALWAYSGIB, owner, ent);
+            UTIL_CS_DamagePlayer(target, fDamage, DMG_ALWAYSGIB, target == owner ? 0 : owner, ent);
         } else {
             ExecuteHamB(Ham_TakeDamage, target, ent, owner, fDamage, DMG_GENERIC);
         }
