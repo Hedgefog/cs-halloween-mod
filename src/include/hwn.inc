@@ -7,6 +7,7 @@
             Added boss spawning on team points collect
             Added bonuses for team bucket filling
             Added spells localization
+            Added bosses localization
             Bots now use spells
             Bots are now equipped with random cosmetics
             Explosions now take obstacles into account
