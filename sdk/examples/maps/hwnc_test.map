@@ -3,7 +3,7 @@
 "MaxRange" "4096"
 "skyname" "night"
 "mapversion" "220"
-"wad" "\vzhlt_34\zhlt.wad;\Steam\steamapps\common\Half-Life\valve\decals.wad;\Steam\steamapps\common\Half-Life\cstrike\decals.wad;\Steam\steamapps\common\Half-Life\valve\halflife.wad"
+"wad" "\zhlt.wad;\decals.wad;\decals.wad;\halflife.wad"
 "_generator" "J.A.C.K. 1.1.1064 (vpHalfLife)"
 {
 ( -288 -256 32 ) ( -64 -256 32 ) ( -288 -256 160 ) C1A3WALL07 [ 1 0 0 0 ] [ 0 0 -1 16 ] 0 1 1

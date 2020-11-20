@@ -5,7 +5,7 @@
 "light" "0"
 "sounds" "0"
 "mapversion" "220"
-"wad" "\Program Files\J.A.C.K\halflife\zhlt.wad;\Program Files (x86)\Steam\steamapps\common\Half-Life\valve\halflife.wad;\Users\yatsk\Desktop\hwn_logo.wad;\Program Files (x86)\Steam\steamapps\common\Half-Life\cstrike\chateau.wad"
+"wad" "\zhlt.wad;\halflife.wad;\hwn_logo.wad;\chateau.wad"
 "_generator" "J.A.C.K. 1.1.1064 (vpHalfLife)"
 {
 ( -2848 96 320 ) ( -2848 96 192 ) ( -2848 512 320 ) NULL [ 0 1 0 0 ] [ 0 0 -1 0 ] 0 1 1
