@@ -52,9 +52,16 @@ stock Float:UTIL_FpsToDelay(fps)
     return (100/fps) * 0.01;
 }
 
-stock Float:UTIL_CalculateRadiusDamage(const Float:vOrigin1[3], const Float:vOrigin2[3], Float:fRadius, Float:fMaxDamage, bool:ignoreObstacles = false)
+stock Float:UTIL_CalculateRadiusDamage(
+    const Float:vOrigin1[3],
+    const Float:vOrigin2[3],
+    Float:fRadius,
+    Float:fMaxDamage,
+    bool:ignoreObstacles = false,
+    ignoreEnt = 0
+)
 {
-    if (!ignoreObstacles && !UTIL_IsPointVisible(vOrigin1, vOrigin2)) {
+    if (!ignoreObstacles && !UTIL_IsPointVisible(vOrigin1, vOrigin2, ignoreEnt)) {
         return 0.0;
     }
 

@@ -173,7 +173,7 @@ RocketRadiusDamage(ent, owner)
         static Float:vTargetOrigin[3];
         pev(target, pev_origin, vTargetOrigin);
 
-        new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE);
+        new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE, false, target);
 
         if (UTIL_IsPlayer(target)) {
             UTIL_CS_DamagePlayer(target, fDamage, DMG_ALWAYSGIB, owner, owner);
