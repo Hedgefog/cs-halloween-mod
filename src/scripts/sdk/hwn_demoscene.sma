@@ -35,6 +35,7 @@
 #define CAMERA_MODEL "models/rpgrocket.mdl"
 #define PLAYER_MODEL "gign"
 #define PLAYER_WEAPON "weapon_mp5navy"
+#define SPELL_ID_FIREBALL 1
 #define DEPTH_OFFSET 64.0 // Distance between player and logo
 #define CAMERA_DISTANCE 240.0 // Resolution: 1920x1080 FOV: 90
 #define CAMERA_YAW 90.0 // Side view
@@ -201,7 +202,7 @@ public SetDecalsLimit(id, value)
 
 public CastSpell(id)
 {
-    Hwn_Spell_SetPlayerSpell(id, 1, 1);
+    Hwn_Spell_SetPlayerSpell(id, SPELL_ID_FIREBALL, 1);
     client_cmd(id, "impulse 100");
 }
 
