@@ -35,10 +35,11 @@
 #define CAMERA_MODEL "models/rpgrocket.mdl"
 #define PLAYER_MODEL "gign"
 #define PLAYER_WEAPON "weapon_mp5navy"
-#define SPELL_ID_FIREBALL 1
 #define DEPTH_OFFSET 64.0 // Distance between player and logo
 #define CAMERA_DISTANCE 240.0 // Resolution: 1920x1080 FOV: 90
 #define CAMERA_YAW 90.0 // Side view
+
+new g_hSpellFireball;
 
 public plugin_init()
 {
@@ -47,6 +48,8 @@ public plugin_init()
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
     RegisterHam(Ham_Think, CAMERA_CLASSNAME, "OnCameraThink", .Post = 0);
     RegisterHam(Ham_Player_PreThink, "player", "OnPlayerPreThink", .Post = 0);
+
+    g_hSpellFireball = Hwn_Spell_GetHandler("Fireball");
 
     register_clcmd("hwn_demoscene_reset", "ResetAll");
 }
@@ -202,7 +205,7 @@ public SetDecalsLimit(id, value)
 
 public CastSpell(id)
 {
-    Hwn_Spell_SetPlayerSpell(id, SPELL_ID_FIREBALL, 1);
+    Hwn_Spell_SetPlayerSpell(id, g_hSpellFireball, 1);
     client_cmd(id, "impulse 100");
 }
 

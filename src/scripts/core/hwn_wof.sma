@@ -86,6 +86,7 @@ public plugin_natives()
     register_library("hwn");
     register_native("Hwn_Wof_Spell_Register", "Native_Spell_Register");
     register_native("Hwn_Wof_Spell_GetName", "Native_Spell_GetName");
+    register_native("Hwn_Wof_Spell_GetHandler", "Native_Spell_GetHandler");
     register_native("Hwn_Wof_Spell_GetCount", "Native_Spell_GetCount");
     register_native("Hwn_Wof_Effect_GetCurrentSpell", "Native_Effect_GetCurrentSpell");
     register_native("Hwn_Wof_Roll", "Native_Roll");
@@ -119,6 +120,19 @@ public Native_Spell_GetName(pluginID, argc)
     ArrayGetString(g_spellName, idx, szSpellName, charsmax(szSpellName));
 
     set_string(2, szSpellName, maxlen);
+}
+
+public Native_Spell_GetHandler(pluginID, argc)
+{
+    new szName[32];
+    get_string(1, szName, charsmax(szName));
+
+    new spellIdx;
+    if (!TrieGetCell(g_spells, szName, spellIdx)) {
+        return -1;
+    }
+
+    return spellIdx;
 }
 
 public Native_Spell_GetCount(pluginID, argc)

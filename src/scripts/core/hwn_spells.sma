@@ -55,6 +55,7 @@ public plugin_natives()
     register_library("hwn");
     register_native("Hwn_Spell_Register", "Native_Register");
     register_native("Hwn_Spell_GetName", "Native_GetName");
+    register_native("Hwn_Spell_GetHandler", "Native_GetHandler");
     register_native("Hwn_Spell_GetCount", "Native_GetCount");
 
     register_native("Hwn_Spell_GetPlayerSpell", "Native_GetPlayerSpell");
@@ -139,6 +140,19 @@ public Native_GetName(pluginID, argc)
     ArrayGetString(g_spellName, idx, szSpellName, charsmax(szSpellName));
 
     set_string(2, szSpellName, maxlen);
+}
+
+public Native_GetHandler(pluginID, argc)
+{
+    new szName[32];
+    get_string(1, szName, charsmax(szName));
+
+    new spellIdx;
+    if (!TrieGetCell(g_spells, szName, spellIdx)) {
+        return -1;
+    }
+
+    return spellIdx;
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
