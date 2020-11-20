@@ -861,11 +861,12 @@ stock UTIL_CreateDictKey(const szName[], const szPrefix[] = "", szOut[], len)
     format(szOut, len, "%s%s", szPrefix, szOut);
 }
 
-stock UTIL_GetLocalizedString(const szKey[], lang, szOut[], len, const szDefault[] = "")
+stock bool:UTIL_IsLocalizationExists(const szKey[])
 {
-    format(szOut, len, "%L", lang, szKey);
+    new szBuffer[16];
+    format(szBuffer, charsmax(szBuffer), "%L", LANG_SERVER, szKey);
 
-    if (equali(szOut, "ML_NOTFOUND:", 12)) {
-        copy(szOut, len, szDefault);
-    }
+    new szNotFound[] = "ML_NOTFOUND:";
+
+    return !equali(szBuffer, szNotFound, sizeof(szNotFound) - 1);
 }

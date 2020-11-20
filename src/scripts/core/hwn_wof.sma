@@ -88,6 +88,7 @@ public plugin_natives()
     register_library("hwn");
     register_native("Hwn_Wof_Spell_Register", "Native_Spell_Register");
     register_native("Hwn_Wof_Spell_GetName", "Native_Spell_GetName");
+    register_native("Hwn_Wof_Spell_GetDictionaryKey", "Native_Spell_GetDictionaryKey");
     register_native("Hwn_Wof_Spell_GetHandler", "Native_Spell_GetHandler");
     register_native("Hwn_Wof_Spell_GetCount", "Native_Spell_GetCount");
     register_native("Hwn_Wof_Effect_GetCurrentSpell", "Native_Effect_GetCurrentSpell");
@@ -117,10 +118,9 @@ public Native_Spell_GetName(pluginID, argc)
 {
     new spellIdx = get_param(1);
     new maxlen = get_param(3);
-    new lang = get_param(4);
 
-    static szSpellName[128];
-    GetLocalizedName(spellIdx, lang, szSpellName, charsmax(szSpellName));
+    static szSpellName[32];
+    ArrayGetString(g_spellName, spellIdx, szSpellName, charsmax(szSpellName));
 
     set_string(2, szSpellName, maxlen);
 }
@@ -136,6 +136,17 @@ public Native_Spell_GetHandler(pluginID, argc)
     }
 
     return spellIdx;
+}
+
+public Native_Spell_GetDictionaryKey(pluginID, argc)
+{
+    new spellIdx = get_param(1);
+    new maxlen = get_param(3);
+
+    static szDictKey[48];
+    ArrayGetString(g_spellDictKey, spellIdx, szDictKey, charsmax(szDictKey));
+
+    set_string(2, szDictKey, maxlen);
 }
 
 public Native_Spell_GetCount(pluginID, argc)
@@ -320,16 +331,21 @@ Register(const szName[], pluginID, invokeFuncID, revokeFuncID)
     }
 
     new spellIdx = g_spellCount;
-    
-    new szDictKey[48];
-    UTIL_CreateDictKey(szName, "HWN_WOF_SPELL_", szDictKey, charsmax(szDictKey));
 
     TrieSetCell(g_spells, szName, spellIdx);
     ArrayPushString(g_spellName, szName);
-    ArrayPushString(g_spellDictKey, szDictKey);
     ArrayPushCell(g_spellPluginID, pluginID);
     ArrayPushCell(g_spellInvokeFuncID, invokeFuncID);
     ArrayPushCell(g_spellRevokeFuncID, revokeFuncID);
+
+    new szDictKey[48];
+    UTIL_CreateDictKey(szName, "HWN_WOF_SPELL_", szDictKey, charsmax(szDictKey));
+
+    if (UTIL_IsLocalizationExists(szDictKey)) {
+        ArrayPushString(g_spellDictKey, szDictKey);
+    } else {
+        ArrayPushString(g_spellDictKey, "");
+    }
 
     g_spellCount++;
 
@@ -375,17 +391,6 @@ Reset()
     g_effectStarted = false;
     remove_task(TASKID_ROLL_END);
     remove_task(TASKID_EFFECT_END);
-}
-
-GetLocalizedName(spellIdx, lang, szOut[], len)
-{
-    static szSpellName[32];
-    ArrayGetString(g_spellName, spellIdx, szSpellName, charsmax(szSpellName));
-
-    static szDictKey[48];
-    ArrayGetString(g_spellDictKey, spellIdx, szDictKey, charsmax(szDictKey));
-
-    UTIL_GetLocalizedString(szDictKey, lang, szOut, len, szSpellName);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/

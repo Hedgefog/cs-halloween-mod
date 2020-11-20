@@ -63,6 +63,7 @@ public plugin_natives()
     register_native("Hwn_Spell_GetPlayerSpell", "Native_GetPlayerSpell");
     register_native("Hwn_Spell_SetPlayerSpell", "Native_SetPlayerSpell");
     register_native("Hwn_Spell_CastPlayerSpell", "Native_CastPlayerSpell");
+    register_native("Hwn_Spell_GetDictionaryKey", "Native_GetDictionaryKey");
 }
 
 public plugin_end()
@@ -138,10 +139,9 @@ public Native_GetName(pluginID, argc)
 {
     new spellIdx = get_param(1);
     new maxlen = get_param(3);
-    new lang = get_param(4);
 
-    static szSpellName[128];
-    GetLocalizedName(spellIdx, lang, szSpellName, charsmax(szSpellName));
+    static szSpellName[32];
+    ArrayGetString(g_spellName, spellIdx, szSpellName, charsmax(szSpellName));
 
     set_string(2, szSpellName, maxlen);
 }
@@ -157,6 +157,17 @@ public Native_GetHandler(pluginID, argc)
     }
 
     return spellIdx;
+}
+
+public Native_GetDictionaryKey(pluginID, argc)
+{
+    new spellIdx = get_param(1);
+    new maxlen = get_param(3);
+
+    static szDictKey[48];
+    ArrayGetString(g_spellDictKey, spellIdx, szDictKey, charsmax(szDictKey));
+
+    set_string(2, szDictKey, maxlen);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -214,14 +225,19 @@ Register(const szName[], pluginID, castFuncID)
 
     new spellIdx = g_spellCount;
 
+    TrieSetCell(g_spells, szName, spellIdx);
+    ArrayPushString(g_spellName, szName);
+    ArrayPushCell(g_spellPluginID, pluginID);
+    ArrayPushCell(g_spellCastFuncID, castFuncID);
+
     new szDictKey[48];
     UTIL_CreateDictKey(szName, "HWN_SPELL_", szDictKey, charsmax(szDictKey));
 
-    TrieSetCell(g_spells, szName, spellIdx);
-    ArrayPushString(g_spellName, szName);
-    ArrayPushString(g_spellDictKey, szDictKey);
-    ArrayPushCell(g_spellPluginID, pluginID);
-    ArrayPushCell(g_spellCastFuncID, castFuncID);
+    if (UTIL_IsLocalizationExists(szDictKey)) {
+        ArrayPushString(g_spellDictKey, szDictKey);
+    } else {
+        ArrayPushString(g_spellDictKey, "");
+    }
 
     g_spellCount++;
 
@@ -264,15 +280,4 @@ CastPlayerSpell(id)
             ExecuteForward(g_fwCast, g_fwResult, id, spellIdx);
         }
     }
-}
-
-GetLocalizedName(spellIdx, lang, szOut[], len)
-{
-    static szSpellName[32];
-    ArrayGetString(g_spellName, spellIdx, szSpellName, charsmax(szSpellName));
-
-    static szDictKey[48];
-    ArrayGetString(g_spellDictKey, spellIdx, szDictKey, charsmax(szDictKey));
-
-    UTIL_GetLocalizedString(szDictKey, lang, szOut, len, szSpellName);
 }

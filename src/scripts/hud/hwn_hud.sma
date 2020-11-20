@@ -136,11 +136,17 @@ public Hwn_Wof_Fw_Roll_Start()
 
 public Hwn_Wof_Fw_Effect_Start(spellIdx)
 {
-    new szName[128];
-    Hwn_Wof_Spell_GetName(spellIdx, szName, charsmax(szName), LANG_PLAYER);
-
     SetupNotificationMessage(HUD_POS_NOTIFICATION_WOF);
-    show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_WOF_EFFECT_STARTED", szName);
+
+    static szSpellName[128];
+    Hwn_Wof_Spell_GetDictionaryKey(spellIdx, szSpellName, charsmax(szSpellName));
+
+    if (szSpellName[0] == '^0') {
+        Hwn_Wof_Spell_GetName(spellIdx, szSpellName, charsmax(szSpellName));
+        show_dhudmessage(0, "%L %s!", LANG_PLAYER, "HWN_WOF_EFFECT_STARTED", szSpellName);
+    } else {
+        show_dhudmessage(0, "%L %L!", LANG_PLAYER, "HWN_WOF_EFFECT_STARTED", LANG_PLAYER, szSpellName);
+    }
 }
 
 public Hwn_Collector_Fw_Overtime(overtime)
@@ -271,14 +277,12 @@ UpdatePlayerPoints(id)
 UpdatePlayerSpell(id)
 {
     new amount;
-    new userSpell = Hwn_Spell_GetPlayerSpell(id, amount);
+    new playerSpell = Hwn_Spell_GetPlayerSpell(id, amount);
 
-    if (userSpell < 0) {
+    if (playerSpell < 0) {
         return;
     }
 
-    static szSpellName[128];
-    Hwn_Spell_GetName(userSpell, szSpellName, charsmax(szSpellName), id);
     
     set_hudmessage
     (
@@ -289,7 +293,15 @@ UpdatePlayerSpell(id)
         .channel = -1
     );
 
-    ShowSyncHudMsg(id, g_hudMsgPlayerSpell, "%L x%i", id, "HWN_SPELL", szSpellName, amount);
+    static szSpellName[128];
+    Hwn_Spell_GetDictionaryKey(playerSpell, szSpellName, charsmax(szSpellName));
+
+    if (szSpellName[0] == '^0') {
+        Hwn_Spell_GetName(playerSpell, szSpellName, charsmax(szSpellName));
+        ShowSyncHudMsg(id, g_hudMsgPlayerSpell, "%L: %s x%i", id, "HWN_SPELL", szSpellName, amount);
+    } else {
+        ShowSyncHudMsg(id, g_hudMsgPlayerSpell, "%L: %L x%i", id, "HWN_SPELL", id, szSpellName, amount);
+    }
 }
 
 SetupNotificationMessage(Float:x = -1.0, Float:y = -1.0, const color[3] = {HUD_COLOR_NOTIFICATION}, Float:holdTime = 3.0)
