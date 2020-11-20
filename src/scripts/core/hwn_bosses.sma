@@ -41,6 +41,7 @@ new g_fwWinner;
 
 new Array:g_bosses;
 new Array:g_bossesNames;
+new Array:g_bossesDictKeys;
 new Array:g_bossSpawnPoints;
 
 new Array:g_playerTotalDamage;
@@ -88,6 +89,7 @@ public plugin_end()
     if (g_bosses != Invalid_Array) {
         ArrayDestroy(g_bosses);
         ArrayDestroy(g_bossesNames);
+        ArrayDestroy(g_bossesDictKeys);
     }
 
     if (g_bossSpawnPoints != Invalid_Array) {
@@ -112,6 +114,7 @@ public plugin_natives()
     register_native("Hwn_Bosses_Spawn", "Native_Spawn");
     register_native("Hwn_Bosses_GetCurrent", "Native_GetCurrent");
     register_native("Hwn_Bosses_GetName", "Native_GetName");
+    register_native("Hwn_Bosses_GetDictionaryKey", "Native_GetDictionaryKey");
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -127,11 +130,21 @@ public Native_Register(pluginID, argc)
     if (!g_bosses) {
         g_bosses = ArrayCreate(32, 8);
         g_bossesNames = ArrayCreate(32, 8);
+        g_bossesDictKeys = ArrayCreate(48, 8);
     }
 
     new idx = ArraySize(g_bosses);
     ArrayPushString(g_bosses, szClassname);
     ArrayPushString(g_bossesNames, szName);
+
+    new szDictKey[48];
+    UTIL_CreateDictKey(szName, "HWN_BOSS_", szDictKey, charsmax(szDictKey));
+
+    if (UTIL_IsLocalizationExists(szDictKey)) {
+        ArrayPushString(g_bossesDictKeys, szDictKey);
+    } else {
+        ArrayPushString(g_bossesDictKeys, "");
+    }
 
     CE_RegisterHook(CEFunction_Remove, szClassname, "OnBossRemove");
 
@@ -160,6 +173,16 @@ public Native_GetName(pluginID, argc)
     set_string(2, szName, maxlen);
 }
 
+public Native_GetDictionaryKey(pluginID, argc)
+{
+    new bossIdx = get_param(1);
+    new maxlen = get_param(3);
+
+    static szDictKey[48];
+    ArrayGetString(g_bossesDictKeys, bossIdx, szDictKey, charsmax(szDictKey));
+
+    set_string(2, szDictKey, maxlen);
+}
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 

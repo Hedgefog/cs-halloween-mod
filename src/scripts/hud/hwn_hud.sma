@@ -110,22 +110,34 @@ public Hwn_Bosses_Fw_BossSpawn()
 {
     new bossIdx = Hwn_Bosses_GetCurrent();
 
-    static szName[128];
-    Hwn_Bosses_GetName(bossIdx, szName, charsmax(szName));
-
     SetupNotificationMessage(HUD_POS_NOTIFICATION_BOSS_SPAWN);
-    show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_BOSS_SPAWN", szName);
+
+    static szName[128];
+    Hwn_Bosses_GetDictionaryKey(bossIdx, szName, charsmax(szName));
+
+    if (szName[0] == '^0') {
+        Hwn_Bosses_GetName(bossIdx, szName, charsmax(szName));
+        show_dhudmessage(0, "%s %L!", szName, LANG_PLAYER, "HWN_BOSS_SPAWN");
+    } else {
+        show_dhudmessage(0, "%L %L!", LANG_PLAYER, szName, LANG_PLAYER, "HWN_BOSS_SPAWN");
+    }
 }
 
 public Hwn_Bosses_Fw_BossEscape()
 {
     new bossIdx = Hwn_Bosses_GetCurrent();
 
-    static szName[128];
-    Hwn_Bosses_GetName(bossIdx, szName, charsmax(szName));
-
     SetupNotificationMessage(HUD_POS_NOTIFICATION_BOSS_ESCAPE);
-    show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_BOSS_ESCAPE", szName);
+
+    static szName[128];
+    Hwn_Bosses_GetDictionaryKey(bossIdx, szName, charsmax(szName));
+
+    if (szName[0] == '^0') {
+        Hwn_Bosses_GetName(bossIdx, szName, charsmax(szName));
+        show_dhudmessage(0, "%s %L!", szName, LANG_PLAYER, "HWN_BOSS_ESCAPE");
+    } else {
+        show_dhudmessage(0, "%L %L!", LANG_PLAYER, szName, LANG_PLAYER, "HWN_BOSS_ESCAPE");
+    }
 }
 
 public Hwn_Wof_Fw_Roll_Start()

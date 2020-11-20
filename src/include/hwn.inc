@@ -343,6 +343,7 @@ native Hwn_Bosses_Register(const szCEClassName[], const szName[] = "Boss");
 native Hwn_Bosses_Spawn();
 native Hwn_Bosses_GetCurrent(&ent = 0);
 native Hwn_Bosses_GetName(bossIdx, szOutput[], maxlen);
+native Hwn_Bosses_GetDictionaryKey(bossIdx, szOutput[], maxlen);
 
 forward Hwn_Bosses_Fw_BossSpawn(ent, Float:fLifeTime);
 forward Hwn_Bosses_Fw_BossKill(ent);
