@@ -22,6 +22,7 @@
             Improved explosion effect
             Improved custom lighting for default gamemode
             Improved overheal spell effect
+            Increased spawn range
 
         Cvars:
             Added hwn_collector_roundtime cvar

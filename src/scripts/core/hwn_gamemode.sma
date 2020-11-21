@@ -30,6 +30,8 @@
 #define MIN_EVENT_POINTS 8
 #define MAX_EVENT_POINTS 32
 
+#define SPAWN_RANGE 320.0
+
 enum GameState
 {
     GameState_NewRound,
@@ -565,7 +567,7 @@ bool:IsPlayerOnSpawn(id)
     static Float:vSpawnOrigin[3];
     ArrayGetArray(g_playerSpawnPoint, id, vSpawnOrigin);
 
-    return (get_distance_f(vOrigin, vSpawnOrigin) <= 256.0);
+    return (get_distance_f(vOrigin, vSpawnOrigin) <= SPAWN_RANGE);
 }
 
 bool:FindEventPoint(Float:vOrigin[3])
