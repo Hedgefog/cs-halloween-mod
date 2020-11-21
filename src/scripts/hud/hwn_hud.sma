@@ -68,6 +68,7 @@ public plugin_init()
     CE_RegisterHook(CEFunction_Picked, "hwn_item_gift", "OnGiftPicked");
 
     CE_RegisterHook(CEFunction_Picked, "hwn_item_spellbook", "OnSpellbookPicked");
+    CE_RegisterHook(CEFunction_Picked, "hwn_item_pumpkin", "OnPumpkinPicked");
 
     g_maxPlayers = get_maxplayers();
     g_hGamemodeCollector = Hwn_Gamemode_GetHandler("Collector");
@@ -88,11 +89,6 @@ public Hwn_Collector_Fw_TeamPoints(team)
 
 public Hwn_Collector_Fw_PlayerPoints(id)
 {
-    if (Hwn_Collector_GetPlayerPoints(id) == 1) {
-        SetupNotificationMessage(HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED);
-        show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_FIRST_PUMPKIN_PICKED");
-    }
-
     UpdatePlayerPoints(id);
 }
 
@@ -212,6 +208,18 @@ public OnSpellbookPicked(ent, id)
 
     SetupNotificationMessage(HUD_POS_NOTIFICATION_SPELL_PICKED);
     show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_SPELLBOOK_PICKUP");
+}
+
+public OnPumpkinPicked(ent, id)
+{
+    if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
+        return;
+    }
+
+    if (Hwn_Collector_GetPlayerPoints(id) == 1) {
+        SetupNotificationMessage(HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED);
+        show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_FIRST_PUMPKIN_PICKED");
+    }
 }
 
 public OnResetHUD(id)

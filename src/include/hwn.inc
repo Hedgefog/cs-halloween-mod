@@ -6,6 +6,7 @@
             Added objectives blocking while the boss is alive
             Added boss spawning on team points collect
             Added bonuses for team bucket filling
+            Reduced Monoculus damage
             Added spells localization
             Added bosses localization
             Bots now use spells
@@ -39,7 +40,7 @@
             Fixed team score calculation for reapi version
             Fixed crit trace origin
             Fixed explosive pumpkin damage
-            Reduced Monoculus damages
+            Fixed first pumpkin picked message condition
 
     6.1.0
         Additions and improvements:
