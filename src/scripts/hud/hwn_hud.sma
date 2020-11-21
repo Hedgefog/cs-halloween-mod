@@ -69,6 +69,7 @@ public plugin_init()
 
     CE_RegisterHook(CEFunction_Picked, "hwn_item_spellbook", "OnSpellbookPicked");
     CE_RegisterHook(CEFunction_Picked, "hwn_item_pumpkin", "OnPumpkinPicked");
+    CE_RegisterHook(CEFunction_Picked, "hwn_item_pumpkin_big", "OnPumpkinPicked");
 
     g_maxPlayers = get_maxplayers();
     g_hGamemodeCollector = Hwn_Gamemode_GetHandler("Collector");
@@ -216,7 +217,10 @@ public OnPumpkinPicked(ent, id)
         return;
     }
 
-    if (Hwn_Collector_GetPlayerPoints(id) == 1) {
+    new playerPoints = Hwn_Collector_GetPlayerPoints(id);
+    new pumpkinPoints = pev(ent, pev_iuser1) == -1 ?  pev(ent, pev_iuser2) : 1;
+
+    if (playerPoints == pumpkinPoints) {
         SetupNotificationMessage(HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED);
         show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_FIRST_PUMPKIN_PICKED");
     }

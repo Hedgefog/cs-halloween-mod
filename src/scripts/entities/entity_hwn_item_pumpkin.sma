@@ -89,16 +89,16 @@ public plugin_precache()
 
 public OnSpawn(ent)
 {
-    new type = random(PumpkinType);
-    set_pev(ent, pev_iuser1, type);
-
     set_pev(ent, pev_rendermode, kRenderNormal);
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 4.0);
 
     if (isBig(ent)) {
+        set_pev(ent, pev_iuser1, -1);
         set_pev(ent, pev_rendercolor, Float:{HWN_COLOR_SECONDARY_F});
     } else {
+        new type = random(PumpkinType);
+        set_pev(ent, pev_iuser1, type);
         set_pev(ent, pev_rendercolor, g_fLootTypeColor[type]);
     }
 
@@ -109,7 +109,8 @@ public OnSpawn(ent)
 
 public OnPickup(ent, id)
 {
-    new type = isBig(ent) ? -1 : pev(ent, pev_iuser1);
+    new type = pev(ent, pev_iuser1);
+
     switch (type)
     {
         case PumpkinType_Crits:
