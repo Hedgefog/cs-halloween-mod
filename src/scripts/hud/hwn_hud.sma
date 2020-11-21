@@ -23,6 +23,7 @@
 #define HUD_POS_STATIC_TEAM_POINTS -1.0, 0.075
 #define HUD_POS_STATIC_PLAYER_SPELL -1.0, 0.85
 #define HUD_POS_NOTIFICATION_INFO -1.0, 0.65
+#define HUD_POS_NOTIFICATION_OVERTIME -1.0, 0.030
 #define HUD_POS_NOTIFICATION_WOF -1.0, 0.15
 #define HUD_POS_NOTIFICATION_BOSS_SPAWN -1.0, 0.225
 #define HUD_POS_NOTIFICATION_BOSS_ESCAPE -1.0, 0.225
@@ -67,12 +68,14 @@ public plugin_init()
     CE_RegisterHook(CEFunction_Picked, "hwn_item_gift", "OnGiftPicked");
 
     CE_RegisterHook(CEFunction_Picked, "hwn_item_spellbook", "OnSpellbookPicked");
+    CE_RegisterHook(CEFunction_Picked, "hwn_item_pumpkin", "OnPumpkinPicked");
+    CE_RegisterHook(CEFunction_Picked, "hwn_item_pumpkin_big", "OnPumpkinPicked");
 
     g_maxPlayers = get_maxplayers();
     g_hGamemodeCollector = Hwn_Gamemode_GetHandler("Collector");
 
     g_cvarCollectorHideMoney = register_cvar("hwn_hud_collector_hide_money", "1");
-    g_cvarCollectorHideTimer = register_cvar("hwn_hud_collector_hide_timer", "1");
+    g_cvarCollectorHideTimer = register_cvar("hwn_hud_collector_hide_timer", "0");
     g_cvarTeamPointsLimit = get_cvar_pointer("hwn_collector_teampoints_limit");
 
     set_task(1.0, "TaskUpdate", _, _, _, "b");
@@ -87,11 +90,6 @@ public Hwn_Collector_Fw_TeamPoints(team)
 
 public Hwn_Collector_Fw_PlayerPoints(id)
 {
-    if (Hwn_Collector_GetPlayerPoints(id) == 1) {
-        SetupNotificationMessage(HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED);
-        show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_FIRST_PUMPKIN_PICKED");
-    }
-
     UpdatePlayerPoints(id);
 }
 
@@ -109,22 +107,34 @@ public Hwn_Bosses_Fw_BossSpawn()
 {
     new bossIdx = Hwn_Bosses_GetCurrent();
 
-    static szName[128];
-    Hwn_Bosses_GetName(bossIdx, szName, charsmax(szName));
-
     SetupNotificationMessage(HUD_POS_NOTIFICATION_BOSS_SPAWN);
-    show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_BOSS_SPAWN", szName);
+
+    static szName[128];
+    Hwn_Bosses_GetDictionaryKey(bossIdx, szName, charsmax(szName));
+
+    if (szName[0] == '^0') {
+        Hwn_Bosses_GetName(bossIdx, szName, charsmax(szName));
+        show_dhudmessage(0, "%s %L!", szName, LANG_PLAYER, "HWN_BOSS_SPAWN");
+    } else {
+        show_dhudmessage(0, "%L %L!", LANG_PLAYER, szName, LANG_PLAYER, "HWN_BOSS_SPAWN");
+    }
 }
 
 public Hwn_Bosses_Fw_BossEscape()
 {
     new bossIdx = Hwn_Bosses_GetCurrent();
 
-    static szName[128];
-    Hwn_Bosses_GetName(bossIdx, szName, charsmax(szName));
-
     SetupNotificationMessage(HUD_POS_NOTIFICATION_BOSS_ESCAPE);
-    show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_BOSS_ESCAPE", szName);
+
+    static szName[128];
+    Hwn_Bosses_GetDictionaryKey(bossIdx, szName, charsmax(szName));
+
+    if (szName[0] == '^0') {
+        Hwn_Bosses_GetName(bossIdx, szName, charsmax(szName));
+        show_dhudmessage(0, "%s %L!", szName, LANG_PLAYER, "HWN_BOSS_ESCAPE");
+    } else {
+        show_dhudmessage(0, "%L %L!", LANG_PLAYER, szName, LANG_PLAYER, "HWN_BOSS_ESCAPE");
+    }
 }
 
 public Hwn_Wof_Fw_Roll_Start()
@@ -135,11 +145,23 @@ public Hwn_Wof_Fw_Roll_Start()
 
 public Hwn_Wof_Fw_Effect_Start(spellIdx)
 {
-    new szName[32];
-    Hwn_Wof_Spell_GetName(spellIdx, szName, charsmax(szName));
-
     SetupNotificationMessage(HUD_POS_NOTIFICATION_WOF);
-    show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_WOF_EFFECT_STARTED", szName);
+
+    static szSpellName[128];
+    Hwn_Wof_Spell_GetDictionaryKey(spellIdx, szSpellName, charsmax(szSpellName));
+
+    if (szSpellName[0] == '^0') {
+        Hwn_Wof_Spell_GetName(spellIdx, szSpellName, charsmax(szSpellName));
+        show_dhudmessage(0, "%L %s!", LANG_PLAYER, "HWN_WOF_EFFECT_STARTED", szSpellName);
+    } else {
+        show_dhudmessage(0, "%L %L!", LANG_PLAYER, "HWN_WOF_EFFECT_STARTED", LANG_PLAYER, szSpellName);
+    }
+}
+
+public Hwn_Collector_Fw_Overtime(overtime)
+{
+    SetupNotificationMessage(HUD_POS_NOTIFICATION_OVERTIME, .holdTime = float(overtime));
+    show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_OVERTIME");
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -187,6 +209,21 @@ public OnSpellbookPicked(ent, id)
 
     SetupNotificationMessage(HUD_POS_NOTIFICATION_SPELL_PICKED);
     show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_SPELLBOOK_PICKUP");
+}
+
+public OnPumpkinPicked(ent, id)
+{
+    if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
+        return;
+    }
+
+    new playerPoints = Hwn_Collector_GetPlayerPoints(id);
+    new pumpkinPoints = pev(ent, pev_iuser1) == -1 ?  pev(ent, pev_iuser2) : 1;
+
+    if (playerPoints == pumpkinPoints) {
+        SetupNotificationMessage(HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED);
+        show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_FIRST_PUMPKIN_PICKED");
+    }
 }
 
 public OnResetHUD(id)
@@ -264,14 +301,12 @@ UpdatePlayerPoints(id)
 UpdatePlayerSpell(id)
 {
     new amount;
-    new userSpell = Hwn_Spell_GetPlayerSpell(id, amount);
+    new playerSpell = Hwn_Spell_GetPlayerSpell(id, amount);
 
-    if (userSpell < 0) {
+    if (playerSpell < 0) {
         return;
     }
 
-    static szSpellName[32];
-    Hwn_Spell_GetName(userSpell, szSpellName, charsmax(szSpellName));
     
     set_hudmessage
     (
@@ -282,7 +317,15 @@ UpdatePlayerSpell(id)
         .channel = -1
     );
 
-    ShowSyncHudMsg(id, g_hudMsgPlayerSpell, "%L x%i", LANG_PLAYER, "HWN_SPELL", szSpellName, amount);
+    static szSpellName[128];
+    Hwn_Spell_GetDictionaryKey(playerSpell, szSpellName, charsmax(szSpellName));
+
+    if (szSpellName[0] == '^0') {
+        Hwn_Spell_GetName(playerSpell, szSpellName, charsmax(szSpellName));
+        ShowSyncHudMsg(id, g_hudMsgPlayerSpell, "%L: %s x%i", id, "HWN_SPELL", szSpellName, amount);
+    } else {
+        ShowSyncHudMsg(id, g_hudMsgPlayerSpell, "%L: %L x%i", id, "HWN_SPELL", id, szSpellName, amount);
+    }
 }
 
 SetupNotificationMessage(Float:x = -1.0, Float:y = -1.0, const color[3] = {HUD_COLOR_NOTIFICATION}, Float:holdTime = 3.0)

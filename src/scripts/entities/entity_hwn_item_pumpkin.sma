@@ -89,16 +89,16 @@ public plugin_precache()
 
 public OnSpawn(ent)
 {
-    new type = random(PumpkinType);
-    set_pev(ent, pev_iuser1, type);
-
     set_pev(ent, pev_rendermode, kRenderNormal);
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 4.0);
 
     if (isBig(ent)) {
+        set_pev(ent, pev_iuser1, -1);
         set_pev(ent, pev_rendercolor, Float:{HWN_COLOR_SECONDARY_F});
     } else {
+        new type = random(PumpkinType);
+        set_pev(ent, pev_iuser1, type);
         set_pev(ent, pev_rendercolor, g_fLootTypeColor[type]);
     }
 
@@ -109,7 +109,8 @@ public OnSpawn(ent)
 
 public OnPickup(ent, id)
 {
-    new type = isBig(ent) ? -1 : pev(ent, pev_iuser1);
+    new type = pev(ent, pev_iuser1);
+
     switch (type)
     {
         case PumpkinType_Crits:
@@ -118,12 +119,12 @@ public OnPickup(ent, id)
         }
         case PumpkinType_Equipment:
         {
-            GiveAmmo(id);
-            GiveArmor(id, 30.0);
+            Hwn_PEquipment_GiveAmmo(id);
+            Hwn_PEquipment_GiveArmor(id, 30);
         }
         case PumpkinType_Health:
         {
-            GiveHealth(id, 30.0);
+            Hwn_PEquipment_GiveHealth(id, 30);
         }
     }
 
@@ -150,55 +151,6 @@ GiveCrits(id, Float:fTime)
     Hwn_Crits_Set(id, true);
     remove_task(id + TASKID_SUM_DISABLE_CRITS);
     set_task(fTime, "TaskDisableCrits", id + TASKID_SUM_DISABLE_CRITS);
-}
-
-GiveHealth(id, Float:fCount)
-{
-    new Float:fHealth;
-    pev(id, pev_health, fHealth);
-
-    if (fHealth < 100.0) {
-        fHealth += fCount;
-
-        if (fHealth > 100.0) {
-            fHealth = 100.0;
-        }
-
-        set_pev(id, pev_health, fHealth);
-    }
-}
-
-
-GiveArmor(id, Float:fCount)
-{
-    new Float:fArmor = float(pev(id, pev_armorvalue));
-
-    if (fArmor < 100.0) {
-        fArmor += fCount;
-
-        if (fArmor > 100.0) {
-            fArmor = 100.0;
-        }
-
-        set_pev(id, pev_armorvalue, fArmor);
-    }
-}
-
-GiveAmmo(id)
-{
-    new weapons[32];
-    new weaponCount = 0;
-
-    get_user_weapons(id, weapons, weaponCount);
-
-    for (new i = 0; i < weaponCount; ++i) {
-        new weapon = weapons[i];
-        new ammoType = WeaponAmmo[weapon];
-
-        if (ammoType >= 0) {
-            give_item(id, AmmoEntityNames[ammoType]);
-        }
-    }
 }
 
 FlashEffect(ent, const Float:vOrigin[3], type)

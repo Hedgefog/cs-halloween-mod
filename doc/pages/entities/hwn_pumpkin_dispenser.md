@@ -11,4 +11,4 @@
 ### FLAGS
 | Flag | Description            | Default Value |
 |------|------------------------|---------------|
-| 1    | random drop direction. | false         |
+| 2    | drop forward           | false         |

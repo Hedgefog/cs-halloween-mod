@@ -15,8 +15,9 @@
 
 #define ENTITY_NAME "hwn_prop_explosive_pumpkin"
 
-#define EXPLOSION_RADIUS 256.0
+#define EXPLOSION_RADIUS 128.0
 #define EXPLOSION_DAMAGE 130.0
+#define EXPLOSION_SPRITE_SIZE 80.0
 
 new g_mdlGibs;
 new g_sprExlplosion;
@@ -44,7 +45,7 @@ public plugin_precache()
 
     precache_sound(g_szSndExplode);
 
-    g_sprExlplosion = precache_model("sprites/dexplo.spr");
+    g_sprExlplosion = precache_model("sprites/eexplo.spr");
     g_mdlGibs = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
 }
 
@@ -69,7 +70,7 @@ PumpkinRadiusDamage(ent, owner)
 
     new target;
     new prevTarget;
-    while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EXPLOSION_RADIUS)) > 0)
+    while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EXPLOSION_RADIUS * 2)) > 0)
     {
         if (prevTarget >= target) {
             break; // infinite loop fix
@@ -93,17 +94,13 @@ PumpkinRadiusDamage(ent, owner)
             continue;
         }
 
-        if (target == owner) {
-            owner = 0;
-        }
-
         static Float:vTargetOrigin[3];
         pev(target, pev_origin, vTargetOrigin);
 
         new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE);
 
         if (UTIL_IsPlayer(target)) {
-            UTIL_CS_DamagePlayer(target, fDamage, DMG_ALWAYSGIB, owner, ent);
+            UTIL_CS_DamagePlayer(target, fDamage, DMG_ALWAYSGIB, target == owner ? 0 : owner, ent);
         } else {
             ExecuteHamB(Ham_TakeDamage, target, ent, owner, fDamage, DMG_GENERIC);
         }
@@ -122,8 +119,8 @@ ExplosionEffect(ent)
     engfunc(EngFunc_WriteCoord, vOrigin[1]);
     engfunc(EngFunc_WriteCoord, vOrigin[2]);
     write_short(g_sprExlplosion);
-    write_byte(32);
-    write_byte(10);
+    write_byte(floatround(((EXPLOSION_RADIUS * 2) / EXPLOSION_SPRITE_SIZE) * 10));
+    write_byte(24);
     write_byte(0);
     message_end();
 

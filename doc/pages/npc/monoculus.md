@@ -16,7 +16,7 @@
 
 - **Health**: 10000
 - **Speed** : 32 ups
-- **Damage**: 256
+- **Damage**: 100
 - **Hit Range**: 1024 units
 - **Hit Delay**: 1.0 sec
 - **Size**: 96 x 96 x 96 units

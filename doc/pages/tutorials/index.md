@@ -1,6 +1,6 @@
 # Collector gamemode map rules and advices
 
-* Map should contains bucket for each team.
+* Map should contains bucket.
 * Map should contains pumpkin dispenser.
 * Map should contains gift spawners.
 * Map should contains npc spawners.

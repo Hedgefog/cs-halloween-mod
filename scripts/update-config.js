@@ -26,7 +26,9 @@ function getCvars(src) {
 
   const cvars = flatMap(cvarExpList, code => {
     const [, name, value] = /register_cvar\("(.*)", "(.*)"\)/.exec(code) || [];
-    return {name, value: /^([0-9\.])+$/.test(value) ? +value : value };
+    const isNumber = /^([0-9\.])+$/.test(value);
+    const isFloat = isNumber && /\./.test(value);
+    return {name, value: isNumber ? +value : value, isFloat: isFloat};
   });
 
   return sortBy(cvars, 'name');
@@ -56,7 +58,13 @@ function createConfig() {
       `// ${plugin.name}`,
       plugin.cvars.map(
         cvar => {
-          const value = typeof cvar.value === 'number' ? cvar.value : `"${cvar.value}"`;
+          const value = typeof cvar.value === 'number'
+            ? (cvar.isFloat && Math.floor(cvar.value) === cvar.value
+                ? cvar.value + '.0'
+                : cvar.value
+              )
+            : `"${cvar.value}"`;
+
           return [cvar.name, value].join(' ');
         }
       ).join('\n')
