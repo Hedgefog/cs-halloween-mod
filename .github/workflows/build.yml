@@ -4,9 +4,9 @@
 
   on:
     push:
-      branches: [ master ]
+      branches: [ release ]
     workflow_dispatch:
-      branches: [ master ]
+      branches: [ release ]
 
   jobs:
     build:
