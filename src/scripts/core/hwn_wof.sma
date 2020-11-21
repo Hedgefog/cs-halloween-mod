@@ -22,6 +22,7 @@ new g_szSndWofRun[] = "hwn/wof/wof_roll.wav";
 
 new Trie:g_spells;
 new Array:g_spellName;
+new Array:g_spellDictKey;
 new Array:g_spellPluginID;
 new Array:g_spellInvokeFuncID;
 new Array:g_spellRevokeFuncID;
@@ -75,6 +76,7 @@ public plugin_end()
     if (g_spellCount) {
         TrieDestroy(g_spells);
         ArrayDestroy(g_spellName);
+        ArrayDestroy(g_spellDictKey);
         ArrayDestroy(g_spellInvokeFuncID);
         ArrayDestroy(g_spellRevokeFuncID);
         ArrayDestroy(g_spellPluginID);
@@ -86,6 +88,8 @@ public plugin_natives()
     register_library("hwn");
     register_native("Hwn_Wof_Spell_Register", "Native_Spell_Register");
     register_native("Hwn_Wof_Spell_GetName", "Native_Spell_GetName");
+    register_native("Hwn_Wof_Spell_GetDictionaryKey", "Native_Spell_GetDictionaryKey");
+    register_native("Hwn_Wof_Spell_GetHandler", "Native_Spell_GetHandler");
     register_native("Hwn_Wof_Spell_GetCount", "Native_Spell_GetCount");
     register_native("Hwn_Wof_Effect_GetCurrentSpell", "Native_Effect_GetCurrentSpell");
     register_native("Hwn_Wof_Roll", "Native_Roll");
@@ -112,13 +116,37 @@ public Native_Spell_Register(pluginID, argc)
 
 public Native_Spell_GetName(pluginID, argc)
 {
-    new idx = get_param(1);
+    new spellIdx = get_param(1);
     new maxlen = get_param(3);
 
     static szSpellName[32];
-    ArrayGetString(g_spellName, idx, szSpellName, charsmax(szSpellName));
+    ArrayGetString(g_spellName, spellIdx, szSpellName, charsmax(szSpellName));
 
     set_string(2, szSpellName, maxlen);
+}
+
+public Native_Spell_GetHandler(pluginID, argc)
+{
+    new szName[32];
+    get_string(1, szName, charsmax(szName));
+
+    new spellIdx;
+    if (!TrieGetCell(g_spells, szName, spellIdx)) {
+        return -1;
+    }
+
+    return spellIdx;
+}
+
+public Native_Spell_GetDictionaryKey(pluginID, argc)
+{
+    new spellIdx = get_param(1);
+    new maxlen = get_param(3);
+
+    static szDictKey[48];
+    ArrayGetString(g_spellDictKey, spellIdx, szDictKey, charsmax(szDictKey));
+
+    set_string(2, szDictKey, maxlen);
 }
 
 public Native_Spell_GetCount(pluginID, argc)
@@ -296,22 +324,32 @@ Register(const szName[], pluginID, invokeFuncID, revokeFuncID)
     if (!g_spellCount) {
         g_spells = TrieCreate();
         g_spellName = ArrayCreate(32);
+        g_spellDictKey = ArrayCreate(48);
         g_spellInvokeFuncID = ArrayCreate();
         g_spellRevokeFuncID = ArrayCreate();
         g_spellPluginID = ArrayCreate();
     }
 
-    new effectIdx = g_spellCount;
+    new spellIdx = g_spellCount;
 
-    TrieSetCell(g_spells, szName, effectIdx);
+    TrieSetCell(g_spells, szName, spellIdx);
     ArrayPushString(g_spellName, szName);
     ArrayPushCell(g_spellPluginID, pluginID);
     ArrayPushCell(g_spellInvokeFuncID, invokeFuncID);
     ArrayPushCell(g_spellRevokeFuncID, revokeFuncID);
 
+    new szDictKey[48];
+    UTIL_CreateDictKey(szName, "HWN_WOF_SPELL_", szDictKey, charsmax(szDictKey));
+
+    if (UTIL_IsLocalizationExists(szDictKey)) {
+        ArrayPushString(g_spellDictKey, szDictKey);
+    } else {
+        ArrayPushString(g_spellDictKey, "");
+    }
+
     g_spellCount++;
 
-    return effectIdx;
+    return spellIdx;
 }
 
 CallInvoke(id)

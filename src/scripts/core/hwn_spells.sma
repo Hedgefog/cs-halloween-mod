@@ -8,6 +8,7 @@
 #include <api_custom_entities>
 
 #include <hwn>
+#include <hwn_utils>
 
 #define PLUGIN "[Hwn] Spells"
 #define AUTHOR "Hedgehog Fog"
@@ -16,6 +17,7 @@ const Float:SpellCooldown = 1.0;
 
 new Trie:g_spells;
 new Array:g_spellName;
+new Array:g_spellDictKey;
 new Array:g_spellPluginID;
 new Array:g_spellCastFuncID;
 new g_spellCount = 0;
@@ -44,7 +46,7 @@ public plugin_init()
     g_playerNextCast = ArrayCreate(1, g_maxPlayers+1);
 
     for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerSpell, 0);
+        ArrayPushCell(g_playerSpell, -1);
         ArrayPushCell(g_playerSpellAmount, 0);
         ArrayPushCell(g_playerNextCast, 0);
     }
@@ -55,11 +57,13 @@ public plugin_natives()
     register_library("hwn");
     register_native("Hwn_Spell_Register", "Native_Register");
     register_native("Hwn_Spell_GetName", "Native_GetName");
+    register_native("Hwn_Spell_GetHandler", "Native_GetHandler");
     register_native("Hwn_Spell_GetCount", "Native_GetCount");
 
     register_native("Hwn_Spell_GetPlayerSpell", "Native_GetPlayerSpell");
     register_native("Hwn_Spell_SetPlayerSpell", "Native_SetPlayerSpell");
     register_native("Hwn_Spell_CastPlayerSpell", "Native_CastPlayerSpell");
+    register_native("Hwn_Spell_GetDictionaryKey", "Native_GetDictionaryKey");
 }
 
 public plugin_end()
@@ -67,6 +71,7 @@ public plugin_end()
     if (g_spellCount) {
         TrieDestroy(g_spells);
         ArrayDestroy(g_spellName);
+        ArrayDestroy(g_spellDictKey);
         ArrayDestroy(g_spellCastFuncID);
         ArrayDestroy(g_spellPluginID);
     }
@@ -132,16 +137,49 @@ public Native_GetCount(pluginID, argc)
 
 public Native_GetName(pluginID, argc)
 {
-    new idx = get_param(1);
+    new spellIdx = get_param(1);
     new maxlen = get_param(3);
 
     static szSpellName[32];
-    ArrayGetString(g_spellName, idx, szSpellName, charsmax(szSpellName));
+    ArrayGetString(g_spellName, spellIdx, szSpellName, charsmax(szSpellName));
 
     set_string(2, szSpellName, maxlen);
 }
 
+public Native_GetHandler(pluginID, argc)
+{
+    new szName[32];
+    get_string(1, szName, charsmax(szName));
+
+    new spellIdx;
+    if (!TrieGetCell(g_spells, szName, spellIdx)) {
+        return -1;
+    }
+
+    return spellIdx;
+}
+
+public Native_GetDictionaryKey(pluginID, argc)
+{
+    new spellIdx = get_param(1);
+    new maxlen = get_param(3);
+
+    static szDictKey[48];
+    ArrayGetString(g_spellDictKey, spellIdx, szDictKey, charsmax(szDictKey));
+
+    set_string(2, szDictKey, maxlen);
+}
+
 /*--------------------------------[ Hooks ]--------------------------------*/
+
+#if AMXX_VERSION_NUM < 183
+    public client_disconnect(id)
+#else
+    public client_disconnected(id)
+#endif
+{
+    SetPlayerSpell(id, -1, 0);
+}
 
 public OnClCmd_Give(id, level, cid)
 {
@@ -180,6 +218,7 @@ Register(const szName[], pluginID, castFuncID)
     if (!g_spellCount) {
         g_spells = TrieCreate();
         g_spellName = ArrayCreate(32);
+        g_spellDictKey = ArrayCreate(48);
         g_spellCastFuncID = ArrayCreate();
         g_spellPluginID = ArrayCreate();
     }
@@ -190,6 +229,15 @@ Register(const szName[], pluginID, castFuncID)
     ArrayPushString(g_spellName, szName);
     ArrayPushCell(g_spellPluginID, pluginID);
     ArrayPushCell(g_spellCastFuncID, castFuncID);
+
+    new szDictKey[48];
+    UTIL_CreateDictKey(szName, "HWN_SPELL_", szDictKey, charsmax(szDictKey));
+
+    if (UTIL_IsLocalizationExists(szDictKey)) {
+        ArrayPushString(g_spellDictKey, szDictKey);
+    } else {
+        ArrayPushString(g_spellDictKey, "");
+    }
 
     g_spellCount++;
 

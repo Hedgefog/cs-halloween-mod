@@ -16,8 +16,9 @@
 
 #define ENTITY_NAME "hwn_monoculus_rocket"
 
-#define EXPLOSION_RADIUS 256.0
-#define EXPLOSION_DAMAGE 256.0
+#define EXPLOSION_RADIUS 128.0
+#define EXPLOSION_DAMAGE 100.0
+#define EXPLOSION_SPRITE_SIZE 80.0
 
 new g_sprSmoke;
 
@@ -54,7 +55,7 @@ public plugin_precache()
 
     precache_sound(g_szSndExplode);
 
-    g_sprExlplosion = precache_model("sprites/dexplo.spr");
+    g_sprExlplosion = precache_model("sprites/eexplo.spr");
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -145,7 +146,7 @@ RocketRadiusDamage(ent, owner)
 
     new target;
     new prevTarget;
-    while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EXPLOSION_RADIUS)) > 0)
+    while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EXPLOSION_RADIUS * 2)) > 0)
     {
         if (prevTarget >= target) {
             break; // infinite loop fix
@@ -172,7 +173,7 @@ RocketRadiusDamage(ent, owner)
         static Float:vTargetOrigin[3];
         pev(target, pev_origin, vTargetOrigin);
 
-        new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE);
+        new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE, false, target);
 
         if (UTIL_IsPlayer(target)) {
             UTIL_CS_DamagePlayer(target, fDamage, DMG_ALWAYSGIB, owner, owner);
@@ -194,8 +195,8 @@ ExplosionEffect(ent)
     engfunc(EngFunc_WriteCoord, vOrigin[1]);
     engfunc(EngFunc_WriteCoord, vOrigin[2]);
     write_short(g_sprExlplosion);
-    write_byte(32);
-    write_byte(10);
+    write_byte(floatround(((EXPLOSION_RADIUS * 2) / EXPLOSION_SPRITE_SIZE) * 10));
+    write_byte(24);
     write_byte(0);
     message_end();
 

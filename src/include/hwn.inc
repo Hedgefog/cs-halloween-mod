@@ -1,4 +1,47 @@
 /*
+    6.2.0
+        Additions and improvements:
+            New team bucket
+            Added round time for collector gamemode
+            Added objectives blocking while the boss is alive
+            Added boss spawning on team points collect
+            Added bonuses for team bucket filling
+            Reduced Monoculus damage
+            Added spells localization
+            Added bosses localization
+            Bots now use spells
+            Bots are now equipped with random cosmetics
+            Explosions now take obstacles into account
+            Improved radius damage calculation
+            Crit damage now applies only to players and NPCs
+            Added a chance to drop a spellbook from an NPC on kill
+            Buckets now ignore wallbang damage
+            Added random equipment for bots
+            Added drop forward flag to hwn_pumpkin_dispenser entity
+            Removed drop direction flag from hwn_pumpkin_dispenser entity
+            Added onhit mode for crit effects
+            Improved explosion effect
+            Improved custom lighting for default gamemode
+            Improved overheal spell effect
+            Increased spawn range
+
+        Cvars:
+            Added hwn_collector_roundtime cvar
+            Added hwn_collector_roundtime_overtime cvar
+            Added hwn_bucket_bonus_health cvar
+            Added hwn_bucket_bonus_armor cvar
+            Added hwn_bucket_bonus_ammo cvar
+            Added hwn_collector_npc_drop_chance_spell cvar
+            Added hwn_collector_teampoints_to_boss_spawn cvar
+            Added hwn_bots_spells cvar
+            Added hwn_bots_cosmetics cvar
+
+        Fixes:
+            Fixed team score calculation for reapi version
+            Fixed crit trace origin
+            Fixed explosive pumpkin damage
+            Fixed first pumpkin picked message condition
+
     6.1.0
         Additions and improvements:
             Reduced the fire rate boost for the powerup spell
@@ -212,7 +255,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.1.0"
+#define HWN_VERSION "6.2.0"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
@@ -234,10 +277,14 @@ native Hwn_Gamemode_DispatchWin(team);
 native Hwn_Gamemode_GetCurrent();
 native bool:Hwn_Gamemode_IsPlayerOnSpawn(id);
 native Hwn_Gamemode_GetHandler(const szName[]);
+native Hwn_Gamemode_SetRoundTime(time);
+native Hwn_Gamemode_GetRoundTime();
+native Hwn_Gamemode_GetRoundTimeLeft();
 
 forward Hwn_Gamemode_Fw_NewRound();
 forward Hwn_Gamemode_Fw_RoundStart();
 forward Hwn_Gamemode_Fw_RoundEnd();
+forward Hwn_Gamemode_Fw_RoundExpired();
 
 /*--------------------------------[ Default Gamemode ]--------------------------------*/
 
@@ -249,15 +296,21 @@ native Hwn_Collector_GetPlayerPoints(id);
 native Hwn_Collector_SetPlayerPoints(id, count);
 native Hwn_Collector_GetTeamPoints(team);
 native Hwn_Collector_SetTeamPoints(team, count);
+native bool:Hwn_Collector_IsOvertime();
+native bool:Hwn_Collector_ObjectiveBlocked();
 
 forward Hwn_Collector_Fw_TeamPoints(team);
 forward Hwn_Collector_Fw_PlayerPoints(id);
+forward Hwn_Collector_Fw_Overtime(time);
+forward Hwn_Collector_Fw_WinnerTeam(team);
 
 /*--------------------------------[ Spells ]--------------------------------*/
 
 native Hwn_Spell_Register(const szName[], const szCastCallback[]);
 native Hwn_Spell_GetCount();
 native Hwn_Spell_GetName(spell, szOutput[], maxlen);
+native Hwn_Spell_GetHandler(const szName[]);
+native Hwn_Spell_GetDictionaryKey(spell, szOutput[], maxlen);
 
 native Hwn_Spell_GetPlayerSpell(id, &amount = 0);
 native Hwn_Spell_SetPlayerSpell(id, spell, amount = 0);
@@ -269,6 +322,8 @@ forward Hwn_Spell_Fw_Cast(id, spellIdx);
 native Hwn_Wof_Spell_Register(const szName[], const szInvokeCallback[], const szRevokeCallback[] = "");
 native Hwn_Wof_Spell_GetCount();
 native Hwn_Wof_Spell_GetName(spell, szOutput[], maxlen);
+native Hwn_Wof_Spell_GetHandler(const szName[]);
+native Hwn_Wof_Spell_GetDictionaryKey(spell, szOutput[], maxlen);
 native Hwn_Wof_Roll();
 native Hwn_Wof_Abort();
 native Hwn_Wof_Effect_GetCurrentSpell();
@@ -290,10 +345,12 @@ native Hwn_Cosmetic_Register(PCosmetic:hPCosmetic);
 /*--------------------------------[ Bosses ]--------------------------------*/
 
 native Hwn_Bosses_Register(const szCEClassName[], const szName[] = "Boss");
+native Hwn_Bosses_Spawn();
 native Hwn_Bosses_GetCurrent(&ent = 0);
 native Hwn_Bosses_GetName(bossIdx, szOutput[], maxlen);
+native Hwn_Bosses_GetDictionaryKey(bossIdx, szOutput[], maxlen);
 
-forward Hwn_Bosses_Fw_BossSpawn(ent);
+forward Hwn_Bosses_Fw_BossSpawn(ent, Float:fLifeTime);
 forward Hwn_Bosses_Fw_BossKill(ent);
 forward Hwn_Bosses_Fw_BossEscape(ent);
 forward Hwn_Bosses_Fw_BossTeleport(ent, handler);
@@ -303,6 +360,9 @@ forward Hwn_Bosses_Fw_Winner(id);
 
 native Hwn_PEquipment_ShowMenu(id);
 native Hwn_PEquipment_Equip(id);
+native Hwn_PEquipment_GiveHealth(id, amount);
+native Hwn_PEquipment_GiveArmor(id, amount);
+native Hwn_PEquipment_GiveAmmo(id, amount = 1);
 
 forward Hwn_PEquipment_Fw_Changed(id);
 

@@ -16,8 +16,9 @@
 
 @BaseClass = Team
 [
-    team(choices) : "Team" : 1 =
+    team(choices) : "Team" : 0 =
     [
+        0: "None"
         1: "Terrorists"
         2: "Counter-Terrorists"
     ]
@@ -56,7 +57,7 @@
     base(Targetname, Angles, Team)
     color(90 27 122)
     size(-28 -28 0, 28 28 56)
-    Studio("models/hwn/props/pumpkin_bucket.mdl")
+    Studio("models/hwn/props/cauldron.mdl")
 = hwn_bucket []
 
 @PointClass
@@ -67,7 +68,7 @@
     delay(string) : "Delay" : "10.0"
     impulse(string) : "Impulse" : "320.0"
     spawnflags(flags) = [
-        1 : "Random Drop Direction" : 0
+        2 : "Drop Forward" : 0
     ]
 ]
 
@@ -130,7 +131,7 @@
     base(Targetname, Angles)
     color(90 27 122)
     size(-8 -8 -16, 8 8 16)
-    Studio("models/hwn/npc/skeleton_small_v2.mdl")
+    Studio("models/hwn/npc/skeleton_small_v3.mdl")
 = hwn_npc_skeleton_small []
 
 @PointClass

@@ -11,7 +11,7 @@
 #define AUTHOR "Hedgehog Fog"
 
 const Float:EffectTime = 25.0;
-const EffectRadius = 48;
+const EffectRadius = 32;
 new const EffectColor[3] = {32, 32, 32};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_moonjump.wav";

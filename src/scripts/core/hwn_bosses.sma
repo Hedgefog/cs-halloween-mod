@@ -41,6 +41,7 @@ new g_fwWinner;
 
 new Array:g_bosses;
 new Array:g_bossesNames;
+new Array:g_bossesDictKeys;
 new Array:g_bossSpawnPoints;
 
 new Array:g_playerTotalDamage;
@@ -70,7 +71,7 @@ public plugin_init()
     g_cvarBossMinDamageToWin = register_cvar("hwn_boss_min_damage_to_win", "300");
     g_cvarBossPve = register_cvar("hwn_boss_pve", "0");
 
-    g_fwBossSpawn = CreateMultiForward("Hwn_Bosses_Fw_BossSpawn", ET_IGNORE, FP_CELL);
+    g_fwBossSpawn = CreateMultiForward("Hwn_Bosses_Fw_BossSpawn", ET_IGNORE, FP_CELL, FP_CELL);
     g_fwBossKill = CreateMultiForward("Hwn_Bosses_Fw_BossKill", ET_IGNORE, FP_CELL);
     g_fwBossEscape = CreateMultiForward("Hwn_Bosses_Fw_BossEscape", ET_IGNORE, FP_CELL);
     g_fwBossTeleport = CreateMultiForward("Hwn_Bosses_Fw_BossTeleport", ET_IGNORE, FP_CELL, FP_CELL);
@@ -88,6 +89,7 @@ public plugin_end()
     if (g_bosses != Invalid_Array) {
         ArrayDestroy(g_bosses);
         ArrayDestroy(g_bossesNames);
+        ArrayDestroy(g_bossesDictKeys);
     }
 
     if (g_bossSpawnPoints != Invalid_Array) {
@@ -109,8 +111,10 @@ public plugin_natives()
 {
     register_library("hwn");
     register_native("Hwn_Bosses_Register", "Native_Register");
+    register_native("Hwn_Bosses_Spawn", "Native_Spawn");
     register_native("Hwn_Bosses_GetCurrent", "Native_GetCurrent");
     register_native("Hwn_Bosses_GetName", "Native_GetName");
+    register_native("Hwn_Bosses_GetDictionaryKey", "Native_GetDictionaryKey");
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -126,11 +130,21 @@ public Native_Register(pluginID, argc)
     if (!g_bosses) {
         g_bosses = ArrayCreate(32, 8);
         g_bossesNames = ArrayCreate(32, 8);
+        g_bossesDictKeys = ArrayCreate(48, 8);
     }
 
     new idx = ArraySize(g_bosses);
     ArrayPushString(g_bosses, szClassname);
     ArrayPushString(g_bossesNames, szName);
+
+    new szDictKey[48];
+    UTIL_CreateDictKey(szName, "HWN_BOSS_", szDictKey, charsmax(szDictKey));
+
+    if (UTIL_IsLocalizationExists(szDictKey)) {
+        ArrayPushString(g_bossesDictKeys, szDictKey);
+    } else {
+        ArrayPushString(g_bossesDictKeys, "");
+    }
 
     CE_RegisterHook(CEFunction_Remove, szClassname, "OnBossRemove");
 
@@ -141,6 +155,11 @@ public Native_GetCurrent(pluginID, argc)
 {
     set_param_byref(1, g_bossEnt);
     return g_bossIdx;
+}
+
+public Native_Spawn(pluginID, argc)
+{
+    SpawnBoss();
 }
 
 public Native_GetName(pluginID, argc)
@@ -154,6 +173,16 @@ public Native_GetName(pluginID, argc)
     set_string(2, szName, maxlen);
 }
 
+public Native_GetDictionaryKey(pluginID, argc)
+{
+    new bossIdx = get_param(1);
+    new maxlen = get_param(3);
+
+    static szDictKey[48];
+    ArrayGetString(g_bossesDictKeys, bossIdx, szDictKey, charsmax(szDictKey));
+
+    set_string(2, szDictKey, maxlen);
+}
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
@@ -170,7 +199,6 @@ public OnClCmd_SpawnBoss(id, level, cid)
         return PLUGIN_HANDLED;
     }
 
-    remove_task(TASKID_SPAWN_BOSS);
     SpawnBoss();
 
     return PLUGIN_HANDLED;
@@ -301,17 +329,17 @@ SpawnBoss()
     }
 
     g_bossIdx = bossIdx;
-
-    dllfunc(DLLFunc_Spawn, g_bossEnt);
-
     g_bossSpawnPoint = targetIdx;
 
+    dllfunc(DLLFunc_Spawn, g_bossEnt);
     client_cmd(0, "spk %s", g_szSndBossSpawn);
-    set_task(get_pcvar_float(g_cvarBossLifeTime), "TaskRemoveBoss", TASKID_REMOVE_BOSS);
-
     IntersectKill();
 
-    ExecuteForward(g_fwBossSpawn, g_fwResult, g_bossEnt);
+    new Float:fLifeTime = get_pcvar_float(g_cvarBossLifeTime);
+
+    remove_task(TASKID_SPAWN_BOSS);
+    set_task(fLifeTime, "TaskRemoveBoss", TASKID_REMOVE_BOSS);
+    ExecuteForward(g_fwBossSpawn, g_fwResult, g_bossEnt, fLifeTime);
 }
 
 IntersectKill()
@@ -337,6 +365,7 @@ IntersectKill()
 
 CreateBossSpawnTask()
 {
+    remove_task(TASKID_SPAWN_BOSS);
     set_task(get_pcvar_float(g_cvarBossSpawnDelay), "TaskSpawnBoss", TASKID_SPAWN_BOSS);
 }
 

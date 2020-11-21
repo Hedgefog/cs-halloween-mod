@@ -1,7 +1,9 @@
-![](./images/logo.png)
-
+![Alt Text](./images/demo.gif)
 ### Halloween Mod for Counter-Strike 1.6
-__Version:__ 6.1.0
+__Version:__ 6.2.0
+
+### What is Halloween Mod?
+Halloween mod is a powerful Halloween-themed core for your server with completely new game modes, NPCs, bosses, spells, cosmetics, and more.
 
 #### Deploy
 - Clone repository.

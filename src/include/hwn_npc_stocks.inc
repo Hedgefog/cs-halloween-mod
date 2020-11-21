@@ -468,14 +468,15 @@ stock bool:NPC_CanHit(ent, enemy, Float:fHitRange)
         return true;
     }
 
+    new bool:result = false;
     if (get_tr2(trace, TR_pHit) == enemy) {
         get_tr2(trace, TR_vecEndPos, vTarget);
-        return (get_distance_f(vOrigin, vTarget) <= fHitRange);
+        result = (get_distance_f(vOrigin, vTarget) <= fHitRange);
     }
 
     free_tr2(trace);
 
-    return false;
+    return result;
 }
 
 stock NPC_IsValidEnemy(enemy)

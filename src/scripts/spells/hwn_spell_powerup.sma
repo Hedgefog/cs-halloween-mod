@@ -15,14 +15,13 @@
 
 #define JUMP_SPEED 320.0
 #define JUMP_DELAY 0.175
-#define JUMP_EFFECT_NOISE 255
 #define JUMP_EFFECT_BRIGHTNESS 255
-#define JUMP_EFFECT_LIFETIME 7
+#define JUMP_EFFECT_LIFETIME 5
 #define SPEED_BOOST 2.0
 #define WEAPON_SPEED_BOOST 1.25
 
 const Float:EffectTime = 10.0;
-const EffectRadius = 96;
+const EffectRadius = 48;
 new const EffectColor[3] = {HWN_COLOR_PRIMARY};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_powerup.wav";
@@ -291,12 +290,12 @@ JumpEffect(id)
 
     UTIL_Message_BeamDisk(
         vOrigin,
-        float(EffectRadius) * 10 / JUMP_EFFECT_LIFETIME,
+        float(EffectRadius) * (10 / JUMP_EFFECT_LIFETIME),
         .modelIndex = g_sprTrail,
         .color = EffectColor,
         .brightness = JUMP_EFFECT_BRIGHTNESS,
         .speed = 0,
-        .noise = JUMP_EFFECT_NOISE,
+        .noise = 0,
         .lifeTime = JUMP_EFFECT_LIFETIME,
         .width = 0
     );
