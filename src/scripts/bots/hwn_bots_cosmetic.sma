@@ -1,3 +1,5 @@
+#pragma semicolon 1
+
 #include <amxmodx>
 #include <hamsandwich>
 
@@ -47,6 +49,8 @@ public client_connect(id)
 #endif
 {
     g_playerFirstSpawnFlag &= ~(1 << (id & 31));
+
+    TakeAllCosmetic(id);
 }
 
 public OnPlayerSpawn(id)
@@ -57,7 +61,7 @@ public OnPlayerSpawn(id)
 
     if (g_playerFirstSpawnFlag & (1 << (id & 31))) {
         GiveAllCosmetic(id);
-        UnequipAllCosmetic(id)
+        TakeAllCosmetic(id);
         EquipRandomCosmetics(id);
         g_playerFirstSpawnFlag &= ~(1 << (id & 31));
 
@@ -97,7 +101,16 @@ EquipRandomCosmetics(id)
     }
 }
 
-UnequipAllCosmetic(id)
+GiveAllCosmetic(id)
+{
+    new count = Hwn_Cosmetic_GetCount();
+    for (new i = 0; i < count; ++i) {
+        new cosmetic = Hwn_Cosmetic_GetCosmetic(i);
+        PCosmetic_Give(id, cosmetic, random(2) == 1 ? PCosmetic_Type_Unusual : PCosmetic_Type_Normal, 999999);
+    }
+}
+
+TakeAllCosmetic(id)
 {
     new invSize = PInv_Size(id);
 
@@ -107,14 +120,6 @@ UnequipAllCosmetic(id)
         }
 
         PCosmetic_Unequip(id, i);
-    }
-}
-
-GiveAllCosmetic(id)
-{
-    new count = Hwn_Cosmetic_GetCount();
-    for (new i = 0; i < count; ++i) {
-        new cosmetic = Hwn_Cosmetic_GetCosmetic(i);
-        PCosmetic_Give(id, cosmetic, random(2) == 1 ? PCosmetic_Type_Unusual : PCosmetic_Type_Normal, 999999);
+        PInv_TakeItem(id, i);
     }
 }
