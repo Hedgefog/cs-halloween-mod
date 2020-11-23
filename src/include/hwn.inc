@@ -369,6 +369,7 @@ forward Hwn_PEquipment_Fw_Changed(id);
 
 /*--------------------------------[ Menu ]--------------------------------*/
 
+native Hwn_Menu_Open(id);
 native Hwn_Menu_AddItem(const szTitle[], const szCallback[]);
 
 /*--------------------------------[ Crits ]--------------------------------*/
