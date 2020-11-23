@@ -44,7 +44,6 @@ public plugin_init()
     RegisterHam(Ham_Spawn, "player", "on_player_spawn", .Post = 1);
     RegisterHam(Ham_Killed, "player", "on_player_killed", .Post = 0);
     RegisterHam(Ham_TakeDamage, "player", "on_player_takeDamage", .Post = 1);
-    RegisterHam(Ham_Player_PostThink, "player", "on_player_prethink", .Post = 1);
 
     g_maxPlayers = get_maxplayers();
 
@@ -183,18 +182,6 @@ public on_player_takeDamage(victim, inflictor, attacker, Float:damage, damageTyp
     set_pdata_float(victim, m_flVelocityModifier, fPainShock, CBASEPLAYER_LINUX_OFFSET);
 }
 
-public on_player_prethink(id)
-{
-    if (~pev(id, pev_flags) & FL_INWATER)
-        return;
-
-    if (!is_user_alive(id))
-        return;
-
-    if(is_player_burn(id))
-        extinguish_player(id);
-}
-
 /*----[ Tasks ]----*/
 
 public task_player_burn_effect(taskID)
@@ -204,6 +191,12 @@ public task_player_burn_effect(taskID)
     if(!is_user_alive(id))
         return;
 
+    if (pev(id, pev_flags) & FL_INWATER)
+    {
+        extinguish_player(id);
+        return;
+    }
+    
     static Float:fOrigin[3];
     pev(id, pev_origin, fOrigin);
 
