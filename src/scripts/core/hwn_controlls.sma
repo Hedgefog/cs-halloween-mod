@@ -20,6 +20,7 @@ public plugin_init()
     register_dictionary("hwn.txt");
 
     register_clcmd("chooseteam", "OnClCmd_ChooseTeam");
+    register_clcmd("drop", "OnClCmd_Drop");
     register_impulse(100, "OnImpulse_100");
 
     new szChooseTeamText[32];
@@ -45,6 +46,18 @@ public OnClCmd_ChooseTeam(id)
 
     g_chooseTeamOverride |= (1<<(id&31));
     return PLUGIN_CONTINUE;
+}
+
+public OnClCmd_Drop(id)
+{
+    new Hwn_GamemodeFlags:flags = Hwn_Gamemode_GetFlags();
+    if (!(flags & Hwn_GamemodeFlag_SpecialEquip)) {
+        return PLUGIN_CONTINUE;
+    }
+
+    Hwn_PEquipment_ShowMenu(id);
+
+    return PLUGIN_HANDLED;
 }
 
 public OnImpulse_100(id)

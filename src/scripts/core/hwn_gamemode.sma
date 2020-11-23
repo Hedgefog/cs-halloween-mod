@@ -90,7 +90,6 @@ public plugin_init()
         RegisterControl(RC_CheckWinConditions, "OnCheckWinConditions");
     #endif
 
-    register_clcmd("drop", "OnClCmd_Drop");
     register_clcmd("joinclass", "OnClCmd_JoinClass");
     register_clcmd("menuselect", "OnClCmd_JoinClass");
 
@@ -138,6 +137,7 @@ public plugin_natives()
     register_native("Hwn_Gamemode_SetRoundTime", "Native_SetRoundTime");
     register_native("Hwn_Gamemode_GetRoundTimeLeft", "Native_GetRoundTimeLeft");
     register_native("Hwn_Gamemode_IsRoundStarted", "Native_IsRoundStarted");
+    register_native("Hwn_Gamemode_GetFlags", "Native_GetFlags");
 }
 
 public plugin_end()
@@ -282,6 +282,15 @@ public bool:Native_IsRoundStarted(pluginID, argc)
     return g_gamestate > GameState_NewRound;
 }
 
+public Hwn_GamemodeFlags:Native_GetFlags(pluginID, argc)
+{
+    if (!g_gamemodeCount) {
+        return Hwn_GamemodeFlag_None;
+    }
+
+    return ArrayGetCell(g_gamemodeFlags, g_gamemode);
+}
+
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnNewRound()
@@ -329,22 +338,6 @@ public Hwn_PEquipment_Event_Changed(id)
     if (IsPlayerOnSpawn(id)) {
         Hwn_PEquipment_Equip(id);
     }
-}
-
-public OnClCmd_Drop(id)
-{
-    if (!g_gamemodeCount) {
-        return PLUGIN_CONTINUE;
-    }
-
-    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if (!(flags & Hwn_GamemodeFlag_SpecialEquip)) {
-        return PLUGIN_CONTINUE;
-    }
-
-    Hwn_PEquipment_ShowMenu(id);
-
-    return PLUGIN_HANDLED;
 }
 
 public OnClCmd_JoinClass(id)
