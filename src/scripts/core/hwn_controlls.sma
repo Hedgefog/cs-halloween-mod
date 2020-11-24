@@ -26,7 +26,12 @@ public plugin_init()
 
 public OnImpulse_100(id)
 {
+    if (!Hwn_Gamemode_IsRoundStarted()) {
+        return PLUGIN_HANDLED;
+    }
+
     Hwn_Spell_CastPlayerSpell(id);
+
     return PLUGIN_HANDLED;
 }
 

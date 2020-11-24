@@ -254,6 +254,10 @@ CastPlayerSpell(id)
         return;
     }
 
+    if (pev(id, pev_flags) & FL_FROZEN) {
+        return;
+    }
+
     new spellAmount = ArrayGetCell(g_playerSpellAmount, id);
     if (spellAmount <= 0) {
         return;

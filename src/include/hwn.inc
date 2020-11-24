@@ -280,6 +280,7 @@ native Hwn_Gamemode_GetHandler(const szName[]);
 native Hwn_Gamemode_SetRoundTime(time);
 native Hwn_Gamemode_GetRoundTime();
 native Hwn_Gamemode_GetRoundTimeLeft();
+native bool:Hwn_Gamemode_IsRoundStarted();
 
 forward Hwn_Gamemode_Fw_NewRound();
 forward Hwn_Gamemode_Fw_RoundStart();

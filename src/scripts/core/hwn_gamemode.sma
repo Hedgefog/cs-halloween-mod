@@ -137,6 +137,7 @@ public plugin_natives()
     register_native("Hwn_Gamemode_GetRoundTime", "Native_GetRoundTime");
     register_native("Hwn_Gamemode_SetRoundTime", "Native_SetRoundTime");
     register_native("Hwn_Gamemode_GetRoundTimeLeft", "Native_GetRoundTimeLeft");
+    register_native("Hwn_Gamemode_IsRoundStarted", "Native_IsRoundStarted");
 }
 
 public plugin_end()
@@ -274,6 +275,11 @@ public Native_SetRoundTime(pluginID, argc)
 public Native_GetRoundTimeLeft(pluginID, argc)
 {
     return GetRoundTimeLeft();
+}
+
+public bool:Native_IsRoundStarted(pluginID, argc)
+{
+    return g_gamestate > GameState_NewRound;
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
