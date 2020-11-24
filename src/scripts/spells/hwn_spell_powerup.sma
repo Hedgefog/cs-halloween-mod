@@ -124,7 +124,7 @@ public OnWeaponAttack(ent)
     return HAM_HANDLED;
 }
 
-public OnPlayerJumpPre (id)
+public OnPlayerJumpPre(id)
 {
 	if (!is_user_alive(id)) {
         return HAM_IGNORED;
@@ -136,7 +136,7 @@ public OnPlayerJumpPre (id)
 	
 	new oldButton = pev(id, pev_oldbuttons);
 	
-    if ((~oldButton & IN_JUMP)) {
+    if (~oldButton & IN_JUMP) {
         ProcessPlayerJump(id);
 	}
 
