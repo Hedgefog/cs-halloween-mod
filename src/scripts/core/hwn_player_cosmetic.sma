@@ -3,6 +3,7 @@
 #include <amxmodx>
 
 #include <hwn>
+#include <api_player_cosmetic>
 
 #define PLUGIN "[Hwn] Cosmetics"
 #define AUTHOR "Hedgehog Fog"
@@ -58,4 +59,17 @@ public Native_RegisterCosmetic()
 
     new hPCosmetic = get_param(1);
     ArrayPushCell(g_cosmetics, hPCosmetic);
+}
+
+public PCosmetic_Fw_EquipmentChanged(id)
+{
+    if (!is_user_alive(id)) {
+        return;
+    }
+
+    if (!Hwn_Gamemode_IsPlayerOnSpawn(id)) {
+        return;
+    }
+
+    PCosmetic_UpdateEquipment(id);
 }

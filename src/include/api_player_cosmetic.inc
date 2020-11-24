@@ -26,6 +26,7 @@ native PCosmetic_Give(id, cosmetic, PCosmetic_Type:type, time);
 native PCosmetic_Equip(id, slotIdx);
 native PCosmetic_Unequip(id, slotIdx);
 native bool:PCosmetic_IsItemEquiped(id, slotIdx);
+native PCosmetic_UpdateEquipment(id);
 
 native PCosmetic_GetItemCosmetic(id, slotIdx);
 native PCosmetic_Type:PCosmetic_GetItemCosmeticType(id, slotIdx);
@@ -35,3 +36,5 @@ native PCosmetic_GetCosmeticName(cosmetic, szDest[], maxlen);
 native PCosmetic_GetCosmeticGroups(cosmetic);
 
 native PCosmetic_CanBeEquiped(id, cosmetic, ignoreSlotIdx = -1);
+
+forward PCosmetic_Fw_EquipmentChanged(id);

@@ -10,7 +10,7 @@
 #include <api_player_cosmetic>
 
 #define PLUGIN "[Player Inventory Item] Cosmetic"
-#define VERSION "1.0.0"
+#define VERSION "1.1.0"
 #define AUTHOR "Hedgehog Fog"
 
 #define TASKID_SUM_PLAYER_TIMER 1000
@@ -50,6 +50,9 @@ new g_allocClassname;
 new PInv_ItemType:g_itemType;
 new g_hVault;
 
+new g_fwResult;
+new g_fwEquipmentChanged;
+
 new g_maxPlayers;
 
 public plugin_precache()
@@ -66,6 +69,8 @@ public plugin_init()
 
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
+
+    g_fwEquipmentChanged = CreateMultiForward("PCosmetic_Fw_EquipmentChanged", ET_IGNORE, FP_CELL);
 
     g_playerRenderMode = ArrayCreate(1, g_maxPlayers+1);
     g_playerRenderAmt = ArrayCreate(1, g_maxPlayers+1);
@@ -87,6 +92,7 @@ public plugin_natives()
     register_native("PCosmetic_Equip", "Native_Equip");
     register_native("PCosmetic_Unequip", "Native_Unequip");
     register_native("PCosmetic_IsItemEquiped", "Native_IsItemEquiped");
+    register_native("PCosmetic_UpdateEquipment", "Native_UpdateEquipment");
     register_native("PCosmetic_CanBeEquiped", "Native_CanBeEquiped");
 
     register_native("PCosmetic_GetItemCosmetic", "Native_GetItemCosmetic");
@@ -132,7 +138,6 @@ public OnPlayerSpawn(id)
     }
 
     UpdateEquipment(id);
-    SetupPlayerTasks(id);
 }
 
 public OnPlayerKilled(id)
@@ -198,6 +203,7 @@ public Native_Equip(pluginID, argc)
     }
 
     ArraySetCell(item, _:ItemData_State, itemState);
+    ExecuteForward(g_fwEquipmentChanged, g_fwResult, id);
 }
 
 public Native_Unequip(pluginID, argc)
@@ -215,6 +221,7 @@ public Native_Unequip(pluginID, argc)
     }
 
     ArraySetCell(item, _:ItemData_State, itemState);
+    ExecuteForward(g_fwEquipmentChanged, g_fwResult, id);
 }
 
 public Native_IsItemEquiped(pluginID, argc)
@@ -226,6 +233,13 @@ public Native_IsItemEquiped(pluginID, argc)
     new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
 
     return (itemState == ItemState_Equiped || itemState == ItemState_Equip);
+}
+
+public Native_UpdateEquipment(pluginID, argc)
+{
+    new id = get_param(1);
+
+    UpdateEquipment(id);
 }
 
 public Native_CanBeEquiped(pluginID, argc)
@@ -441,6 +455,8 @@ Equip(id, slotIdx)
     new ent = CreateCosmeticEntity(id, cosmetic, cosmeticType);
     ArraySetCell(item, _:ItemData_Entity, ent);
     ArraySetCell(item, _:ItemData_State, ItemState_Equiped);
+
+    ExecuteForward(g_fwEquipmentChanged, g_fwResult, id);
 }
 
 Unequip(id, slotIdx, bool:changeState = true)
@@ -474,6 +490,8 @@ Unequip(id, slotIdx, bool:changeState = true)
     if (itemTime <= 0) {
         PInv_TakeItem(id, slotIdx);
     }
+    
+    ExecuteForward(g_fwEquipmentChanged, g_fwResult, id);
 }
 
 bool:CanBeEquiped(id, cosmetic, ignoreSlotIdx = -1)
@@ -557,6 +575,8 @@ UpdateEquipment(id)
             Unequip(id, i);
         }
     }
+
+    SetupPlayerTasks(id);
 }
 
 SetupPlayerTasks(id)

@@ -30,7 +30,7 @@
 #define MIN_EVENT_POINTS 8
 #define MAX_EVENT_POINTS 32
 
-#define SPAWN_RANGE 320.0
+#define SPAWN_RANGE 192.0
 
 enum GameState
 {
@@ -44,6 +44,8 @@ new g_fwNewRound;
 new g_fwRoundStart;
 new g_fwRoundEnd;
 new g_fwRoundExpired;
+
+new g_fmFwSpawn;
 
 new g_cvarRespawnTime;
 new g_cvarSpawnProtectionTime;
@@ -63,7 +65,8 @@ new g_gamemodeCount = 0;
 new Float:g_fRoundStartTime;
 
 new g_playerFirstSpawnFlag = 0;
-new Array:g_playerSpawnPoint;
+new Array:g_tSpawnPoints;
+new Array:g_ctSpawnPoints;
 new Array:g_eventPoints;
 
 new g_maxPlayers;
@@ -74,6 +77,11 @@ public plugin_precache()
 {
     register_dictionary("hwn.txt");
     format(g_szEquipmentMenuTitle, charsmax(g_szEquipmentMenuTitle), "%L", LANG_SERVER, "HWN_EQUIPMENT_MENU_TITLE");
+
+    g_fmFwSpawn = register_forward(FM_Spawn, "OnSpawn", 1);
+
+    g_tSpawnPoints = ArrayCreate(3);
+    g_ctSpawnPoints = ArrayCreate(3);
 }
 
 public plugin_init()
@@ -101,11 +109,6 @@ public plugin_init()
 
     g_maxPlayers = get_maxplayers();
 
-    g_playerSpawnPoint = ArrayCreate(3, g_maxPlayers+1);
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerSpawnPoint, 0);
-    }
-
     g_cvarRespawnTime = register_cvar("hwn_gamemode_respawn_time", "5.0");
     g_cvarSpawnProtectionTime = register_cvar("hwn_gamemode_spawn_protection_time", "3.0");
     g_cvarNewRoundDelay = register_cvar("hwn_gamemode_new_round_delay", "10.0");
@@ -121,6 +124,27 @@ public plugin_init()
     g_fwRoundExpired = CreateMultiForward("Hwn_Gamemode_Fw_RoundExpired", ET_IGNORE);
 
     register_forward(FM_SetModel, "OnSetModel");
+
+    unregister_forward(FM_Spawn, g_fmFwSpawn, 1);
+}
+
+public OnSpawn(ent)
+{
+    if (!pev_valid(ent)) {
+        return;
+    }
+
+    new szClassname[32];
+    pev(ent, pev_classname, szClassname, charsmax(szClassname));
+
+    new Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    if (equal(szClassname, "info_player_start")) {
+        ArrayPushArray(g_ctSpawnPoints, vOrigin);
+    } else if(equal(szClassname, "info_player_deathmatch")) {
+        ArrayPushArray(g_tSpawnPoints, vOrigin);
+    }
 }
 
 public plugin_natives()
@@ -153,7 +177,8 @@ public plugin_end()
         ArrayDestroy(g_eventPoints);
     }
 
-    ArrayDestroy(g_playerSpawnPoint);
+    ArrayDestroy(g_tSpawnPoints);
+    ArrayDestroy(g_ctSpawnPoints);
 }
 
 public client_connect(id)
@@ -430,10 +455,6 @@ public OnPlayerSpawn(id)
         }
     }
 
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
-    ArraySetArray(g_playerSpawnPoint, id, vOrigin);
-
     if (flags & Hwn_GamemodeFlag_RespawnPlayers) {
         set_pev(id, pev_takedamage, DAMAGE_NO);
         remove_task(id+TASKID_SUM_SPAWN_PROTECTION);
@@ -563,10 +584,24 @@ bool:IsPlayerOnSpawn(id)
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
 
-    static Float:vSpawnOrigin[3];
-    ArrayGetArray(g_playerSpawnPoint, id, vSpawnOrigin);
+    new team = UTIL_GetPlayerTeam(id);
 
-    return (get_distance_f(vOrigin, vSpawnOrigin) <= SPAWN_RANGE);
+    if (team < 1 || team > 2) {
+        return false;
+    }
+
+    new Array:spawnPoints = team == 1 ? g_tSpawnPoints : g_ctSpawnPoints;
+    new spawnPointsSize = ArraySize(spawnPoints);
+
+    static Float:vSpawnOrigin[3];
+    for (new i = 0; i < spawnPointsSize; ++i) {
+        ArrayGetArray(spawnPoints, i, vSpawnOrigin);
+        if (get_distance_f(vOrigin, vSpawnOrigin) <= SPAWN_RANGE) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool:FindEventPoint(Float:vOrigin[3])
