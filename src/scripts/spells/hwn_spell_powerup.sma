@@ -52,7 +52,7 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Player_PreThink, "player", "OnPlayerPreThink", .Post = 0);
+    RegisterHam(Ham_Player_Jump, "player", "OnPlayerJumpPre", .Post = 1);
     RegisterHam(Ham_Item_PreFrame, "player", "OnPlayerItemPreFrame", .Post = 1);
     RegisterHam(Ham_TakeDamage, "player", "OnPlayerTakeDamage", .Post = 0);
     RegisterHam(Ham_Killed, "player", "Revoke", .Post = 1);
@@ -124,24 +124,23 @@ public OnWeaponAttack(ent)
     return HAM_HANDLED;
 }
 
-public OnPlayerPreThink(id)
+public OnPlayerJumpPre(id)
 {
-    if (!is_user_alive(id)) {
+	if (!is_user_alive(id)) {
         return HAM_IGNORED;
-    }
-
-    if (!GetSpellEffect(id)) {
+	}
+	
+	if (!GetSpellEffect(id)) {
         return HAM_IGNORED;
-    }
-
-    new button = pev(id, pev_button);
-    new oldButton = pev(id, pev_oldbuttons);
-
-    if ((button & IN_JUMP) && (~oldButton & IN_JUMP)) {
+	}
+	
+	new oldButton = pev(id, pev_oldbuttons);
+	
+    if (~oldButton & IN_JUMP) {
         ProcessPlayerJump(id);
-    }
+	}
 
-    return HAM_HANDLED;
+	return HAM_HANDLED;
 }
 
 public OnPlayerItemPreFrame(id)
