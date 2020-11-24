@@ -281,6 +281,7 @@ native Hwn_Gamemode_SetRoundTime(time);
 native Hwn_Gamemode_GetRoundTime();
 native Hwn_Gamemode_GetRoundTimeLeft();
 native bool:Hwn_Gamemode_IsRoundStarted();
+native Hwn_GamemodeFlags:Hwn_Gamemode_GetFlags();
 
 forward Hwn_Gamemode_Fw_NewRound();
 forward Hwn_Gamemode_Fw_RoundStart();
@@ -369,6 +370,7 @@ forward Hwn_PEquipment_Fw_Changed(id);
 
 /*--------------------------------[ Menu ]--------------------------------*/
 
+native Hwn_Menu_Open(id);
 native Hwn_Menu_AddItem(const szTitle[], const szCallback[]);
 
 /*--------------------------------[ Crits ]--------------------------------*/

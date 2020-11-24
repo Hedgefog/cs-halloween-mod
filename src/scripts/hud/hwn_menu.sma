@@ -12,7 +12,6 @@ new g_itemCount = 0;
 
 new bool:g_update = false;
 
-new g_chooseTeamOverride;
 new g_menu;
 
 static g_szMenuTitle[32];
@@ -22,22 +21,17 @@ public plugin_init()
     register_dictionary("hwn.txt");
     register_dictionary("plmenu.txt");
 
-    new pluginID = register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    register_clcmd("chooseteam", "OnClCmd_ChooseTeam");
+    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+    
     register_clcmd("hwn_menu", "OnClCmd_Menu");
 
     format(g_szMenuTitle, charsmax(g_szMenuTitle), "%L", LANG_SERVER, "HWN_MENU_TITLE");
-
-    {
-        new szChooseTeamText[32];
-        format(szChooseTeamText, charsmax(szChooseTeamText), "%L", LANG_SERVER, "TEAM_MENU");
-        AddItem(szChooseTeamText, pluginID, get_func_id("ChooseTeam", pluginID));
-    }
 }
 
 public plugin_natives()
 {
     register_library("hwn");
+    register_native("Hwn_Menu_Open", "Native_Open");
     register_native("Hwn_Menu_AddItem", "Native_AddItem");
 }
 
@@ -50,12 +44,14 @@ public plugin_end()
     }
 }
 
-public client_putinserver(id)
-{
-    g_chooseTeamOverride |= (1<<(id&31));
-}
-
 /*--------------------------------[ Natives ]--------------------------------*/
+
+public Native_Open(pluginID, argc)
+{
+    new id = get_param(1);
+    
+    ShowMenu(id);
+}
 
 public Native_AddItem(pluginID, argc)
 {
@@ -70,17 +66,6 @@ public Native_AddItem(pluginID, argc)
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnClCmd_ChooseTeam(id)
-{
-    if (g_chooseTeamOverride & (1<<(id&31))) {
-        ShowMenu(id);
-        return PLUGIN_HANDLED;
-    }
-
-    g_chooseTeamOverride |= (1<<(id&31));
-    return PLUGIN_CONTINUE;
-}
-
 public OnClCmd_Menu(id)
 {
     ShowMenu(id);
@@ -88,12 +73,6 @@ public OnClCmd_Menu(id)
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
-
-public ChooseTeam(id)
-{
-    g_chooseTeamOverride &= ~(1<<(id&31));
-    client_cmd(id, "chooseteam");
-}
 
 CreateMenu()
 {
