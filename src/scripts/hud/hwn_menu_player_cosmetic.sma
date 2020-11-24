@@ -183,7 +183,7 @@ Create(id)
     }
 
     if (!size) {
-        static szEmptyCosmeticText[32];
+        static szEmptyCosmeticText[64];
         format(szEmptyCosmeticText, charsmax(szEmptyCosmeticText), "%L", id, "HWN_COSMETIC_MENU_EMPTY");
 
         menu_additem(menu, szEmptyCosmeticText, .callback = callbackDisabled);
