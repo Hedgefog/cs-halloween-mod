@@ -48,6 +48,10 @@ public client_connect(id)
     public client_disconnected(id)
 #endif
 {
+    if (!is_user_bot(id)) {
+        return;
+    }
+
     g_playerFirstSpawnFlag &= ~(1 << (id & 31));
 
     TakeAllCosmetic(id);
@@ -60,8 +64,8 @@ public OnPlayerSpawn(id)
     }
 
     if (g_playerFirstSpawnFlag & (1 << (id & 31))) {
-        GiveAllCosmetic(id);
         TakeAllCosmetic(id);
+        GiveAllCosmetic(id);
         EquipRandomCosmetics(id);
         g_playerFirstSpawnFlag &= ~(1 << (id & 31));
 
