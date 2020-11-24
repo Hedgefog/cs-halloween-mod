@@ -33,6 +33,11 @@ new Array:g_playerCamera;
 
 new g_maxPlayers;
 
+public plugin_precache()
+{
+    precache_model(PREVIEW_CAMERA_MODEL);
+}
+
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -205,6 +210,7 @@ SetPlayerPreview(id, value)
 
         if (CreatePlayerCamera(id)) {
             set_pev(id, pev_flags, pev(id, pev_flags) | FL_FROZEN);
+            set_pev(id, pev_velocity, Float:{0.0, 0.0, 0.0});
         }
     } else {
         set_pev(id, pev_flags, pev(id, pev_flags) & ~FL_FROZEN);
@@ -307,20 +313,22 @@ public MenuHandler(id, menu, item)
         }
     }
 
-    new page;
-    {
-        new _unusedRef;
-        player_menu_info(id, _unusedRef, _unusedRef, page);
-    }
-
     if (is_user_connected(id)) {
         menu_cancel(id);
         SetPlayerPreview(id, false);
+
+        new page = 0;
+        {
+            new _unusedRef;
+            player_menu_info(id, _unusedRef, _unusedRef, page);
+        }
+
+        if (item != MENU_EXIT) {
+        Open(id, page);
+        }
     }
 
-    if (item != MENU_EXIT) {
-        Open(id, page);
-    }
+
 
     return PLUGIN_HANDLED;
 }
