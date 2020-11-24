@@ -33,9 +33,6 @@ new Array:g_playerCamera;
 
 new g_maxPlayers;
 
-static g_szMenuTitle[32];
-static g_szEmptyCosmeticText[32];
-
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -58,9 +55,6 @@ public plugin_init()
         ArrayPushCell(g_playerMenuSlotRefs, Invalid_Array);
         ArrayPushCell(g_playerCamera, 0);
     }
-
-    format(g_szMenuTitle, charsmax(g_szMenuTitle), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_TITLE");
-    format(g_szEmptyCosmeticText, charsmax(g_szEmptyCosmeticText), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_EMPTY");
 }
 
 public plugin_natives()
@@ -133,7 +127,10 @@ Create(id)
 {
     new callbackDisabled = menu_makecallback("MenuDisabledCallback");
 
-    new menu = menu_create(g_szMenuTitle, "MenuHandler");
+    static szMenuTitle[32];
+    format(szMenuTitle, charsmax(szMenuTitle), "%L", id, "HWN_COSMETIC_MENU_TITLE");
+    
+    new menu = menu_create(szMenuTitle, "MenuHandler");
 
     new Array:slotRefs = ArrayGetCell(g_playerMenuSlotRefs, id);
     if (slotRefs != Invalid_Array) {
@@ -181,7 +178,10 @@ Create(id)
     }
 
     if (!size) {
-        menu_additem(menu, g_szEmptyCosmeticText, .callback = callbackDisabled);
+        static szEmptyCosmeticText[32];
+        format(szEmptyCosmeticText, charsmax(szEmptyCosmeticText), "%L", id, "HWN_COSMETIC_MENU_EMPTY");
+
+        menu_additem(menu, szEmptyCosmeticText, .callback = callbackDisabled);
     }
 
     menu_setprop(menu, MPROP_EXIT, MEXIT_ALL);
