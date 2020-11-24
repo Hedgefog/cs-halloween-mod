@@ -7,8 +7,10 @@
     "build": "gulp",
     "watch": "gulp watch",
     "pack": "gulp pack",
+    "init-config": "node ./scripts/init-config.js",
     "update-version": "node ./scripts/update-version.js",
-    "update-config": "node ./scripts/update-config.js"
+    "update-config": "node ./scripts/update-config.js",
+    "postinstall": "npm run init-config"
   },
   "author": "Hedgehog Fog",
   "license": "MIT",
