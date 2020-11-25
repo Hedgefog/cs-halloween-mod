@@ -172,7 +172,10 @@ public CheckDance(id)
     if (xs_vec_len(vLastAngles) > 0
         && xs_vec_len(vLastViewAngles) > 0
         && get_distance_f(vLastAngles, vAngles) <= DANCE_MIN_MOVE_ANGLE
-        && get_distance_f(vLastViewAngles, vViewAngles) <= DANCE_MIN_VIEW_ANGLE
+        && (
+            get_distance_f(vLastViewAngles, vViewAngles) <= DANCE_MIN_VIEW_ANGLE
+                || get_distance_f(vLastAngles, vAngles) > 0.1 // restrict forward movement on "camera dance"
+        )
         && pev(id, pev_flags) & FL_ONGROUND
     ) {
         UTIL_CS_DamagePlayer(id, EFFECT_DAMAGE);
