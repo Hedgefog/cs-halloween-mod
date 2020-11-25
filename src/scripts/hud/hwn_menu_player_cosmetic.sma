@@ -45,7 +45,7 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     register_forward(FM_AddToFullPack, "OnAddToFullPack", 1);
-    RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
+    RegisterHam(Ham_Killed, "player", "OnPlayerKilled_Pre", .Post = 0);
 
     g_cvarPreview = register_cvar("hwn_pcosmetic_menu_preview", "1");
     g_cvarPreviewLight = register_cvar("hwn_pcosmetic_menu_preview_light", "1");
@@ -106,7 +106,7 @@ public Native_Open(pluginID, argc)
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnPlayerKilled(id)
+public OnPlayerKilled_Pre(id)
 {
     SetPlayerPreview(id, false);
 }
