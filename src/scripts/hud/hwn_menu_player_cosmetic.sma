@@ -187,8 +187,6 @@ public MenuHandler(id, menu, item)
         }
     }
 
-
-
     return PLUGIN_HANDLED;
 }
 
