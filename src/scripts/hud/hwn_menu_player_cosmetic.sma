@@ -5,9 +5,11 @@
 #include <fakemeta>
 #include <xs>
 
-#include <hwn>
 #include <api_player_inventory>
 #include <api_player_cosmetic>
+
+#include <hwn>
+#include <hwn_utils>
 
 #define PLUGIN "[Hwn] Menu Player Cosmetic"
 #define VERSION "1.0.0"
@@ -42,6 +44,7 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
+    register_forward(FM_AddToFullPack, "OnAddToFullPack", 1);
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
 
     g_cvarPreview = register_cvar("hwn_pcosmetic_menu_preview", "1");
@@ -106,6 +109,37 @@ public Native_Open(pluginID, argc)
 public OnPlayerKilled(id)
 {
     SetPlayerPreview(id, false);
+}
+
+public OnAddToFullPack(es, e, ent, host, hostflags, player, pSet)
+{
+    if (!UTIL_IsPlayer(ent)) {
+        return;
+    }
+
+
+    if (!is_user_connected(ent)) {
+        return;
+    }
+
+    if (!is_user_alive(ent)) {
+        return;
+    }
+
+    if (ent != host) {
+        return;
+    }
+
+    if (!ArrayGetCell(g_playerCamera, ent)) {
+        return;
+    }
+
+    set_es(es, ES_Sequence, 64);
+    set_es(es, ES_GaitSequence, 1);
+    set_es(es, ES_RenderMode, kRenderNormal);
+    set_es(es, ES_RenderFx, kRenderFxNone);
+    set_es(es, ES_RenderAmt, 255.0);
+    set_es(es, ES_MoveType, MOVETYPE_NONE); // disable blending
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -209,8 +243,9 @@ SetPlayerPreview(id, value)
         }
 
         if (CreatePlayerCamera(id)) {
-            set_pev(id, pev_flags, pev(id, pev_flags) | FL_FROZEN);
             set_pev(id, pev_velocity, Float:{0.0, 0.0, 0.0});
+            set_pev(id, pev_avelocity, Float:{0.0, 0.0, 0.0});
+            set_pev(id, pev_flags, pev(id, pev_flags) | FL_FROZEN);
         }
     } else {
         set_pev(id, pev_flags, pev(id, pev_flags) & ~FL_FROZEN);
@@ -220,6 +255,10 @@ SetPlayerPreview(id, value)
 CreatePlayerCamera(id)
 {
     if (!is_user_alive(id)) {
+        return false;
+    }
+
+    if (~pev(id, pev_flags) & FL_ONGROUND) {
         return false;
     }
 
@@ -237,42 +276,17 @@ CreatePlayerCamera(id)
     set_pev(ent, pev_solid, SOLID_NOT);
     set_pev(ent, pev_movetype, MOVETYPE_NONE);
     set_pev(ent, pev_rendermode, kRenderTransTexture);
-
     engfunc(EngFunc_SetModel, ent, PREVIEW_CAMERA_MODEL);
 
-    static Float:vViewAngle[3];
-    pev(id, pev_v_angle, vViewAngle);
-    vViewAngle[0] = PREVIEW_CAMERA_PITCH;
-    vViewAngle[1] += PREVIEW_CAMERA_YAW;
-    vViewAngle[2] = 0.0;
-    set_pev(ent, pev_angles, vViewAngle);
-
-    static Float:vPlayerOrigin[3];
-    pev(id, pev_origin, vPlayerOrigin);
-
-    static Float:vOffset[3];
-    angle_vector(vViewAngle, ANGLEVECTOR_FORWARD, vOffset);
-    xs_vec_mul_scalar(vOffset, -1.0, vOffset);
-    xs_vec_mul_scalar(vOffset, PREVIEW_CAMERA_DISTANCE, vOffset);
-    
-    static Float:vOrigin[3];
-    xs_vec_add(vPlayerOrigin, vOffset, vOrigin);
-
-    engfunc(EngFunc_TraceLine, vPlayerOrigin, vOrigin, IGNORE_MONSTERS, id, 0); 
-
-    new Float:flFraction;
-    get_tr2(0, TR_flFraction, flFraction);
-
-    if(flFraction != 1.0) {
-        engfunc(EngFunc_RemoveEntity, ent);
+    UpdatePlayerCamera(ent);
+    if (!CheckPlayerCamera(ent)) {
+        DestroyPlayerCamera(id);
         return false;
     }
 
-    dllfunc(DLLFunc_Think, ent);
-    engfunc(EngFunc_SetOrigin, ent, vOrigin);
-
     engfunc(EngFunc_SetView, id, ent);
     set_task(0.1, "TaskCameraThink", ent, _, _, "b");
+
     ArraySetCell(g_playerCamera, id, ent);
 
     return true;
@@ -292,6 +306,48 @@ DestroyPlayerCamera(id)
     remove_task(ent);
     engfunc(EngFunc_RemoveEntity, ent);
     ArraySetCell(g_playerCamera, id, 0);
+}
+
+UpdatePlayerCamera(ent)
+{
+    new owner = pev(ent, pev_owner);
+
+    static Float:vViewAngle[3];
+    pev(owner, pev_v_angle, vViewAngle);
+    vViewAngle[0] = PREVIEW_CAMERA_PITCH;
+    vViewAngle[1] += PREVIEW_CAMERA_YAW;
+    vViewAngle[2] = 0.0;
+    set_pev(ent, pev_angles, vViewAngle);
+
+    static Float:vPlayerOrigin[3];
+    pev(owner, pev_origin, vPlayerOrigin);
+
+    static Float:vOffset[3];
+    angle_vector(vViewAngle, ANGLEVECTOR_FORWARD, vOffset);
+    xs_vec_mul_scalar(vOffset, -1.0, vOffset);
+    xs_vec_mul_scalar(vOffset, PREVIEW_CAMERA_DISTANCE, vOffset);
+    
+    static Float:vOrigin[3];
+    xs_vec_add(vPlayerOrigin, vOffset, vOrigin);
+    engfunc(EngFunc_SetOrigin, ent, vOrigin);
+}
+
+CheckPlayerCamera(ent)
+{
+    new owner = pev(ent, pev_owner);
+
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+    
+    static Float:vPlayerOrigin[3];
+    pev(owner, pev_origin, vPlayerOrigin);
+
+    engfunc(EngFunc_TraceLine, vPlayerOrigin, vOrigin, IGNORE_MONSTERS, owner, 0); 
+
+    new Float:flFraction;
+    get_tr2(0, TR_flFraction, flFraction);
+
+    return flFraction == 1.0;
 }
 
 /*--------------------------------[ Menu ]--------------------------------*/
