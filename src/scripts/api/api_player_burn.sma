@@ -191,12 +191,6 @@ public task_player_burn_effect(taskID)
     if(!is_user_alive(id))
         return;
 
-    if (pev(id, pev_flags) & FL_INWATER)
-    {
-        extinguish_player(id);
-        return;
-    }
-    
     static Float:fOrigin[3];
     pev(id, pev_origin, fOrigin);
 
@@ -229,6 +223,11 @@ public task_player_burn_damage(taskID)
 
     if(!is_user_alive(id))
         return;
+
+    if (pev(id, pev_flags) & FL_INWATER) {
+        extinguish_player(id);
+        return;
+    }
 
     UTIL_CS_DamagePlayer(id, DMG_BURN_AMOUNT, DMG_BURN, 0, 0);
 }
