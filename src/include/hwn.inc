@@ -1,6 +1,7 @@
 /*
     6.3.0
         Additions and improvements:
+            Added player preview when choosing cosmetics
             Force equipment change is now available on all spawn points
             Players can no longer cast spells during freezetime and with the FL_FROZEN flag
             Player burn api optimization
