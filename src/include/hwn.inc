@@ -1,4 +1,21 @@
 /*
+    6.3.0
+        Additions and improvements:
+            Force equipment change is now available on all spawn points
+            Players can no longer cast spells during freezetime and with the FL_FROZEN flag
+            Player burn api optimization
+            Power Up spell optimization
+
+        Cvars:
+            -
+
+        Fixes:
+            Fixed bots cosmetics
+            Fixed jump animation for Power Up spell
+
+        Credits:
+            iwillnotleave (player burn api and power spell optimization)
+
     6.2.0
         Additions and improvements:
             New team bucket
@@ -255,7 +272,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.2.0"
+#define HWN_VERSION "6.3.0"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
