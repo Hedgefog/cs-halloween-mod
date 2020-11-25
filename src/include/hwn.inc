@@ -8,7 +8,8 @@
             Power Up spell optimization
 
         Cvars:
-            -
+            Added hwn_pcosmetic_menu_preview cvar
+            Added hwn_pcosmetic_menu_preview_light cvar
 
         Fixes:
             Fixed bots cosmetics
