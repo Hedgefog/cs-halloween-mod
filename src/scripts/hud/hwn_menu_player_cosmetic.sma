@@ -4,10 +4,15 @@
 
 #include <api_player_inventory>
 #include <api_player_cosmetic>
+#include <api_player_preview>
 
-#define PLUGIN "[Menu] Player Cosmetic"
-#define VERSION "1.0.0"
+#include <hwn>
+
+#define PLUGIN "[Hwn] Menu Player Cosmetic"
 #define AUTHOR "Hedgehog Fog"
+
+new g_cvarPreview;
+new g_cvarPreviewLight;
 
 new PInv_ItemType:g_hCosmeticItemType;
 
@@ -16,12 +21,12 @@ new Array:g_playerMenuSlotRefs;
 
 new g_maxPlayers;
 
-static g_szMenuTitle[32];
-static g_szEmptyCosmeticText[32];
-
 public plugin_init()
 {
-    register_plugin(PLUGIN, VERSION, AUTHOR);
+    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+
+    g_cvarPreview = register_cvar("hwn_pcosmetic_menu_preview", "1");
+    g_cvarPreviewLight = register_cvar("hwn_pcosmetic_menu_preview_light", "1");
 
     g_hCosmeticItemType = PInv_GetItemTypeHandler("cosmetic");
 
@@ -29,13 +34,11 @@ public plugin_init()
 
     g_playerMenu = ArrayCreate(1, g_maxPlayers+1);
     g_playerMenuSlotRefs = ArrayCreate(1, g_maxPlayers+1);
+
     for (new i = 0; i <= g_maxPlayers; ++i) {
         ArrayPushCell(g_playerMenu, 0);
         ArrayPushCell(g_playerMenuSlotRefs, Invalid_Array);
     }
-
-    format(g_szMenuTitle, charsmax(g_szMenuTitle), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_TITLE");
-    format(g_szEmptyCosmeticText, charsmax(g_szEmptyCosmeticText), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_EMPTY");
 }
 
 public plugin_natives()
@@ -66,7 +69,7 @@ public Native_Open(pluginID, argc)
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-Open(id)
+Open(id, page = 0)
 {
     new menu = ArrayGetCell(g_playerMenu, id);
     if (menu) {
@@ -76,13 +79,22 @@ Open(id)
     menu = Create(id);
     ArraySetCell(g_playerMenu, id, menu);
 
-    menu_display(id, menu);
+    menu_display(id, menu, page);
+
+    if (get_pcvar_num(g_cvarPreview) > 0 && Hwn_Gamemode_IsPlayerOnSpawn(id)) {
+        new bool:light = get_pcvar_num(g_cvarPreviewLight) > 0;
+        PlayerPreview_Activate(id, light);
+    }
 }
 
 Create(id)
 {
     new callbackDisabled = menu_makecallback("MenuDisabledCallback");
-    new menu = menu_create(g_szMenuTitle, "MenuHandler");
+
+    static szMenuTitle[32];
+    format(szMenuTitle, charsmax(szMenuTitle), "%L", id, "HWN_COSMETIC_MENU_TITLE");
+    
+    new menu = menu_create(szMenuTitle, "MenuHandler");
 
     new Array:slotRefs = ArrayGetCell(g_playerMenuSlotRefs, id);
     if (slotRefs != Invalid_Array) {
@@ -130,7 +142,10 @@ Create(id)
     }
 
     if (!size) {
-        menu_additem(menu, g_szEmptyCosmeticText, .callback = callbackDisabled);
+        static szEmptyCosmeticText[64];
+        format(szEmptyCosmeticText, charsmax(szEmptyCosmeticText), "%L", id, "HWN_COSMETIC_MENU_EMPTY");
+
+        menu_additem(menu, szEmptyCosmeticText, .callback = callbackDisabled);
     }
 
     menu_setprop(menu, MPROP_EXIT, MEXIT_ALL);
@@ -159,6 +174,17 @@ public MenuHandler(id, menu, item)
 
     if (is_user_connected(id)) {
         menu_cancel(id);
+        PlayerPreview_Deactivate(id);
+
+        new page = 0;
+        {
+            new _unusedRef;
+            player_menu_info(id, _unusedRef, _unusedRef, page);
+        }
+
+        if (item != MENU_EXIT) {
+            Open(id, page);
+        }
     }
 
     return PLUGIN_HANDLED;

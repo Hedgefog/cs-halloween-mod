@@ -1,13 +1,15 @@
 /*
     6.3.0
         Additions and improvements:
+            Added player preview when choosing cosmetics
             Force equipment change is now available on all spawn points
             Players can no longer cast spells during freezetime and with the FL_FROZEN flag
             Player burn api optimization
             Power Up spell optimization
 
         Cvars:
-            -
+            Added hwn_pcosmetic_menu_preview cvar
+            Added hwn_pcosmetic_menu_preview_light cvar
 
         Fixes:
             Fixed bots cosmetics
