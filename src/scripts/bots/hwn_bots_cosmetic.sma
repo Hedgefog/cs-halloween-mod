@@ -10,6 +10,8 @@
 #define PLUGIN "[Hwn] Bots Cosmetics"
 #define AUTHOR "Hedgehog Fog"
 
+#define COSMETIC_TIME 3600
+
 new g_cvarCosmeticCount;
 
 new g_playerFirstSpawnFlag = 0;
@@ -110,7 +112,7 @@ GiveAllCosmetic(id)
     new count = Hwn_Cosmetic_GetCount();
     for (new i = 0; i < count; ++i) {
         new cosmetic = Hwn_Cosmetic_GetCosmetic(i);
-        PCosmetic_Give(id, cosmetic, random(2) == 1 ? PCosmetic_Type_Unusual : PCosmetic_Type_Normal, 999999);
+        PCosmetic_Give(id, cosmetic, random(2) == 1 ? PCosmetic_Type_Unusual : PCosmetic_Type_Normal, COSMETIC_TIME);
     }
 }
 
