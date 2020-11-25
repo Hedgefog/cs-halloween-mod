@@ -35,7 +35,7 @@ public plugin_init()
 
     register_forward(FM_AddToFullPack, "OnAddToFullPack", 1);
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled_Pre", .Post = 0);
-    RegisterHam(Ham_Killed, "player", "OnPlayerSpawn", .Post = 1);
+    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
 
     g_maxPlayers = get_maxplayers();
     g_playerCamera = ArrayCreate(1, g_maxPlayers+1);
