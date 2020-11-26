@@ -104,6 +104,10 @@ public OnPlayerSpawn(id)
 
 public OnAddToFullPack(es, e, ent, host, hostflags, player, pSet)
 {
+    if (ent != host) {
+        return;
+    }
+
     if (!IsPlayer(ent)) {
         return;
     }
@@ -113,10 +117,6 @@ public OnAddToFullPack(es, e, ent, host, hostflags, player, pSet)
     }
 
     if (!is_user_alive(ent)) {
-        return;
-    }
-
-    if (ent != host) {
         return;
     }
 
