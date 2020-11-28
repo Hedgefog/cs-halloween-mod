@@ -13,6 +13,10 @@
 #define PLUGIN "[Hwn] Gamemode Collector"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 #define BUCKET_ENTITY_CLASSNAME "hwn_bucket"
 #define LOOT_ENTITY_CLASSNAME "hwn_item_pumpkin"
 #define SPELLBOOK_ENTITY_CLASSNAME "hwn_item_spellbook"
@@ -28,7 +32,7 @@ new g_fwTeamPointsChanged;
 new g_fwOvertime;
 new g_fwWinnerTeam;
 
-new Array:g_playerPoints;
+new g_playerPoints[MAX_PLAYERS + 1] = { 0, ... };
 new Array:g_teamPoints;
 new g_teamPointsToSpawnBoss;
 new bool:g_isOvertime;
@@ -70,11 +74,6 @@ public plugin_init()
 
     g_maxPlayers = get_maxplayers();
 
-    g_playerPoints = ArrayCreate(1, g_maxPlayers+1);
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerPoints, 0);
-    }
-
     g_teamPoints = ArrayCreate(1, TEAM_COUNT);
     for (new i = 0; i < TEAM_COUNT; ++i) {
         ArrayPushCell(g_teamPoints, 0);
@@ -107,7 +106,6 @@ public plugin_natives()
 
 public plugin_end()
 {
-    ArrayDestroy(g_playerPoints);
     ArrayDestroy(g_teamPoints);
 }
 
@@ -347,12 +345,12 @@ public Hwn_Bosses_Fw_BossSpawn(ent, Float:fLifeTime)
 
 GetPlayerPoints(id)
 {
-    return ArrayGetCell(g_playerPoints, id);
+    return g_playerPoints[id];
 }
 
 SetPlayerPoints(id, count, bool:silent = false)
 {
-    ArraySetCell(g_playerPoints, id, count);
+    g_playerPoints[id] = count;
 
     if (!silent) {
         ExecuteForward(g_fwPlayerPointsChanged, g_fwResult, id);

@@ -13,6 +13,10 @@
 #define VERSION "1.1.0"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 #define TASKID_SUM_PLAYER_TIMER 1000
 
 #define ITEM_TYPE "cosmetic"
@@ -42,8 +46,8 @@ new Array:g_cosmeticModelIndex;
 new Array:g_cosmeticUnusualColor;
 new g_cosmeticCount = 0;
 
-new Array:g_playerRenderMode;
-new Array:g_playerRenderAmt;
+new g_playerRenderMode[MAX_PLAYERS + 1] = { 0, ... };
+new Float:g_playerRenderAmt[MAX_PLAYERS + 1] = { 0.0, ... };
 
 new g_allocClassname;
 
@@ -52,8 +56,6 @@ new g_hVault;
 
 new g_fwResult;
 new g_fwEquipmentChanged;
-
-new g_maxPlayers;
 
 public plugin_precache()
 {
@@ -71,16 +73,6 @@ public plugin_init()
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
 
     g_fwEquipmentChanged = CreateMultiForward("PCosmetic_Fw_EquipmentChanged", ET_IGNORE, FP_CELL);
-
-    g_playerRenderMode = ArrayCreate(1, g_maxPlayers+1);
-    g_playerRenderAmt = ArrayCreate(1, g_maxPlayers+1);
-
-    g_maxPlayers = get_maxplayers();
-
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerRenderMode, 0);
-        ArrayPushCell(g_playerRenderAmt, 0);
-    }
 }
 
 public plugin_natives()
@@ -101,12 +93,6 @@ public plugin_natives()
 
     register_native("PCosmetic_GetCosmeticName", "Native_GetCosmeticName");
     register_native("PCosmetic_GetCosmeticGroups", "Native_GetCosmeticGroups");
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_playerRenderMode);
-    ArrayDestroy(g_playerRenderAmt);
 }
 
 #if AMXX_VERSION_NUM < 183
@@ -738,11 +724,11 @@ public TaskPlayerThink(id)
     static Float:renderAmt;
     pev(id, pev_renderamt, renderAmt);
 
-    if (renderMode != ArrayGetCell(g_playerRenderMode, id)
-        || renderAmt != ArrayGetCell(g_playerRenderAmt, id))
+    if (renderMode != g_playerRenderMode[id]
+        || renderAmt != g_playerRenderAmt[id])
     {
-        ArraySetCell(g_playerRenderMode, id, renderMode);
-        ArraySetCell(g_playerRenderAmt, id, renderAmt);
+        g_playerRenderMode[id] = renderMode;
+        g_playerRenderAmt[id] = renderAmt;
 
         new size = PInv_Size(id);
         for (new i = 0; i < size; ++i)

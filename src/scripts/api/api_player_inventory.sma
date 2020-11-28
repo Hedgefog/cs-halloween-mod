@@ -13,6 +13,10 @@
 #define VERSION "1.0.0"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 enum _:Slot
 {
     Slot_Item,
@@ -28,13 +32,13 @@ new g_fwDestroy;
 
 new g_hVault;
 
-new Array:g_playerInventories;
+new Array:g_playerInventories[MAX_PLAYERS + 1] = { Invalid_Array, ... };
 
 new Trie:g_itemTypeHandlers;
 new Array:g_itemTypeNames;
 new g_itemTypeCount = 0;
 
-new Array:g_userAuthID;
+new g_userAuthID[MAX_PLAYERS + 1][32];
 
 new g_maxPlayers;
 
@@ -54,11 +58,6 @@ public plugin_init()
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
     g_maxPlayers = get_maxplayers();
-
-    g_playerInventories = ArrayCreate(1, g_maxPlayers+1);
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerInventories, Invalid_Array);
-    }
 }
 
 public plugin_end()
@@ -68,15 +67,9 @@ public plugin_end()
         DestroyPlayerInventory(id);
     }
 
-    ArrayDestroy(g_playerInventories);
-
     if (g_itemTypeCount) {
         TrieDestroy(g_itemTypeHandlers);
         ArrayDestroy(g_itemTypeNames);
-    }
-
-    if (g_userAuthID != Invalid_Array) {
-        ArrayDestroy(g_userAuthID);
     }
 
     nvault_close(g_hVault);
@@ -100,16 +93,9 @@ public plugin_natives()
 
 public client_authorized(id)
 {
-    if (g_userAuthID == Invalid_Array) {
-        g_userAuthID = ArrayCreate(32, g_maxPlayers+1);
-        for (new i = 0; i <= g_maxPlayers; ++i) {
-            ArrayPushCell(g_userAuthID, 0);
-        }
-    }
-
     static authID[32];
     get_user_authid(id, authID, charsmax(authID));
-    ArraySetString(g_userAuthID, id, authID);
+    copy(g_userAuthID[id], charsmax(g_userAuthID[]), authID);
 }
 
 public client_putinserver(id)
@@ -154,7 +140,7 @@ public Native_GetItem(pluginID, argc)
     new id = get_param(1);
     new slotIdx = get_param(2);
 
-    new Array:inventory = ArrayGetCell(g_playerInventories, id);
+    new Array:inventory = g_playerInventories[id];
     new Array:slot = ArrayGetCell(inventory, slotIdx);
     new item = ArrayGetCell(slot, Slot_Item);
 
@@ -166,7 +152,7 @@ public Native_GetItemType(pluginID, argc)
     new id = get_param(1);
     new slotIdx = get_param(2);
 
-    new Array:inventory = ArrayGetCell(g_playerInventories, id);
+    new Array:inventory = g_playerInventories[id];
     new Array:slot = ArrayGetCell(inventory, slotIdx);
     new itemType = ArrayGetCell(slot, Slot_ItemType);
 
@@ -204,7 +190,7 @@ public Native_Size(pluginID, argc)
 {
     new id = get_param(1);
 
-    new Array:inventory = ArrayGetCell(g_playerInventories, id);
+    new Array:inventory = g_playerInventories[id];
     if (inventory == Invalid_Array) {
         return 0;
     }
@@ -253,14 +239,14 @@ GetItemTypeName(itemType, szTypeName[], maxlen)
 Array:CreatePlayerInventory(id)
 {
     new Array:inventory = ArrayCreate(1);
-    ArraySetCell(g_playerInventories, id, inventory);
+    g_playerInventories[id] = inventory;
 
     return inventory;
 }
 
 Array:DestroyPlayerInventory(id)
 {
-    new Array:inventory = ArrayGetCell(g_playerInventories, id);
+    new Array:inventory = g_playerInventories[id];
     if (inventory == Invalid_Array) {
         return;
     }
@@ -270,7 +256,7 @@ Array:DestroyPlayerInventory(id)
 
 Array:ClearPlayerInventory(id)
 {
-    new Array:inventory = ArrayGetCell(g_playerInventories, id);
+    new Array:inventory = g_playerInventories[id];
     if (inventory == Invalid_Array) {
         return;
     }
@@ -296,7 +282,7 @@ GiveItem(id, item, itemType)
         return -1;
     }
 
-    new Array:inventory = ArrayGetCell(g_playerInventories, id);
+    new Array:inventory = g_playerInventories[id];
 
     if (inventory == Invalid_Array) {
         inventory = CreatePlayerInventory(id);
@@ -316,14 +302,14 @@ TakeItem(id, slotIdx)
 {
     ExecuteForward(g_fwTakeSlot, g_fwResult, id, slotIdx);
 
-    new Array:inventory = ArrayGetCell(g_playerInventories, id);
+    new Array:inventory = g_playerInventories[id];
     new Array:slot = ArrayGetCell(inventory, slotIdx);
     ArraySetCell(slot, Slot_ItemType, PInv_Invalid_ItemType);
 }
 
 SetItem(id, slotIdx, item, itemType)
 {
-    new Array:inventory = ArrayGetCell(g_playerInventories, id);
+    new Array:inventory = g_playerInventories[id];
     new Array:slot = ArrayGetCell(inventory, slotIdx);
 
     ArraySetCell(slot, Slot_Item, item);
@@ -335,14 +321,11 @@ LoadPlayerInventory(id)
 {
     ClearPlayerInventory(id);
 
-    new authID[32];
-    ArrayGetString(g_userAuthID, id, authID, charsmax(authID));
-
     new key[32];
 
     new size;
     {
-        format(key, charsmax(key), "%s_size", authID);
+        format(key, charsmax(key), "%s_size", g_userAuthID[id]);
         size = nvault_get(g_hVault, key);
     }
 
@@ -352,7 +335,7 @@ LoadPlayerInventory(id)
         static typeName[32];
         new itemType;
         {
-            format(key, charsmax(key), "%s_%i_itemType", authID, i);
+            format(key, charsmax(key), "%s_%i_itemType", g_userAuthID[id], i);
             nvault_get(g_hVault, key, typeName, charsmax(typeName));
             itemType = GetItemTypeIndex(typeName);
         }
@@ -363,7 +346,7 @@ LoadPlayerInventory(id)
 
         new item;
         {
-            format(key, charsmax(key), "%s_%i_item", authID, i);
+            format(key, charsmax(key), "%s_%i_item", g_userAuthID[id], i);
             item = nvault_get(g_hVault, key);
         }
 
@@ -374,11 +357,11 @@ LoadPlayerInventory(id)
 
 SavePlayerInventory(id)
 {
-    if (g_userAuthID == Invalid_Array) {
+    if (g_userAuthID[id][0] == '^0') {
         return;
     }
 
-    new Array:inventory = ArrayGetCell(g_playerInventories, id);
+    new Array:inventory = g_playerInventories[id];
     if (inventory == Invalid_Array) {
         return;
     }
@@ -387,9 +370,6 @@ SavePlayerInventory(id)
     if (!size) {
         return;
     }
-
-    new authID[32];
-    ArrayGetString(g_userAuthID, id, authID, charsmax(authID));
 
     new key[32];
     new value[32];
@@ -407,7 +387,7 @@ SavePlayerInventory(id)
 
         new item = ArrayGetCell(slot, Slot_Item);
         {
-            format(key, charsmax(key), "%s_%i_item", authID, inventorySize);
+            format(key, charsmax(key), "%s_%i_item", g_userAuthID[id], inventorySize);
             format(value, charsmax(value), "%i", item);
             nvault_set(g_hVault, key, value);
         }
@@ -415,7 +395,7 @@ SavePlayerInventory(id)
         //itemType
         {
             static itemTypeName[32];
-            format(key, charsmax(key), "%s_%i_itemType", authID, inventorySize);
+            format(key, charsmax(key), "%s_%i_itemType", g_userAuthID[id], inventorySize);
             GetItemTypeName(itemType, itemTypeName, charsmax(itemTypeName));
             nvault_set(g_hVault, key, itemTypeName);
         }
@@ -427,7 +407,7 @@ SavePlayerInventory(id)
 
     //Save inventory size
     {
-        format(key, charsmax(key), "%s_size", authID);
+        format(key, charsmax(key), "%s_size", g_userAuthID[id]);
         format(value, charsmax(value), "%i", inventorySize);
 
         nvault_set(g_hVault, key, value);

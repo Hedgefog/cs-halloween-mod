@@ -14,6 +14,10 @@
 #define PLUGIN "[Hwn] Invisibility Spell"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 const Float:EffectTime = 10.0;
 const Float:EffectRadius = 16.0;
 new const EffectColor[3] = {255, 255, 255};
@@ -26,8 +30,8 @@ new const g_szSndDetonate[] = "hwn/spells/spell_stealth.wav";
 new g_sprEffectTrace;
 
 new g_playerSpellEffectFlag = 0;
-new Array:g_playerSpellEffectStart;
-new Array:g_playerSpellEffectTime;
+new Float:g_playerSpellEffectStart[MAX_PLAYERS + 1] = { 0.0, ... };
+new Float:g_playerSpellEffectTime[MAX_PLAYERS + 1] = { 0.0, ... };
 
 new g_hWofSpell;
 
@@ -52,20 +56,6 @@ public plugin_init()
     register_message(get_user_msgid("ScreenFade"), "OnMessage_ScreenFade");
 
     g_maxPlayers = get_maxplayers();
-
-    g_playerSpellEffectStart = ArrayCreate(1, g_maxPlayers+1);
-    g_playerSpellEffectTime = ArrayCreate(1, g_maxPlayers+1);
-
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerSpellEffectStart, 0.0);
-        ArrayPushCell(g_playerSpellEffectTime, 0.0);
-    }
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_playerSpellEffectStart);
-    ArrayDestroy(g_playerSpellEffectTime);
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -138,8 +128,8 @@ SetSpellEffect(id, bool:value, Float:fTime = 0.0)
 {
     if (value) {
         FadeEffect(id, fTime);
-        ArraySetCell(g_playerSpellEffectStart, id, get_gametime());
-        ArraySetCell(g_playerSpellEffectTime, id, fTime);
+        g_playerSpellEffectStart[id] = get_gametime();
+        g_playerSpellEffectTime[id] = fTime;
         g_playerSpellEffectFlag |= (1 << (id & 31));
     } else {
         RemoveFadeEffect(id);
@@ -197,8 +187,8 @@ DetonateEffect(ent)
 
 public TaskFixInvisibleEffect(id)
 {
-    new Float:fStart = Float:ArrayGetCell(g_playerSpellEffectStart, id);
-    new Float:fTime = Float:ArrayGetCell(g_playerSpellEffectTime, id);
+    new Float:fStart = g_playerSpellEffectStart[id];
+    new Float:fTime = g_playerSpellEffectTime[id];
     new Float:fTimeleft =  fStart > 0.0 ? fTime - (get_gametime() - fStart) : 0.0;
 
     if (fTimeleft > 0.0) {
