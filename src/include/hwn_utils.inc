@@ -323,11 +323,9 @@ stock UTIL_RandomVector(Float:min, Float:max, Float:vOut[3])
     }
 }
 
-stock Array:UTIL_FindUsersNearby(Float:vOrigin[3], Float:fDistance, team = 0, bool:alive = true, maxPlayers = 32)
+stock UTIL_FindUsersNearby(startId = 0, Float:vOrigin[3], Float:fDistance, team = 0, bool:alive = true, maxPlayers = 32)
 {
-    new Array:users = ArrayCreate(1, maxPlayers);
-
-    for (new id = 1; id <= maxPlayers; ++id)
+    for (new id = startId + 1; id <= maxPlayers; ++id)
     {
         if (!is_user_connected(id)) {
             continue;
@@ -348,10 +346,10 @@ stock Array:UTIL_FindUsersNearby(Float:vOrigin[3], Float:fDistance, team = 0, bo
             continue;
         }
 
-        ArrayPushCell(users, id);
+        return id;
     }
 
-    return users;
+    return 0;
 }
 
 stock UTIL_FixedUnsigned16(const Float:fValue, const scale)
@@ -422,28 +420,19 @@ stock UTIL_GetItemPlayer(ent)
     #endif
 }
 
-stock Array:UTIL_FindEntityNearby(const Float:vOrigin[3], const Float:fRadius)
+stock UTIL_FindEntityNearby(startEnt = 0, const Float:vOrigin[3], const Float:fRadius)
 {
-    new Array:arr = ArrayCreate();
 
-    new target;
-    new prevTarget;
-    while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, fRadius)) != 0)
-    {
-        if (prevTarget >= target) {
-            break; // infinite loop fix
-        }
-
-        prevTarget = target;
-
-        if (!pev_valid(target)) {
-            continue;
-        }
-
-        ArrayPushCell(arr, target);
+    new target = engfunc(EngFunc_FindEntityInSphere, startEnt, vOrigin, fRadius);
+    if (target <= startEnt) {
+        return 0; // infinite loop fix
     }
 
-    return arr;
+    if (!pev_valid(target)) {
+        return 0;
+    }
+
+    return target;
 }
 
 stock bool:UTIL_EntityIntersects(ent1, ent2)

@@ -195,12 +195,8 @@ public TaskDamage(taskID)
     new owner = pev(ent, pev_owner);
     new team = owner ? UTIL_GetPlayerTeam(owner) : -1;
 
-    new Array:nearbyEntities = UTIL_FindEntityNearby(vOrigin, EffectRadius);
-    new size = ArraySize(nearbyEntities);
-
-    for (new i = 0; i < size; ++i) {
-        new target = ArrayGetCell(nearbyEntities, i);
-
+    new target;
+    while ((target = UTIL_FindEntityNearby(target, vOrigin, EffectRadius / 2)) != 0) {
         if (ent == target) {
             continue;
         }
@@ -228,8 +224,6 @@ public TaskDamage(taskID)
         }
     }
 
-    ArrayDestroy(nearbyEntities);
-
     emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
     CreateDamageTask(ent);
 }
@@ -243,20 +237,9 @@ public TaskThink(ent)
     new team = owner ? UTIL_GetPlayerTeam(owner) : -1;
 
     new target;
-    new prevTarget;
-    while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EffectRadius)) != 0)
+    while ((target = UTIL_FindEntityNearby(target, vOrigin, EffectRadius)) != 0)
     {
-        if (prevTarget >= target) {
-            break; // infinite loop fix
-        }
-
-        prevTarget = target;
-
         if (ent == target) {
-            continue;
-        }
-
-        if (!pev_valid(target)) {
             continue;
         }
 

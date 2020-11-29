@@ -65,22 +65,17 @@ public Invoke(id)
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
 
-    new Array:users = UTIL_FindUsersNearby(vOrigin, EffectRadius, .team = team, .maxPlayers = g_maxPlayers);
-    new userCount = ArraySize(users);
 
-    for (new i = 0; i < userCount; ++i) {
-        new nearbyId = ArrayGetCell(users, i);
-
-        if (team != UTIL_GetPlayerTeam(nearbyId)) {
+    new target;
+    while ((target = UTIL_FindUsersNearby(target, vOrigin, EffectRadius, .team = team, .maxPlayers = g_maxPlayers)) != 0) {
+        if (team != UTIL_GetPlayerTeam(target)) {
             continue;
         }
 
-        set_pev(nearbyId, pev_health, 150.0);
-        UTIL_ScreenFade(nearbyId, {255, 0, 0}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
-        UTIL_Message_BeamEnts(id, nearbyId, g_sprEffect, .lifeTime = 10, .color = EffectColor, .width = 8, .noise = 120);
+        set_pev(target, pev_health, 150.0);
+        UTIL_ScreenFade(target, {255, 0, 0}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
+        UTIL_Message_BeamEnts(id, target, g_sprEffect, .lifeTime = 10, .color = EffectColor, .width = 8, .noise = 120);
     }
-
-    ArrayDestroy(users);
 
     DetonateEffect(id);
 }
