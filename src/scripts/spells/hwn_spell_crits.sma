@@ -26,7 +26,7 @@ public plugin_precache()
 {
     precache_sound(g_szSndDetonate);
 
-    Hwn_Spell_Register("Crits", Hwn_SpellFlag_Rare, "Cast");
+    Hwn_Spell_Register("Crits", Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Rare, "Cast");
     g_hWofSpell = Hwn_Wof_Spell_Register("Crits", "Invoke", "Revoke");
 }
 

@@ -287,7 +287,10 @@ enum Hwn_GamemodeFlags (<<=1)
 enum Hwn_SpellFlags (<<=1)
 {
     Hwn_SpellFlag_None,
-    Hwn_SpellFlag_Rare = 1
+    Hwn_SpellFlag_Rare = 1,
+    Hwn_SpellFlag_Throwable,
+    Hwn_SpellFlag_Applicable,
+    Hwn_SpellFlag_Radius
 };
 
 /*--------------------------------[ Core ]--------------------------------*/

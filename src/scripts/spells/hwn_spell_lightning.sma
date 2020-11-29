@@ -39,7 +39,7 @@ public plugin_precache()
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
 
-    g_hSpell = Hwn_Spell_Register("Lightning", Hwn_SpellFlag_Rare, "OnCast");
+    g_hSpell = Hwn_Spell_Register("Lightning", Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Rare, "OnCast");
 }
 
 public plugin_init()
