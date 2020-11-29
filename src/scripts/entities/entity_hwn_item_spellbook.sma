@@ -13,6 +13,9 @@
 #define PLUGIN "[Custom Entity] Hwn Item Spellbook"
 #define AUTHOR "Hedgehog Fog"
 
+#define pev_spell pev_iuser1
+#define pev_eparticle pev_euser1
+
 #define ENTITY_NAME "hwn_item_spellbook"
 
 new g_sprSparkle;
@@ -69,6 +72,13 @@ public Hwn_Fw_ConfigLoaded()
 
 public OnSpawn(ent)
 {
+    new spellCount = Hwn_Spell_GetCount();
+    if (!spellCount) {
+        CE_Remove(ent);
+    }
+
+    set_pev(ent, pev_spell, random(spellCount));
+
     set_pev(ent, pev_framerate, 1.0);
 
     static Float:vOrigin[3];
@@ -114,12 +124,11 @@ public OnPickup(ent, id)
         return PLUGIN_CONTINUE;
     }
 
-    new count = Hwn_Spell_GetCount();
+    new spell = pev(ent, pev_spell);
     new maxSpellCount = get_pcvar_num(g_cvarMaxSpellCount);
 
-    if (count && maxSpellCount > 0) {
-        new idx = random(count);
-        Hwn_Spell_SetPlayerSpell(id, idx, random(maxSpellCount) + 1);
+    if (maxSpellCount > 0) {
+        Hwn_Spell_SetPlayerSpell(id, spell, random(maxSpellCount) + 1);
     }
 
     emit_sound(ent, CHAN_BODY, g_szSndPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
@@ -147,20 +156,22 @@ public TaskThink(ent)
 
     if (g_particlesEnabled)
     {
-        new particlesEnt = pev(ent, pev_iuser1);
+        new spell = pev(ent, pev_spell);
+        new particlesEnt = pev(ent, pev_eparticle);
+        new bool:isRare = !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare);
 
         if (particlesEnt)
         {
             if (pev_valid(particlesEnt)) {
                 engfunc(EngFunc_SetOrigin, particlesEnt, vOrigin);
             } else {
-                set_pev(ent, pev_iuser1, 0);
+                set_pev(ent, pev_eparticle, 0);
             }
         }
         else if (!g_isPrecaching)
         {
-            particlesEnt = Particles_Spawn("magic_glow", vOrigin, 0.0);
-            set_pev(ent, pev_iuser1, particlesEnt);
+            particlesEnt = Particles_Spawn(isRare ? "magic_glow_purple" : "magic_glow", vOrigin, 0.0);
+            set_pev(ent, pev_eparticle, particlesEnt);
         }
     }
 
@@ -169,10 +180,10 @@ public TaskThink(ent)
 
 RemoveParticles(ent)
 {
-    if (!pev(ent, pev_iuser1)) {
+    if (!pev(ent, pev_eparticle)) {
         return;
     }
 
-    Particles_Remove(pev(ent, pev_iuser1));
-    set_pev(ent, pev_iuser1, 0);
+    Particles_Remove(pev(ent, pev_eparticle));
+    set_pev(ent, pev_eparticle, 0);
 }
