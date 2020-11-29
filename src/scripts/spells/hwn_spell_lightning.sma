@@ -38,13 +38,13 @@ public plugin_precache()
 
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
+
+    g_hSpell = Hwn_Spell_Register("Lightning", Hwn_SpellFlag_Rare, "OnCast");
 }
 
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-
-    g_hSpell = Hwn_Spell_Register("Lightning", "OnCast");
 
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
     CE_RegisterHook(CEFunction_Remove, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballRemove");

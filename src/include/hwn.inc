@@ -284,6 +284,12 @@ enum Hwn_GamemodeFlags (<<=1)
     Hwn_GamemodeFlag_SpecialEquip
 };
 
+enum Hwn_SpellFlags (<<=1)
+{
+    Hwn_SpellFlag_None,
+    Hwn_SpellFlag_Rare = 1
+};
+
 /*--------------------------------[ Core ]--------------------------------*/
 
 forward Hwn_Fw_ConfigLoaded();
@@ -327,11 +333,12 @@ forward Hwn_Collector_Fw_WinnerTeam(team);
 
 /*--------------------------------[ Spells ]--------------------------------*/
 
-native Hwn_Spell_Register(const szName[], const szCastCallback[]);
+native Hwn_Spell_Register(const szName[], Hwn_SpellFlags:flags = Hwn_SpellFlag_None, const szCastCallback[]);
 native Hwn_Spell_GetCount();
 native Hwn_Spell_GetName(spell, szOutput[], maxlen);
 native Hwn_Spell_GetHandler(const szName[]);
 native Hwn_Spell_GetDictionaryKey(spell, szOutput[], maxlen);
+native Hwn_SpellFlags:Hwn_Spell_GetFlags(spell);
 
 native Hwn_Spell_GetPlayerSpell(id, &amount = 0);
 native Hwn_Spell_SetPlayerSpell(id, spell, amount = 0);
