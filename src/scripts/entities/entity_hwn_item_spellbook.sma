@@ -103,6 +103,9 @@ public OnSpawn(ent)
 
     emit_sound(ent, CHAN_BODY, g_szSndSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
+    RemoveParticles(ent);
+    CreateParticles(ent);
+
     TaskThink(ent);
 }
 
@@ -150,40 +153,61 @@ public TaskThink(ent)
         return;
     }
 
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-    vOrigin[2] += 32.0;
-
-    if (g_particlesEnabled)
-    {
-        new spell = pev(ent, pev_spell);
-        new particlesEnt = pev(ent, pev_eparticle);
-        new bool:isRare = !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare);
-
-        if (particlesEnt)
-        {
-            if (pev_valid(particlesEnt)) {
-                engfunc(EngFunc_SetOrigin, particlesEnt, vOrigin);
-            } else {
-                set_pev(ent, pev_eparticle, 0);
-            }
-        }
-        else if (!g_isPrecaching)
-        {
-            particlesEnt = Particles_Spawn(isRare ? "magic_glow_purple" : "magic_glow", vOrigin, 0.0);
-            set_pev(ent, pev_eparticle, particlesEnt);
-        }
+    if (g_particlesEnabled) {
+        UpdateParticles(ent, true);
+    } else {
+        RemoveParticles(ent);
     }
 
     set_task(1.0, "TaskThink", ent);
 }
 
+CreateParticles(ent)
+{
+    if (g_isPrecaching) {
+        return 0;
+    } 
+
+    new spell = pev(ent, pev_spell);
+    new bool:isRare = !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare);
+
+    new particlesEnt = Particles_Spawn(isRare ? "magic_glow_purple" : "magic_glow", Float:{0.0, 0.0, 0.0}, 0.0);
+    if (particlesEnt) {
+        set_pev(ent, pev_eparticle, particlesEnt);
+        UpdateParticles(ent);
+    }
+
+    return particlesEnt;
+}
+
+UpdateParticles(ent, bool:createIfNotExists = false)
+{
+    new particlesEnt = pev(ent, pev_eparticle);
+    if (!particlesEnt || !pev_valid(particlesEnt)) {
+        if (!createIfNotExists) {
+            return;
+        }
+
+        particlesEnt = CreateParticles(ent);
+    }
+
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+    vOrigin[2] += 32.0;
+
+    engfunc(EngFunc_SetOrigin, particlesEnt, vOrigin);
+}
+
 RemoveParticles(ent)
 {
-    if (!pev(ent, pev_eparticle)) {
+    new particlesEnt = pev(ent, pev_eparticle);
+    if (!particlesEnt) {
         return;
     }
 
-    Particles_Remove(pev(ent, pev_eparticle));
+    if (pev_valid(particlesEnt)) {
+        Particles_Remove(particlesEnt);
+    }
+
     set_pev(ent, pev_eparticle, 0);
 }
