@@ -131,12 +131,8 @@ Detonate(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    new Array:nearbyEntities = UTIL_FindEntityNearby(vOrigin, EffectRadius * 2);
-    new size = ArraySize(nearbyEntities);
-
-    for (new i = 0; i < size; ++i) {
-        new target = ArrayGetCell(nearbyEntities, i);
-
+    new target;
+    while ((target = UTIL_FindEntityNearby(target, vOrigin, EffectRadius * 2)) != 0) {
         if (ent == target) {
             continue;
         }
@@ -175,8 +171,6 @@ Detonate(ent)
             ExecuteHamB(Ham_TakeDamage, target, 0, owner, fDamage, DMG_BURN);
         }
     }
-
-    ArrayDestroy(nearbyEntities);
 
     DetonateEffect(ent);
 }

@@ -11,6 +11,10 @@
 #define PLUGIN "[Hwn] Dance Spell"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 #define LIGHT_RANGE 24
 #define LIGHT_LIFETIME 5
 #define LIGHT_DECAY_RATE LIGHT_RANGE * (10 / LIGHT_LIFETIME)
@@ -32,8 +36,8 @@ new g_hWofSpell;
 
 new g_maxPlayers;
 
-new Array:g_playerLastAngle;
-new Array:g_playerLastViewAngle;
+new Float:g_playerLastAngle[MAX_PLAYERS + 1][3];
+new Float:g_playerLastViewAngle[MAX_PLAYERS + 1][3];
 
 public plugin_precache()
 {
@@ -50,19 +54,10 @@ public plugin_init()
 
     g_maxPlayers = get_maxplayers();
 
-    g_playerLastAngle = ArrayCreate(3, g_maxPlayers+1);
-    g_playerLastViewAngle = ArrayCreate(3, g_maxPlayers+1);
-
     for (new id = 0; id <= g_maxPlayers; ++id) {
-        ArrayPushCell(g_playerLastAngle, 0);
-        ArrayPushCell(g_playerLastViewAngle, 0);
+        xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastAngle[id]);
+        xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastViewAngle[id]);
     }
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_playerLastAngle);
-    ArrayDestroy(g_playerLastViewAngle);
 }
 
 
@@ -120,8 +115,8 @@ public Invoke(id)
 public Revoke(id)
 {
     remove_task(id);
-    ArraySetArray(g_playerLastAngle, id, {0, 0, 0});
-    ArraySetArray(g_playerLastViewAngle, id, {0, 0, 0});
+    xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastAngle[id]);
+    xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastViewAngle[id]);
 }
 
 public PlaySound(id)
@@ -136,10 +131,10 @@ public CheckDance(id)
     }
 
     new Float:vLastAngles[3];
-    ArrayGetArray(g_playerLastAngle, id, vLastAngles);
+    g_playerLastAngle[id] = vLastAngles;
 
     new Float:vLastViewAngles[3];
-    ArrayGetArray(g_playerLastViewAngle, id, vLastViewAngles);
+    g_playerLastViewAngle[id] = vLastViewAngles;
 
     static Float:vViewAngles[3];
     pev(id, pev_v_angle, vViewAngles);
@@ -181,6 +176,6 @@ public CheckDance(id)
         UTIL_CS_DamagePlayer(id, EFFECT_DAMAGE);
     }
     
-    ArraySetArray(g_playerLastAngle, id, vAngles);
-    ArraySetArray(g_playerLastViewAngle, id, vViewAngles);
+    xs_vec_copy(vAngles, g_playerLastAngle[id]);
+    xs_vec_copy(vViewAngles, g_playerLastViewAngle[id]);
 }

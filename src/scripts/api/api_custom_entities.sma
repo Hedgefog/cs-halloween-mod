@@ -436,15 +436,15 @@ Register(
 	if (!g_entityCount) {
 		g_entityHandlers = TrieCreate();
 		g_entityName = ArrayCreate(32);
-		g_entityPluginID = ArrayCreate(1);
-		g_entityModelIndex = ArrayCreate(1);
+		g_entityPluginID = ArrayCreate();
+		g_entityModelIndex = ArrayCreate();
 		g_entityMaxs = ArrayCreate(3);
 		g_entityMins = ArrayCreate(3);
-		g_entityLifeTime = ArrayCreate(1);
-		g_entityRespawnTime = ArrayCreate(1);
-		g_entityIgnoreRounds = ArrayCreate(1);
-		g_entityPreset = ArrayCreate(1);
-		g_entityHooks = ArrayCreate(1);
+		g_entityLifeTime = ArrayCreate();
+		g_entityRespawnTime = ArrayCreate();
+		g_entityIgnoreRounds = ArrayCreate();
+		g_entityPreset = ArrayCreate();
+		g_entityHooks = ArrayCreate();
 	}
 
 	new index = g_entityCount;

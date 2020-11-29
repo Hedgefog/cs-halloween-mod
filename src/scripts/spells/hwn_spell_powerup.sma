@@ -13,6 +13,10 @@
 #define PLUGIN "[Hwn] Power Up Spell"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 #define JUMP_SPEED 320.0
 #define JUMP_DELAY 0.175
 #define JUMP_EFFECT_BRIGHTNESS 255
@@ -30,7 +34,7 @@ new const g_szSndJump[] = "hwn/spells/spell_powerup_jump.wav";
 new g_sprTrail;
 
 new g_playerSpellEffectFlag = 0;
-new Array:g_playerLastJump;
+new Float:g_playerLastJump[MAX_PLAYERS + 1] = { 0.0, ... };
 
 new g_hWofSpell;
 
@@ -73,19 +77,8 @@ public plugin_init()
     g_hWofSpell = Hwn_Wof_Spell_Register("Power Up", "Invoke", "Revoke");
     
     g_maxPlayers = get_maxplayers();
-
-    g_playerLastJump = ArrayCreate(1, g_maxPlayers + 1);
-
-    for (new i = 1; i <= g_maxPlayers; ++i) {
-      ArrayPushCell(g_playerLastJump, 0.0);
-    }
-
 }
 
-public plugin_end()
-{
-    ArrayDestroy(g_playerLastJump);
-}
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
@@ -234,9 +227,7 @@ ProcessPlayerJump(id)
     new flags = pev(id, pev_flags);
 
     if (~flags & FL_ONGROUND) {
-        new Float:fLastJump = ArrayGetCell(g_playerLastJump, id);
-        
-        if (get_gametime() - fLastJump < JUMP_DELAY) {
+        if (get_gametime() - g_playerLastJump[id] < JUMP_DELAY) {
             return;
         }
 
@@ -244,7 +235,7 @@ ProcessPlayerJump(id)
     }
 
     JumpEffect(id);
-    ArraySetCell(g_playerLastJump, id, get_gametime());
+    g_playerLastJump[id] = get_gametime();
 }
 
 Jump(id)

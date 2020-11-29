@@ -14,6 +14,10 @@
 #define PLUGIN "[Hwn] Crits"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 #define CRIT_EFFECT_SPLASH_LENGTH 128.0
 #define CRIT_EFFECT_SPLASH_SPEEDNOISE 255
 #define CRIT_EFFECT_SPLASH_COUNT 18
@@ -31,10 +35,10 @@
 #define TASKID_SUM_HIT_BONUS 2000
 
 new g_playerCritsFlag;
-new Array:g_playerCritChance;
-new Array:g_playerLastShot;
-new Array:g_playerLastHit;
-new Array:g_playerLastCrit;
+new Float:g_playerCritChance[MAX_PLAYERS + 1] = { 0.0, ... };
+new Float:g_playerLastShot[MAX_PLAYERS + 1] = { 0.0, ... };
+new Float:g_playerLastHit[MAX_PLAYERS + 1] = { 0.0, ... };
+new Float:g_playerLastCrit[MAX_PLAYERS + 1] = { 0.0, ... };
 
 new g_cvarCritsDmgMultiplier;
 new g_cvarCritsEffectTrace;
@@ -59,8 +63,6 @@ new g_szSndCritHit[][32] = {
 new g_szSndCritShot[] = "hwn/crits/crit_shoot.wav";
 new g_szSndCritOn[] = "hwn/crits/crit_on.wav";
 new g_szSndCritOff[] = "hwn/crits/crit_off.wav";
-
-new g_maxPlayers;
 
 public plugin_precache()
 {
@@ -100,20 +102,6 @@ public plugin_init()
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
 
     register_concmd("hwn_crits_toggle", "OnClCmd_CritsToggle", ADMIN_CVAR);
-
-    g_maxPlayers = get_maxplayers();
-
-    g_playerCritChance = ArrayCreate(1, g_maxPlayers+1);
-    g_playerLastShot = ArrayCreate(1, g_maxPlayers+1);
-    g_playerLastHit = ArrayCreate(1, g_maxPlayers+1);
-    g_playerLastCrit = ArrayCreate(1, g_maxPlayers+1);
-
-    for (new id = 0; id <= g_maxPlayers; ++id) {
-        ArrayPushCell(g_playerCritChance, 0);
-        ArrayPushCell(g_playerLastShot, 0);
-        ArrayPushCell(g_playerLastHit, 0);
-        ArrayPushCell(g_playerLastCrit, 0);
-    }
 }
 
 public plugin_natives()
@@ -121,14 +109,6 @@ public plugin_natives()
     register_library("hwn");
     register_native("Hwn_Crits_Get", "Native_GetPlayerCrits");
     register_native("Hwn_Crits_Set", "Native_SetPlayerCrits");
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_playerCritChance);
-    ArrayDestroy(g_playerLastShot);
-    ArrayDestroy(g_playerLastHit);
-    ArrayDestroy(g_playerLastCrit);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -217,7 +197,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
             UTIL_Message_Sound(vHitOrigin, g_szSndCritHit[random(sizeof(g_szSndCritHit))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
         }
 
-        ArraySetCell(g_playerLastCrit, attacker, fGameTime);
+        g_playerLastCrit[attacker] = fGameTime;
 
         // apply crit only on hit
         if (isHit) {
@@ -227,10 +207,10 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     }
 
     if (isHit) {
-        ArraySetCell(g_playerLastHit, attacker, fGameTime);
+        g_playerLastHit[attacker] = fGameTime;
     }
 
-    ArraySetCell(g_playerLastShot, attacker, fGameTime);
+    g_playerLastShot[attacker] = fGameTime;
 
     return HAM_OVERRIDE;
 }
@@ -271,9 +251,9 @@ ProcessCrit(id, bool:isHit)
         return false;
     }
 
-    new Float:fLastShot = ArrayGetCell(g_playerLastShot, id);
+    new Float:fLastShot = g_playerLastShot[id];
     new bool:isNewShot = fLastShot != get_gametime();
-    new bool:isCrit = ArrayGetCell(g_playerLastCrit, id) == get_gametime();
+    new bool:isCrit = g_playerLastCrit[id] == get_gametime();
 
     if (isNewShot) { // exclude multiple bullets and wallbangs
         new Float:fCritChance = GetCritChance(id);
@@ -284,7 +264,7 @@ ProcessCrit(id, bool:isHit)
     }
 
     if (isHit) {
-        if (ArrayGetCell(g_playerLastHit, id) != get_gametime()) { // only new hit
+        if (g_playerLastHit[id] != get_gametime()) { // only new hit
             set_task(0.0, "TaskHitBonus", id + TASKID_SUM_HIT_BONUS);
         }
 
@@ -300,7 +280,7 @@ ProcessCrit(id, bool:isHit)
 
 Float:GetCritChance(id)
 {
-    return ArrayGetCell(g_playerCritChance, id);
+    return g_playerCritChance[id];
 }
 
 ResetCritChance(id)
@@ -318,13 +298,13 @@ SetCritChance(id, Float:fValue)
         fValue = 0.0;
     }
 
-    ArraySetCell(g_playerCritChance, id, fValue);
+    g_playerCritChance[id] = fValue;
 }
 
 ResetCrits(id)
 {
     SetPlayerCrits(id, false);
-    ArraySetCell(g_playerCritChance, id, 0);
+    g_playerCritChance[id] = 0.0;
 }
 
 UpdateStatusIcon(id)

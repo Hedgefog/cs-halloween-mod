@@ -6,7 +6,7 @@ enum _:NPC
     Float:NPC_NextAction,
     Float:NPC_NextVoice,
     Float:NPC_NextFootStep,
-    Float:NPC_LastReachablePoint,
+    Float:NPC_LastReachablePoint[3],
     Float:NPC_ReachTime,
     Float:NPC_LastRotation
 }
@@ -25,9 +25,7 @@ stock NPC_Create(ent)
         ArrayPushCell(npcData, 0);
     }
 
-    new Array:lastReachablePoint = ArrayCreate(3, 1);
-    ArrayPushArray(lastReachablePoint, Float:{0.0, 0.0, 0.0});
-    ArraySetCell(npcData, NPC_LastReachablePoint, lastReachablePoint);
+    ArraySetArray(npcData, NPC_LastReachablePoint, Float:{0.0, 0.0, 0.0});
 
     set_pev(ent, pev_iuser1, npcData);
 }
@@ -35,9 +33,6 @@ stock NPC_Create(ent)
 stock NPC_Destroy(ent)
 {
     new Array:npcData = NPC_GetData(ent);
-    new Array:lastReachablePoint = ArrayGetCell(npcData, NPC_LastReachablePoint);
-    ArrayDestroy(lastReachablePoint);
-
     ArrayDestroy(npcData);
 }
 
@@ -289,7 +284,6 @@ stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly
     pev(enemy, pev_origin, vTarget);
 
     new Array:npcData = NPC_GetData(ent);
-    new Array:lastReachablePoint = ArrayGetCell(npcData, NPC_LastReachablePoint);
 
     new Float:fGameTime = get_gametime();
     if (!reachableOnly || NPC_IsReachable(ent, vTarget))
@@ -298,13 +292,13 @@ stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly
         new Float:fReachTime = fGameTime + fDistance/fSpeed;
 
         ArraySetCell(npcData, NPC_ReachTime, fReachTime);
-        ArraySetArray(lastReachablePoint, 0, vTarget);
+        ArraySetArray(npcData, NPC_LastReachablePoint, vTarget);
     }
     else
     {
         new Float:fReachTime = ArrayGetCell(npcData, NPC_ReachTime);
         if (fGameTime < fReachTime) {
-            ArrayGetArray(lastReachablePoint, 0, vTarget);
+            ArrayGetArray(npcData, NPC_LastReachablePoint, vTarget);
         } else {
             return false;
         }
@@ -315,7 +309,12 @@ stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly
 
 stock bool:NPC_FindEnemy(ent, maxplayers = 32, bool:reachableOnly = true)
 {
-    new Array:targets = ArrayCreate();
+    new nearestPlayer = 0;
+    new Float:fNearestPlayerDistance = -1.0;
+
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
     for (new i = 1; i <= maxplayers; ++i)
     {
         if (!is_user_connected(i)) {
@@ -330,26 +329,25 @@ stock bool:NPC_FindEnemy(ent, maxplayers = 32, bool:reachableOnly = true)
             continue;
         }
 
-        static Float:vOrigin[3];
-        pev(i, pev_origin, vOrigin);
+        static Float:vPlayerOrigin[3];
+        pev(i, pev_origin, vPlayerOrigin);
 
-        if (reachableOnly && !NPC_IsReachable(ent, vOrigin)) {
+        if (reachableOnly && !NPC_IsReachable(ent, vPlayerOrigin)) {
             continue;
         }
 
-        ArrayPushCell(targets, i);
+        new Float:fDistance = get_distance_f(vOrigin, vPlayerOrigin);
+        if (fNearestPlayerDistance < 0 || fDistance < fNearestPlayerDistance) {
+            nearestPlayer = i;
+            fNearestPlayerDistance = fDistance;
+        }
     }
 
-    new size = ArraySize(targets);
-    if (size > 0) {
-        new index = random(size);
-        new enemy = ArrayGetCell(targets, index);
-        set_pev(ent, pev_enemy, enemy);
+    if (nearestPlayer) {
+        set_pev(ent, pev_enemy, nearestPlayer);
     }
 
-    ArrayDestroy(targets);
-
-    return (size > 0);
+    return !!nearestPlayer;
 }
 
 stock bool:NPC_IsVisible(const Float:vOrigin1[3], const Float:vOrigin2[3], ent = 0)

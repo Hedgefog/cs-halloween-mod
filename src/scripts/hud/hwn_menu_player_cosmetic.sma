@@ -11,13 +11,17 @@
 #define PLUGIN "[Hwn] Menu Player Cosmetic"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 new g_cvarPreview;
 new g_cvarPreviewLight;
 
 new PInv_ItemType:g_hCosmeticItemType;
 
-new Array:g_playerMenu;
-new Array:g_playerMenuSlotRefs;
+new g_playerMenu[MAX_PLAYERS + 1] = { 0, ... };
+new Array:g_playerMenuSlotRefs[MAX_PLAYERS + 1] = { Invalid_Array, ... };
 
 new g_maxPlayers;
 
@@ -31,14 +35,6 @@ public plugin_init()
     g_hCosmeticItemType = PInv_GetItemTypeHandler("cosmetic");
 
     g_maxPlayers = get_maxplayers();
-
-    g_playerMenu = ArrayCreate(1, g_maxPlayers+1);
-    g_playerMenuSlotRefs = ArrayCreate(1, g_maxPlayers+1);
-
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerMenu, 0);
-        ArrayPushCell(g_playerMenuSlotRefs, Invalid_Array);
-    }
 }
 
 public plugin_natives()
@@ -49,14 +45,12 @@ public plugin_natives()
 
 public plugin_end()
 {
-    ArrayDestroy(g_playerMenu);
-
     for (new i = 1; i <= g_maxPlayers; ++i) {
-        new Array:slotRefs = ArrayGetCell(g_playerMenuSlotRefs, i);
+        new Array:slotRefs = g_playerMenuSlotRefs[i];
         if (slotRefs != Invalid_Array) {
             ArrayDestroy(slotRefs);
         }
-    } ArrayDestroy(g_playerMenuSlotRefs);
+    }
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -71,13 +65,13 @@ public Native_Open(pluginID, argc)
 
 Open(id, page = 0)
 {
-    new menu = ArrayGetCell(g_playerMenu, id);
+    new menu = g_playerMenu[id];
     if (menu) {
         menu_destroy(menu);
     }
 
     menu = Create(id);
-    ArraySetCell(g_playerMenu, id, menu);
+    g_playerMenu[id] = menu;
 
     menu_display(id, menu, page);
 
@@ -96,12 +90,12 @@ Create(id)
     
     new menu = menu_create(szMenuTitle, "MenuHandler");
 
-    new Array:slotRefs = ArrayGetCell(g_playerMenuSlotRefs, id);
+    new Array:slotRefs = g_playerMenuSlotRefs[id];
     if (slotRefs != Invalid_Array) {
         ArrayClear(slotRefs);
     } else {
         slotRefs = ArrayCreate();
-        ArraySetCell(g_playerMenuSlotRefs, id, slotRefs);
+        g_playerMenuSlotRefs[id] = slotRefs;
     }
 
     new size = PInv_Size(id);
@@ -159,7 +153,7 @@ public MenuHandler(id, menu, item)
 {
     if (item != MENU_EXIT)
     {
-        new Array:slotRefs = ArrayGetCell(g_playerMenuSlotRefs, id);
+        new Array:slotRefs = g_playerMenuSlotRefs[id];
         new slotIdx = ArrayGetCell(slotRefs, item);
 
         new PInv_ItemType:itemType = PInv_GetItemType(id, slotIdx);

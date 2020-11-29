@@ -69,20 +69,9 @@ PumpkinRadiusDamage(ent, owner)
     pev(ent, pev_origin, vOrigin);
 
     new target;
-    new prevTarget;
-    while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EXPLOSION_RADIUS * 2)) > 0)
+    while ((target = UTIL_FindEntityNearby(target, vOrigin, EXPLOSION_RADIUS * 2)) > 0)
     {
-        if (prevTarget >= target) {
-            break; // infinite loop fix
-        }
-
-        prevTarget = target;
-
         if (ent == target) {
-            continue;
-        }
-
-        if (!pev_valid(target)) {
             continue;
         }
 

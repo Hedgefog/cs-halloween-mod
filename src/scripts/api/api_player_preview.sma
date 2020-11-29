@@ -9,6 +9,10 @@
 #define VERSION "1.0.0"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 #define IsPlayer(%1) (1 <= %1 <= 32)
 
 #define PREVIEW_CAMERA_MODEL "models/rpgrocket.mdl"
@@ -20,9 +24,7 @@
 #define PREVIEW_CAMERA_LIGHT_LIFETIME 5
 #define PREVIEW_CAMERA_LIGHT_DECAYRATE 1
 
-new Array:g_playerCamera;
-
-new g_maxPlayers;
+new g_playerCamera[MAX_PLAYERS + 1] = { 0, ... };
 
 public plugin_precache()
 {
@@ -36,13 +38,6 @@ public plugin_init()
     register_forward(FM_AddToFullPack, "OnAddToFullPack", 1);
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled_Pre", .Post = 0);
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
-
-    g_maxPlayers = get_maxplayers();
-    g_playerCamera = ArrayCreate(1, g_maxPlayers+1);
-
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerCamera, 0);
-    }
 }
 
 public plugin_natives()
@@ -51,11 +46,6 @@ public plugin_natives()
     register_native("PlayerPreview_Activate", "Native_Activate");
     register_native("PlayerPreview_Deactivate", "Native_Deactivate");
     register_native("PlayerPreview_IsActive", "Native_IsActive");
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_playerCamera);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -76,7 +66,7 @@ public Native_Deactivate(pluginID, argc)
 public bool:Native_IsActive(pluginID, argc)
 {
    new id = get_param(1);
-   return !!ArrayGetCell(g_playerCamera, id);
+   return !!g_playerCamera[id];
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -120,7 +110,7 @@ public OnAddToFullPack(es, e, ent, host, hostflags, player, pSet)
         return;
     }
 
-    if (!ArrayGetCell(g_playerCamera, ent)) {
+    if (!g_playerCamera[ent]) {
         return;
     }
 
@@ -205,14 +195,14 @@ CreatePlayerCamera(id, bool:light)
     engfunc(EngFunc_SetView, id, ent);
     set_task(0.1, "TaskCameraThink", ent, _, _, "b");
 
-    ArraySetCell(g_playerCamera, id, ent);
+    g_playerCamera[id] = ent;
 
     return true;
 }
 
 DestroyPlayerCamera(id)
 {
-    new ent = ArrayGetCell(g_playerCamera, id);
+    new ent = g_playerCamera[id];
     if (!ent) {
         return;
     }
@@ -223,7 +213,7 @@ DestroyPlayerCamera(id)
 
     remove_task(ent);
     engfunc(EngFunc_RemoveEntity, ent);
-    ArraySetCell(g_playerCamera, id, 0);
+    g_playerCamera[id] = 0;
 }
 
 UpdatePlayerCamera(ent)

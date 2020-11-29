@@ -14,6 +14,10 @@
 #define PLUGIN    "[Custom Entity] Hwn NPC Ghost"
 #define AUTHOR    "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 #define ENTITY_NAME "hwn_npc_ghost"
 
 const Float:NPC_Speed = 150.0;
@@ -39,7 +43,7 @@ new const g_szSndIdle[][128] = {
 new Float:g_fThinkDelay;
 new g_particlesEnabled;
 
-new Array:g_playerKiller;
+new g_playerKiller[MAX_PLAYERS + 1] = { 0, ... };
 
 new g_maxPlayers;
 
@@ -83,16 +87,6 @@ public plugin_init()
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
 
     g_maxPlayers = get_maxplayers();
-
-    g_playerKiller = ArrayCreate(1, g_maxPlayers+1);
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerKiller, 0);
-    }
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_playerKiller);
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -143,7 +137,7 @@ public OnKilled(ent)
 
 public OnPlayerKilled(id, killer)
 {
-    ArraySetCell(g_playerKiller, id, killer);
+    g_playerKiller[id] = killer;
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
@@ -211,7 +205,7 @@ Attack(ent, target)
 
 Revenge(ent, target)
 {
-    new killer = ArrayGetCell(g_playerKiller, target);
+    new killer = g_playerKiller[target];
     if (killer == target) {
         killer = 0;
     }
