@@ -32,6 +32,8 @@ public plugin_precache()
     precache_model(g_szSprSpellBall);
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
+
+    g_hSpell = Hwn_Spell_Register("Blink", Hwn_SpellFlag_None, "OnCast");
 }
 
 public plugin_init()
@@ -39,8 +41,6 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
-
-    g_hSpell = Hwn_Spell_Register("Blink", "OnCast");
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 

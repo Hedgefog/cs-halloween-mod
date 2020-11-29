@@ -14,13 +14,16 @@ enum Spell {
 
 new g_hSpells[Spell];
 
-public plugin_init()
+public plugin_precache()
 {
-    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-
     g_hSpells[Spell_Fish] = Hwn_Wof_Spell_Register("Fish?", "Invoke");
     g_hSpells[Spell_BeingLucky] = Hwn_Wof_Spell_Register("Being lucky", "Invoke");
     g_hSpells[Spell_Wait] = Hwn_Wof_Spell_Register("Wait for the next roll", "Invoke");
+}
+
+public plugin_init()
+{
+    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
 public Invoke() {}

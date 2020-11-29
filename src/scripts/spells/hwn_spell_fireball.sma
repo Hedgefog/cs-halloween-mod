@@ -37,6 +37,9 @@ public plugin_precache()
 
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
+
+    g_hSpell = Hwn_Spell_Register("Fireball", Hwn_SpellFlag_None, "Cast");
+    g_hWofSpell = Hwn_Wof_Spell_Register("Fire", "Invoke");
 }
 
 public plugin_init()
@@ -44,9 +47,6 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
-
-    g_hSpell = Hwn_Spell_Register("Fireball", "Cast");
-    g_hWofSpell = Hwn_Wof_Spell_Register("Fire", "Invoke");
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 

@@ -45,6 +45,9 @@ public plugin_precache()
     g_sprTrail = precache_model("sprites/zbeam2.spr");
     precache_sound(g_szSndDetonate);
     precache_sound(g_szSndJump);
+
+    Hwn_Spell_Register("Power Up", Hwn_SpellFlag_Rare, "Cast");
+    g_hWofSpell = Hwn_Wof_Spell_Register("Power Up", "Invoke", "Revoke");
 }
 
 public plugin_cfg()
@@ -73,9 +76,6 @@ public plugin_init()
         RegisterHam(Ham_Weapon_SecondaryAttack, szWeaponName, "OnWeaponAttack", .Post = 1);
     }
 
-    Hwn_Spell_Register("Power Up", "Cast");
-    g_hWofSpell = Hwn_Wof_Spell_Register("Power Up", "Invoke", "Revoke");
-    
     g_maxPlayers = get_maxplayers();
 }
 

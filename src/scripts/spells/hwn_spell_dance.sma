@@ -42,6 +42,8 @@ new Float:g_playerLastViewAngle[MAX_PLAYERS + 1][3];
 public plugin_precache()
 {
     precache_sound(g_szSndLoop);
+
+    g_hWofSpell = Hwn_Wof_Spell_Register("Dance", "Invoke");
 }
 
 public plugin_init()
@@ -49,8 +51,6 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled");
-
-    g_hWofSpell = Hwn_Wof_Spell_Register("Dance", "Invoke");
 
     g_maxPlayers = get_maxplayers();
 
