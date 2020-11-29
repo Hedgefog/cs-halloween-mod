@@ -149,6 +149,7 @@ SpawnParticles(const szName[], const Float:vOrigin[3], Float:fPlayTime)
     dllfunc(DLLFunc_Spawn, ent);
 
     set_pev(ent, pev_iuser1, index);
+    set_pev(ent, pev_iuser2, 0);
 
     set_task(0.04, "TaskTargetTick", ent+TASKID_SUM_TARGET_TICK, _, _, "b");
 
@@ -176,6 +177,7 @@ public TaskTargetTick(taskID)
 {
     new ent = taskID - TASKID_SUM_TARGET_TICK;
     new index = pev(ent, pev_iuser1);
+    new tickIndex = pev(ent, pev_iuser2);
 
     new pluginID            = ArrayGetCell(g_particlePluginID, index);
     new funcID                = ArrayGetCell(g_particleFuncID, index);
@@ -199,6 +201,8 @@ public TaskTargetTick(taskID)
         if (callfunc_begin_i(funcID, pluginID) == 1) {
             callfunc_push_array(_:vOrigin, 3);
             callfunc_push_array(_:vVelocity, 3);
+            callfunc_push_int(ent);
+            callfunc_push_int(tickIndex);
             callfunc_end();
         }
 
@@ -217,6 +221,8 @@ public TaskTargetTick(taskID)
             set_task(fLifeTime, "TaskRemoveParticle", particleEnt+TASKID_SUM_REMOVE_PARTICLE);
         }
     }
+
+    set_pev(ent, pev_iuser2, tickIndex + 1);
 }
 
 public TaskRemoveParticle(taskID)
