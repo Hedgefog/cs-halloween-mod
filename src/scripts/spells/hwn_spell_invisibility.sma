@@ -42,7 +42,7 @@ public plugin_precache()
     g_sprEffectTrace = precache_model("sprites/xbeam4.spr");
     precache_sound(g_szSndDetonate);
 
-    Hwn_Spell_Register("Invisibility", Hwn_SpellFlag_None, "Cast");
+    Hwn_Spell_Register("Invisibility", Hwn_SpellFlag_Applicable, "Cast");
     g_hWofSpell = Hwn_Wof_Spell_Register("Invisibility", "Invoke", "Revoke");
 }
 
