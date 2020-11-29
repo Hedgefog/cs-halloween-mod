@@ -8,23 +8,21 @@
 #define VERSION "1.0.0"
 #define AUTHOR "Hedgehog Fog"
 
-new Array:g_sprites;
-
 public plugin_precache()
 {
-    g_sprites = ArrayCreate();
-    ArrayPushCell(g_sprites, precache_model("sprites/muz2.spr"));
-    ArrayPushCell(g_sprites, precache_model("sprites/muz3.spr"));
-    ArrayPushCell(g_sprites, precache_model("sprites/muz4.spr"));
-    ArrayPushCell(g_sprites, precache_model("sprites/muz5.spr"));
-    ArrayPushCell(g_sprites, precache_model("sprites/muz6.spr"));
-    ArrayPushCell(g_sprites, precache_model("sprites/muz7.spr"));
-    ArrayPushCell(g_sprites, precache_model("sprites/muz8.spr"));
+    new sprites[API_PARTICLES_MAX_SPRITES];
+    sprites[0] = precache_model("sprites/muz2.spr");
+    sprites[1] = precache_model("sprites/muz3.spr");
+    sprites[2] = precache_model("sprites/muz4.spr");
+    sprites[3] = precache_model("sprites/muz5.spr");
+    sprites[4] = precache_model("sprites/muz6.spr");
+    sprites[5] = precache_model("sprites/muz7.spr");
+    sprites[6] = precache_model("sprites/muz8.spr");
 
     Particles_Register(
         .szName = "magic_glow",
         .szTransformCallback = "Transform",
-        .sprites = g_sprites,
+        .sprites = sprites,
         .fLifeTime = 0.8,
         .fScale = 0.05,
         .renderMode = kRenderTransAdd,
@@ -36,11 +34,6 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, VERSION, AUTHOR);
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_sprites);
 }
 
 public Transform(Float:vOrigin[3], Float:vVelocity[3], index, tickIndex)

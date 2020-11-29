@@ -207,8 +207,8 @@ public Native_Register(pluginID, argc)
     if (!g_gamemodeCount) {
         g_gamemodeIndex = TrieCreate();
         g_gamemodeName = ArrayCreate(32);
-        g_gamemodeFlags = ArrayCreate(1);
-        g_gamemodePluginID = ArrayCreate(1);
+        g_gamemodeFlags = ArrayCreate();
+        g_gamemodePluginID = ArrayCreate();
     }
 
     new index = g_gamemodeCount;

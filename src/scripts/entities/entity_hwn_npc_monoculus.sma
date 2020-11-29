@@ -372,7 +372,7 @@ public OnPlayerKilled(id, killer)
 
 Array:Monoculus_Create(ent)
 {
-    new Array:monoculus = ArrayCreate(Monoculus);
+    new Array:monoculus = ArrayCreate(1, Monoculus);
     for (new i = 0; i < Monoculus; ++i) {
         ArrayPushCell(monoculus, 0);
     }

@@ -46,7 +46,7 @@ enum _:HHH
 {
     HHH_AStar_Idx,
     Array:HHH_AStar_Path,
-    Array:HHH_AStar_Target,
+    Float:HHH_AStar_Target[3],
     Float:HHH_AStar_ArrivalTime,
     Float:HHH_AStar_NextSearch
 };
@@ -325,14 +325,12 @@ public AStar_OnPathDone(astarIdx, Array:path, Float:Distance, NodesAdded, NodesV
 
 HHH_Create(ent)
 {
-    new Array:hhh = ArrayCreate(HHH);
+    new Array:hhh = ArrayCreate(1, HHH);
     for (new i = 0; i < HHH; ++i) {
         ArrayPushCell(hhh, 0);
     }
 
-    new Array:target = ArrayCreate(3, 1);
-    ArraySetCell(hhh, HHH_AStar_Target, target);
-    ArrayPushArray(target, Float:{0.0, 0.0, 0.0});
+    ArraySetArray(hhh, HHH_AStar_Target, Float:{0.0, 0.0, 0.0});
 
     set_pev(ent, pev_iuser2, hhh);
 }
@@ -340,9 +338,6 @@ HHH_Create(ent)
 HHH_Destroy(ent)
 {
     new Array:hhh = any:pev(ent, pev_iuser2);
-
-    new Array:target = ArrayGetCell(hhh, HHH_AStar_Target);
-    ArrayDestroy(target);
 
     new Array:path = ArrayGetCell(hhh, HHH_AStar_Path);
     if (path != Invalid_Array) {
@@ -388,8 +383,7 @@ AStar_ProcessPath(ent, Array:path)
     pev(ent, pev_origin, vOrigin);
 
     static Float:vTarget[3];
-    new Array:target = ArrayGetCell(hhh, HHH_AStar_Target);
-    ArrayGetArray(target, 0, vTarget);
+    ArrayGetArray(hhh, HHH_AStar_Target, vTarget);
 
     if (ArraySize(path) > 0) {
         if (get_gametime() >= fArrivalTime) {
@@ -403,7 +397,7 @@ AStar_ProcessPath(ent, Array:path)
 
             //if (NPC_IsReachable(ent, vTarget)) {
             new Float:fDistance = get_distance_f(vOrigin, vTarget);
-            ArraySetArray(target, 0, vTarget);
+            ArraySetArray(hhh, HHH_AStar_Target, vTarget);
 
             ArraySetCell(hhh, HHH_AStar_ArrivalTime, get_gametime() + (fDistance/NPC_Speed));
             /*} else {

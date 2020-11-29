@@ -65,10 +65,10 @@ public OnSpawn(ent)
     }
 
     if (!g_spawnerCount) {
-        g_spawners = ArrayCreate(1);
+        g_spawners = ArrayCreate();
         g_spawnerCE = ArrayCreate(32);
-        g_spawnerDelay = ArrayCreate(1);
-        g_spawnerImpulse = ArrayCreate(1);
+        g_spawnerDelay = ArrayCreate();
+        g_spawnerImpulse = ArrayCreate();
     }
 
     new index = g_spawnerCount;

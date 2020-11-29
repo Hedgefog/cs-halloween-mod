@@ -4,6 +4,8 @@
 #include <fakemeta>
 #include <xs>
 
+#include <api_particles>
+
 #define PLUGIN "[API] Particles"
 #define VERSION "1.0.0"
 #define AUTHOR "Hedgehog Fog"
@@ -69,7 +71,9 @@ public Native_Register(pluginID, argc)
     get_string(2, szTransformCallback, charsmax(szTransformCallback));
     new funcID = get_func_id(szTransformCallback, pluginID);
 
-    new Array:sprites = any:get_param(3);
+    new sprites[API_PARTICLES_MAX_SPRITES];
+    get_array(3, sprites, sizeof(sprites));
+
     new Float:fLifeTime = get_param_f(4);
     new Float:fScale = get_param_f(5);
     new renderMode = get_param(6);
@@ -98,13 +102,13 @@ public Native_Remove(pluginID, argc)
     RemoveParticles(ent);
 }
 
-RegisterParticle(const szName[], pluginID, funcID, Array:sprites, Float:fLifeTime, Float:fScale, renderMode, Float:fRenderAmt, spawnCount)
+RegisterParticle(const szName[], pluginID, funcID, const sprites[API_PARTICLES_MAX_SPRITES], Float:fLifeTime, Float:fScale, renderMode, Float:fRenderAmt, spawnCount)
 {
     if (!g_particleCount) {
         g_particles = TrieCreate();
         g_particlePluginID = ArrayCreate();
         g_particleFuncID = ArrayCreate();
-        g_particleSprites = ArrayCreate();
+        g_particleSprites = ArrayCreate(API_PARTICLES_MAX_SPRITES);
         g_particleLifeTime = ArrayCreate();
         g_particleScale = ArrayCreate();
         g_particleRenderMode = ArrayCreate();
@@ -122,7 +126,7 @@ RegisterParticle(const szName[], pluginID, funcID, Array:sprites, Float:fLifeTim
     ArrayPushCell(g_particleRenderMode, renderMode);
     ArrayPushCell(g_particleRenderAmt, fRenderAmt);
     ArrayPushCell(g_particleSpawnCount, spawnCount);
-    ArrayPushCell(g_particleSprites, sprites);
+    ArrayPushArray(g_particleSprites, sprites);
 
     g_particleCount++;
 
@@ -180,7 +184,9 @@ public TaskTargetTick(taskID)
     new renderMode            = ArrayGetCell(g_particleRenderMode, index);
     new Float:fRenderAmt    = ArrayGetCell(g_particleRenderAmt, index);
     new spawnCount            = ArrayGetCell(g_particleSpawnCount, index);
-    new Array:sprites        = ArrayGetCell(g_particleSprites, index);
+
+    static sprites[API_PARTICLES_MAX_SPRITES];
+    ArrayGetArray(g_particleSprites, index, sprites);
 
     static Float:vOrigin[3];
     static Float:vVelocity[3];
@@ -196,18 +202,12 @@ public TaskTargetTick(taskID)
             callfunc_end();
         }
 
-        static modelindex;
-        {
-            new size = ArraySize(sprites);
-            modelindex = ArrayGetCell(sprites, random(size));
-        }
-
         static particleEnt;
         {
             particleEnt = engfunc(EngFunc_CreateNamedEntity, g_ptrParticleClassname);
             engfunc(EngFunc_SetOrigin, particleEnt, vOrigin);
             set_pev(particleEnt, pev_velocity, vVelocity);
-            set_pev(particleEnt, pev_modelindex, modelindex);
+            set_pev(particleEnt, pev_modelindex, sprites[random(strlen(sprites))]);
             set_pev(particleEnt, pev_solid, SOLID_TRIGGER);
             set_pev(particleEnt, pev_movetype, MOVETYPE_NOCLIP);
             set_pev(particleEnt, pev_rendermode, renderMode);

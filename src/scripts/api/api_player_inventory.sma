@@ -238,7 +238,7 @@ GetItemTypeName(itemType, szTypeName[], maxlen)
 
 Array:CreatePlayerInventory(id)
 {
-    new Array:inventory = ArrayCreate(1);
+    new Array:inventory = ArrayCreate();
     g_playerInventories[id] = inventory;
 
     return inventory;

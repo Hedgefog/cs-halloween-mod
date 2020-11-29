@@ -33,7 +33,7 @@ new g_fwOvertime;
 new g_fwWinnerTeam;
 
 new g_playerPoints[MAX_PLAYERS + 1] = { 0, ... };
-new Array:g_teamPoints;
+new g_teamPoints[TEAM_COUNT];
 new g_teamPointsToSpawnBoss;
 new bool:g_isOvertime;
 
@@ -74,11 +74,6 @@ public plugin_init()
 
     g_maxPlayers = get_maxplayers();
 
-    g_teamPoints = ArrayCreate(1, TEAM_COUNT);
-    for (new i = 0; i < TEAM_COUNT; ++i) {
-        ArrayPushCell(g_teamPoints, 0);
-    }
-
     g_cvarTeamPointsLimit = register_cvar("hwn_collector_teampoints_limit", "50");
     g_cvarRoundTime = register_cvar("hwn_collector_roundtime", "10.0");
     g_cvarRoundTimeOvertime = register_cvar("hwn_collector_roundtime_overtime", "30");
@@ -102,11 +97,6 @@ public plugin_natives()
     register_native("Hwn_Collector_SetTeamPoints", "Native_SetTeamPoints");
     register_native("Hwn_Collector_IsOvertime", "Native_IsOvertime");
     register_native("Hwn_Collector_ObjectiveBlocked", "Native_ObjectiveBlocked");
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_teamPoints);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -359,14 +349,14 @@ SetPlayerPoints(id, count, bool:silent = false)
 
 GetTeamPoints(team)
 {
-    return ArrayGetCell(g_teamPoints, team);
+    return g_teamPoints[team];
 }
 
 SetTeamPoints(team, count, bool:silent = false)
 {
     new teamPointsToBossSpawn = get_pcvar_num(g_cvarTeamPointsToBossSpawn);
     if (teamPointsToBossSpawn > 0) {
-        new countDiff = count - ArrayGetCell(g_teamPoints, team);
+        new countDiff = count - g_teamPoints[team];
         if (countDiff > 0) {
             g_teamPointsToSpawnBoss += countDiff;
 
@@ -377,7 +367,7 @@ SetTeamPoints(team, count, bool:silent = false)
         }
     }
 
-    ArraySetCell(g_teamPoints, team, count);
+    g_teamPoints[team] = count;
 
     new teamPointsLimit = get_pcvar_num(g_cvarTeamPointsLimit);
     if (count >= teamPointsLimit) {

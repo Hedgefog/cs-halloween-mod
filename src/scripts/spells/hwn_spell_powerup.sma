@@ -227,9 +227,8 @@ ProcessPlayerJump(id)
     new flags = pev(id, pev_flags);
 
     if (~flags & FL_ONGROUND) {
-        new Float:fLastJump = g_playerLastJump[id];
-        if (get_gametime() - fLastJump > JUMP_DELAY) {
-            Jump(id);
+        if (get_gametime() - g_playerLastJump[id] < JUMP_DELAY) {
+            return;
         }
 
         Jump(id);

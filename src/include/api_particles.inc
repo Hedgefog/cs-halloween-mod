@@ -3,11 +3,13 @@
 #endif
 #define _api_particles_included
 
+#define API_PARTICLES_MAX_SPRITES 8
+
 native Particles_Register
 (
     const szName[],
     const szTransformCallback[],
-    Array:sprites,
+    const sprites[API_PARTICLES_MAX_SPRITES],
     Float:fLifeTime,
     Float:fScale,
     renderMode,
