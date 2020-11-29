@@ -236,9 +236,11 @@ ProcessPlayerJump(id)
     if (~flags & FL_ONGROUND) {
         new Float:fLastJump = ArrayGetCell(g_playerLastJump, id);
         
-        if (get_gametime() - fLastJump > JUMP_DELAY) {
-            Jump(id);
+        if (get_gametime() - fLastJump < JUMP_DELAY) {
+            return;
         }
+
+        Jump(id);
     }
 
     JumpEffect(id);
