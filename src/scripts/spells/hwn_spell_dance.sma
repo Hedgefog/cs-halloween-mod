@@ -54,7 +54,7 @@ public plugin_init()
 
     g_maxPlayers = get_maxplayers();
 
-    for (new id = 0; id <= MAX_PLAYERS; ++id) {
+    for (new id = 0; id <= g_maxPlayers; ++id) {
         xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastAngle[id]);
         xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastViewAngle[id]);
     }
