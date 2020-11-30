@@ -24,6 +24,7 @@ new g_particlesEnabled = false;
 
 new const g_szSndSpawn[] = "hwn/items/spellbook/spellbook_spawn.wav";
 new const g_szSndPickup[] = "hwn/spells/spell_pickup.wav";
+new const g_szSndPickupRare[] = "hwn/spells/spell_pickup_rare.wav";
 
 new bool:g_isPrecaching;
 
@@ -47,6 +48,7 @@ public plugin_precache()
 
     precache_sound(g_szSndSpawn);
     precache_sound(g_szSndPickup);
+    precache_sound(g_szSndPickupRare);
 
     g_ceHandler = CE_Register(
         .szName = ENTITY_NAME,
@@ -130,15 +132,14 @@ public OnPickup(ent, id)
     }
 
     new spell = pev(ent, pev_spell);
-    new maxSpellCount = Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare
-        ? get_pcvar_num(g_cvarMaxRareSpellCount)
-        : get_pcvar_num(g_cvarMaxSpellCount);
+    new bool:isRare = !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare);
+    new maxSpellCount = isRare ? get_pcvar_num(g_cvarMaxRareSpellCount) : get_pcvar_num(g_cvarMaxSpellCount);
 
     if (maxSpellCount > 0) {
         Hwn_Spell_SetPlayerSpell(id, spell, random(maxSpellCount) + 1);
     }
 
-    emit_sound(ent, CHAN_BODY, g_szSndPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(ent, CHAN_BODY, isRare ? g_szSndPickupRare : g_szSndPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     return PLUGIN_HANDLED;
 }
