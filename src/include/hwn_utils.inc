@@ -866,3 +866,19 @@ stock bool:UTIL_IsLocalizationExists(const szKey[])
 
     return !equali(szBuffer, szNotFound, sizeof(szNotFound) - 1);
 }
+
+stock UTIL_PushFromOrigin(const Float:vOrigin[3], ent, Float:fImpulse)
+{
+    static Float:vTargetOrigin[3];
+    pev(ent, pev_origin, vTargetOrigin);
+
+    static Float:vVelocity[3];
+    xs_vec_sub(vTargetOrigin, vOrigin, vVelocity);
+    xs_vec_normalize(vVelocity, vVelocity);
+    xs_vec_mul_scalar(vVelocity, fImpulse, vVelocity);
+
+    static Float:vTargetVelocity[3];
+    pev(ent, pev_velocity, vTargetVelocity);
+    xs_vec_add(vTargetVelocity, vVelocity, vTargetVelocity);
+    set_pev(ent, pev_velocity, vTargetVelocity);
+}
