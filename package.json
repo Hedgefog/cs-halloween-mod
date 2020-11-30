@@ -19,7 +19,7 @@
     "gulp": "^4.0.2",
     "gulp-file": "^0.4.0",
     "gulp-flatten": "^0.4.0",
-    "gulp-sma": "^1.0.7",
+    "gulp-sma": "^1.0.8",
     "gulp-watch": "^5.0.1",
     "gulp-zip": "^5.0.2",
     "lodash": "^4.17.20",
