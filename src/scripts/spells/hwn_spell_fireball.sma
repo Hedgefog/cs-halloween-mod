@@ -161,18 +161,9 @@ Detonate(ent)
                 continue;
             }
 
-            static Float:vDirection[3];
-            xs_vec_sub(vOrigin, vTargetOrigin, vDirection);
-            xs_vec_normalize(vDirection, vDirection);
-            xs_vec_mul_scalar(vDirection, -512.0, vDirection);
-
-            static Float:vTargetVelocity[3];
-            pev(target, pev_velocity, vTargetVelocity);
-            xs_vec_add(vTargetVelocity, vDirection, vTargetVelocity);
-            set_pev(target, pev_velocity, vTargetVelocity);
-
             UTIL_CS_DamagePlayer(target, fDamage, DMG_BURN, owner, 0);
             burn_player(target, owner, 15);
+            UTIL_PushFromOrigin(vOrigin, target, 512.0);
         } else {
             ExecuteHamB(Ham_TakeDamage, target, 0, owner, fDamage, DMG_BURN);
         }
