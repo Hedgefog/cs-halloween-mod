@@ -33,6 +33,7 @@ const Float:EffectDamageDelay = 0.5;
 const Float:EffectLightningDelay = 0.1;
 const Float:EffectRadius = 96.0;
 const Float:EffectDamageRadiusMultiplier = 0.75;
+const Float:EffectImpactRadiusMultiplier = 0.5;
 new const EffectColor[3] = {32, 128, 192};
 
 new const g_szSndCast[] = "hwn/spells/spell_lightning_cast.wav";
@@ -163,7 +164,7 @@ public OnPlayerPreThink(id)
         return HAM_IGNORED;
     }
 
-    if (fDistance > EffectRadius / 2) {
+    if (fDistance > EffectRadius * EffectImpactRadiusMultiplier) {
         UTIL_PushFromOrigin(vCoreOrigin, id, -SpellballMagnetism);
     } else {
         static Float:vCoreVelocity[3];
