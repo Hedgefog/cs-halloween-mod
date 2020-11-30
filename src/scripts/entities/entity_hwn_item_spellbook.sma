@@ -28,6 +28,7 @@ new const g_szSndPickup[] = "hwn/spells/spell_pickup.wav";
 new bool:g_isPrecaching;
 
 new g_cvarMaxSpellCount;
+new g_cvarMaxRareSpellCount;
 
 new g_ceHandler;
 
@@ -63,6 +64,7 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "OnPickup");
 
     g_cvarMaxSpellCount = register_cvar("hwn_spellbook_max_spell_count", "3");
+    g_cvarMaxRareSpellCount = register_cvar("hwn_spellbook_max_rare_spell_count", "1");
 }
 
 public Hwn_Fw_ConfigLoaded()
@@ -128,7 +130,9 @@ public OnPickup(ent, id)
     }
 
     new spell = pev(ent, pev_spell);
-    new maxSpellCount = get_pcvar_num(g_cvarMaxSpellCount);
+    new maxSpellCount = Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare
+        ? get_pcvar_num(g_cvarMaxRareSpellCount)
+        : get_pcvar_num(g_cvarMaxSpellCount);
 
     if (maxSpellCount > 0) {
         Hwn_Spell_SetPlayerSpell(id, spell, random(maxSpellCount) + 1);
