@@ -30,7 +30,12 @@ public plugin_precache()
     g_sprEffect = precache_model("sprites/smoke.spr");
     precache_sound(g_szSndDetonate);
 
-    Hwn_Spell_Register("Overheal", Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Heal | Hwn_SpellFlag_Radius, "Invoke");
+    Hwn_Spell_Register(
+        "Overheal",
+        Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Heal | Hwn_SpellFlag_Radius,
+        "Invoke"
+    );
+
     g_hWofSpell = Hwn_Wof_Spell_Register("Overheal", "Invoke");
 }
 

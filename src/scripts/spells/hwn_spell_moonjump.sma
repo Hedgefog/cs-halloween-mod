@@ -26,7 +26,12 @@ public plugin_precache()
 {
     precache_sound(g_szSndDetonate);
 
-    Hwn_Spell_Register("Moon Jump", Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability, "Cast");
+    Hwn_Spell_Register(
+        "Moon Jump",
+        Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability,
+        "Cast"
+    );
+
     g_hWofSpell = Hwn_Wof_Spell_Register("Moon Jump", "Invoke", "Revoke");
 }
 

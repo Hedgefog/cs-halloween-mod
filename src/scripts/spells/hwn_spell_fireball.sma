@@ -39,7 +39,12 @@ public plugin_precache()
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
 
-    g_hSpell = Hwn_Spell_Register("Fireball", Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Radius, "Cast");
+    g_hSpell = Hwn_Spell_Register(
+        "Fireball",
+        Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Radius,
+        "Cast"
+    );
+
     g_hWofSpell = Hwn_Wof_Spell_Register("Fire", "Invoke");
 }
 
