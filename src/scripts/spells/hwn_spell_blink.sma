@@ -15,6 +15,8 @@
 #define PLUGIN "[Hwn] Blink Spell"
 #define AUTHOR "Hedgehog Fog"
 
+const SpellballSpeed = 720;
+
 const Float:EffectRadius = 64.0;
 new const EffectColor[3] = {0, 0, 255};
 
@@ -51,7 +53,7 @@ public plugin_init()
 
 public OnCast(id)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, _, g_szSprSpellBall, _, 0.75, 10.0);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
 
     if (!ent) {
         return PLUGIN_HANDLED;
