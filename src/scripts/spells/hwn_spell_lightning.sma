@@ -94,7 +94,6 @@ public OnCast(id)
     static Float:vVelocity[3];
     pev(ent, pev_velocity, vVelocity);
 
-    set_pev(ent, pev_movetype, MOVETYPE_FLYMISSILE);
     set_pev(ent, pev_vuser1, vVelocity);
     set_pev(ent, pev_iuser1, g_hSpell);
     set_pev(ent, pev_groupinfo, 128);
