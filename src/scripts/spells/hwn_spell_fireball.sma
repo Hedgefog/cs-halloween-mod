@@ -16,6 +16,7 @@
 #define AUTHOR "Hedgehog Fog"
 
 const Float:FireballDamage = 30.0;
+const FireballSpeed = 720;
 
 const Float:EffectRadius = 64.0;
 new const EffectColor[3] = {255, 127, 47};
@@ -100,7 +101,7 @@ public OnSpellballKilled(ent)
 
 public Cast(id)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, _, g_szSprFireball, _, 0.5, 10.0);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, FireballSpeed, g_szSprFireball, _, 0.5, 10.0);
     if (!ent) {
         return PLUGIN_HANDLED;
     }
