@@ -102,6 +102,7 @@
 
         Cvars:
             Added hwn_spellbook_max_spell_count cvar
+            Added hwn_spellbook_max_rare_spell_count cvar
             Added hwn_bucket_collect_flash cvar
             Added hwn_pumpkin_pickup_flash cvar
             Added hwn_wof_effect_time cvar
