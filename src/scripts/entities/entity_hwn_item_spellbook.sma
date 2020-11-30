@@ -188,7 +188,8 @@ UpdateParticles(ent, bool:createIfNotExists = false)
             return;
         }
 
-        particlesEnt = CreateParticles(ent);
+        CreateParticles(ent);
+        return;
     }
 
     static Float:vOrigin[3];
