@@ -14,6 +14,10 @@
 #define PLUGIN "[Hwn] Lightning Spell"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 #define SPELLBALL_ENTITY_CLASSNAME "hwn_item_spellball"
 
 #define TASKID_SUM_DAMAGE 1000
@@ -34,6 +38,8 @@ new const EffectColor[3] = {32, 128, 192};
 new const g_szSndCast[] = "hwn/spells/spell_lightning_cast.wav";
 new const g_szSndDetonate[] = "hwn/spells/spell_lightning_impact.wav";
 new const g_szSprSpellBall[] = "sprites/flare6.spr";
+
+new g_playerFocalPointEnt[MAX_PLAYERS + 1];
 
 new g_sprEffect;
 new g_hSpell;
@@ -65,6 +71,8 @@ public plugin_init()
 
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
     CE_RegisterHook(CEFunction_Remove, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballRemove");
+
+    RegisterHam(Ham_Player_PreThink, "player", "OnPlayerPreThink", .Post = 1);
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -89,9 +97,10 @@ public OnCast(id)
     set_pev(ent, pev_movetype, MOVETYPE_FLYMISSILE);
     set_pev(ent, pev_vuser1, vVelocity);
     set_pev(ent, pev_iuser1, g_hSpell);
+    set_pev(ent, pev_groupinfo, 128);
 
-    set_task(g_fThinkDelay, "TaskThink", ent, _, _, "b");
     set_task(SpellballLifeTime, "TaskKill", ent+TASKID_SUM_KILL);
+    set_task(g_fThinkDelay, "TaskThink", ent, _, _, "b");
     set_task(EffectDamageDelay, "TaskDamage", ent+TASKID_SUM_DAMAGE, _, _, "b");
     set_task(EffectLightningDelay, "TaskLightningEffect", ent+TASKID_SUM_LIGHTNING_EFFECT, _, _, "b");
 
@@ -117,7 +126,54 @@ public OnSpellballKilled(ent)
         return;
     }
 
+    for (new id = 1; id <= MAX_PLAYERS; ++id) {
+        if (g_playerFocalPointEnt[id] == ent) {
+            g_playerFocalPointEnt[id] = 0;
+        }
+    }
+
     Detonate(ent);
+}
+
+public OnPlayerPreThink(id)
+{
+    if (!g_playerFocalPointEnt[id]) {
+        return HAM_IGNORED;
+    }
+
+    if (!is_user_alive(id)) {
+        g_playerFocalPointEnt[id] = 0;
+        return HAM_IGNORED;
+    }
+
+    if (!pev_valid(g_playerFocalPointEnt[id])) {
+        g_playerFocalPointEnt[id] = 0;
+        return HAM_IGNORED;
+    }
+
+    static Float:vOrigin[3];
+    pev(id, pev_origin, vOrigin);
+    
+    static Float:vCoreOrigin[3];
+    pev(g_playerFocalPointEnt[id], pev_origin, vCoreOrigin);
+
+    new Float:fDistance = get_distance_f(vCoreOrigin, vOrigin);
+
+    if (fDistance > EffectRadius) {
+        g_playerFocalPointEnt[id] = 0;
+        return HAM_IGNORED;
+    }
+
+    if (fDistance > EffectRadius / 2) {
+        UTIL_PushFromOrigin(vCoreOrigin, id, -SpellballMagnetism);
+    } else {
+        static Float:vCoreVelocity[3];
+        pev(g_playerFocalPointEnt[id], pev_velocity, vCoreVelocity);
+
+        set_pev(id, pev_velocity, vCoreVelocity);
+    }
+
+    return HAM_HANDLED;
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -175,15 +231,6 @@ RadiusDamage(ent, bool:push = false)
     }
 }
 
-DetonateEffect(ent)
-{
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-
-    UTIL_Message_BeamCylinder(vOrigin, EffectRadius * 3, g_sprEffect, 0, 3, 32, 255, EffectColor, 100, 0);
-    emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-}
-
 DrawLightingBeam(ent)
 {
     static Float:vOrigin[3];
@@ -221,6 +268,15 @@ DrawLightingBeam(ent)
     message_end();
 }
 
+DetonateEffect(ent)
+{
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    UTIL_Message_BeamCylinder(vOrigin, EffectRadius * 3, g_sprEffect, 0, 3, 32, 255, EffectColor, 100, 0);
+    emit_sound(ent, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+}
+
 /*--------------------------------[ Task ]--------------------------------*/
 
 
@@ -228,9 +284,6 @@ public TaskThink(ent)
 {
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
-
-    static Float:vVelocity[3];
-    pev(ent, pev_velocity, vVelocity);
 
     new owner = pev(ent, pev_owner);
     new team = owner ? UTIL_GetPlayerTeam(owner) : -1;
@@ -258,17 +311,15 @@ public TaskThink(ent)
             continue;
         }
 
-        static Float:vTargetOrigin[3];
-        pev(target, pev_origin, vTargetOrigin);
-
-        if (get_distance_f(vOrigin, vTargetOrigin) > EffectRadius / 2) {
-            UTIL_PushFromOrigin(vOrigin, target, -SpellballMagnetism);
-        } else {
-            set_pev(target, pev_velocity, vVelocity);
+        if (g_playerFocalPointEnt[target]) {
+            continue;
         }
+
+        g_playerFocalPointEnt[target] = ent;
     }
 
     // update velocity
+    static Float:vVelocity[3];
     pev(ent, pev_vuser1, vVelocity);
     set_pev(ent, pev_velocity, vVelocity);
 }
