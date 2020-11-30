@@ -179,13 +179,13 @@ public TaskTargetTick(taskID)
     new index = pev(ent, pev_iuser1);
     new tickIndex = pev(ent, pev_iuser2);
 
-    new pluginID            = ArrayGetCell(g_particlePluginID, index);
-    new funcID                = ArrayGetCell(g_particleFuncID, index);
-    new Float:fLifeTime        = ArrayGetCell(g_particleLifeTime, index);
-    new Float:fScale        = ArrayGetCell(g_particleScale, index);
-    new renderMode            = ArrayGetCell(g_particleRenderMode, index);
-    new Float:fRenderAmt    = ArrayGetCell(g_particleRenderAmt, index);
-    new spawnCount            = ArrayGetCell(g_particleSpawnCount, index);
+    new pluginID = ArrayGetCell(g_particlePluginID, index);
+    new funcID = ArrayGetCell(g_particleFuncID, index);
+    new Float:fLifeTime = ArrayGetCell(g_particleLifeTime, index);
+    new Float:fScale = ArrayGetCell(g_particleScale, index);
+    new renderMode = ArrayGetCell(g_particleRenderMode, index);
+    new Float:fRenderAmt = ArrayGetCell(g_particleRenderAmt, index);
+    new spawnCount = ArrayGetCell(g_particleSpawnCount, index);
 
     static sprites[API_PARTICLES_MAX_SPRITES];
     ArrayGetArray(g_particleSprites, index, sprites);
