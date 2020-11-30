@@ -15,7 +15,7 @@
 #define PLUGIN "[Hwn] Blink Spell"
 #define AUTHOR "Hedgehog Fog"
 
-const SpellballSpeed = 720;
+const SpellballSpeed = 600;
 
 const Float:EffectRadius = 64.0;
 new const EffectColor[3] = {0, 0, 255};
