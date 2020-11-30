@@ -290,6 +290,9 @@ enum Hwn_SpellFlags (<<=1)
     Hwn_SpellFlag_Rare = 1,
     Hwn_SpellFlag_Throwable,
     Hwn_SpellFlag_Applicable,
+    Hwn_SpellFlag_Ability,
+    Hwn_SpellFlag_Heal,
+    Hwn_SpellFlag_Damage,
     Hwn_SpellFlag_Radius
 };
 

@@ -46,7 +46,7 @@ public plugin_precache()
     precache_sound(g_szSndDetonate);
     precache_sound(g_szSndJump);
 
-    Hwn_Spell_Register("Power Up", Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Rare, "Cast");
+    Hwn_Spell_Register("Power Up", Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Rare, "Cast");
     g_hWofSpell = Hwn_Wof_Spell_Register("Power Up", "Invoke", "Revoke");
 }
 
