@@ -233,6 +233,11 @@ public TaskThink(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
+    // update velocity
+    static Float:vVelocity[3];
+    pev(ent, pev_vuser1, vVelocity);
+    set_pev(ent, pev_velocity, vVelocity);
+
     new owner = pev(ent, pev_owner);
     new team = owner ? UTIL_GetPlayerTeam(owner) : -1;
 
@@ -259,23 +264,23 @@ public TaskThink(ent)
                 continue;
             }
 
-            static Float:vDirection[3];
-            xs_vec_sub(vTargetOrigin, vOrigin, vDirection);
-            xs_vec_normalize(vDirection, vDirection);
-            xs_vec_mul_scalar(vDirection, -512.0, vDirection);
-
             static Float:vTargetVelocity[3];
             pev(target, pev_velocity, vTargetVelocity);
+            vTargetVelocity[2] = 0.0;
 
-            xs_vec_add(vTargetVelocity, vDirection, vTargetVelocity);
+            if (get_distance_f(vOrigin, vTargetOrigin) > 32.0) {
+                static Float:vDirection[3];
+                xs_vec_sub(vTargetOrigin, vOrigin, vDirection);
+                xs_vec_normalize(vDirection, vDirection);
+                xs_vec_mul_scalar(vDirection, -512.0, vDirection);
+                xs_vec_add(vTargetVelocity, vDirection, vTargetVelocity);
+            }
+
+            xs_vec_add(vTargetVelocity, vVelocity, vTargetVelocity);
+
             set_pev(target, pev_velocity, vTargetVelocity);
         }
     }
-
-    // update velocity
-    static Float:vVelocity[3];
-    pev(ent, pev_vuser1, vVelocity);
-    set_pev(ent, pev_velocity, vVelocity);
 
     for (new i = 0; i < 4; ++i) {
         DrawLightingBeam(vOrigin);
