@@ -130,12 +130,6 @@ public CheckDance(id)
         return;
     }
 
-    new Float:vLastAngles[3];
-    g_playerLastAngle[id] = vLastAngles;
-
-    new Float:vLastViewAngles[3];
-    g_playerLastViewAngle[id] = vLastViewAngles;
-
     static Float:vViewAngles[3];
     pev(id, pev_v_angle, vViewAngles);
 
@@ -164,12 +158,12 @@ public CheckDance(id)
 
     UTIL_Message_Dlight(vOrigin, LIGHT_RANGE, color, LIGHT_LIFETIME, LIGHT_DECAY_RATE);
 
-    if (xs_vec_len(vLastAngles) > 0
-        && xs_vec_len(vLastViewAngles) > 0
-        && get_distance_f(vLastAngles, vAngles) <= DANCE_MIN_MOVE_ANGLE
+    if (xs_vec_len(g_playerLastAngle[id]) > 0
+        && xs_vec_len(g_playerLastViewAngle[id]) > 0
+        && get_distance_f(g_playerLastAngle[id], vAngles) <= DANCE_MIN_MOVE_ANGLE
         && (
-            get_distance_f(vLastViewAngles, vViewAngles) <= DANCE_MIN_VIEW_ANGLE
-                || get_distance_f(vLastAngles, vAngles) > 0.1 // restrict forward movement on "camera dance"
+            get_distance_f(g_playerLastViewAngle[id], vViewAngles) <= DANCE_MIN_VIEW_ANGLE
+                || get_distance_f(g_playerLastAngle[id], vAngles) > 0.1 // restrict forward movement on "camera dance"
         )
         && pev(id, pev_flags) & FL_ONGROUND
     ) {
