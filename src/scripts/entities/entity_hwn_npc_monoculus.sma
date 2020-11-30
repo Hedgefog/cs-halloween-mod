@@ -634,22 +634,11 @@ CreateJumpToPortalTask(ent)
 
 TeleportEffect(const Float:vOrigin[3])
 {
-    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
-    write_byte(TE_SPRITETRAIL);
-    engfunc(EngFunc_WriteCoord, vOrigin[0]);
-    engfunc(EngFunc_WriteCoord, vOrigin[1]);
-    engfunc(EngFunc_WriteCoord, vOrigin[2]);
-    engfunc(EngFunc_WriteCoord, vOrigin[0]);
-    engfunc(EngFunc_WriteCoord, vOrigin[1]);
-    engfunc(EngFunc_WriteCoord, vOrigin[2] + 8.0);
-    write_short(g_sprSparkle);
-    write_byte(8); //Count
-    write_byte(1); //Lifetime
-    write_byte(4); //Scale
-    write_byte(16); //Speed Noise
-    write_byte(32); //Speed
-    message_end();
+    static Float:vEnd[3];
+    xs_vec_copy(vOrigin, vEnd);
+    vEnd[2] += 8.0;
 
+    UTIL_Message_SpriteTrail(vOrigin, vEnd, g_sprSparkle, 8, 1, 4, 32, 16);
     UTIL_Message_Dlight(vOrigin, 48, {HWN_COLOR_PRIMARY}, 5, 32);
 }
 
