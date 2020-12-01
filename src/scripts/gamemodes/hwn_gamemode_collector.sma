@@ -193,27 +193,7 @@ public OnPlayerKilled(id)
         return;
     }
 
-    new points = GetPlayerPoints(id);
-
-    if (!points) {
-        return;
-    }
-
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
-
-    new bpEnt = CE_Create(BACKPACK_ENTITY_CLASSNAME, vOrigin);
-
-    if (bpEnt) {
-        set_pev(bpEnt, pev_iuser2, points);
-        dllfunc(DLLFunc_Spawn, bpEnt);
-
-        static Float:vVelocity[3];
-        UTIL_RandomVector(256.0, 256.0, vVelocity);
-        set_pev(bpEnt, pev_velocity, vVelocity);
-    }
-
-    SetPlayerPoints(id, 0);
+    ExtractPlayerPoints(id);
 }
 
 public OnTargetKilled(ent)
@@ -338,13 +318,37 @@ GetPlayerPoints(id)
     return g_playerPoints[id];
 }
 
-SetPlayerPoints(id, count, bool:silent = false)
+SetPlayerPoints(id, count)
 {
     g_playerPoints[id] = count;
+    ExecuteForward(g_fwPlayerPointsChanged, g_fwResult, id);
+}
 
-    if (!silent) {
-        ExecuteForward(g_fwPlayerPointsChanged, g_fwResult, id);
+bool:ExtractPlayerPoints(id)
+{
+    new points = GetPlayerPoints(id);
+    if (!points) {
+        return false;
     }
+
+    static Float:vOrigin[3];
+    pev(id, pev_origin, vOrigin);
+
+    new bpEnt = CE_Create(BACKPACK_ENTITY_CLASSNAME, vOrigin);
+    if (!bpEnt) {
+        return false;
+    }
+
+    set_pev(bpEnt, pev_iuser2, points);
+    dllfunc(DLLFunc_Spawn, bpEnt);
+
+    static Float:vVelocity[3];
+    UTIL_RandomVector(256.0, 256.0, vVelocity);
+    set_pev(bpEnt, pev_velocity, vVelocity);
+
+    SetPlayerPoints(id, 0);
+
+    return true;
 }
 
 GetTeamPoints(team)
@@ -352,7 +356,7 @@ GetTeamPoints(team)
     return g_teamPoints[team];
 }
 
-SetTeamPoints(team, count, bool:silent = false)
+SetTeamPoints(team, count)
 {
     new teamPointsToBossSpawn = get_pcvar_num(g_cvarTeamPointsToBossSpawn);
     if (teamPointsToBossSpawn > 0) {
@@ -374,22 +378,21 @@ SetTeamPoints(team, count, bool:silent = false)
         DispatchWin(team);
     }
 
-    if (!silent) {
-        ExecuteForward(g_fwTeamPointsChanged, g_fwResult, team);
-    }
+    ExecuteForward(g_fwTeamPointsChanged, g_fwResult, team);
 }
 
 ResetVariables()
 {
     for (new team = 0; team < TEAM_COUNT; ++team) {
-        SetTeamPoints(team, 0, .silent = true);
-        g_teamPointsToSpawnBoss = 0;
+        g_teamPoints[team] = 0;
     }
 
     for (new id = 1; id <= g_maxPlayers; ++id) {
-        SetPlayerPoints(id, 0, .silent = true);
+        g_playerPoints[id] = 0;
         Hwn_Spell_SetPlayerSpell(id, -1, 0);
     }
+
+    g_teamPointsToSpawnBoss = 0;
 }
 
 SetWofTask()
