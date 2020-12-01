@@ -1,7 +1,10 @@
+#pragma semicolon 1
+
 #include <amxmodx>
 #include <engine>
 #include <fakemeta>
 #include <hamsandwich>
+#include <xs>
 
 #tryinclude <reapi>
 
@@ -17,7 +20,6 @@
 #include <hwn>
 #include <hwn_utils>
 
-#pragma semicolon 1
 
 #define PLUGIN "[Hwn] Gamemode"
 #define AUTHOR "Hedgehog Fog"
@@ -67,7 +69,7 @@ new Float:g_fRoundStartTime;
 new g_playerFirstSpawnFlag = 0;
 new Array:g_tSpawnPoints;
 new Array:g_ctSpawnPoints;
-new Array:g_eventPoints;
+new Float:g_eventPoints[MAX_EVENT_POINTS][3];
 
 new g_maxPlayers;
 
@@ -98,25 +100,25 @@ public plugin_init()
         RegisterControl(RC_CheckWinConditions, "OnCheckWinConditions");
     #endif
 
-    register_clcmd("joinclass", "OnClCmd_JoinClass");
-    register_clcmd("menuselect", "OnClCmd_JoinClass");
+    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
+    RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
+
+    register_event("HLTV", "OnNewRound", "a", "1=0", "2=0");
+    register_logevent("OnRoundStart", 2, "1=Round_Start");
+    register_logevent("OnRoundEnd", 2, "1=Round_End");
+    register_event("TextMsg", "OnRoundEnd", "a", "2=#Game_will_restart_in");
 
     register_message(get_user_msgid("ClCorpse"), "OnMessage_ClCorpse");
     register_message(get_user_msgid("RoundTime"), "OnMessage_RoundTime");
 
-    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
-    RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
+    register_clcmd("joinclass", "OnClCmd_JoinClass");
+    register_clcmd("menuselect", "OnClCmd_JoinClass");
 
     g_maxPlayers = get_maxplayers();
 
     g_cvarRespawnTime = register_cvar("hwn_gamemode_respawn_time", "5.0");
     g_cvarSpawnProtectionTime = register_cvar("hwn_gamemode_spawn_protection_time", "3.0");
     g_cvarNewRoundDelay = register_cvar("hwn_gamemode_new_round_delay", "10.0");
-
-    register_event("HLTV", "OnNewRound", "a", "1=0", "2=0");
-    register_logevent("OnRoundStart", 2, "1=Round_Start");
-    register_logevent("OnRoundEnd", 2, "1=Round_End");
-    register_event("TextMsg", "OnRoundEnd", "a", "2=#Game_will_restart_in");
 
     g_fwNewRound = CreateMultiForward("Hwn_Gamemode_Fw_NewRound", ET_IGNORE);
     g_fwRoundStart = CreateMultiForward("Hwn_Gamemode_Fw_RoundStart", ET_IGNORE);
@@ -171,10 +173,6 @@ public plugin_end()
         ArrayDestroy(g_gamemodeName);
         ArrayDestroy(g_gamemodeFlags);
         ArrayDestroy(g_gamemodePluginID);
-    }
-
-    if (g_eventPoints != Invalid_Array) {
-        ArrayDestroy(g_eventPoints);
     }
 
     ArrayDestroy(g_tSpawnPoints);
@@ -279,7 +277,7 @@ public Native_IsPlayerOnSpawn(pluginID, argc)
 public Native_FindEventPoint()
 {
     new Float:vOrigin[3];
-    new bool:result =FindEventPoint(vOrigin);
+    new bool:result = FindEventPoint(vOrigin);
 
     set_array_f(1, vOrigin, sizeof(vOrigin));
 
@@ -339,7 +337,10 @@ public OnRoundEnd()
     g_gamestate = GameState_RoundEnd;
 
     remove_task(TASKID_ROUNDTIME_EXPIRE);
-    ClearRespawnTasks();
+
+    for (new id = 1; id <= g_maxPlayers; ++id) {
+        remove_task(id+TASKID_SUM_RESPAWN_PLAYER);
+    }
 
     ExecuteForward(g_fwRoundEnd, g_fwResult);
 }
@@ -356,7 +357,7 @@ public Hwn_PEquipment_Event_Changed(id)
     }
 
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if (!(flags & Hwn_GamemodeFlag_SpecialEquip)) {
+    if (~flags & Hwn_GamemodeFlag_SpecialEquip) {
         return;
     }
 
@@ -371,6 +372,11 @@ public OnClCmd_JoinClass(id)
         return PLUGIN_CONTINUE;
     }
 
+    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
+    if (~flags & Hwn_GamemodeFlag_RespawnPlayers) {
+        return PLUGIN_CONTINUE;
+    }
+
     #if defined _reapi_included
         new menu = get_member(id, m_iMenu);
         new joinState = get_member(id, m_iJoiningState);
@@ -379,31 +385,30 @@ public OnClCmd_JoinClass(id)
         new joinState = get_pdata_int(id, m_iJoiningState);
     #endif
 
+    if (menu != MENU_CHOOSEAPPEARANCE) {
+        return PLUGIN_CONTINUE;
+    }
+
     new team = UTIL_GetPlayerTeam(id);
     new bool:inPlayableTeam = team == 1 || team == 2;
 
-    if(menu == MENU_CHOOSEAPPEARANCE && (joinState == JOIN_CHOOSEAPPEARANCE || (!joinState && inPlayableTeam)))
-    {
-        new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-        if (flags & Hwn_GamemodeFlag_RespawnPlayers)
-        {
-            //ConnorMcLeod
-            new command[11], arg1[32];
-            read_argv(0, command, charsmax(command));
-            read_argv(1, arg1, charsmax(arg1));
-            engclient_cmd(id, command, arg1);
-
-            ExecuteHam(Ham_Player_PreThink, id);
-
-            if (!is_user_alive(id)) {
-                SetRespawnTask(id);
-            }
-
-            return PLUGIN_HANDLED;
-        }
+    if (joinState != JOIN_CHOOSEAPPEARANCE && (joinState || !inPlayableTeam)) {
+        return PLUGIN_CONTINUE;
     }
 
-    return PLUGIN_CONTINUE;
+    //ConnorMcLeod
+    new command[11], arg1[32];
+    read_argv(0, command, charsmax(command));
+    read_argv(1, arg1, charsmax(arg1));
+    engclient_cmd(id, command, arg1);
+
+    ExecuteHam(Ham_Player_PreThink, id);
+
+    if (!is_user_alive(id)) {
+        SetRespawnTask(id);
+    }
+
+    return PLUGIN_HANDLED;
 }
 
 public OnMessage_ClCorpse()
@@ -496,14 +501,15 @@ public OnSetModel(ent)
     }
 
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if ((flags & Hwn_GamemodeFlag_SpecialEquip))
-    {
-        static szClassname[32];
-        pev(ent, pev_classname, szClassname, charsmax(szClassname));
+    if (~flags & Hwn_GamemodeFlag_SpecialEquip) {
+        return;
+    }
 
-        if (szClassname[9] == '^0' && szClassname[0] == 'w' && szClassname[6] == 'b') {
-            dllfunc(DLLFunc_Think, ent);
-        }
+    static szClassname[32];
+    pev(ent, pev_classname, szClassname, charsmax(szClassname));
+
+    if (szClassname[9] == '^0' && szClassname[0] == 'w' && szClassname[6] == 'b') {
+        dllfunc(DLLFunc_Think, ent);
     }
 }
 
@@ -535,15 +541,13 @@ public OnCheckWinConditions()
 SetGamemode(gamemode)
 {
     g_gamemode = gamemode;
-
-    new szGamemodeName[32];
-    ArrayGetString(g_gamemodeName, gamemode, szGamemodeName, charsmax(szGamemodeName));
-
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if ((flags & Hwn_GamemodeFlag_SpecialEquip)) {
+    if (flags & Hwn_GamemodeFlag_SpecialEquip) {
         Hwn_Menu_AddItem(g_szEquipmentMenuTitle, "MenuItem_ChangeEquipment");
     }
 
+    new szGamemodeName[32];
+    ArrayGetString(g_gamemodeName, gamemode, szGamemodeName, charsmax(szGamemodeName));
     log_amx("[Hwn] Gamemode '%s' activated", szGamemodeName);
 }
 
@@ -606,31 +610,48 @@ bool:IsPlayerOnSpawn(id)
 
 bool:FindEventPoint(Float:vOrigin[3])
 {
-    if (g_eventPoints == Invalid_Array) {
-        return false;
+    new size = 0;
+    for (new i = 0; i < MAX_EVENT_POINTS; ++i) {
+        if (xs_vec_len(g_eventPoints[i]) == 0.0) {
+            break;
+        }
+
+        size++;
     }
 
-    new size = ArraySize(g_eventPoints);
     if (size < MIN_EVENT_POINTS) {
         return false;
     }
 
-    ArrayGetArray(g_eventPoints, random(size), vOrigin);
+    xs_vec_copy(g_eventPoints[random(size)], vOrigin);
 
     return true;
 }
 
 AddEventPoint(const Float:vOrigin[3])
 {
-    if (g_eventPoints == Invalid_Array) {
-        g_eventPoints = ArrayCreate(3, MAX_EVENT_POINTS);
-    }
+    new bool:isFull = xs_vec_len(g_eventPoints[MAX_EVENT_POINTS - 1]) > 0.0;
 
-    if (ArraySize(g_eventPoints) >= MAX_EVENT_POINTS) {
-        ArrayDeleteItem(g_eventPoints, 0);
-    }
+    for (new i = 0; i < MAX_EVENT_POINTS; ++i) {
+        if (isFull) {
+            if (!i) {
+                continue;
+            }
 
-    ArrayPushArray(g_eventPoints, vOrigin);
+            xs_vec_copy(g_eventPoints[i], g_eventPoints[i - 1]);
+
+            if (i < MAX_EVENT_POINTS - 1) {
+                continue;
+            }
+        } else {
+            if (xs_vec_len(g_eventPoints[i]) > 0.0) {
+                continue;
+            }
+        }
+
+        xs_vec_copy(vOrigin, g_eventPoints[i]);
+        break;
+    }
 }
 
 DispatchWin(team)
@@ -698,13 +719,6 @@ bool:IsTeamExtermination()
 SetRespawnTask(id)
 {
     set_task(get_pcvar_float(g_cvarRespawnTime), "TaskRespawnPlayer", id+TASKID_SUM_RESPAWN_PLAYER);
-}
-
-ClearRespawnTasks()
-{
-    for (new id = 1; id <= g_maxPlayers; ++id) {
-        remove_task(id+TASKID_SUM_RESPAWN_PLAYER);
-    }
 }
 
 GetRoundTime()
