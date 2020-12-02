@@ -181,7 +181,7 @@ public OnClCmd_Give(id, level, cid)
         return PLUGIN_HANDLED;
     }
     
-    static szArgs[4];
+    new szArgs[4];
     read_args(szArgs, charsmax(szArgs));
 
     if (szArgs[0] == '^0') {

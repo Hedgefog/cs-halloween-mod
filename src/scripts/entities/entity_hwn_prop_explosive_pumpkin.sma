@@ -65,7 +65,7 @@ public OnKilled(ent, attacker)
 
 PumpkinRadiusDamage(ent, owner)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     new target;
@@ -98,7 +98,7 @@ PumpkinRadiusDamage(ent, owner)
 
 ExplosionEffect(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 16.0;
 
@@ -113,7 +113,7 @@ ExplosionEffect(ent)
     write_byte(0);
     message_end();
 
-    static Float:vVelocity[3];
+    new Float:vVelocity[3];
     UTIL_RandomVector(-128.0, 128.0, vVelocity);
 
     UTIL_Message_BreakModel(vOrigin, Float:{16.0, 16.0, 16.0}, vVelocity, 32, g_mdlGibs, 4, 25, 0);

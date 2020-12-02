@@ -201,7 +201,7 @@ public Hwn_Bosses_Fw_BossTeleport(ent, handler)
 
 public OnSpawn(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PRIMARY}, 60, 4);

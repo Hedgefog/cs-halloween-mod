@@ -280,7 +280,7 @@ public OnHurtTouch(ent, toucher)
         return HAM_IGNORED;
     }
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     ArrayGetArray(g_bossSpawnPoints, g_bossSpawnPoint, vOrigin);
     engfunc(EngFunc_SetOrigin, g_bossEnt, vOrigin);
 
@@ -316,7 +316,7 @@ SpawnBoss()
     new targetCount = ArraySize(g_bossSpawnPoints);
     new targetIdx = random(targetCount);
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     ArrayGetArray(g_bossSpawnPoints, targetIdx, vOrigin);
 
     g_bossEnt = CE_Create(szClassname, vOrigin);

@@ -66,9 +66,8 @@ public Invoke(id)
 
     new team = UTIL_GetPlayerTeam(id);
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
-
 
     new target;
     while ((target = UTIL_FindUsersNearby(target, vOrigin, EffectRadius, .team = team, .maxPlayers = g_maxPlayers)) != 0) {
@@ -86,10 +85,10 @@ public Invoke(id)
 
 DetonateEffect(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    static Float:vMins[3];
+    new Float:vMins[3];
     pev(ent, pev_mins, vMins);
 
     vOrigin[2] += vMins[2] + 1.0;

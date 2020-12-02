@@ -192,7 +192,7 @@ public TaskSpawnGift(taskID)
         return;
     }
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     if (g_giftTargets != Invalid_Array && ArraySize(g_giftTargets) > 0) {
         new targetCount = ArraySize(g_giftTargets);
         ArrayGetArray(g_giftTargets, random(targetCount), vOrigin);

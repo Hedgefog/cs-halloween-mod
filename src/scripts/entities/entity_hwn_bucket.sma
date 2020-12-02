@@ -264,7 +264,7 @@ public OnLiquidSpawn(ent)
     set_pev(ent, pev_rendermode, kRenderTransAdd);
     set_pev(ent, pev_renderamt, 255.0);
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(owner, pev_origin, vOrigin);
     engfunc(EngFunc_SetOrigin, ent, vOrigin);
 }
@@ -486,10 +486,10 @@ bool:ExtractPoints(ent, count = 1)
 
     Hwn_Collector_SetTeamPoints(team, teamPoints - count);
     
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    static Float:vMaxs[3];
+    new Float:vMaxs[3];
     pev(ent, pev_maxs, vMaxs);
     vOrigin[2] += vMaxs[2];
 
@@ -509,7 +509,7 @@ bool:DropPumpkin(const Float:vOrigin[3])
         return false;
     }
 
-    static Float:vVelocity[3];
+    new Float:vVelocity[3];
     vVelocity[0] = random_float(-640.0, 640.0);
     vVelocity[1] = random_float(-640.0, 640.0);
     vVelocity[2] = random_float(0.0, 256.0);
@@ -630,11 +630,11 @@ DamageEffect(ent)
 
 PotionExplodeEffect(ent)
 {
-    static Float:vStart[3];
+    new Float:vStart[3];
     pev(ent, pev_origin, vStart);
     vStart[2] += 8.0;
 
-    static Float:vEnd[3];
+    new Float:vEnd[3];
     xs_vec_copy(vStart, vEnd);
     vEnd[2] += 16.0;
 

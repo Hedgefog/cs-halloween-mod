@@ -184,10 +184,10 @@ public TaskSpawnEntity(taskID)
 
 stock CanStuck(const Float:vOrigin[3], const Float:vMins[3], const Float:vMaxs[3])
 {
-    static Float:vStart[3];
+    new Float:vStart[3];
     xs_vec_copy(vOrigin, vStart);
 
-    static Float:vEnd[3];
+    new Float:vEnd[3];
     xs_vec_copy(vOrigin, vEnd);
 
     for (new i = 0; i < 3; ++i) {

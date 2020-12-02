@@ -242,7 +242,7 @@ public OnPortalSpawn(ent)
 
 public OnSpawn(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PRIMARY}, 60, 4);
@@ -634,7 +634,7 @@ CreateJumpToPortalTask(ent)
 
 TeleportEffect(const Float:vOrigin[3])
 {
-    static Float:vEnd[3];
+    new Float:vEnd[3];
     xs_vec_copy(vOrigin, vEnd);
     vEnd[2] += 8.0;
 
@@ -702,16 +702,16 @@ public TaskTeleport(taskID)
     new Array:monoculus = Monoculus_Get(ent);
     new portalIdx = ArrayGetCell(monoculus, Monoculus_NextPortal);
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     TeleportEffect(vOrigin);
 
-    static Float:vTargetOrigin[3];
+    new Float:vTargetOrigin[3];
     ArrayGetArray(g_portals, portalIdx, vTargetOrigin);
     engfunc(EngFunc_SetOrigin, ent, vTargetOrigin);
     TeleportEffect(vTargetOrigin);
 
-    static Float:vTargetAngles[3];
+    new Float:vTargetAngles[3];
     ArrayGetArray(g_portalAngles, portalIdx, vTargetAngles);
     set_pev(ent, pev_angles, vTargetAngles);
 
