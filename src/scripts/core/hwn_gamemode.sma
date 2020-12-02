@@ -1,10 +1,8 @@
 #pragma semicolon 1
 
 #include <amxmodx>
-#include <engine>
 #include <fakemeta>
 #include <hamsandwich>
-#include <xs>
 
 #tryinclude <reapi>
 
@@ -29,9 +27,6 @@
 #define TASKID_SUM_RESPAWN_PLAYER 1000
 #define TASKID_SUM_SPAWN_PROTECTION 2000
 
-#define MIN_EVENT_POINTS 8
-#define MAX_EVENT_POINTS 32
-
 #define SPAWN_RANGE 192.0
 
 enum GameState
@@ -46,6 +41,7 @@ new g_fwNewRound;
 new g_fwRoundStart;
 new g_fwRoundEnd;
 new g_fwRoundExpired;
+new g_fwGamemodeActivated;
 
 new g_fmFwSpawn;
 
@@ -69,7 +65,6 @@ new Float:g_fRoundStartTime;
 new g_playerFirstSpawnFlag = 0;
 new Array:g_tSpawnPoints;
 new Array:g_ctSpawnPoints;
-new Float:g_eventPoints[MAX_EVENT_POINTS][3];
 
 new g_maxPlayers;
 
@@ -79,6 +74,8 @@ public plugin_precache()
 {
     register_dictionary("hwn.txt");
     format(g_szEquipmentMenuTitle, charsmax(g_szEquipmentMenuTitle), "%L", LANG_SERVER, "HWN_EQUIPMENT_MENU_TITLE");
+
+    g_fwGamemodeActivated = CreateMultiForward("Hwn_Gamemode_Fw_Activated", ET_IGNORE, FP_CELL);
 
     g_fmFwSpawn = register_forward(FM_Spawn, "OnSpawn", 1);
 
@@ -158,7 +155,6 @@ public plugin_natives()
     register_native("Hwn_Gamemode_GetCurrent", "Native_GetCurrent");
     register_native("Hwn_Gamemode_GetHandler", "Native_GetHandler");
     register_native("Hwn_Gamemode_IsPlayerOnSpawn", "Native_IsPlayerOnSpawn");
-    register_native("Hwn_Gamemode_FindEventPoint", "Native_FindEventPoint");
     register_native("Hwn_Gamemode_GetRoundTime", "Native_GetRoundTime");
     register_native("Hwn_Gamemode_SetRoundTime", "Native_SetRoundTime");
     register_native("Hwn_Gamemode_GetRoundTimeLeft", "Native_GetRoundTimeLeft");
@@ -190,7 +186,8 @@ public client_connect(id)
     public client_disconnected(id)
 #endif
 {
-    remove_task(id+TASKID_SUM_SPAWN_PROTECTION);
+    remove_task(id + TASKID_SUM_RESPAWN_PLAYER);
+    remove_task(id + TASKID_SUM_SPAWN_PROTECTION);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -274,16 +271,6 @@ public Native_IsPlayerOnSpawn(pluginID, argc)
     return IsPlayerOnSpawn(id);
 }
 
-public Native_FindEventPoint()
-{
-    new Float:vOrigin[3];
-    new bool:result = FindEventPoint(vOrigin);
-
-    set_array_f(1, vOrigin, sizeof(vOrigin));
-
-    return result;
-}
-
 public Native_GetRoundTime(pluginID, argc)
 {
     return GetRoundTime();
@@ -339,7 +326,7 @@ public OnRoundEnd()
     remove_task(TASKID_ROUNDTIME_EXPIRE);
 
     for (new id = 1; id <= g_maxPlayers; ++id) {
-        remove_task(id+TASKID_SUM_RESPAWN_PLAYER);
+        remove_task(id + TASKID_SUM_RESPAWN_PLAYER);
     }
 
     ExecuteForward(g_fwRoundEnd, g_fwResult);
@@ -462,24 +449,13 @@ public OnPlayerSpawn(id)
 
     if (flags & Hwn_GamemodeFlag_RespawnPlayers) {
         set_pev(id, pev_takedamage, DAMAGE_NO);
-        remove_task(id+TASKID_SUM_SPAWN_PROTECTION);
-        set_task(get_pcvar_float(g_cvarSpawnProtectionTime), "TaskDisableSpawnProtection", id+TASKID_SUM_SPAWN_PROTECTION);
+        remove_task(id + TASKID_SUM_SPAWN_PROTECTION);
+        set_task(get_pcvar_float(g_cvarSpawnProtectionTime), "TaskDisableSpawnProtection", id + TASKID_SUM_SPAWN_PROTECTION);
     }
 }
 
 public OnPlayerKilled(id)
 {
-    if (!Hwn_Gamemode_IsPlayerOnSpawn(id)) {
-        static Float:vOrigin[3];
-        pev(id, pev_origin, vOrigin);
-
-        if (!pev(id, pev_bInDuck)) {
-            vOrigin[2] += 18.0;
-        }
-
-        AddEventPoint(vOrigin);
-    }
-
     if (!g_gamemodeCount) {
         return;
     }
@@ -549,6 +525,8 @@ SetGamemode(gamemode)
     new szGamemodeName[32];
     ArrayGetString(g_gamemodeName, gamemode, szGamemodeName, charsmax(szGamemodeName));
     log_amx("[Hwn] Gamemode '%s' activated", szGamemodeName);
+
+    ExecuteForward(g_fwGamemodeActivated, g_fwResult, gamemode);
 }
 
 GetGamemodeByPluginID(pluginID)
@@ -606,52 +584,6 @@ bool:IsPlayerOnSpawn(id)
     }
 
     return false;
-}
-
-bool:FindEventPoint(Float:vOrigin[3])
-{
-    new size = 0;
-    for (new i = 0; i < MAX_EVENT_POINTS; ++i) {
-        if (xs_vec_len(g_eventPoints[i]) == 0.0) {
-            break;
-        }
-
-        size++;
-    }
-
-    if (size < MIN_EVENT_POINTS) {
-        return false;
-    }
-
-    xs_vec_copy(g_eventPoints[random(size)], vOrigin);
-
-    return true;
-}
-
-AddEventPoint(const Float:vOrigin[3])
-{
-    new bool:isFull = xs_vec_len(g_eventPoints[MAX_EVENT_POINTS - 1]) > 0.0;
-
-    for (new i = 0; i < MAX_EVENT_POINTS; ++i) {
-        if (isFull) {
-            if (!i) {
-                continue;
-            }
-
-            xs_vec_copy(g_eventPoints[i], g_eventPoints[i - 1]);
-
-            if (i < MAX_EVENT_POINTS - 1) {
-                continue;
-            }
-        } else {
-            if (xs_vec_len(g_eventPoints[i]) > 0.0) {
-                continue;
-            }
-        }
-
-        xs_vec_copy(vOrigin, g_eventPoints[i]);
-        break;
-    }
 }
 
 DispatchWin(team)
@@ -718,7 +650,7 @@ bool:IsTeamExtermination()
 
 SetRespawnTask(id)
 {
-    set_task(get_pcvar_float(g_cvarRespawnTime), "TaskRespawnPlayer", id+TASKID_SUM_RESPAWN_PLAYER);
+    set_task(get_pcvar_float(g_cvarRespawnTime), "TaskRespawnPlayer", id + TASKID_SUM_RESPAWN_PLAYER);
 }
 
 GetRoundTime()

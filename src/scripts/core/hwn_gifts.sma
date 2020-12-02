@@ -153,7 +153,7 @@ public TaskSpawnGift(taskID)
             ArrayGetArray(g_giftTargets, targetIdx, vOrigin);
             SpawnGift(id, vOrigin);
         } else {
-            if (Hwn_Gamemode_FindEventPoint(vOrigin)) {
+            if (Hwn_EventPoints_GetRandom(vOrigin)) {
                 SpawnGift(id, vOrigin);
             }
         }

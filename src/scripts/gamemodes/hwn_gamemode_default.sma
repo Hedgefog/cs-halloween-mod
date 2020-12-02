@@ -156,7 +156,7 @@ public TaskEvent()
     }
 
     static Float:vOrigin[3];
-    if (!Hwn_Gamemode_FindEventPoint(vOrigin)) {
+    if (!Hwn_EventPoints_GetRandom(vOrigin)) {
         return;
     }
 
