@@ -50,12 +50,12 @@ public plugin_natives()
     register_native("Hwn_Spell_GetName", "Native_GetName");
     register_native("Hwn_Spell_GetHandler", "Native_GetHandler");
     register_native("Hwn_Spell_GetCount", "Native_GetCount");
+    register_native("Hwn_Spell_GetFlags", "Native_GetFlags");
 
     register_native("Hwn_Spell_GetPlayerSpell", "Native_GetPlayerSpell");
     register_native("Hwn_Spell_SetPlayerSpell", "Native_SetPlayerSpell");
     register_native("Hwn_Spell_CastPlayerSpell", "Native_CastPlayerSpell");
     register_native("Hwn_Spell_GetDictionaryKey", "Native_GetDictionaryKey");
-    register_native("Hwn_Spell_GetFlags", "Native_GetFlags");
 }
 
 public plugin_end()
