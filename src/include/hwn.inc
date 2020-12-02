@@ -301,6 +301,13 @@ enum Hwn_SpellFlags (<<=1)
 
 forward Hwn_Fw_ConfigLoaded();
 
+/*--------------------------------[ Event Points ]--------------------------------*/
+
+native Hwn_EventPoints_Add(const Float:vOrigin[3]);
+native Hwn_EventPoints_GetCount();
+native Hwn_EventPoints_Get(pointIdx, Float:vOrigin[3]);
+native Hwn_EventPoints_GetRandom(Float:vOrigin[3]);
+
 /*--------------------------------[ Gamemode ]--------------------------------*/
 
 native Hwn_Gamemode_Register(const szName[], Hwn_GamemodeFlags:flags = Hwn_GamemodeFlag_None);
@@ -315,14 +322,11 @@ native Hwn_Gamemode_GetRoundTimeLeft();
 native bool:Hwn_Gamemode_IsRoundStarted();
 native Hwn_GamemodeFlags:Hwn_Gamemode_GetFlags();
 
+forward Hwn_Gamemode_Fw_Activated(gamemode);
 forward Hwn_Gamemode_Fw_NewRound();
 forward Hwn_Gamemode_Fw_RoundStart();
 forward Hwn_Gamemode_Fw_RoundEnd();
 forward Hwn_Gamemode_Fw_RoundExpired();
-
-/*--------------------------------[ Default Gamemode ]--------------------------------*/
-
-native bool:Hwn_Gamemode_FindEventPoint(Float:vOrigin[3]);
 
 /*--------------------------------[ Collector Gamemode ]--------------------------------*/
 
@@ -337,6 +341,15 @@ forward Hwn_Collector_Fw_TeamPoints(team);
 forward Hwn_Collector_Fw_PlayerPoints(id);
 forward Hwn_Collector_Fw_Overtime(time);
 forward Hwn_Collector_Fw_WinnerTeam(team);
+
+/*--------------------------------[ Gifts ]--------------------------------*/
+native Hwn_Gifts_AddTarget(const Float:vOrigin[3]);
+native Hwn_Gifts_GetTargetCount();
+native Hwn_Gifts_GetTarget(targetIdx, Float:vOrigin[3]);
+
+forward Hwn_Gifts_Fw_GiftSpawn(id, ent);
+forward Hwn_Gifts_Fw_GiftPicked(id, ent);
+forward Hwn_Gifts_Fw_GiftDisappear(id, ent);
 
 /*--------------------------------[ Spells ]--------------------------------*/
 
