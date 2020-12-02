@@ -187,18 +187,21 @@ public TaskSpawnGift(taskID)
     new id = taskID - TASKID_SUM_SPAWN_GIFT;
 
     new team = UTIL_GetPlayerTeam(id);
-    if (team == 1 || team == 2) {
-        static Float:vOrigin[3];
-        if (g_giftTargets != Invalid_Array) {
-            new targetCount = ArraySize(g_giftTargets);
-            new targetIdx = random(targetCount);
+    if (team != 1 && team != 2) {
+        SetupSpawnGiftTask(id);
+        return;
+    }
 
-            ArrayGetArray(g_giftTargets, targetIdx, vOrigin);
-            SpawnGift(id, vOrigin);
-        } else {
-            if (Hwn_EventPoints_GetRandom(vOrigin)) {
-                SpawnGift(id, vOrigin);
-            }
+    static Float:vOrigin[3];
+    if (g_giftTargets != Invalid_Array && ArraySize(g_giftTargets) > 0) {
+        new targetCount = ArraySize(g_giftTargets);
+        ArrayGetArray(g_giftTargets, random(targetCount), vOrigin);
+    } else {
+        if (!Hwn_EventPoints_GetRandom(vOrigin)) {
+            SetupSpawnGiftTask(id);
+            return;
         }
     }
+
+    SpawnGift(id, vOrigin);
 }
