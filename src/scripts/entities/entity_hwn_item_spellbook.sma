@@ -20,6 +20,7 @@
 #define ENTITY_NAME "hwn_item_spellbook"
 
 new g_sprSparkle;
+new g_sprSparklePurple;
 
 new g_particlesEnabled = false;
 
@@ -45,7 +46,8 @@ public plugin_precache()
 {
     g_isPrecaching = true;
 
-    g_sprSparkle = precache_model("sprites/muz7.spr");
+    g_sprSparkle = precache_model("sprites/muz2.spr");
+    g_sprSparklePurple = precache_model("sprites/muz7.spr");
 
     precache_sound(g_szSndSpawn);
     precache_sound(g_szSndPickup);
@@ -82,8 +84,10 @@ public OnSpawn(ent)
         CE_Remove(ent);
     }
 
-    set_pev(ent, pev_spell, random(spellCount));
+    new spell = random(spellCount);
+    new bool:isRare = !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare);
 
+    set_pev(ent, pev_spell, spell);
     set_pev(ent, pev_framerate, 1.0);
 
     static Float:vOrigin[3];
@@ -94,7 +98,12 @@ public OnSpawn(ent)
     xs_vec_copy(vOrigin, vEnd);
     vEnd[2] += 8.0;
 
-    UTIL_Message_SpriteTrail(vOrigin, vEnd, g_sprSparkle, 8, 1, 1, 32, 16);
+    if (isRare) {
+        UTIL_Message_SpriteTrail(vOrigin, vEnd,  g_sprSparklePurple, 8, 1, 1, 32, 16);
+    } else {
+        UTIL_Message_SpriteTrail(vOrigin, vEnd, g_sprSparkle, 6, 1, 1, 32, 16);
+        UTIL_Message_SpriteTrail(vOrigin, vEnd, g_sprSparklePurple, 2, 1, 1, 32, 16);
+    }
 
     emit_sound(ent, CHAN_BODY, g_szSndSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
