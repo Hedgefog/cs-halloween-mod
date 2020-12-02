@@ -28,16 +28,20 @@ new g_maxPlayers;
 public plugin_precache()
 {
     g_sprEffect = precache_model("sprites/smoke.spr");
-
     precache_sound(g_szSndDetonate);
+
+    Hwn_Spell_Register(
+        "Overheal",
+        Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Heal | Hwn_SpellFlag_Radius,
+        "Invoke"
+    );
+
+    g_hWofSpell = Hwn_Wof_Spell_Register("Overheal", "Invoke");
 }
 
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-
-    Hwn_Spell_Register("Overheal", "Invoke");
-    g_hWofSpell = Hwn_Wof_Spell_Register("Overheal", "Invoke");
 
     g_maxPlayers = get_maxplayers();
 }

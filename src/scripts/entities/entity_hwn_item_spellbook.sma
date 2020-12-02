@@ -3,6 +3,7 @@
 #include <amxmodx>
 #include <fakemeta>
 #include <hamsandwich>
+#include <xs>
 
 #include <hwn>
 #include <hwn_utils>
@@ -13,18 +14,24 @@
 #define PLUGIN "[Custom Entity] Hwn Item Spellbook"
 #define AUTHOR "Hedgehog Fog"
 
+#define pev_spell pev_iuser1
+#define pev_eparticle pev_euser1
+
 #define ENTITY_NAME "hwn_item_spellbook"
 
 new g_sprSparkle;
+new g_sprSparklePurple;
 
 new g_particlesEnabled = false;
 
 new const g_szSndSpawn[] = "hwn/items/spellbook/spellbook_spawn.wav";
 new const g_szSndPickup[] = "hwn/spells/spell_pickup.wav";
+new const g_szSndPickupRare[] = "hwn/spells/spell_pickup_rare.wav";
 
 new bool:g_isPrecaching;
 
 new g_cvarMaxSpellCount;
+new g_cvarMaxRareSpellCount;
 
 new g_ceHandler;
 
@@ -39,10 +46,12 @@ public plugin_precache()
 {
     g_isPrecaching = true;
 
-    g_sprSparkle = precache_model("sprites/muz7.spr");
+    g_sprSparkle = precache_model("sprites/muz2.spr");
+    g_sprSparklePurple = precache_model("sprites/muz7.spr");
 
     precache_sound(g_szSndSpawn);
     precache_sound(g_szSndPickup);
+    precache_sound(g_szSndPickupRare);
 
     g_ceHandler = CE_Register(
         .szName = ENTITY_NAME,
@@ -60,6 +69,7 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "OnPickup");
 
     g_cvarMaxSpellCount = register_cvar("hwn_spellbook_max_spell_count", "3");
+    g_cvarMaxRareSpellCount = register_cvar("hwn_spellbook_max_rare_spell_count", "1");
 }
 
 public Hwn_Fw_ConfigLoaded()
@@ -69,29 +79,36 @@ public Hwn_Fw_ConfigLoaded()
 
 public OnSpawn(ent)
 {
+    new spellCount = Hwn_Spell_GetCount();
+    if (!spellCount) {
+        CE_Remove(ent);
+    }
+
+    new spell = random(spellCount);
+    new bool:isRare = !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare);
+
+    set_pev(ent, pev_spell, spell);
     set_pev(ent, pev_framerate, 1.0);
 
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 32.0;
 
-    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
-    write_byte(TE_SPRITETRAIL);
-    engfunc(EngFunc_WriteCoord, vOrigin[0]);
-    engfunc(EngFunc_WriteCoord, vOrigin[1]);
-    engfunc(EngFunc_WriteCoord, vOrigin[2]);
-    engfunc(EngFunc_WriteCoord, vOrigin[0]);
-    engfunc(EngFunc_WriteCoord, vOrigin[1]);
-    engfunc(EngFunc_WriteCoord, vOrigin[2] + 8.0);
-    write_short(g_sprSparkle);
-    write_byte(8); //Count
-    write_byte(1); //Lifetime
-    write_byte(1); //Scale
-    write_byte(16); //Speed Noise
-    write_byte(32); //Speed
-    message_end();
+    static Float:vEnd[3];
+    xs_vec_copy(vOrigin, vEnd);
+    vEnd[2] += 8.0;
+
+    if (isRare) {
+        UTIL_Message_SpriteTrail(vOrigin, vEnd,  g_sprSparklePurple, 8, 1, 1, 32, 16);
+    } else {
+        UTIL_Message_SpriteTrail(vOrigin, vEnd, g_sprSparkle, 6, 1, 1, 32, 16);
+        UTIL_Message_SpriteTrail(vOrigin, vEnd, g_sprSparklePurple, 2, 1, 1, 32, 16);
+    }
 
     emit_sound(ent, CHAN_BODY, g_szSndSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
+    RemoveParticles(ent);
+    CreateParticles(ent);
 
     TaskThink(ent);
 }
@@ -114,15 +131,15 @@ public OnPickup(ent, id)
         return PLUGIN_CONTINUE;
     }
 
-    new count = Hwn_Spell_GetCount();
-    new maxSpellCount = get_pcvar_num(g_cvarMaxSpellCount);
+    new spell = pev(ent, pev_spell);
+    new bool:isRare = !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare);
+    new maxSpellCount = isRare ? get_pcvar_num(g_cvarMaxRareSpellCount) : get_pcvar_num(g_cvarMaxSpellCount);
 
-    if (count && maxSpellCount > 0) {
-        new idx = random(count);
-        Hwn_Spell_SetPlayerSpell(id, idx, random(maxSpellCount) + 1);
+    if (maxSpellCount > 0) {
+        Hwn_Spell_SetPlayerSpell(id, spell, random(maxSpellCount) + 1);
     }
 
-    emit_sound(ent, CHAN_BODY, g_szSndPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(ent, CHAN_BODY, isRare ? g_szSndPickupRare : g_szSndPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     return PLUGIN_HANDLED;
 }
@@ -141,38 +158,58 @@ public TaskThink(ent)
         return;
     }
 
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-    vOrigin[2] += 32.0;
-
-    if (g_particlesEnabled)
-    {
-        new particlesEnt = pev(ent, pev_iuser1);
-
-        if (particlesEnt)
-        {
-            if (pev_valid(particlesEnt)) {
-                engfunc(EngFunc_SetOrigin, particlesEnt, vOrigin);
-            } else {
-                set_pev(ent, pev_iuser1, 0);
-            }
-        }
-        else if (!g_isPrecaching)
-        {
-            particlesEnt = Particles_Spawn("magic_glow", vOrigin, 0.0);
-            set_pev(ent, pev_iuser1, particlesEnt);
-        }
+    if (g_particlesEnabled) {
+        UpdateParticles(ent, true);
+    } else {
+        RemoveParticles(ent);
     }
 
     set_task(1.0, "TaskThink", ent);
 }
 
-RemoveParticles(ent)
+CreateParticles(ent)
 {
-    if (!pev(ent, pev_iuser1)) {
+    new spell = pev(ent, pev_spell);
+    new bool:isRare = !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare);
+
+    new particleEnt = Particles_Spawn(isRare ? "magic_glow_purple" : "magic_glow", Float:{0.0, 0.0, 0.0}, 0.0);
+    if (particleEnt) {
+        set_pev(ent, pev_eparticle, particleEnt);
+    }
+}
+
+UpdateParticles(ent, bool:createIfNotExists = false)
+{
+    if (g_isPrecaching) {
+        return;
+    } 
+
+    new particleEnt = pev(ent, pev_eparticle);
+    if (!particleEnt || !pev_valid(particleEnt)) {
+        if (createIfNotExists) {
+            CreateParticles(ent);
+        }
+
         return;
     }
 
-    Particles_Remove(pev(ent, pev_iuser1));
-    set_pev(ent, pev_iuser1, 0);
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+    vOrigin[2] += 32.0;
+
+    engfunc(EngFunc_SetOrigin, particleEnt, vOrigin);
+}
+
+RemoveParticles(ent)
+{
+    new particleEnt = pev(ent, pev_eparticle);
+    if (!particleEnt) {
+        return;
+    }
+
+    if (pev_valid(particleEnt)) {
+        Particles_Remove(particleEnt);
+    }
+
+    set_pev(ent, pev_eparticle, 0);
 }

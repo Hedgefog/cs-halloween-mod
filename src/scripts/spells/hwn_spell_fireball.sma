@@ -16,6 +16,7 @@
 #define AUTHOR "Hedgehog Fog"
 
 const Float:FireballDamage = 30.0;
+const FireballSpeed = 720;
 
 const Float:EffectRadius = 64.0;
 new const EffectColor[3] = {255, 127, 47};
@@ -37,6 +38,14 @@ public plugin_precache()
 
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
+
+    g_hSpell = Hwn_Spell_Register(
+        "Fireball",
+        Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Radius,
+        "Cast"
+    );
+
+    g_hWofSpell = Hwn_Wof_Spell_Register("Fire", "Invoke");
 }
 
 public plugin_init()
@@ -44,9 +53,6 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
-
-    g_hSpell = Hwn_Spell_Register("Fireball", "Cast");
-    g_hWofSpell = Hwn_Wof_Spell_Register("Fire", "Invoke");
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 
@@ -100,7 +106,7 @@ public OnSpellballKilled(ent)
 
 public Cast(id)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, _, g_szSprFireball, _, 0.5, 10.0);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, FireballSpeed, g_szSprFireball, _, 0.5, 10.0);
     if (!ent) {
         return PLUGIN_HANDLED;
     }
@@ -155,18 +161,9 @@ Detonate(ent)
                 continue;
             }
 
-            static Float:vDirection[3];
-            xs_vec_sub(vOrigin, vTargetOrigin, vDirection);
-            xs_vec_normalize(vDirection, vDirection);
-            xs_vec_mul_scalar(vDirection, -512.0, vDirection);
-
-            static Float:vTargetVelocity[3];
-            pev(target, pev_velocity, vTargetVelocity);
-            xs_vec_add(vTargetVelocity, vDirection, vTargetVelocity);
-            set_pev(target, pev_velocity, vTargetVelocity);
-
             UTIL_CS_DamagePlayer(target, fDamage, DMG_BURN, owner, 0);
             burn_player(target, owner, 15);
+            UTIL_PushFromOrigin(vOrigin, target, 512.0);
         } else {
             ExecuteHamB(Ham_TakeDamage, target, 0, owner, fDamage, DMG_BURN);
         }

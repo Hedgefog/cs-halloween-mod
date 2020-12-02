@@ -25,6 +25,18 @@ new g_maxPlayers;
 public plugin_precache()
 {
     precache_sound(g_szSndDetonate);
+
+    Hwn_Spell_Register(
+        "Crits",
+        (
+            Hwn_SpellFlag_Applicable
+                | Hwn_SpellFlag_Ability
+                | Hwn_SpellFlag_Damage
+                | Hwn_SpellFlag_Rare
+        ),
+        "Cast"
+    );
+    g_hWofSpell = Hwn_Wof_Spell_Register("Crits", "Invoke", "Revoke");
 }
 
 public plugin_init()
@@ -32,9 +44,6 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHam(Ham_Killed, "player", "Revoke", .Post = 1);
-
-    Hwn_Spell_Register("Crits", "Cast");
-    g_hWofSpell = Hwn_Wof_Spell_Register("Crits", "Invoke", "Revoke");
 
     g_maxPlayers = get_maxplayers();
 }

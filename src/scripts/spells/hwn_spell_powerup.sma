@@ -45,6 +45,20 @@ public plugin_precache()
     g_sprTrail = precache_model("sprites/zbeam2.spr");
     precache_sound(g_szSndDetonate);
     precache_sound(g_szSndJump);
+
+    Hwn_Spell_Register(
+        "Power Up",
+        (
+            Hwn_SpellFlag_Applicable
+                | Hwn_SpellFlag_Ability
+                | Hwn_SpellFlag_Damage
+                | Hwn_SpellFlag_Heal
+                | Hwn_SpellFlag_Rare
+        ),
+        "Cast"
+    );
+
+    g_hWofSpell = Hwn_Wof_Spell_Register("Power Up", "Invoke", "Revoke");
 }
 
 public plugin_cfg()
@@ -73,9 +87,6 @@ public plugin_init()
         RegisterHam(Ham_Weapon_SecondaryAttack, szWeaponName, "OnWeaponAttack", .Post = 1);
     }
 
-    Hwn_Spell_Register("Power Up", "Cast");
-    g_hWofSpell = Hwn_Wof_Spell_Register("Power Up", "Invoke", "Revoke");
-    
     g_maxPlayers = get_maxplayers();
 }
 
@@ -189,6 +200,7 @@ public Invoke(id)
     Revoke(id);
 
     SetSpellEffect(id, true);
+    Heal(id);
     JumpEffect(id);
     ExecuteHamB(Ham_Item_PreFrame, id);
     emit_sound(id, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
@@ -328,4 +340,14 @@ GetMoveVector(id, Float:vOut[3])
     vOut[2] = 0.0;
 
     xs_vec_normalize(vOut, vOut);
+}
+
+Heal(id)
+{
+    new Float:fHealth;
+    pev(id, pev_health, fHealth);
+
+    if (fHealth < 100.0) {
+        set_pev(id, pev_health, 100.0);
+    }
 }

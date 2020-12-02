@@ -29,6 +29,21 @@ public plugin_precache()
         .fRenderAmt = 255.0,
         .spawnCount = 1
     );
+
+    new purpleSprites[API_PARTICLES_MAX_SPRITES];
+    purpleSprites[0] = precache_model("sprites/muz4.spr");
+    purpleSprites[1] = precache_model("sprites/muz7.spr");
+
+    Particles_Register(
+        .szName = "magic_glow_purple",
+        .szTransformCallback = "Transform",
+        .sprites = purpleSprites,
+        .fLifeTime = 0.8,
+        .fScale = 0.05,
+        .renderMode = kRenderTransAdd,
+        .fRenderAmt = 255.0,
+        .spawnCount = 1
+    );
 }
 
 public plugin_init()
@@ -36,7 +51,7 @@ public plugin_init()
     register_plugin(PLUGIN, VERSION, AUTHOR);
 }
 
-public Transform(Float:vOrigin[3], Float:vVelocity[3], index, tickIndex)
+public Transform(Float:vOrigin[3], Float:vVelocity[3])
 {
     static Float:vRandom[3];
 
@@ -46,7 +61,7 @@ public Transform(Float:vOrigin[3], Float:vVelocity[3], index, tickIndex)
     }
 
     {
-        UTIL_RandomVector(0.0, 1.0, vVelocity);
+        UTIL_RandomVector(0.0, 32.0, vVelocity);
     }
 }
 

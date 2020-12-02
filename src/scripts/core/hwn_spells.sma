@@ -24,6 +24,7 @@ new Array:g_spellName;
 new Array:g_spellDictKey;
 new Array:g_spellPluginID;
 new Array:g_spellCastFuncID;
+new Array:g_spellFlags;
 new g_spellCount = 0;
 
 new g_fwCast;
@@ -54,6 +55,7 @@ public plugin_natives()
     register_native("Hwn_Spell_SetPlayerSpell", "Native_SetPlayerSpell");
     register_native("Hwn_Spell_CastPlayerSpell", "Native_CastPlayerSpell");
     register_native("Hwn_Spell_GetDictionaryKey", "Native_GetDictionaryKey");
+    register_native("Hwn_Spell_GetFlags", "Native_GetFlags");
 }
 
 public plugin_end()
@@ -64,6 +66,7 @@ public plugin_end()
         ArrayDestroy(g_spellDictKey);
         ArrayDestroy(g_spellCastFuncID);
         ArrayDestroy(g_spellPluginID);
+        ArrayDestroy(g_spellFlags);
     }
 }
 
@@ -74,11 +77,13 @@ public Native_Register(pluginID, argc)
     new szName[32];
     get_string(1, szName, charsmax(szName));
 
+    new Hwn_SpellFlags:flags = Hwn_SpellFlags:get_param(2);
+
     new szCastCallback[32];
-    get_string(2, szCastCallback, charsmax(szCastCallback));
+    get_string(3, szCastCallback, charsmax(szCastCallback));
     new castFuncID = get_func_id(szCastCallback, pluginID);
 
-    return Register(szName, pluginID, castFuncID);
+    return Register(szName, flags, pluginID, castFuncID);
 }
 
 public Native_CastPlayerSpell(pluginID, argc)
@@ -152,6 +157,13 @@ public Native_GetDictionaryKey(pluginID, argc)
     set_string(2, szDictKey, maxlen);
 }
 
+public Hwn_SpellFlags:Native_GetFlags()
+{
+    new spellIdx = get_param(1);
+
+    return ArrayGetCell(g_spellFlags, spellIdx);
+}
+
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 #if AMXX_VERSION_NUM < 183
@@ -195,7 +207,7 @@ SetPlayerSpell(id, spell, amount)
     g_playerSpellAmount[id] = amount;
 }
 
-Register(const szName[], pluginID, castFuncID)
+Register(const szName[], Hwn_SpellFlags:flags, pluginID, castFuncID)
 {
     if (!g_spellCount) {
         g_spells = TrieCreate();
@@ -203,6 +215,7 @@ Register(const szName[], pluginID, castFuncID)
         g_spellDictKey = ArrayCreate(48);
         g_spellCastFuncID = ArrayCreate();
         g_spellPluginID = ArrayCreate();
+        g_spellFlags = ArrayCreate();
     }
 
     new spellIdx = g_spellCount;
@@ -211,6 +224,7 @@ Register(const szName[], pluginID, castFuncID)
     ArrayPushString(g_spellName, szName);
     ArrayPushCell(g_spellPluginID, pluginID);
     ArrayPushCell(g_spellCastFuncID, castFuncID);
+    ArrayPushCell(g_spellFlags, flags);
 
     new szDictKey[48];
     UTIL_CreateDictKey(szName, "HWN_SPELL_", szDictKey, charsmax(szDictKey));

@@ -15,6 +15,8 @@
 #define PLUGIN "[Hwn] Blink Spell"
 #define AUTHOR "Hedgehog Fog"
 
+const SpellballSpeed = 600;
+
 const Float:EffectRadius = 64.0;
 new const EffectColor[3] = {0, 0, 255};
 
@@ -32,6 +34,8 @@ public plugin_precache()
     precache_model(g_szSprSpellBall);
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
+
+    g_hSpell = Hwn_Spell_Register("Blink", Hwn_SpellFlag_Throwable, "OnCast");
 }
 
 public plugin_init()
@@ -39,8 +43,6 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
-
-    g_hSpell = Hwn_Spell_Register("Blink", "OnCast");
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 
@@ -51,7 +53,7 @@ public plugin_init()
 
 public OnCast(id)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, _, g_szSprSpellBall, _, 0.75, 10.0);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
 
     if (!ent) {
         return PLUGIN_HANDLED;

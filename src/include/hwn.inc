@@ -102,6 +102,7 @@
 
         Cvars:
             Added hwn_spellbook_max_spell_count cvar
+            Added hwn_spellbook_max_rare_spell_count cvar
             Added hwn_bucket_collect_flash cvar
             Added hwn_pumpkin_pickup_flash cvar
             Added hwn_wof_effect_time cvar
@@ -284,6 +285,18 @@ enum Hwn_GamemodeFlags (<<=1)
     Hwn_GamemodeFlag_SpecialEquip
 };
 
+enum Hwn_SpellFlags (<<=1)
+{
+    Hwn_SpellFlag_None,
+    Hwn_SpellFlag_Rare = 1,
+    Hwn_SpellFlag_Throwable,
+    Hwn_SpellFlag_Applicable,
+    Hwn_SpellFlag_Ability,
+    Hwn_SpellFlag_Heal,
+    Hwn_SpellFlag_Damage,
+    Hwn_SpellFlag_Radius
+};
+
 /*--------------------------------[ Core ]--------------------------------*/
 
 forward Hwn_Fw_ConfigLoaded();
@@ -327,11 +340,12 @@ forward Hwn_Collector_Fw_WinnerTeam(team);
 
 /*--------------------------------[ Spells ]--------------------------------*/
 
-native Hwn_Spell_Register(const szName[], const szCastCallback[]);
+native Hwn_Spell_Register(const szName[], Hwn_SpellFlags:flags = Hwn_SpellFlag_None, const szCastCallback[]);
 native Hwn_Spell_GetCount();
 native Hwn_Spell_GetName(spell, szOutput[], maxlen);
 native Hwn_Spell_GetHandler(const szName[]);
 native Hwn_Spell_GetDictionaryKey(spell, szOutput[], maxlen);
+native Hwn_SpellFlags:Hwn_Spell_GetFlags(spell);
 
 native Hwn_Spell_GetPlayerSpell(id, &amount = 0);
 native Hwn_Spell_SetPlayerSpell(id, spell, amount = 0);

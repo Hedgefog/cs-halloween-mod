@@ -25,6 +25,14 @@ new g_maxPlayers;
 public plugin_precache()
 {
     precache_sound(g_szSndDetonate);
+
+    Hwn_Spell_Register(
+        "Moon Jump",
+        Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability,
+        "Cast"
+    );
+
+    g_hWofSpell = Hwn_Wof_Spell_Register("Moon Jump", "Invoke", "Revoke");
 }
 
 public plugin_init()
@@ -32,9 +40,6 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHam(Ham_Killed, "player", "Revoke", .Post = 1);
-
-    Hwn_Spell_Register("Moon Jump", "Cast");
-    g_hWofSpell = Hwn_Wof_Spell_Register("Moon Jump", "Invoke", "Revoke");
 
     g_maxPlayers = get_maxplayers();
 }
