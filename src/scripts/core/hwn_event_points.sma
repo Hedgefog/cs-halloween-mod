@@ -70,7 +70,7 @@ public bool:Native_GetRandom(pluginID, argc)
 
 public OnPlayerKilled(id)
 {
-    if (Hwn_Gamemode_IsPlayerOnSpawn(id)) {
+    if (Hwn_Gamemode_IsPlayerOnSpawn(id, true)) {
         return;
     }
 

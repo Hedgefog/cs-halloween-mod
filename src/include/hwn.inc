@@ -2,21 +2,22 @@
     6.3.0
         Additions and improvements:
             Added player preview when choosing cosmetics
-            Added spell groups (common, rare)
-            Spellbook now indicates a spell group with different particles
             Force equipment change is now available on all spawn points
             Players can no longer cast spells during freezetime and with the FL_FROZEN flag
-            Player burn api optimization
             Power Up spell optimization
-            Added spell flags to the spells api
-            Improved magic glow particle
-            Powerup spell now heals
+            Power Up spell now heals
+            Reworked lightning spell
             Increased fireball speed
             Increased blinkball speed
-            Reworked lightning spell
-            Many performance optimizations
+            Event points are no longer created at enemy spawn
+            Added spell groups (common, rare)
+            Spellbook now indicates a spell group with different particles
+            Added spell flags to the spells api
             Added event points API
             Added Gifts API
+            Improved magic glow particle
+            Player burn api optimization
+            Many performance optimizations
 
         Cvars:
             Added hwn_pcosmetic_menu_preview cvar
@@ -329,7 +330,7 @@ native Hwn_Gamemode_Register(const szName[], Hwn_GamemodeFlags:flags = Hwn_Gamem
 native Hwn_Gamemode_Activate();
 native Hwn_Gamemode_DispatchWin(team);
 native Hwn_Gamemode_GetCurrent();
-native bool:Hwn_Gamemode_IsPlayerOnSpawn(id);
+native bool:Hwn_Gamemode_IsPlayerOnSpawn(id, bool:ignoreTeam = false);
 native Hwn_Gamemode_GetHandler(const szName[]);
 native Hwn_Gamemode_SetRoundTime(time);
 native Hwn_Gamemode_GetRoundTime();

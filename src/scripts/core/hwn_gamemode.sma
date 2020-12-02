@@ -268,7 +268,9 @@ public Native_GetHandler(pluginID, argc)
 public Native_IsPlayerOnSpawn(pluginID, argc)
 {
     new id = get_param(1);
-    return IsPlayerOnSpawn(id);
+    new bool:ignoreTeam = bool:get_param(2);
+
+    return IsPlayerOnSpawn(id, ignoreTeam);
 }
 
 public Native_GetRoundTime(pluginID, argc)
@@ -561,19 +563,25 @@ RespawnPlayer(id)
     ExecuteHamB(Ham_CS_RoundRespawn, id);
 }
 
-bool:IsPlayerOnSpawn(id)
+bool:IsPlayerOnSpawn(id, bool:ignoreTeam = false)
 {
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
-
     new team = UTIL_GetPlayerTeam(id);
-
     if (team < 1 || team > 2) {
         return false;
     }
 
+    return ignoreTeam
+        ? IsPlayerOnTeamSpawn(id, 1) || IsPlayerOnTeamSpawn(id, 2)
+        : IsPlayerOnTeamSpawn(id, team);
+}
+
+bool:IsPlayerOnTeamSpawn(id, team)
+{
     new Array:spawnPoints = team == 1 ? g_tSpawnPoints : g_ctSpawnPoints;
     new spawnPointsSize = ArraySize(spawnPoints);
+
+    static Float:vOrigin[3];
+    pev(id, pev_origin, vOrigin);
 
     static Float:vSpawnOrigin[3];
     for (new i = 0; i < spawnPointsSize; ++i) {
