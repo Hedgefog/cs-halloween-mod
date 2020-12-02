@@ -2,18 +2,33 @@
     6.3.0
         Additions and improvements:
             Added player preview when choosing cosmetics
+            Added spell groups (common, rare)
+            Spellbook now indicates a spell group with different particles
             Force equipment change is now available on all spawn points
             Players can no longer cast spells during freezetime and with the FL_FROZEN flag
             Player burn api optimization
             Power Up spell optimization
+            Added spell flags to the spells api
+            Improved magic glow particle
+            Powerup spell now heals
+            Increased fireball speed
+            Increased blinkball speed
+            Reworked lightning spell
+            Many performance optimizations
+            Added event points API
+            Added Gifts API
 
         Cvars:
             Added hwn_pcosmetic_menu_preview cvar
             Added hwn_pcosmetic_menu_preview_light cvar
+            Added hwn_spellbook_max_rare_spell_count cvar
 
         Fixes:
             Fixed bots cosmetics
             Fixed jump animation for Power Up spell
+            Fixed powerup spell jump behavior
+            Fixed gift spawn task
+            Fixed temp entities with ignoreRounds flag behavior
 
         Credits:
             iwillnotleave (player burn api and power spell optimization)
