@@ -1,6 +1,7 @@
 #pragma semicolon 1
 
 #include <amxmodx>
+#include <engine>
 #include <fakemeta>
 #include <xs>
 
@@ -9,6 +10,8 @@
 #define PLUGIN "[API] Particles"
 #define VERSION "1.0.0"
 #define AUTHOR "Hedgehog Fog"
+
+#define IsPlayer(%1) (1 <= %1 <= 32)
 
 #define TASKID_SUM_TARGET_TICK 1000
 #define TASKID_SUM_REMOVE_TARGET 2000
@@ -28,15 +31,21 @@ new g_particleCount = 0;
 new g_ptrTargetClassname;
 new g_ptrParticleClassname;
 
+new g_maxPlayers;
+
 public plugin_precache()
 {
     g_ptrTargetClassname = engfunc(EngFunc_AllocString, "info_target");
     g_ptrParticleClassname = engfunc(EngFunc_AllocString, "env_sprite");
+
+    register_forward(FM_AddToFullPack, "OnAddToFullPack", 0);
 }
 
 public plugin_init()
 {
     register_plugin(PLUGIN, VERSION, AUTHOR);
+
+    g_maxPlayers = get_maxplayers();
 }
 
 public plugin_end()
@@ -102,6 +111,41 @@ public Native_Remove(pluginID, argc)
     RemoveParticles(ent);
 }
 
+
+public OnAddToFullPack(es, e, ent, host, hostflags, player, pSet)
+{
+    if (!IsPlayer(host)) {
+        return FMRES_IGNORED;
+    }
+
+    if (!is_user_connected(host)) {
+        return FMRES_IGNORED;
+    }
+
+    if (!pev_valid(ent)) {
+        return FMRES_IGNORED;
+    }
+
+    static szClassname[32];
+    pev(ent, pev_classname, szClassname, charsmax(szClassname));
+
+    if (equal(szClassname, "_particle")) {
+        new owner = pev(ent, pev_owner);
+
+        if (!owner || !pev_valid(owner)) {
+            return FMRES_IGNORED;
+        }
+
+        if (pev(owner, pev_iuser3) & (1<<(host&31))) {
+            return FMRES_IGNORED;
+        }
+
+        return FMRES_SUPERCEDE;
+    }
+
+    return FMRES_IGNORED;
+}
+
 RegisterParticle(const szName[], pluginID, funcID, const sprites[API_PARTICLES_MAX_SPRITES], Float:fLifeTime, Float:fScale, renderMode, Float:fRenderAmt, spawnCount)
 {
     if (!g_particleCount) {
@@ -150,6 +194,7 @@ SpawnParticles(const szName[], const Float:vOrigin[3], Float:fPlayTime)
 
     set_pev(ent, pev_iuser1, index);
     set_pev(ent, pev_iuser2, 0);
+    set_pev(ent, pev_iuser3, 0);
 
     set_task(0.04, "TaskTargetTick", ent+TASKID_SUM_TARGET_TICK, _, _, "b");
 
@@ -165,6 +210,38 @@ RemoveParticles(ent)
     remove_task(ent+TASKID_SUM_TARGET_TICK);
     set_pev(ent, pev_flags, pev(ent, pev_flags) | FL_KILLME);
     dllfunc(DLLFunc_Think, ent);
+}
+
+UpdateVisibleFlag(ent)
+{   
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    new playerVisibleFlags = 0;
+    for (new id = 1; id <= g_maxPlayers; ++id) {
+        if (!is_user_connected(id)) {
+            continue;
+        }
+
+        if (!is_in_viewcone(id, vOrigin, 1)) {
+            continue;
+        }
+
+        static Float:vPlayerOrigin[3];
+        pev(id, pev_origin, vPlayerOrigin);
+        vPlayerOrigin[2] += 16.0;
+
+        engfunc(EngFunc_TraceLine, vPlayerOrigin, vOrigin, IGNORE_MONSTERS, id, 0);
+
+        static Float:fFraction;
+        get_tr2(0, TR_flFraction, fFraction);
+
+        if (fFraction == 1.0) {
+            playerVisibleFlags |= (1<<(id&31));
+        }
+    }
+
+    set_pev(ent, pev_iuser3, playerVisibleFlags);
 }
 
 public TaskRemoveTarget(taskID)
@@ -210,6 +287,7 @@ public TaskTargetTick(taskID)
         {
             particleEnt = engfunc(EngFunc_CreateNamedEntity, g_ptrParticleClassname);
             engfunc(EngFunc_SetOrigin, particleEnt, vOrigin);
+            set_pev(particleEnt, pev_classname, "_particle");
             set_pev(particleEnt, pev_velocity, vVelocity);
             set_pev(particleEnt, pev_modelindex, sprites[random(strlen(sprites))]);
             set_pev(particleEnt, pev_solid, SOLID_TRIGGER);
@@ -217,10 +295,13 @@ public TaskTargetTick(taskID)
             set_pev(particleEnt, pev_rendermode, renderMode);
             set_pev(particleEnt, pev_renderamt, fRenderAmt);
             set_pev(particleEnt, pev_scale, fScale);
+            set_pev(particleEnt, pev_owner, ent);
 
             set_task(fLifeTime, "TaskRemoveParticle", particleEnt+TASKID_SUM_REMOVE_PARTICLE);
         }
     }
+
+    UpdateVisibleFlag(ent);
 
     set_pev(ent, pev_iuser2, tickIndex + 1);
 }
