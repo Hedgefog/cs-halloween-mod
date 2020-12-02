@@ -13,7 +13,7 @@
 #include <xs>
 
 #define PLUGIN	"[API] Custom Entities"
-#define VERSION	"1.2.1"
+#define VERSION	"1.2.2"
 #define AUTHOR	"Hedgehog Fog"
 
 #define CE_BASE_CLASSNAME "info_target"
@@ -372,9 +372,9 @@ public OnSpawn(ent)
 
 public OnTouch(ent, id)
 {
-	if (pev(ent, pev_flags) & ~FL_ONGROUND) {
-		return;
-	}
+	// if (pev(ent, pev_flags) & ~FL_ONGROUND) {
+	// 	return;
+	// }
 
 	if (!is_user_connected(id)) {
 		return;
@@ -659,20 +659,34 @@ Cleanup()
 	{
 		new ent = ArrayGetCell(g_tmpEntities, i);
 		
-		if (ent && pev_valid(ent))
-		{
-			new ceIdx = GetHandlerByEntity(ent);
-			if (ceIdx == -1) {
-				log_error(0, "%s Entity %i is not a custom entity.", LOG_PREFIX, ent);
-				continue;
-			}
-
-			new ignoreRounds = ArrayGetCell(g_entityIgnoreRounds, ceIdx);
-			if (!ignoreRounds) {
-				Remove(ent);
-				ArrayDeleteItem(g_tmpEntities, i);
-			}
+		if (!ent || !pev_valid(ent)) {
+			continue;
 		}
+
+		new ceIdx = GetHandlerByEntity(ent);
+		if (ceIdx == -1) {
+			log_error(0, "%s Entity %i is not a custom entity.", LOG_PREFIX, ent);
+			continue;
+		}
+
+		new ignoreRounds = ArrayGetCell(g_entityIgnoreRounds, ceIdx);
+		if (!ignoreRounds) {
+			Remove(ent);
+			ArrayDeleteItem(g_tmpEntities, i);
+		}
+	}
+
+	// update temp entities refs
+	new newSize = ArraySize(g_tmpEntities);
+	for (new i = 0; i < newSize; ++i) {
+		new ent = ArrayGetCell(g_tmpEntities, i);
+		
+		if (!ent || !pev_valid(ent)) {
+			continue;
+		}
+
+		new Array:ceData = GetPData(ent);
+		ArraySetCell(ceData, CEData_TempIndex, i);
 	}
 }
 
