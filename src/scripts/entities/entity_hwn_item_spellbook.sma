@@ -82,6 +82,7 @@ public OnSpawn(ent)
     new spellCount = Hwn_Spell_GetCount();
     if (!spellCount) {
         CE_Remove(ent);
+        return;
     }
 
     new spell = random(spellCount);
