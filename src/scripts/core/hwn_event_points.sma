@@ -31,7 +31,7 @@ public plugin_natives()
     register_native("Hwn_EventPoints_GetRandom", "Native_GetRandom");
 }
 
-/*--------------------------------[ Native ]--------------------------------*/
+/*--------------------------------[ Natives ]--------------------------------*/
 
 public Native_Add(pluginID, argc)
 {

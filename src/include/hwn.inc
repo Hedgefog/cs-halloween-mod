@@ -342,6 +342,15 @@ forward Hwn_Collector_Fw_PlayerPoints(id);
 forward Hwn_Collector_Fw_Overtime(time);
 forward Hwn_Collector_Fw_WinnerTeam(team);
 
+/*--------------------------------[ Gifts ]--------------------------------*/
+native Hwn_Gifts_AddTarget(const Float:vOrigin[3]);
+native Hwn_Gifts_GetTargetCount();
+native Hwn_Gifts_GetTarget(targetIdx, Float:vOrigin[3]);
+
+forward Hwn_Gifts_Fw_GiftSpawn(id, ent);
+forward Hwn_Gifts_Fw_GiftPicked(id, ent);
+forward Hwn_Gifts_Fw_GiftDisappear(id, ent);
+
 /*--------------------------------[ Spells ]--------------------------------*/
 
 native Hwn_Spell_Register(const szName[], Hwn_SpellFlags:flags = Hwn_SpellFlag_None, const szCastCallback[]);
