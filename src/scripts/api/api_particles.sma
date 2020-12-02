@@ -17,6 +17,8 @@
 #define TASKID_SUM_REMOVE_TARGET 2000
 #define TASKID_SUM_REMOVE_PARTICLE 3000
 
+const Float:MaxVisibleDistance = 2048.0;
+
 new Trie:g_particles;
 new Array:g_particlePluginID;
 new Array:g_particleFuncID;
@@ -230,6 +232,10 @@ UpdateVisibleFlag(ent)
         static Float:vPlayerOrigin[3];
         pev(id, pev_origin, vPlayerOrigin);
         vPlayerOrigin[2] += 16.0;
+
+        if (get_distance_f(vOrigin, vPlayerOrigin) > MaxVisibleDistance) {
+            continue;
+        }
 
         engfunc(EngFunc_TraceLine, vPlayerOrigin, vOrigin, IGNORE_MONSTERS, id, 0);
 
