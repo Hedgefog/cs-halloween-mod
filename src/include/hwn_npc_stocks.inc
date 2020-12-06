@@ -323,7 +323,7 @@ stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly
     return true;
 }
 
-stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 1024.0, bool:reachableOnly = true)
+stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool:reachableOnly = true)
 {
     new nearestPlayer = 0;
     new Float:fNearestPlayerDistance = -1.0;

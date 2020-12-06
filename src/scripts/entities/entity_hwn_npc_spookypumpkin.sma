@@ -43,6 +43,7 @@ const Float:NPC_Speed = 160.0; // for jump velocity
 const Float:NPC_Damage = 10.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.5;
+const Float:NPC_ViewRange = 1024.0;
 
 const Float:ENTITY_LifeTime = 30.0;
 const Float:ENTITY_RespawnTime = 30.0;
@@ -363,7 +364,7 @@ public TaskThink(taskID)
         if (NPC_IsValidEnemy(enemy)) {
             Attack(ent, enemy, action);
         } else {
-            NPC_FindEnemy(ent, g_maxPlayers);
+            NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange);
         }
     } else {
         action = Action_JumpFloat;
