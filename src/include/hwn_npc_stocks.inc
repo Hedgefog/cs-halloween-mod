@@ -352,7 +352,7 @@ stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool
         pev(i, pev_origin, vTarget);
 
         new Float:fDistance = get_distance_f(vOrigin, vTarget);
-        if (fDistance > fMaxDistance) {
+        if (fMaxDistance > 0 && fDistance > fMaxDistance) {
             continue;
         }
 
@@ -379,29 +379,6 @@ stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool
     }
 
     return !!nearestPlayer;
-}
-
-stock NPC_GetSideLine(ent, Float:vOrigin1[3], Float:vOrigin2[3], Float:fLength = 48.0)
-{
-    static Float:vAngles[3];
-    pev(ent, pev_angles, vAngles);
-
-    static Float:vDirection[3];
-    angle_vector(vAngles, ANGLEVECTOR_FORWARD, vDirection);
-
-    xs_vec_mul_scalar(vDirection, fLength/2, vDirection);
-    vDirection[2] = 0.0;
-
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-
-    new Float:fTemp;
-    fTemp = vDirection[0];
-    vDirection[0] = vDirection[1];
-    vDirection[1] = fTemp;
-
-    xs_vec_sub(vOrigin, vDirection, vOrigin1);
-    xs_vec_add(vOrigin, vDirection, vOrigin2);
 }
 
 stock NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed, Float:fMaxAnglePerSecond = 180.0)
@@ -486,7 +463,7 @@ stock NPC_IsValidEnemy(enemy)
     return (enemy && is_user_alive(enemy) && !UTIL_IsInvisible(enemy) && pev(enemy, pev_takedamage) != DAMAGE_NO);
 }
 
-stock NPC_IsVisible(ent, Float:vTarget[3])
+stock NPC_IsVisible(ent, const Float:vTarget[3])
 {
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
