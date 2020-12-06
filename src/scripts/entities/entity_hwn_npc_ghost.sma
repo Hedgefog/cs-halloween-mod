@@ -116,7 +116,7 @@ public OnSpawn(ent)
     set_pev(ent, pev_health, 1);
 
     if (!UTIL_IsPlayer(pev(ent, pev_enemy))) {
-        NPC_FindEnemy(ent, .maxplayers = g_maxPlayers, .reachableOnly = false);
+        NPC_FindEnemy(ent, g_maxPlayers, 0.0, .reachableOnly = false);
     }
 
     TaskThink(ent);
