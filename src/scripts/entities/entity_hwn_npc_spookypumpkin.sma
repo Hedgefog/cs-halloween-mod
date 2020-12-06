@@ -163,9 +163,9 @@ public OnSpawn(ent)
     set_pev(ent, pev_rendercolor, {HWN_COLOR_ORANGE_DIRTY_F});
     set_pev(ent, pev_health, fHealth);
 
-    EmitRandomLaugh(ent);
-
     engfunc(EngFunc_DropToFloor, ent);
+
+    EmitRandomLaugh(ent);
 
     RemoveTasks(ent);
     set_task(0.0, "TaskThink", ent);
