@@ -96,6 +96,7 @@ const Float:NPC_Speed               = 300.0;
 const Float:NPC_Damage              = 80.0;
 const Float:NPC_HitRange            = 96.0;
 const Float:NPC_HitDelay            = 0.75;
+const Float:NPC_ViewRange           = 2048.0;
 
 new g_sprBlood;
 new g_sprBloodSpray;
@@ -362,8 +363,10 @@ AStar_FindPath(ent)
     static Float:vTarget[3];
     pev(enemy, pev_origin, vTarget);
 
-    new Float:fDistanceToFloor = UTIL_GetDistanceToFloor(vOrigin, ent);// + 8.0;
-    new astarIdx = AStarThreaded(vOrigin, vTarget, "AStar_OnPathDone", 30, DONT_IGNORE_MONSTERS, ent, floatround(fDistanceToFloor), 50);
+    static Float:vMins[3];
+    pev(ent, pev_mins, vMins);
+
+    new astarIdx = AStarThreaded(vOrigin, vTarget, "AStar_OnPathDone", 30, DONT_IGNORE_MONSTERS, ent, floatround(-vMins[2]), 50);
 
     new Array:hhh = HHH_Get(ent);
     ArraySetCell(hhh, HHH_AStar_Idx, astarIdx);
@@ -395,14 +398,13 @@ AStar_ProcessPath(ent, Array:path)
                 vTarget[i] = float(curStep[i]);
             }
 
-            //if (NPC_IsReachable(ent, vTarget)) {
-            new Float:fDistance = get_distance_f(vOrigin, vTarget);
-            ArraySetArray(hhh, HHH_AStar_Target, vTarget);
-
-            ArraySetCell(hhh, HHH_AStar_ArrivalTime, get_gametime() + (fDistance/NPC_Speed));
-            /*} else {
+            if (NPC_IsReachable(ent, vTarget)) {
+                new Float:fDistance = get_distance_f(vOrigin, vTarget);
+                ArraySetArray(hhh, HHH_AStar_Target, vTarget);
+                ArraySetCell(hhh, HHH_AStar_ArrivalTime, get_gametime() + (fDistance/NPC_Speed));
+            } else {
                 AStar_Reset(ent);
-            }*/
+            }
         }
 
         NPC_PlayAction(ent, g_actions[Action_Run]);
@@ -494,12 +496,12 @@ public TaskThink(ent)
     if (NPC_IsValidEnemy(enemy))
     {
         if (!Attack(ent, enemy) && (get_pcvar_num(g_cvarUseAstar) > 0)) {
-            astarRequired = !NPC_FindEnemy(ent, g_maxPlayers);
+            astarRequired = !NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange);
         }
     }
     else
     {
-        if (NPC_FindEnemy(ent, g_maxPlayers)) {
+        if (NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange)) {
             NPC_PlayAction(ent, g_actions[Action_Idle]);
         } else {
             astarRequired = get_pcvar_num(g_cvarUseAstar) > 0;
@@ -516,7 +518,7 @@ public TaskThink(ent)
         new Float:fNextSearch = ArrayGetCell(hhh, HHH_AStar_NextSearch);
 
         if (astarIdx == -1) {
-            if (NPC_IsValidEnemy(enemy) || NPC_FindEnemy(ent, g_maxPlayers, .reachableOnly = false)) {
+            if (NPC_IsValidEnemy(enemy) || NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange, .reachableOnly = false)) {
                 AStar_FindPath(ent);
                 ArraySetCell(hhh, HHH_AStar_NextSearch, fGametime + 10.0);
             }

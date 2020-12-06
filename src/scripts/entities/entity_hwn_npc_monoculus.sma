@@ -405,8 +405,7 @@ public TaskThink(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    if (pev(ent, pev_deadflag) == DEAD_DYING)
-    {
+    if (pev(ent, pev_deadflag) == DEAD_DYING) {
         NPC_EmitVoice(ent, g_szSndDeath, .supercede = true);
         set_pev(ent, pev_deadflag, DEAD_DEAD);
         CE_Kill(ent);
@@ -422,9 +421,13 @@ public TaskThink(ent)
     new bool:isStunned = ArrayGetCell(monoculus, Monoculus_IsStunned);
 
     if (!isStunned) {
+        new Float:fHeight = random_float(MONOCULUS_MIN_HEIGHT, MONOCULUS_MAX_HEIGHT);
+
         new enemy = pev(ent, pev_enemy);
         if (NPC_IsValidEnemy(enemy) && Attack(ent, enemy)) {
-            // do something
+            static Float:vEnemyOrigin[3];
+            pev(enemy, pev_origin, vEnemyOrigin);
+            fHeight += vEnemyOrigin[2] - vOrigin[2];
         } else {
             if (random_num(0, 100) < 5) {
                 LookAround(ent);
@@ -433,9 +436,10 @@ public TaskThink(ent)
             NPC_FindEnemy(ent, g_maxPlayers);
             set_pev(ent, pev_velocity, ZERO_VECTOR_F);
             NPC_PlayAction(ent, g_actions[Action_Idle]);
+
         }
 
-        RandomHeight(ent);
+        SetHeight(ent, fHeight);
     }
 
     set_task(g_fThinkDelay, "TaskThink", ent);
@@ -444,9 +448,6 @@ public TaskThink(ent)
 bool:Attack(ent, target)
 {
     new Array:monoculus = Monoculus_Get(ent);
-
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
 
     if (NPC_CanHit(ent, target, NPC_HitRange)) {
         new bool:isAngry = ArrayGetCell(monoculus, Monoculus_IsAngry);
@@ -463,7 +464,7 @@ bool:Attack(ent, target)
     static Float:vTarget[3];
     pev(target, pev_origin, vTarget);
 
-    if (NPC_IsVisible(vOrigin, vTarget, ent)) {
+    if (NPC_IsVisible(ent, vTarget)) {
         if (task_exists(ent+TASKID_SUM_PUSH_BACK_END)) {
             NPC_MoveToTarget(ent, vTarget, 0.0);
         } else {
@@ -520,6 +521,7 @@ Stun(ent)
     NPC_EmitVoice(ent, g_szSndStunned[random(sizeof(g_szSndStunned))], 1.0);
     NPC_PlayAction(ent, g_actions[Action_Stunned], .supercede = true);
 
+    remove_task(ent+TASKID_SUM_SHOT);
     set_task(g_actions[Action_Stunned][NPC_Action_Time], "TaskRemoveStun", ent+TASKID_SUM_REMOVE_STUN);
 }
 
@@ -535,7 +537,7 @@ MakeAngry(ent)
     }
 }
 
-RandomHeight(ent)
+SetHeight(ent, Float:fHeight)
 {
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
@@ -543,9 +545,8 @@ RandomHeight(ent)
     static Float:vVelocity[3];
     pev(ent, pev_velocity, vVelocity);
 
-    new Float:fRandomHeight = random_float(MONOCULUS_MIN_HEIGHT, MONOCULUS_MAX_HEIGHT);
-    new Float:fDistanceToFloor = UTIL_GetDistanceToFloor(vOrigin, ent);
-    new direction = (fDistanceToFloor > fRandomHeight) ? -1 : 1;
+    new Float:fDistanceToFloor = UTIL_GetDistanceToFloor(ent, vOrigin);
+    new direction = (fDistanceToFloor > fHeight) ? -1 : 1;
     vVelocity[2] += 12.0 * direction;
 
     set_pev(ent, pev_velocity, vVelocity);
@@ -589,7 +590,6 @@ PushBack(ent)
 {
     static Float:vVelocity[3];
     UTIL_GetDirectionVector(ent, vVelocity, -MONOCULUS_PUSHBACK_SPEED);
-
     set_pev(ent, pev_velocity, vVelocity);
 
     set_task(0.25, "TaskPushBackEnd", ent+TASKID_SUM_PUSH_BACK_END);

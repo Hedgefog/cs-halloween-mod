@@ -4,8 +4,9 @@
             Added player preview when choosing cosmetics
             Force equipment change is now available on all spawn points
             Players can no longer cast spells during freezetime and with the FL_FROZEN flag
-            Power Up spell optimization
+            Improved NPC navigation
             Power Up spell now heals
+            Power Up spell optimization
             Reworked lightning spell
             Increased fireball speed
             Increased blinkball speed
@@ -30,6 +31,7 @@
             Fixed powerup spell jump behavior
             Fixed gift spawn task
             Fixed temp entities with ignoreRounds flag behavior
+            Fixed bug when monoculus can shoot while in stun
 
         Credits:
             iwillnotleave (player burn api and power spell optimization)
