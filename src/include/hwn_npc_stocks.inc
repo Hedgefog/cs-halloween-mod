@@ -282,7 +282,7 @@ stock bool:NPC_TestStep(ent, const Float:vOrigin[3], const Float:vStep[3], Float
     return true;
 }
 
-stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly = true)
+stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly = true, bool:visibleOnly = true)
 {
     new enemy = pev(ent, pev_enemy);
     if (!enemy) {
@@ -305,7 +305,7 @@ stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly
     new Array:npcData = NPC_GetData(ent);
 
     new Float:fGameTime = get_gametime();
-    if (NPC_IsVisible(ent, vTarget) && (!reachableOnly || NPC_IsReachable(ent, vTarget))) {
+    if ((!visibleOnly || NPC_IsVisible(ent, vTarget)) && (!reachableOnly || NPC_IsReachable(ent, vTarget))) {
         new Float:fDistance = get_distance_f(vOrigin, vTarget);
         new Float:fReachTime = fGameTime + fDistance/fSpeed;
 
@@ -323,7 +323,7 @@ stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly
     return true;
 }
 
-stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool:reachableOnly = true)
+stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool:reachableOnly = true, bool:visibleOnly = true)
 {
     new nearestPlayer = 0;
     new Float:fNearestPlayerDistance = -1.0;
@@ -356,7 +356,7 @@ stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool
             continue;
         }
 
-        if (!NPC_IsVisible(ent, vTarget)) {
+        if (visibleOnly && !NPC_IsVisible(ent, vTarget)) {
             continue;
         }
 
