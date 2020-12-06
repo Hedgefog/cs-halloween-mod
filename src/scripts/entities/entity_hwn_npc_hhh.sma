@@ -362,8 +362,10 @@ AStar_FindPath(ent)
     static Float:vTarget[3];
     pev(enemy, pev_origin, vTarget);
 
-    new Float:fDistanceToFloor = UTIL_GetDistanceToFloor(vOrigin, ent);// + 8.0;
-    new astarIdx = AStarThreaded(vOrigin, vTarget, "AStar_OnPathDone", 30, DONT_IGNORE_MONSTERS, ent, floatround(fDistanceToFloor), 50);
+    static Float:vMins[3];
+    pev(ent, pev_mins, vMins);
+
+    new astarIdx = AStarThreaded(vOrigin, vTarget, "AStar_OnPathDone", 30, DONT_IGNORE_MONSTERS, ent, floatround(-vMins[2]), 50);
 
     new Array:hhh = HHH_Get(ent);
     ArraySetCell(hhh, HHH_AStar_Idx, astarIdx);
@@ -395,14 +397,13 @@ AStar_ProcessPath(ent, Array:path)
                 vTarget[i] = float(curStep[i]);
             }
 
-            //if (NPC_IsReachable(ent, vTarget)) {
-            new Float:fDistance = get_distance_f(vOrigin, vTarget);
-            ArraySetArray(hhh, HHH_AStar_Target, vTarget);
-
-            ArraySetCell(hhh, HHH_AStar_ArrivalTime, get_gametime() + (fDistance/NPC_Speed));
-            /*} else {
+            if (NPC_IsReachable(ent, vTarget)) {
+                new Float:fDistance = get_distance_f(vOrigin, vTarget);
+                ArraySetArray(hhh, HHH_AStar_Target, vTarget);
+                ArraySetCell(hhh, HHH_AStar_ArrivalTime, get_gametime() + (fDistance/NPC_Speed));
+            } else {
                 AStar_Reset(ent);
-            }*/
+            }
         }
 
         NPC_PlayAction(ent, g_actions[Action_Run]);

@@ -114,18 +114,25 @@ stock UTIL_CS_DamagePlayer(victim, Float:fDamage, dmgbits = DMG_GENERIC, attacke
     #endif
 }
 
-stock Float:UTIL_GetDistanceToFloor(const Float:vOrigin[3], ignoreEnt = 0)
+stock Float:UTIL_GetDistanceToFloor(ent, const Float:vOrigin[3])
 {
-    new Float:vTarget[3];
+    static Float:vTarget[3];
     xs_vec_copy(vOrigin, vTarget);
     vTarget[2] -= 8192.0;
 
     new trace = create_tr2();
-    engfunc(EngFunc_TraceLine, vOrigin, vTarget, IGNORE_MONSTERS, ignoreEnt, trace);
-    get_tr2(trace, TR_vecEndPos, vTarget);
+    engfunc(EngFunc_TraceMonsterHull, ent, vOrigin, vTarget, IGNORE_MONSTERS, ent, trace);
+    new bool:isOpen = UTIL_IsTraceOpen(trace);
     free_tr2(trace);
 
-    return (vOrigin[2] - vTarget[2]);
+    if (isOpen) {
+        return -1.0;
+    }
+
+    static Float:vEnd[3];
+    get_tr2(trace, TR_vecEndPos, vEnd);
+
+    return get_distance_f(vOrigin, vEnd);
 }
 
 stock bool:UTIL_IsPointVisible(const Float:vOrigin1[3], const Float:vOrigin2[3], ignoreEnt = 0)
@@ -161,6 +168,36 @@ stock UTIL_GetDirectionVector(ent, Float:vOut[3], Float:fLength = 1.0)
     xs_vec_normalize(vOut, vOut);
     xs_vec_mul_scalar(vOut, fLength, vOut);
     vOut[2] = -vOut[2];
+}
+
+stock bool:UTIL_IsTraceOpen(trace)
+{   
+    if (get_tr2(trace, TR_AllSolid)) {
+        return false;
+    }
+
+    if (get_tr2(trace, TR_StartSolid)) {
+        return false;
+    }
+
+    new Float:fFraction;
+    get_tr2(trace, TR_flFraction, fFraction);
+
+    if (fFraction < 1.0) {
+        return false;
+    }
+
+    return true;
+}
+
+stock bool:UTIL_IsOpen(const Float:vOrigin1[3], const Float:vOrigin2[3], ent = 0, ignoreFlags = IGNORE_MONSTERS)
+{
+    new trace = create_tr2();
+    engfunc(EngFunc_TraceLine, vOrigin1, vOrigin2, ignoreFlags, ent, trace);
+    new bool:isOpen = UTIL_IsTraceOpen(trace);
+    free_tr2(trace);
+
+    return isOpen;
 }
 
 stock bool:UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {true, false, false}, const Float:fMaxAngle = -1.0)

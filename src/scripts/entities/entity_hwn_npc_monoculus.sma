@@ -449,9 +449,6 @@ bool:Attack(ent, target)
 {
     new Array:monoculus = Monoculus_Get(ent);
 
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-
     if (NPC_CanHit(ent, target, NPC_HitRange)) {
         new bool:isAngry = ArrayGetCell(monoculus, Monoculus_IsAngry);
 
@@ -467,7 +464,7 @@ bool:Attack(ent, target)
     static Float:vTarget[3];
     pev(target, pev_origin, vTarget);
 
-    if (NPC_IsVisible(vOrigin, vTarget, ent)) {
+    if (NPC_IsVisible(ent, vTarget)) {
         if (task_exists(ent+TASKID_SUM_PUSH_BACK_END)) {
             NPC_MoveToTarget(ent, vTarget, 0.0);
         } else {
