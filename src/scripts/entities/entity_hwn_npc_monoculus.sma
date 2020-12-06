@@ -405,8 +405,7 @@ public TaskThink(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    if (pev(ent, pev_deadflag) == DEAD_DYING)
-    {
+    if (pev(ent, pev_deadflag) == DEAD_DYING) {
         NPC_EmitVoice(ent, g_szSndDeath, .supercede = true);
         set_pev(ent, pev_deadflag, DEAD_DEAD);
         CE_Kill(ent);
@@ -422,9 +421,13 @@ public TaskThink(ent)
     new bool:isStunned = ArrayGetCell(monoculus, Monoculus_IsStunned);
 
     if (!isStunned) {
+        new Float:fHeight = random_float(MONOCULUS_MIN_HEIGHT, MONOCULUS_MAX_HEIGHT);
+
         new enemy = pev(ent, pev_enemy);
         if (NPC_IsValidEnemy(enemy) && Attack(ent, enemy)) {
-            // do something
+            static Float:vEnemyOrigin[3];
+            pev(enemy, pev_origin, vEnemyOrigin);
+            fHeight += vEnemyOrigin[2] - vOrigin[2];
         } else {
             if (random_num(0, 100) < 5) {
                 LookAround(ent);
@@ -433,9 +436,10 @@ public TaskThink(ent)
             NPC_FindEnemy(ent, g_maxPlayers);
             set_pev(ent, pev_velocity, ZERO_VECTOR_F);
             NPC_PlayAction(ent, g_actions[Action_Idle]);
+
         }
 
-        RandomHeight(ent);
+        SetHeight(ent, fHeight);
     }
 
     set_task(g_fThinkDelay, "TaskThink", ent);
@@ -536,7 +540,7 @@ MakeAngry(ent)
     }
 }
 
-RandomHeight(ent)
+SetHeight(ent, Float:fHeight)
 {
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
@@ -544,9 +548,8 @@ RandomHeight(ent)
     static Float:vVelocity[3];
     pev(ent, pev_velocity, vVelocity);
 
-    new Float:fRandomHeight = random_float(MONOCULUS_MIN_HEIGHT, MONOCULUS_MAX_HEIGHT);
-    new Float:fDistanceToFloor = UTIL_GetDistanceToFloor(vOrigin, ent);
-    new direction = (fDistanceToFloor > fRandomHeight) ? -1 : 1;
+    new Float:fDistanceToFloor = UTIL_GetDistanceToFloor(ent, vOrigin);
+    new direction = (fDistanceToFloor > fHeight) ? -1 : 1;
     vVelocity[2] += 12.0 * direction;
 
     set_pev(ent, pev_velocity, vVelocity);
