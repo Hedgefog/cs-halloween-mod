@@ -134,7 +134,7 @@ Detonate(ent)
     new owner = pev(ent, pev_owner);
     new team = UTIL_GetPlayerTeam(owner);
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     new target;
@@ -174,7 +174,7 @@ Detonate(ent)
 
 DetonateEffect(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     UTIL_Message_BeamCylinder(vOrigin, EffectRadius * 3, g_sprEffect, 0, 3, 32, 255, EffectColor, 100, 0);

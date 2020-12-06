@@ -141,7 +141,7 @@ public TaskThink(ent)
 
 RocketRadiusDamage(ent, owner)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     new target;
@@ -173,7 +173,7 @@ RocketRadiusDamage(ent, owner)
 
 ExplosionEffect(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 16.0;
 

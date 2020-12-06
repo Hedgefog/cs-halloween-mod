@@ -146,7 +146,7 @@ public OnSpawn(ent)
 {
     NPC_Create(ent);
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     new Float:fHealth = NPC_Health;
@@ -254,10 +254,10 @@ RemoveTasks(ent)
 
 DisappearEffect(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    static Float:vVelocity[3];
+    new Float:vVelocity[3];
     UTIL_RandomVector(-16.0, 16.0, vVelocity);
 
     UTIL_Message_Dlight(vOrigin, isBig(ent) ? 16 : 8, {HWN_COLOR_YELLOW}, 10, 32);
@@ -288,25 +288,27 @@ MutatePumpkin(ent, bool:big = false) {
         return;
     }
 
-    if (random(100) <= chance) {
-        static Float:vOrigin[3];
-        pev(ent, pev_origin, vOrigin);
-
-        new monsterEnt = CE_Create(big ? ENTITY_NAME_SP_BIG : ENTITY_NAME_SP, vOrigin);
-        if (!monsterEnt) {
-            return;
-        }
-
-        static Float:vAngles[3];
-        for (new i = 0; i < 3; ++i) {
-            vAngles[i] = 0.0;
-        }
-
-        vAngles[1] = random_float(0.0, 360.0);
-        set_pev(monsterEnt, pev_angles, vAngles);
-
-        dllfunc(DLLFunc_Spawn, monsterEnt);
+    if (random(100) > chance) {
+        return;
     }
+
+    new Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    new monsterEnt = CE_Create(big ? ENTITY_NAME_SP_BIG : ENTITY_NAME_SP, vOrigin);
+    if (!monsterEnt) {
+        return;
+    }
+
+    new Float:vAngles[3];
+    for (new i = 0; i < 3; ++i) {
+        vAngles[i] = 0.0;
+    }
+
+    vAngles[1] = random_float(0.0, 360.0);
+    set_pev(monsterEnt, pev_angles, vAngles);
+
+    dllfunc(DLLFunc_Spawn, monsterEnt);
 }
 
 bool:isBig(ent) {

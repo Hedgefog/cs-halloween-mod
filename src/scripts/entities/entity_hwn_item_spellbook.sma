@@ -91,11 +91,11 @@ public OnSpawn(ent)
     set_pev(ent, pev_spell, spell);
     set_pev(ent, pev_framerate, 1.0);
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 32.0;
 
-    static Float:vEnd[3];
+    new Float:vEnd[3];
     xs_vec_copy(vOrigin, vEnd);
     vEnd[2] += 8.0;
 

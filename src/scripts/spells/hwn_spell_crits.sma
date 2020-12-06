@@ -116,7 +116,7 @@ SetSpellEffect(id, bool:value)
 
 DetonateEffect(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     UTIL_Message_Dlight(vOrigin, EffectRadius, EffectColor, 5, 80);

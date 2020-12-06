@@ -92,7 +92,7 @@ public OnCast(id)
         return PLUGIN_HANDLED;
     }
 
-    static Float:vVelocity[3];
+    new Float:vVelocity[3];
     pev(ent, pev_velocity, vVelocity);
 
     set_pev(ent, pev_vuser1, vVelocity);
@@ -186,7 +186,7 @@ Detonate(ent)
 
 RadiusDamage(ent, bool:push = false)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     new owner = pev(ent, pev_owner);
@@ -270,7 +270,7 @@ DrawLightingBeam(ent)
 
 DetonateEffect(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     UTIL_Message_BeamCylinder(vOrigin, EffectRadius * 3, g_sprEffect, 0, 3, 32, 255, EffectColor, 100, 0);

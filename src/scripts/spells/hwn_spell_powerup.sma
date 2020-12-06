@@ -80,7 +80,7 @@ public plugin_init()
             continue;
         }
 
-        static szWeaponName[32];
+        new szWeaponName[32];
         get_weaponname(i, szWeaponName, charsmax(szWeaponName));
 
         RegisterHam(Ham_Weapon_PrimaryAttack, szWeaponName, "OnWeaponAttack", .Post = 1);

@@ -74,7 +74,7 @@ public OnPlayerKilled(id)
         return;
     }
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
 
     if (!pev(id, pev_bInDuck)) {

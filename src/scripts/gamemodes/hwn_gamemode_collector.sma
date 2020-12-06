@@ -206,7 +206,7 @@ public OnTargetKilled(ent)
     Hwn_Bosses_GetCurrent(bossEnt);
 
     if (ent != bossEnt && pev(ent, pev_flags) & FL_MONSTER) { // Monster kill reward
-        static Float:vOrigin[3];
+        new Float:vOrigin[3];
         pev(ent, pev_origin, vOrigin);
 
         new Float:fSpellChance = get_pcvar_float(g_cvarNpcDropChanceSpell);

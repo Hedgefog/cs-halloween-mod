@@ -170,7 +170,7 @@ public OnSpawn(ent)
     
     NPC_Create(ent);
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     UTIL_Message_Dlight(vOrigin, IsSmall(ent) ? 8 : 16, {HWN_COLOR_SECONDARY}, 20, 8);
@@ -195,7 +195,7 @@ public OnKilled(ent, killer)
     DisappearEffect(ent);
 
     if (!IsSmall(ent)) {
-        static Float:vOrigin[3];
+        new Float:vOrigin[3];
         pev(ent, pev_origin, vOrigin);
 
         for (new i = 0; i < SKELETON_EGG_COUNT; ++i) {
@@ -207,7 +207,7 @@ public OnKilled(ent, killer)
 
             dllfunc(DLLFunc_Spawn, eggEnt);
 
-            static Float:vVelocity[3];
+            new Float:vVelocity[3];
             xs_vec_set(vVelocity, random_float(-96.0, 96.0), random_float(-96.0, 96.0), 128.0);
             set_pev(eggEnt, pev_velocity, vVelocity);
         }
@@ -285,10 +285,10 @@ RemoveTasks(ent)
 
 DisappearEffect(ent)
 {
-    static Float:vVelocity[3];
+    new Float:vVelocity[3];
     UTIL_RandomVector(-48.0, 48.0, vVelocity);
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     UTIL_Message_Dlight(vOrigin, IsSmall(ent) ? 8 : 16, {HWN_COLOR_SECONDARY}, 10, 32);
 
