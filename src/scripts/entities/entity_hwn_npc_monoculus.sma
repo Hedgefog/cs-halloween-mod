@@ -520,6 +520,7 @@ Stun(ent)
     NPC_EmitVoice(ent, g_szSndStunned[random(sizeof(g_szSndStunned))], 1.0);
     NPC_PlayAction(ent, g_actions[Action_Stunned], .supercede = true);
 
+    remove_task(ent+TASKID_SUM_SHOT);
     set_task(g_actions[Action_Stunned][NPC_Action_Time], "TaskRemoveStun", ent+TASKID_SUM_REMOVE_STUN);
 }
 
@@ -589,7 +590,6 @@ PushBack(ent)
 {
     static Float:vVelocity[3];
     UTIL_GetDirectionVector(ent, vVelocity, -MONOCULUS_PUSHBACK_SPEED);
-
     set_pev(ent, pev_velocity, vVelocity);
 
     set_task(0.25, "TaskPushBackEnd", ent+TASKID_SUM_PUSH_BACK_END);
