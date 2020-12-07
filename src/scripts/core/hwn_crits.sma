@@ -181,8 +181,11 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     new bool:isHit = (UTIL_IsPlayer(ent) && !IsTeammate(attacker, ent)) || pev(ent, pev_flags) & FL_MONSTER;
 
     if (ProcessCrit(attacker, isHit)) {
-        if (get_pcvar_num(g_cvarCritsSoundShoot)) {
-            emit_sound(attacker, CHAN_STATIC , g_szSndCritShot, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+        new bool:isNewShot = g_playerLastShot[attacker] != get_gametime();
+        new Float:fVolume = isNewShot ? VOL_NORM : VOL_NORM * 0.3525;
+
+        if (isNewShot && get_pcvar_num(g_cvarCritsSoundShoot)) {
+            emit_sound(attacker, CHAN_STATIC, g_szSndCritShot, fVolume, ATTN_NORM, 0, PITCH_NORM);
         }
 
         static Float:vViewOrigin[3];
@@ -194,7 +197,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
         CritEffect(vHitOrigin, vViewOrigin, vDirection, isHit);
 
         if (get_pcvar_num(g_cvarCritsSoundHit)) {
-            UTIL_Message_Sound(vHitOrigin, g_szSndCritHit[random(sizeof(g_szSndCritHit))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+            UTIL_Message_Sound(vHitOrigin, g_szSndCritHit[random(sizeof(g_szSndCritHit))], fVolume, ATTN_NORM, 0, PITCH_NORM);
         }
 
         g_playerLastCrit[attacker] = fGameTime;

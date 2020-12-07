@@ -33,6 +33,7 @@
             Fixed gift spawn task
             Fixed temp entities with ignoreRounds flag behavior
             Fixed bug when monoculus can shoot while in stun
+            Fixed crit sound volume
 
         Credits:
             iwillnotleave (player burn api and power spell optimization)
