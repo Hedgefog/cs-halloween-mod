@@ -374,6 +374,10 @@ bool:Attack(ent, target, &Action:action)
         action = Action_Attack;
         NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.5);
         set_task(NPC_HitDelay, "TaskHit", ent+TASKID_SUM_HIT);
+    } else {
+        if (random(100) < 10) {
+            NPC_EmitVoice(ent, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
+        }
     }
 
     static Float:vTarget[3];
@@ -383,9 +387,8 @@ bool:Attack(ent, target, &Action:action)
         return false;
     }
 
-    AStar_Reset(ent);
 
-    if (get_distance_f(vOrigin, vTarget) < NPC_HitRange - 4.0) {
+    if (get_distance_f(vOrigin, vTarget) > NPC_HitRange * 0.95) {
         set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
     } else {
         action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
@@ -393,10 +396,7 @@ bool:Attack(ent, target, &Action:action)
         ScreenShakeEffect(ent);
     }
 
-    if (!canHit && random(100) < 10) {
-        NPC_EmitVoice(ent, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
-    }
-
+    AStar_Reset(ent);
     NPC_MoveToTarget(ent, vTarget, NPC_Speed);
 
     return true;

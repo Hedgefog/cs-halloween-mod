@@ -254,7 +254,7 @@ bool:Attack(ent, target, &Action:action)
         return false;
     }
     
-    if (get_distance_f(vOrigin, vTarget) < fHitRange - 4.0) {
+    if (get_distance_f(vOrigin, vTarget) < fHitRange * 0.95) {
         set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
     } else {
         action = (action == Action_Attack) ? Action_RunAttack : Action_Run;

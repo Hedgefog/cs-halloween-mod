@@ -154,7 +154,6 @@ public plugin_precache()
 
     g_sprBlood = precache_model("sprites/blood.spr");
     g_sprBloodSpray = precache_model("sprites/bloodspray.spr");
-
     g_sprSparkle = precache_model("sprites/muz7.spr");
 
     for (new i = 0; i < sizeof(g_szSndAttack); ++i) {
