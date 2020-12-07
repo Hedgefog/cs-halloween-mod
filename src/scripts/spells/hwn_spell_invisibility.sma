@@ -18,7 +18,7 @@
     #define MAX_PLAYERS 32
 #endif
 
-const Float:EffectTime = 10.0;
+const Float:EffectTime = 9.9;
 const Float:EffectRadius = 16.0;
 new const EffectColor[3] = {255, 255, 255};
 
