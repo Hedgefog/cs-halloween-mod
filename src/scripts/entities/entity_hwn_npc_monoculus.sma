@@ -29,7 +29,7 @@
 #define MONOCULUS_ROCKET_SPEED 720.0
 #define MONOCULUS_PUSHBACK_SPEED 128.0
 #define MONOCULUS_MIN_HEIGHT 128.0
-#define MONOCULUS_MAX_HEIGHT 320.0
+#define MONOCULUS_MAX_HEIGHT 256.0
 #define MONOCULUS_SPAWN_ROCKET_DISTANCE 80.0
 
 enum _:Sequence
@@ -114,7 +114,7 @@ new const g_actions[Action][NPC_Action] =
 };
 
 const Float:NPC_Health = 10000.0;
-const Float:NPC_Speed = 64.0;
+const Float:NPC_Speed = 16.0;
 const Float:NPC_HitRange = 1024.0;
 const Float:NPC_AttackDelay = 0.33;
 
@@ -422,24 +422,21 @@ public TaskThink(ent)
 
     if (!isStunned) {
         new Float:fHeight = random_float(MONOCULUS_MIN_HEIGHT, MONOCULUS_MAX_HEIGHT);
+        SetHeight(ent, fHeight);
 
         new enemy = pev(ent, pev_enemy);
         if (NPC_IsValidEnemy(enemy) && Attack(ent, enemy)) {
             static Float:vEnemyOrigin[3];
             pev(enemy, pev_origin, vEnemyOrigin);
-            fHeight += vEnemyOrigin[2] - vOrigin[2];
+            AlignHeight(ent, vEnemyOrigin);
         } else {
             if (random_num(0, 100) < 5) {
                 LookAround(ent);
             }
 
             NPC_FindEnemy(ent, g_maxPlayers);
-            set_pev(ent, pev_velocity, ZERO_VECTOR_F);
             NPC_PlayAction(ent, g_actions[Action_Idle]);
-
         }
-
-        SetHeight(ent, fHeight);
     }
 
     set_task(g_fThinkDelay, "TaskThink", ent);
@@ -461,14 +458,14 @@ bool:Attack(ent, target)
         return true;
     }
 
-    static Float:vTarget[3];
-    pev(target, pev_origin, vTarget);
+    static Float:vEnemyOrigin[3];
+    pev(target, pev_origin, vEnemyOrigin);
 
-    if (NPC_IsVisible(ent, vTarget)) {
+    if (NPC_IsVisible(ent, vEnemyOrigin)) {
         if (task_exists(ent+TASKID_SUM_PUSH_BACK_END)) {
-            NPC_MoveToTarget(ent, vTarget, 0.0);
+            NPC_MoveToTarget(ent, vEnemyOrigin, 0.0);
         } else {
-            NPC_MoveToTarget(ent, vTarget, NPC_Speed);
+            NPC_MoveToTarget(ent, vEnemyOrigin, NPC_Speed);
         }
 
         NPC_PlayAction(ent, g_actions[Action_Idle]);
@@ -515,6 +512,8 @@ LookAround(ent)
 
 Stun(ent)
 {
+    set_pev(ent, pev_velocity, ZERO_VECTOR_F);
+
     new Array:monoculus = Monoculus_Get(ent);
     ArraySetCell(monoculus, Monoculus_IsStunned, true);
 
@@ -537,19 +536,40 @@ MakeAngry(ent)
     }
 }
 
-SetHeight(ent, Float:fHeight)
+SetHeight(ent, Float:fHeight, Float:fSpeed = NPC_Speed)
 {
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
+    new Float:fDistanceToFloor = UTIL_GetDistanceToFloor(ent, vOrigin);
+    if (fDistanceToFloor == -1.0) {
+        set_pev(ent, pev_velocity, ZERO_VECTOR_F);
+        return;
+    }
+
     static Float:vVelocity[3];
     pev(ent, pev_velocity, vVelocity);
 
-    new Float:fDistanceToFloor = UTIL_GetDistanceToFloor(ent, vOrigin);
     new direction = (fDistanceToFloor > fHeight) ? -1 : 1;
-    vVelocity[2] += 12.0 * direction;
+    vVelocity[2] = fSpeed * direction;
 
     set_pev(ent, pev_velocity, vVelocity);
+}
+
+AlignHeight(ent, const Float:vTarget[3])
+{
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+ 
+    new Float:fHeightDiff = vOrigin[2] - vTarget[2];
+    vOrigin[2] -= fHeightDiff;
+
+    new Float:fDistanceToFloor = UTIL_GetDistanceToFloor(ent, vOrigin);
+    if (fDistanceToFloor == -1.0) {
+        return;
+    }
+
+    SetHeight(ent, fDistanceToFloor < MONOCULUS_MIN_HEIGHT ? MONOCULUS_MIN_HEIGHT : fDistanceToFloor);
 }
 
 SpawnRocket(ent)
