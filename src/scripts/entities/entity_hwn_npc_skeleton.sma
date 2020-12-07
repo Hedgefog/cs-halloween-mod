@@ -233,7 +233,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 242, floatround(fDamage/4));
 }
 
-Action:Attack(ent, target, &Action:action)
+bool:Attack(ent, target, &Action:action)
 {
     new Float:fHitRange = IsSmall(ent) ? NPC_Small_HitRange : NPC_HitRange;
     new Float:fHitDelay = IsSmall(ent) ? NPC_Small_HitDelay : NPC_HitDelay;
@@ -248,32 +248,29 @@ Action:Attack(ent, target, &Action:action)
     }
 
     static Float:vTarget[3];
-    if (NPC_GetTarget(ent, fSpeed, vTarget))
-    {
-        if (get_distance_f(vOrigin, vTarget) >= fHitRange - 4.0) {
-            action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
-
-            if (pev(ent, pev_sequence) == Sequence_Attack) {
-                set_pev(ent, pev_sequence, Sequence_RunAttack);
-            }
-        } else {
-            set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
-        }
-
-        if (random(100) < 10) {
-            if (IsSmall(ent)) {
-                NPC_EmitVoice(ent, g_szSndSmallIdleList[random(sizeof(g_szSndSmallIdleList))]);
-            } else {
-                NPC_EmitVoice(ent, g_szSndIdleList[random(sizeof(g_szSndIdleList))]);
-            }
-        }
-
-        NPC_MoveToTarget(ent, vTarget, fSpeed);
-    }
-    else
-    {
+    if (!NPC_GetTarget(ent, fSpeed, vTarget)) {
         set_pev(ent, pev_enemy, 0);
+        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+        return false;
     }
+    
+    if (get_distance_f(vOrigin, vTarget) < fHitRange - 4.0) {
+        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+    } else {
+        action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
+    }
+
+    if (random(100) < 10) {
+        if (IsSmall(ent)) {
+            NPC_EmitVoice(ent, g_szSndSmallIdleList[random(sizeof(g_szSndSmallIdleList))]);
+        } else {
+            NPC_EmitVoice(ent, g_szSndIdleList[random(sizeof(g_szSndIdleList))]);
+        }
+    }
+
+    NPC_MoveToTarget(ent, vTarget, fSpeed);
+
+    return true;
 }
 
 RemoveTasks(ent)
@@ -326,9 +323,9 @@ public TaskThink(taskID)
         return;
     }
 
+    new enemy = pev(ent, pev_enemy);
     new Action:action = Action_Idle;
 
-    new enemy = pev(ent, pev_enemy);
     if (NPC_IsValidEnemy(enemy)) {
         Attack(ent, enemy, action);
     } else {
