@@ -114,7 +114,8 @@ new const g_actions[Action][NPC_Action] =
     {Sequence_LookAround1, Sequence_LookAround3, 1.0}
 };
 
-const Float:NPC_Health = 10000.0;
+const Float:NPC_Health = 8000.0;
+const Float:NPC_HealthPerLevel = 3000.0;
 const Float:NPC_Speed = 16.0;
 const Float:NPC_HitRange = 2048.0;
 const Float:NPC_AttackDelay = 0.33;
@@ -137,6 +138,7 @@ new g_maxPlayers;
 
 new Array:g_portals;
 new Array:g_portalAngles;
+new g_level = 0;
 
 public plugin_precache()
 {
@@ -243,12 +245,14 @@ public OnPortalSpawn(ent)
 
 public OnSpawn(ent)
 {
+    new Float:fHealth = NPC_Health + (g_level * NPC_HealthPerLevel);
+
     new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PRIMARY}, 60, 4);
 
-    set_pev(ent, pev_health, NPC_Health);
+    set_pev(ent, pev_health, fHealth);
     set_pev(ent, pev_movetype, MOVETYPE_FLY);
 
     NPC_Create(ent, 0.0);
@@ -300,6 +304,7 @@ public OnKill(ent)
         ClearTasks(ent);
         set_task(g_actions[Action_Death][NPC_Action_Time], "TaskThink", ent);
     } else if (deadflag == DEAD_DEAD) {
+        g_level++;
         return PLUGIN_CONTINUE;
     }
 

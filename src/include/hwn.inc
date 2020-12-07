@@ -4,6 +4,7 @@
             Added player preview when choosing cosmetics
             Force equipment change is now available on all spawn points
             Players can no longer cast spells during freezetime and with the FL_FROZEN flag
+            Improved Monoculus NPC
             Improved NPC navigation
             Power Up spell now heals
             Power Up spell optimization
