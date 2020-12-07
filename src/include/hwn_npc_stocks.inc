@@ -31,7 +31,7 @@ stock NPC_Create(ent, Float:fViewZOffset = -1.0)
 
     ArraySetArray(npcData, NPC_LastReachablePoint, Float:{0.0, 0.0, 0.0});
 
-    if (fViewZOffset < 0.0) {
+    if (fViewZOffset == -1.0) {
         new Float:vMaxs[3];
         pev(ent, pev_maxs, vMaxs);
 
