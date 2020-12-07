@@ -122,17 +122,20 @@ stock Float:UTIL_GetDistanceToFloor(ent, const Float:vOrigin[3])
 
     new trace = create_tr2();
     engfunc(EngFunc_TraceMonsterHull, ent, vOrigin, vTarget, IGNORE_MONSTERS, ent, trace);
-    new bool:isOpen = UTIL_IsTraceOpen(trace);
-    free_tr2(trace);
 
-    if (isOpen) {
+    static Float:fFraction;
+    get_tr2(trace, TR_flFraction, fFraction);
+    
+    if (fFraction == 1.0) {
         return -1.0;
     }
 
     static Float:vEnd[3];
     get_tr2(trace, TR_vecEndPos, vEnd);
 
-    return get_distance_f(vOrigin, vEnd);
+    free_tr2(trace);
+
+    return vOrigin[2] - vEnd[2];
 }
 
 stock bool:UTIL_IsPointVisible(const Float:vOrigin1[3], const Float:vOrigin2[3], ignoreEnt = 0)
