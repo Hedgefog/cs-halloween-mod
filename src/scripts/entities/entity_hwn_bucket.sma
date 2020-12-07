@@ -189,7 +189,10 @@ public Hwn_Collector_Fw_WinnerTeam(team)
         new Float:fDuration = ACTION_BIG_POP_DURATION * (1.0 / ACTION_BIG_POP_FRAMERATE);
         PlayActionSequence(ent, Sequence_BigPop, fDuration);
         set_pev(ent, pev_framerate, ACTION_BIG_POP_FRAMERATE);
+
         PotionExplodeEffect(ent);
+        FlashEffect(ent);
+        WaveEffect(ent);
 
         set_task(fDuration, "TaskRemoveLid", ent + TASKID_SUM_REMOVE_LID);
     }

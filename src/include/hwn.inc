@@ -64,6 +64,7 @@
             Improved custom lighting for default gamemode
             Improved overheal spell effect
             Increased spawn range
+            Added flash and wave bucket effect on win
 
         Cvars:
             Added hwn_collector_roundtime cvar
