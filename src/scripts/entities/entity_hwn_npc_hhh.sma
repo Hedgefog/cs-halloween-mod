@@ -388,7 +388,7 @@ bool:Attack(ent, target, &Action:action)
     }
 
 
-    if (get_distance_f(vOrigin, vTarget) > NPC_HitRange * 0.95) {
+    if (get_distance_f(vOrigin, vTarget) < NPC_HitRange * 0.95) {
         set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
     } else {
         action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
