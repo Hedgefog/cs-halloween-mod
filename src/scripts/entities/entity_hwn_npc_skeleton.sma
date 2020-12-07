@@ -258,6 +258,7 @@ bool:Attack(ent, target, &Action:action)
         set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
     } else {
         action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
+        NPC_MoveToTarget(ent, vTarget, NPC_Speed);
     }
 
     if (random(100) < 10) {
@@ -267,8 +268,6 @@ bool:Attack(ent, target, &Action:action)
             NPC_EmitVoice(ent, g_szSndIdleList[random(sizeof(g_szSndIdleList))]);
         }
     }
-
-    NPC_MoveToTarget(ent, vTarget, fSpeed);
 
     return true;
 }

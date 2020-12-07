@@ -387,17 +387,16 @@ bool:Attack(ent, target, &Action:action)
         return false;
     }
 
-
     if (get_distance_f(vOrigin, vTarget) < NPC_HitRange * 0.95) {
         set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
     } else {
         action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
         NPC_EmitFootStep(ent, g_szSndStep[random(sizeof(g_szSndStep))]);
         ScreenShakeEffect(ent);
+        NPC_MoveToTarget(ent, vTarget, NPC_Speed);    
     }
 
     AStar_Reset(ent);
-    NPC_MoveToTarget(ent, vTarget, NPC_Speed);
 
     return true;
 }
