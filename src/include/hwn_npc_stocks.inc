@@ -12,7 +12,8 @@ enum _:NPC
     Float:NPC_LastReachablePoint[3],
     Float:NPC_ReachTime,
     Float:NPC_LastRotation,
-    Float:NPC_ViewZOffset
+    Float:NPC_ViewZOffset,
+    Float:NPC_EnemyTime
 }
 
 enum NPC_Action
@@ -375,7 +376,7 @@ stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool
     }
 
     if (nearestPlayer) {
-        set_pev(ent, pev_enemy, nearestPlayer);
+        NPC_SetEnemy(ent, nearestPlayer);
     }
 
     return !!nearestPlayer;
@@ -472,4 +473,20 @@ stock NPC_IsVisible(ent, const Float:vTarget[3])
     vOrigin[2] += Float:ArrayGetCell(npcData, NPC_ViewZOffset);
 
     return UTIL_IsOpen(vOrigin, vTarget, ent);
+}
+
+stock NPC_SetEnemy(ent, enemy)
+{
+    set_pev(ent, pev_enemy, enemy);
+
+    if (enemy) {
+        new Array:npcData = NPC_GetData(ent);
+        ArraySetCell(npcData, NPC_EnemyTime, get_gametime());
+    }
+}
+
+stock Float:NPC_GetEnemyTime(ent)
+{
+    new Array:npcData = NPC_GetData(ent);
+    return ArrayGetCell(npcData, NPC_EnemyTime);
 }

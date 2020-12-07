@@ -157,6 +157,7 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "OnKill");
 
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
+    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTakeDamage", .Post = 1);
 
     g_cvarUseAstar = register_cvar("hwn_npc_hhh_use_astar", "1");
 }
@@ -278,17 +279,6 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
         return HAM_IGNORED;
     }
 
-    if (UTIL_IsPlayer(attacker)) {
-        static Float:vOrigin[3];
-        pev(attacker, pev_origin, vOrigin);
-        /*if (!NPC_IsReachable(ent, vOrigin)) {
-            return HAM_SUPERCEDE;
-        } else */
-        if (random(100) < 30) {
-            set_pev(ent, pev_enemy, attacker);
-        }
-    }
-
     static Float:vEnd[3];
     get_tr2(trace, TR_vecEndPos, vEnd);
 
@@ -298,6 +288,27 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     }
 
     return HAM_HANDLED;
+}
+
+public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
+{
+    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
+        return;
+    }
+
+    if (UTIL_IsPlayer(attacker) && NPC_IsValidEnemy(attacker)) {
+        static Float:vOrigin[3];
+        pev(ent, pev_origin, vOrigin);
+
+        static Float:vTarget[3];
+        pev(attacker, pev_origin, vTarget);
+
+        if (get_distance_f(vOrigin, vTarget) <= NPC_HitRange && NPC_IsVisible(ent, vTarget)) {
+            if (get_gametime() - NPC_GetEnemyTime(ent) > 6.0) {
+                NPC_SetEnemy(ent, attacker);
+            }
+        }
+    }
 }
 
 /*--------------------------------[ Callbacks ]--------------------------------*/
@@ -360,14 +371,14 @@ bool:Attack(ent, target, &Action:action)
 
     new bool:canHit = NPC_CanHit(ent, target, NPC_HitRange);
     if (canHit && !task_exists(ent+TASKID_SUM_HIT)) {
-        set_task(NPC_HitDelay, "TaskHit", ent+TASKID_SUM_HIT);
         action = Action_Attack;
         NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.5);
+        set_task(NPC_HitDelay, "TaskHit", ent+TASKID_SUM_HIT);
     }
 
     static Float:vTarget[3];
     if (!NPC_GetTarget(ent, NPC_Speed, vTarget)) {
-        set_pev(ent, pev_enemy, 0);
+        NPC_SetEnemy(ent, 0);
         set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
         return false;
     }

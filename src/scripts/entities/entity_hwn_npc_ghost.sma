@@ -210,7 +210,7 @@ Revenge(ent, target)
         killer = 0;
     }
 
-    set_pev(ent, pev_enemy, killer);
+    NPC_SetEnemy(ent, killer);
 }
 
 UpdateParticles(ent)

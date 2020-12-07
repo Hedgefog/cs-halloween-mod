@@ -249,7 +249,7 @@ bool:Attack(ent, target, &Action:action)
 
     static Float:vTarget[3];
     if (!NPC_GetTarget(ent, fSpeed, vTarget)) {
-        set_pev(ent, pev_enemy, 0);
+        NPC_SetEnemy(ent, 0);
         set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
         return false;
     }

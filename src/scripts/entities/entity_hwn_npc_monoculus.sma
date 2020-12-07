@@ -317,24 +317,6 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
 
     UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 212, floatround(fDamage/4));
 
-    if (random(100) < 10) {
-        NPC_EmitVoice(ent, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
-    }
-
-    // if (UTIL_IsPlayer(attacker) && NPC_IsValidEnemy(attacker)) {
-    //     static Float:vOrigin[3];
-    //     pev(ent, pev_origin, vOrigin);
-
-    //     static Float:vTarget[3];
-    //     pev(attacker, pev_origin, vTarget);
-
-    //     if (get_distance_f(vOrigin, vTarget) <= NPC_HitRange && NPC_IsVisible(ent, vTarget)) {
-    //         if (random(100) < 30) {
-    //             set_pev(ent, pev_enemy, attacker);
-    //         }
-    //     }
-    // }
-
     return HAM_HANDLED;
 }
 
@@ -358,11 +340,25 @@ public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
         Stun(ent);
     }
 
+    ArraySetCell(monoculus, Monoculus_DamageToStun, fDamageToStun);
+
     if (random_num(0, 100) < 5) {
         MakeAngry(ent);
     }
 
-    ArraySetCell(monoculus, Monoculus_DamageToStun, fDamageToStun);
+    if (UTIL_IsPlayer(attacker) && NPC_IsValidEnemy(attacker)) {
+        static Float:vOrigin[3];
+        pev(ent, pev_origin, vOrigin);
+
+        static Float:vTarget[3];
+        pev(attacker, pev_origin, vTarget);
+
+        if (get_distance_f(vOrigin, vTarget) <= NPC_HitRange && NPC_IsVisible(ent, vTarget)) {
+            if (get_gametime() - NPC_GetEnemyTime(ent) > 6.0) {
+                NPC_SetEnemy(ent, attacker);
+            }
+        }
+    }
 }
 
 public OnPlayerKilled(id, killer)

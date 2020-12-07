@@ -241,7 +241,7 @@ Attack(ent, target, &Action:action)
                 }
             }
         } else {
-            set_pev(ent, pev_enemy, 0);
+            NPC_SetEnemy(ent, 0);
         }
     }
 }
