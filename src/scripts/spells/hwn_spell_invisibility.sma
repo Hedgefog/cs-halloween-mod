@@ -158,7 +158,7 @@ SetInvisibility(ent, bool:value)
 
 FadeEffect(id, Float:fTime, bool:external = true)
 {
-    UTIL_ScreenFade(id, FadeEffectColor, -1.0, fTime > FadeEffectMaxTime ? FadeEffectMaxTime : fTime, 128, FFADE_IN, .bExternal = external);
+    UTIL_ScreenFade(id, FadeEffectColor, -1.0, fTime > FadeEffectMaxTime ? (FadeEffectMaxTime + 0.1) : fTime, 128, FFADE_IN, .bExternal = external);
 
     if (external) {
         new iterationCount = floatround(fTime / FadeEffectMaxTime, floatround_ceil);

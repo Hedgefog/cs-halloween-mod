@@ -34,6 +34,7 @@
             Fixed temp entities with ignoreRounds flag behavior
             Fixed bug when monoculus can shoot while in stun
             Fixed crit sound volume
+            Fixed invisibility spell fade effect
 
         Credits:
             iwillnotleave (player burn api and power spell optimization)
