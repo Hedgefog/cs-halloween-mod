@@ -17,12 +17,13 @@
 #define ENTITY_NAME "hwn_npc_monoculus"
 #define PORTAL_ENTITY_NAME "hwn_monoculus_portal"
 
-#define TASKID_SUM_SHOT             1000
-#define TASKID_SUM_CALM_DOWN        2000
-#define TASKID_SUM_REMOVE_STUN      3000
-#define TASKID_SUM_PUSH_BACK_END    4000
-#define TASKID_SUM_JUMP_TO_PORTAL   5000
-#define TASKID_SUM_TELEPORT         6000
+#define TASKID_SUM_FLOAT            1000
+#define TASKID_SUM_SHOT             2000
+#define TASKID_SUM_CALM_DOWN        3000
+#define TASKID_SUM_REMOVE_STUN      4000
+#define TASKID_SUM_PUSH_BACK_END    5000
+#define TASKID_SUM_JUMP_TO_PORTAL   6000
+#define TASKID_SUM_TELEPORT         7000
 
 #define ZERO_VECTOR_F Float:{0.0, 0.0, 0.0}
 
@@ -115,7 +116,7 @@ new const g_actions[Action][NPC_Action] =
 
 const Float:NPC_Health = 10000.0;
 const Float:NPC_Speed = 16.0;
-const Float:NPC_HitRange = 1024.0;
+const Float:NPC_HitRange = 2048.0;
 const Float:NPC_AttackDelay = 0.33;
 
 new g_sprBlood;
@@ -250,7 +251,7 @@ public OnSpawn(ent)
     set_pev(ent, pev_health, NPC_Health);
     set_pev(ent, pev_movetype, MOVETYPE_FLY);
 
-    NPC_Create(ent);
+    NPC_Create(ent, 0.0);
     new Array:monoculus = Monoculus_Create(ent);
 
     engfunc(EngFunc_DropToFloor, ent);
@@ -263,9 +264,11 @@ public OnSpawn(ent)
     ArraySetCell(monoculus, Monoculus_DamageToStun, get_pcvar_float(g_cvarDamageToStun));
     ArraySetCell(monoculus, Monoculus_IsAngry, false);
 
-    CreateJumpToPortalTask(ent);
+    ClearTasks(ent);
 
+    CreateJumpToPortalTask(ent);
     set_task(g_actions[Action_Spawn][NPC_Action_Time], "TaskThink", ent);
+    set_task(1.0, "TaskFloat", ent + TASKID_SUM_FLOAT, _, _, "b");
 }
 
 public OnRemove(ent)
@@ -309,15 +312,6 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
         return HAM_IGNORED;
     }
 
-    if (UTIL_IsPlayer(attacker)) {
-        static Float:vOrigin[3];
-        pev(attacker, pev_origin, vOrigin);
-
-        if (random(100) < 30) {
-            set_pev(ent, pev_enemy, attacker);
-        }
-    }
-
     static Float:vEnd[3];
     get_tr2(trace, TR_vecEndPos, vEnd);
 
@@ -326,6 +320,20 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     if (random(100) < 10) {
         NPC_EmitVoice(ent, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
     }
+
+    // if (UTIL_IsPlayer(attacker) && NPC_IsValidEnemy(attacker)) {
+    //     static Float:vOrigin[3];
+    //     pev(ent, pev_origin, vOrigin);
+
+    //     static Float:vTarget[3];
+    //     pev(attacker, pev_origin, vTarget);
+
+    //     if (get_distance_f(vOrigin, vTarget) <= NPC_HitRange && NPC_IsVisible(ent, vTarget)) {
+    //         if (random(100) < 30) {
+    //             set_pev(ent, pev_enemy, attacker);
+    //         }
+    //     }
+    // }
 
     return HAM_HANDLED;
 }
@@ -421,15 +429,8 @@ public TaskThink(ent)
     new bool:isStunned = ArrayGetCell(monoculus, Monoculus_IsStunned);
 
     if (!isStunned) {
-        new Float:fHeight = random_float(MONOCULUS_MIN_HEIGHT, MONOCULUS_MAX_HEIGHT);
-        SetHeight(ent, fHeight);
-
         new enemy = pev(ent, pev_enemy);
-        if (NPC_IsValidEnemy(enemy) && Attack(ent, enemy)) {
-            static Float:vEnemyOrigin[3];
-            pev(enemy, pev_origin, vEnemyOrigin);
-            AlignHeight(ent, vEnemyOrigin);
-        } else {
+        if (!NPC_IsValidEnemy(enemy) || !Attack(ent, enemy)) {
             if (random_num(0, 100) < 5) {
                 LookAround(ent);
             }
@@ -446,6 +447,13 @@ bool:Attack(ent, target)
 {
     new Array:monoculus = Monoculus_Get(ent);
 
+    static Float:vTarget[3];
+    pev(target, pev_origin, vTarget);
+
+    if (!NPC_IsVisible(ent, vTarget)) {
+        return false;
+    }
+
     if (NPC_CanHit(ent, target, NPC_HitRange)) {
         new bool:isAngry = ArrayGetCell(monoculus, Monoculus_IsAngry);
 
@@ -454,25 +462,17 @@ bool:Attack(ent, target)
         } else {
             Shot(ent);
         }
-
-        return true;
-    }
-
-    static Float:vEnemyOrigin[3];
-    pev(target, pev_origin, vEnemyOrigin);
-
-    if (NPC_IsVisible(ent, vEnemyOrigin)) {
-        if (task_exists(ent+TASKID_SUM_PUSH_BACK_END)) {
-            NPC_MoveToTarget(ent, vEnemyOrigin, 0.0);
+    } else {
+        if (task_exists(ent + TASKID_SUM_PUSH_BACK_END)) {
+            NPC_MoveToTarget(ent, vTarget, 0.0);
         } else {
-            NPC_MoveToTarget(ent, vEnemyOrigin, NPC_Speed);
+            NPC_MoveToTarget(ent, vTarget, NPC_Speed, 90.0);
         }
 
         NPC_PlayAction(ent, g_actions[Action_Idle]);
-        return true;
     }
 
-    return false;
+    return true;
 }
 
 BaseShot(ent, Float:attackDelay)
@@ -521,6 +521,7 @@ Stun(ent)
     NPC_PlayAction(ent, g_actions[Action_Stunned], .supercede = true);
 
     remove_task(ent+TASKID_SUM_SHOT);
+    remove_task(ent+TASKID_SUM_JUMP_TO_PORTAL);
     set_task(g_actions[Action_Stunned][NPC_Action_Time], "TaskRemoveStun", ent+TASKID_SUM_REMOVE_STUN);
 }
 
@@ -664,6 +665,7 @@ TeleportEffect(const Float:vOrigin[3])
 
 ClearTasks(ent) {
     remove_task(ent);
+    remove_task(ent+TASKID_SUM_FLOAT);
     remove_task(ent+TASKID_SUM_SHOT);
     remove_task(ent+TASKID_SUM_CALM_DOWN);
     remove_task(ent+TASKID_SUM_REMOVE_STUN);
@@ -673,6 +675,21 @@ ClearTasks(ent) {
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
+
+public TaskFloat(taskID)
+{
+    new ent = taskID - TASKID_SUM_FLOAT;
+
+    new enemy = pev(ent, pev_enemy);
+    if (NPC_IsValidEnemy(enemy)) {
+        static Float:vTarget[3];
+        pev(enemy, pev_origin, vTarget);
+        AlignHeight(ent, vTarget);
+    } else {
+        new Float:fHeight = random_float(MONOCULUS_MIN_HEIGHT, MONOCULUS_MAX_HEIGHT);
+        SetHeight(ent, fHeight);
+    }
+}
 
 public TaskShot(taskID)
 {
@@ -697,6 +714,7 @@ public TaskRemoveStun(taskID)
 
     new Array:monoculus = Monoculus_Get(ent);
     ArraySetCell(monoculus, Monoculus_IsStunned, false);
+    CreateJumpToPortalTask(ent);
 }
 
 public TaskPushBackEnd(taskID)
