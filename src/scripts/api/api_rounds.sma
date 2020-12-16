@@ -21,12 +21,16 @@
 
 #define TASKID_ROUNDTIME_EXPIRE 1
 
-enum GameState
-{
+enum GameState {
     GameState_NewRound,
     GameState_RoundStarted,
     GameState_RoundEnd
 };
+
+enum _:Hook {
+    Hook_PluginId,
+    Hook_FunctionId
+}
 
 new g_iFwResult;
 new g_iFwNewRound;
@@ -35,8 +39,9 @@ new g_iFwRoundEnd;
 new g_iFwRoundExpired;
 
 new GameState:g_iGamestate;
-
 new Float:g_fRoundStartTime;
+
+new Array:g_iCheckWinConditionHooks;
 
 public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
@@ -46,12 +51,20 @@ public plugin_init() {
     register_logevent("OnRoundEnd", 2, "1=Round_End");
     register_event("TextMsg", "OnRoundEnd", "a", "2=#Game_will_restart_in");
 
+    #if defined _reapi_included
+        RegisterHookChain(RG_CSGameRules_CheckWinConditions, "OnCheckWinConditions");
+    #else
+        RegisterControl(RC_CheckWinConditions, "OnCheckWinConditions");
+    #endif
+
     register_message(get_user_msgid("RoundTime"), "OnMessage_RoundTime");
 
     g_iFwNewRound = CreateMultiForward("Round_Fw_NewRound", ET_IGNORE);
     g_iFwRoundStart = CreateMultiForward("Round_Fw_RoundStart", ET_IGNORE);
     g_iFwRoundEnd = CreateMultiForward("Round_Fw_RoundEnd", ET_IGNORE);
     g_iFwRoundExpired = CreateMultiForward("Round_Fw_RoundExpired", ET_IGNORE);
+
+    g_iCheckWinConditionHooks = ArrayCreate(Hook);
 }
 
 public plugin_natives() {
@@ -62,6 +75,11 @@ public plugin_natives() {
     register_native("Round_GetTimeLeft", "Native_GetTimeLeft");
     register_native("Round_IsRoundStarted", "Native_IsRoundStarted");
     register_native("Round_IsRoundEnd", "Native_IsRoundEnd");
+    register_native("Round_HookCheckWinConditions", "Native_HookCheckWinConditions");
+}
+
+public plugin_destroy() {
+    ArrayDestroy(g_iCheckWinConditionHooks);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -93,7 +111,35 @@ public bool:Native_IsRoundEnd(iPluginId, iArgc) {
     return g_iGamestate == GameState_RoundEnd;
 }
 
+public Native_HookCheckWinConditions(iPluginId, iArgc) {
+    new szFunctionName[32];
+    get_string(1, szFunctionName, charsmax(szFunctionName));
+
+    new hook[Hook];
+    hook[Hook_PluginId] = iPluginId;
+    hook[Hook_FunctionId] = get_func_id(szFunctionName, iPluginId);
+
+    ArrayPushArray(g_iCheckWinConditionHooks, hook);
+}
+
 /*--------------------------------[ Hooks ]--------------------------------*/
+
+public OnCheckWinConditions() {
+    new size = ArraySize(g_iCheckWinConditionHooks);
+
+    for (new i = 0; i < size; ++i) {
+        static hook[_:Hook];
+        ArrayGetArray(g_iCheckWinConditionHooks, i, hook);
+
+        if (callfunc_begin_i(hook[Hook_FunctionId], hook[Hook_PluginId]) == 1) {
+            if (callfunc_end() > PLUGIN_CONTINUE) {
+                return ROUND_SUPERCEDE;
+            }
+        }
+    }
+
+    return ROUND_CONTINUE;
+}
 
 public OnNewRound() {
     g_iGamestate = GameState_NewRound;
@@ -126,6 +172,8 @@ public OnMessage_RoundTime() {
 
     return PLUGIN_CONTINUE;
 }
+
+/*--------------------------------[ Methods ]--------------------------------*/
 
 DispatchWin(iTeam, Float:fDelay) {
     if (g_iGamestate == GameState_RoundEnd) {

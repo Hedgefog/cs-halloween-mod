@@ -11,6 +11,7 @@ native Round_GetTime();
 native Round_GetTimeLeft();
 native bool:Round_IsRoundStarted();
 native bool:Round_IsRoundEnd();
+native Round_HookCheckWinConditions(szFunction[]);
 
 forward Round_Fw_NewRound();
 forward Round_Fw_RoundStart();

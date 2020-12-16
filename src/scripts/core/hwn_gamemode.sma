@@ -6,15 +6,6 @@
 
 #include <api_rounds>
 
-#tryinclude <reapi>
-
-#if defined _reapi_included
-    #define ROUND_CONTINUE HC_CONTINUE
-    #define ROUND_SUPERCEDE HC_SUPERCEDE
-#else
-    #include <roundcontrol>
-#endif
-
 #include <hwn>
 #include <hwn_utils>
 
@@ -73,11 +64,7 @@ public plugin_init()
         SetGamemode(g_defaultGamemode);
     }
 
-    #if defined _reapi_included
-        RegisterHookChain(RG_CSGameRules_CheckWinConditions, "OnCheckWinConditions");
-    #else
-        RegisterControl(RC_CheckWinConditions, "OnCheckWinConditions");
-    #endif
+    Round_HookCheckWinConditions("OnCheckWinConditions");
 
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
@@ -396,19 +383,19 @@ public MenuItem_ChangeEquipment(id)
 public OnCheckWinConditions()
 {
     if (!g_gamemodeCount) {
-        return ROUND_CONTINUE;
+        return PLUGIN_CONTINUE;
     }
 
     if (g_gamemode < 0) {
-        return ROUND_CONTINUE;
+        return PLUGIN_CONTINUE;
     }
 
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if ((flags & Hwn_GamemodeFlag_RespawnPlayers) && IsTeamExtermination()) {
-        return ROUND_SUPERCEDE;
+        return PLUGIN_HANDLED;
     }
 
-    return ROUND_CONTINUE;
+    return PLUGIN_CONTINUE;
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
