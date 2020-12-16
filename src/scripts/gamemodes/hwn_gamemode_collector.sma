@@ -5,6 +5,7 @@
 #include <hamsandwich>
 #include <fun>
 
+#include <api_rounds>
 #include <api_custom_entities>
 
 #include <hwn>
@@ -237,7 +238,7 @@ public Hwn_Fw_ConfigLoaded()
     SetWofTask();
 }
 
-public Hwn_Gamemode_Fw_NewRound()
+public Round_Fw_NewRound()
 {
     if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
         return;
@@ -250,17 +251,17 @@ public Hwn_Gamemode_Fw_NewRound()
     g_isOvertime = false;
 }
 
-public Hwn_Gamemode_Fw_RoundStart()
+public Round_Fw_RoundStart()
 {
     if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
         return;
     }
     
     new roundTime = floatround(get_pcvar_float(g_cvarRoundTime) * 60);
-    Hwn_Gamemode_SetRoundTime(roundTime);
+    Round_SetTime(roundTime);
 }
 
-public Hwn_Gamemode_Fw_RoundExpired()
+public Round_Fw_RoundExpired()
 {
     if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
         return;
@@ -276,8 +277,8 @@ public Hwn_Gamemode_Fw_RoundExpired()
     if (tTeamPoints == ctTeamPoints) {
         new overtime = get_pcvar_num(g_cvarRoundTimeOvertime);
         if (overtime > 0) {
-            new roundTime = Hwn_Gamemode_GetRoundTime() + overtime;
-            Hwn_Gamemode_SetRoundTime(roundTime);
+            new roundTime = Round_GetTime() + overtime;
+            Round_SetTime(roundTime);
 
             g_isOvertime = true;
 
@@ -306,8 +307,8 @@ public Hwn_Wof_Fw_Roll_Start()
 
 public Hwn_Bosses_Fw_BossSpawn(ent, Float:fLifeTime)
 {
-    new roundTime = Hwn_Gamemode_GetRoundTime() + floatround(fLifeTime);
-    Hwn_Gamemode_SetRoundTime(roundTime);
+    new roundTime = Round_GetTime() + floatround(fLifeTime);
+    Round_SetTime(roundTime);
     g_teamPointsToSpawnBoss = 0;
 }
 

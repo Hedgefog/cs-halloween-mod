@@ -5,6 +5,7 @@
 #include <hamsandwich>
 #include <xs>
 
+#include <api_rounds>
 #include <screenfade_util>
 
 #include <hwn>
@@ -73,7 +74,7 @@ public plugin_init()
     Revoke(id);
 }
 
-public Hwn_Gamemode_Fw_NewRound()
+public Round_Fw_NewRound()
 {
     for (new i = 1; i <= g_maxPlayers; ++i) {
         Revoke(i);

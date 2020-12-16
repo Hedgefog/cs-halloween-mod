@@ -7,6 +7,8 @@
 #include <fun>
 #include <xs>
 
+#include <api_rounds>
+
 #include <hwn>
 #include <hwn_utils>
 
@@ -102,7 +104,7 @@ public plugin_init()
     Revoke(id);
 }
 
-public Hwn_Gamemode_Fw_NewRound()
+public Round_Fw_NewRound()
 {
     for (new i = 1; i <= g_maxPlayers; ++i) {
         Revoke(i);

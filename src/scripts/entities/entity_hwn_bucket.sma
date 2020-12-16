@@ -5,6 +5,7 @@
 #include <hamsandwich>
 #include <xs>
 
+#include <api_rounds>
 #include <api_custom_entities>
 
 #include <hwn>
@@ -165,12 +166,12 @@ public Hwn_Fw_ConfigLoaded()
     g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
 }
 
-public Hwn_Gamemode_Fw_RoundStart()
+public Round_Fw_RoundStart()
 {
     g_roundStarted = true;
 }
 
-public Hwn_Gamemode_Fw_RoundEnd()
+public Round_Fw_RoundEnd()
 {
     g_roundStarted = false;
 }

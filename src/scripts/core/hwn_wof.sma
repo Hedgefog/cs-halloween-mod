@@ -4,6 +4,8 @@
 #include <fakemeta>
 #include <hamsandwich>
 
+#include <api_rounds>
+
 #include <hwn>
 #include <hwn_utils>
 
@@ -244,7 +246,7 @@ public OnPlayerKilled(id)
     CallRevoke(id);
 }
 
-public Hwn_Gamemode_Fw_NewRound()
+public Round_Fw_NewRound()
 {
     Abort();
 }

@@ -20,6 +20,7 @@
             Improved magic glow particle
             Player burn api optimization
             Many performance optimizations
+            Round logic moved to the separate API
 
         Cvars:
             Added hwn_pcosmetic_menu_preview cvar
@@ -338,17 +339,9 @@ native Hwn_Gamemode_DispatchWin(team);
 native Hwn_Gamemode_GetCurrent();
 native bool:Hwn_Gamemode_IsPlayerOnSpawn(id, bool:ignoreTeam = false);
 native Hwn_Gamemode_GetHandler(const szName[]);
-native Hwn_Gamemode_SetRoundTime(time);
-native Hwn_Gamemode_GetRoundTime();
-native Hwn_Gamemode_GetRoundTimeLeft();
-native bool:Hwn_Gamemode_IsRoundStarted();
 native Hwn_GamemodeFlags:Hwn_Gamemode_GetFlags();
 
 forward Hwn_Gamemode_Fw_Activated(gamemode);
-forward Hwn_Gamemode_Fw_NewRound();
-forward Hwn_Gamemode_Fw_RoundStart();
-forward Hwn_Gamemode_Fw_RoundEnd();
-forward Hwn_Gamemode_Fw_RoundExpired();
 
 /*--------------------------------[ Collector Gamemode ]--------------------------------*/
 

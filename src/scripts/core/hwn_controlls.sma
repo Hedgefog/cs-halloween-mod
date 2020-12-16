@@ -4,6 +4,7 @@
 #include <engine>
 #include <fakemeta>
 
+#include <api_rounds>
 #include <menu_player_cosmetic>
 
 #include <hwn>
@@ -62,7 +63,7 @@ public OnClCmd_Drop(id)
 
 public OnImpulse_100(id)
 {
-    if (!Hwn_Gamemode_IsRoundStarted()) {
+    if (!Round_IsRoundStarted()) {
         return PLUGIN_HANDLED;
     }
 

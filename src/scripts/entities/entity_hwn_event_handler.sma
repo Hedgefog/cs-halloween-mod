@@ -4,6 +4,7 @@
 #include <fakemeta>
 #include <hamsandwich>
 
+#include <api_rounds>
 #include <api_custom_entities>
 
 #include <hwn>
@@ -76,17 +77,17 @@ Dispatch(const eventName[], caller = 0)
 
 /*------------[ Events ]------------*/
 
-public Hwn_Gamemode_Fw_NewRound()
+public Round_Fw_NewRound()
 {
     Dispatch("new_round");
 }
 
-public Hwn_Gamemode_Fw_RoundStart()
+public Round_Fw_RoundStart()
 {
     Dispatch("round_start");
 }
 
-public Hwn_Gamemode_Fw_RoundEnd()
+public Round_Fw_RoundEnd()
 {
     Dispatch("round_end");
 }

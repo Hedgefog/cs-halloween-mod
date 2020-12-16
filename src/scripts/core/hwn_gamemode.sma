@@ -4,13 +4,13 @@
 #include <fakemeta>
 #include <hamsandwich>
 
+#include <api_rounds>
+
 #tryinclude <reapi>
 
 #if defined _reapi_included
     #define ROUND_CONTINUE HC_CONTINUE
     #define ROUND_SUPERCEDE HC_SUPERCEDE
-    #define WINSTATUS_TERRORIST WINSTATUS_TERRORISTS
-    #define WINSTATUS_CT WINSTATUS_CTS
 #else
     #include <roundcontrol>
 #endif
@@ -18,29 +18,15 @@
 #include <hwn>
 #include <hwn_utils>
 
-
 #define PLUGIN "[Hwn] Gamemode"
 #define AUTHOR "Hedgehog Fog"
-
-#define TASKID_ROUNDTIME_EXPIRE 1
 
 #define TASKID_SUM_RESPAWN_PLAYER 1000
 #define TASKID_SUM_SPAWN_PROTECTION 2000
 
 #define SPAWN_RANGE 192.0
 
-enum GameState
-{
-    GameState_NewRound,
-    GameState_RoundStarted,
-    GameState_RoundEnd
-};
-
 new g_fwResult;
-new g_fwNewRound;
-new g_fwRoundStart;
-new g_fwRoundEnd;
-new g_fwRoundExpired;
 new g_fwGamemodeActivated;
 
 new g_fmFwSpawn;
@@ -48,8 +34,6 @@ new g_fmFwSpawn;
 new g_cvarRespawnTime;
 new g_cvarSpawnProtectionTime;
 new g_cvarNewRoundDelay;
-
-new GameState:g_gamestate;
 
 new g_gamemode = -1;
 new g_defaultGamemode = -1;
@@ -59,8 +43,6 @@ new Array:g_gamemodeName;
 new Array:g_gamemodeFlags;
 new Array:g_gamemodePluginID;
 new g_gamemodeCount = 0;
-
-new Float:g_fRoundStartTime;
 
 new g_playerFirstSpawnFlag = 0;
 new Array:g_tSpawnPoints;
@@ -100,13 +82,7 @@ public plugin_init()
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
 
-    register_event("HLTV", "OnNewRound", "a", "1=0", "2=0");
-    register_logevent("OnRoundStart", 2, "1=Round_Start");
-    register_logevent("OnRoundEnd", 2, "1=Round_End");
-    register_event("TextMsg", "OnRoundEnd", "a", "2=#Game_will_restart_in");
-
     register_message(get_user_msgid("ClCorpse"), "OnMessage_ClCorpse");
-    register_message(get_user_msgid("RoundTime"), "OnMessage_RoundTime");
 
     register_clcmd("joinclass", "OnClCmd_JoinClass");
     register_clcmd("menuselect", "OnClCmd_JoinClass");
@@ -116,11 +92,6 @@ public plugin_init()
     g_cvarRespawnTime = register_cvar("hwn_gamemode_respawn_time", "5.0");
     g_cvarSpawnProtectionTime = register_cvar("hwn_gamemode_spawn_protection_time", "3.0");
     g_cvarNewRoundDelay = register_cvar("hwn_gamemode_new_round_delay", "10.0");
-
-    g_fwNewRound = CreateMultiForward("Hwn_Gamemode_Fw_NewRound", ET_IGNORE);
-    g_fwRoundStart = CreateMultiForward("Hwn_Gamemode_Fw_RoundStart", ET_IGNORE);
-    g_fwRoundEnd = CreateMultiForward("Hwn_Gamemode_Fw_RoundEnd", ET_IGNORE);
-    g_fwRoundExpired = CreateMultiForward("Hwn_Gamemode_Fw_RoundExpired", ET_IGNORE);
 
     register_forward(FM_SetModel, "OnSetModel");
 
@@ -155,10 +126,6 @@ public plugin_natives()
     register_native("Hwn_Gamemode_GetCurrent", "Native_GetCurrent");
     register_native("Hwn_Gamemode_GetHandler", "Native_GetHandler");
     register_native("Hwn_Gamemode_IsPlayerOnSpawn", "Native_IsPlayerOnSpawn");
-    register_native("Hwn_Gamemode_GetRoundTime", "Native_GetRoundTime");
-    register_native("Hwn_Gamemode_SetRoundTime", "Native_SetRoundTime");
-    register_native("Hwn_Gamemode_GetRoundTimeLeft", "Native_GetRoundTimeLeft");
-    register_native("Hwn_Gamemode_IsRoundStarted", "Native_IsRoundStarted");
     register_native("Hwn_Gamemode_GetFlags", "Native_GetFlags");
 }
 
@@ -273,27 +240,6 @@ public Native_IsPlayerOnSpawn(pluginID, argc)
     return IsPlayerOnSpawn(id, ignoreTeam);
 }
 
-public Native_GetRoundTime(pluginID, argc)
-{
-    return GetRoundTime();
-}
-
-public Native_SetRoundTime(pluginID, argc)
-{
-    new time = get_param(1);
-    SetRoundTime(time);
-}
-
-public Native_GetRoundTimeLeft(pluginID, argc)
-{
-    return GetRoundTimeLeft();
-}
-
-public bool:Native_IsRoundStarted(pluginID, argc)
-{
-    return g_gamestate > GameState_NewRound;
-}
-
 public Hwn_GamemodeFlags:Native_GetFlags(pluginID, argc)
 {
     if (!g_gamemodeCount) {
@@ -304,40 +250,6 @@ public Hwn_GamemodeFlags:Native_GetFlags(pluginID, argc)
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
-
-public OnNewRound()
-{
-    g_gamestate = GameState_NewRound;
-    ExecuteForward(g_fwNewRound, g_fwResult);
-}
-
-public OnRoundStart()
-{
-    g_gamestate = GameState_RoundStarted;
-    g_fRoundStartTime = get_gametime();
-
-    UpdateRoundTime();
-
-    ExecuteForward(g_fwRoundStart, g_fwResult);
-}
-
-public OnRoundEnd()
-{
-    g_gamestate = GameState_RoundEnd;
-
-    remove_task(TASKID_ROUNDTIME_EXPIRE);
-
-    for (new id = 1; id <= g_maxPlayers; ++id) {
-        remove_task(id + TASKID_SUM_RESPAWN_PLAYER);
-    }
-
-    ExecuteForward(g_fwRoundEnd, g_fwResult);
-}
-
-public OnRoundTimeExpired()
-{
-    ExecuteForward(g_fwRoundExpired, g_fwResult);
-}
 
 public Hwn_PEquipment_Event_Changed(id)
 {
@@ -414,21 +326,6 @@ public OnMessage_ClCorpse()
     return PLUGIN_CONTINUE;
 }
 
-public OnMessage_RoundTime()
-{
-    if (!g_gamemodeCount) {
-        return PLUGIN_CONTINUE;
-    }
-
-    if (g_gamestate == GameState_NewRound) {
-        return PLUGIN_CONTINUE;
-    }
-
-    set_msg_arg_int(1, ARG_SHORT, GetRoundTimeLeft());
-
-    return PLUGIN_CONTINUE;
-}
-
 public OnPlayerSpawn(id)
 {
     if (!is_user_alive(id)) {
@@ -467,7 +364,7 @@ public OnPlayerKilled(id)
     }
 
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if ((flags & Hwn_GamemodeFlag_RespawnPlayers) && g_gamestate != GameState_RoundEnd) {
+    if ((flags & Hwn_GamemodeFlag_RespawnPlayers) && !Round_IsRoundEnd()) {
         SetRespawnTask(id);
     }
 }
@@ -596,36 +493,8 @@ bool:IsPlayerOnTeamSpawn(id, team)
 
 DispatchWin(team)
 {
-    if (g_gamestate == GameState_RoundEnd) {
-        return;
-    }
-
-    if (team < 1 || team > 3) {
-        return;
-    }
-
     new Float:fDelay = get_pcvar_float(g_cvarNewRoundDelay);
-
-    new any:winstatus = WINSTATUS_DRAW;
-    if (team == 1) {
-        winstatus = WINSTATUS_TERRORIST;
-    } else if (team == 2) {
-        winstatus = WINSTATUS_CT;
-    }
-
-    #if defined _reapi_included
-        new ScenarioEventEndRound:event = ROUND_END_DRAW;
-        if (team == 1) {
-            event = ROUND_TERRORISTS_WIN;
-        } else if (team == 2) {
-            event = ROUND_CTS_WIN;
-        }
-
-        rg_round_end(fDelay, winstatus, event);
-        rg_update_teamscores(team == 2 ? 1 : 0, team == 1 ? 1 : 0);
-    #else
-        RoundEndForceControl(winstatus, fDelay);
-    #endif
+    Round_DispatchWin(team, fDelay);
 }
 
 bool:IsTeamExtermination()
@@ -659,43 +528,6 @@ bool:IsTeamExtermination()
 SetRespawnTask(id)
 {
     set_task(get_pcvar_float(g_cvarRespawnTime), "TaskRespawnPlayer", id + TASKID_SUM_RESPAWN_PLAYER);
-}
-
-GetRoundTime()
-{
-    #if defined _reapi_included
-        return get_member_game(m_iRoundTime);
-    #else
-        return get_pgame_int(m_iRoundTime);
-    #endif
-}
-
-SetRoundTime(time)
-{
-    #if defined _reapi_included
-        set_member_game(m_iRoundTime, time);
-        set_member_game(m_fRoundStartTime, g_fRoundStartTime);
-    #else
-        set_pgame_int(m_iRoundTime, time);
-        set_pgame_float(m_fRoundCount, g_fRoundStartTime);
-    #endif
-
-    UpdateRoundTime();
-}
-
-GetRoundTimeLeft()
-{
-    return floatround(g_fRoundStartTime + float(GetRoundTime()) - get_gametime());
-}
-
-UpdateRoundTime()
-{
-    new roundTimeLeft = GetRoundTimeLeft();
-
-    UTIL_Message_RoundTime(0, roundTimeLeft);
-
-    remove_task(TASKID_ROUNDTIME_EXPIRE);
-    set_task(float(roundTimeLeft), "OnRoundTimeExpired", TASKID_ROUNDTIME_EXPIRE);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
