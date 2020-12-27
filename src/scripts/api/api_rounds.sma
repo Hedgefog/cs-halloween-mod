@@ -86,7 +86,7 @@ public plugin_destroy() {
 
 public Native_DispatchWin(iPluginId, iArgc) {
     new iTeam = get_param(1);
-    new Float:fDelay = get_param_f(1);
+    new Float:fDelay = get_param_f(2);
     DispatchWin(iTeam, fDelay);
 }
 
