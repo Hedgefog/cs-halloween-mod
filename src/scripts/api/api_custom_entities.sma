@@ -13,7 +13,7 @@
 #include <xs>
 
 #define PLUGIN	"[API] Custom Entities"
-#define VERSION	"1.2.3"
+#define VERSION	"1.2.2"
 #define AUTHOR	"Hedgehog Fog"
 
 #define CE_BASE_CLASSNAME "info_target"
@@ -416,7 +416,7 @@ public OnKilled(ent, killer)
 public OnNewRound()
 {
 	Cleanup();
-	RespawnEntities();
+	set_task(0.1, "TaskRespawnEntities");
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -1024,4 +1024,9 @@ public TaskRemove(taskID)
 {
 	new ent = taskID - TASKID_SUM_REMOVE;
 	Remove(ent);
+}
+
+public TaskRespawnEntities()
+{
+	RespawnEntities();
 }
