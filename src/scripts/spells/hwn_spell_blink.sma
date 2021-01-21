@@ -2,6 +2,7 @@
 
 #include <amxmodx>
 #include <fakemeta>
+#include <fakemeta_util>
 #include <hamsandwich>
 #include <xs>
 
@@ -43,6 +44,7 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
+    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 
@@ -85,6 +87,19 @@ public OnTouch(ent, target)
     }
 
     CE_Kill(ent);
+}
+
+public OnPlayerSpawn(id)
+{
+    if (!is_user_alive(id)) {
+        return;
+    }
+
+    new ent = -1;
+    while ((ent = fm_find_ent_by_owner(ent, SPELLBALL_ENTITY_CLASSNAME, id)) > 0) {
+        set_pev(ent, pev_owner, 0);
+        CE_Kill(ent);
+    }
 }
 
 public OnSpellballKilled(ent)
