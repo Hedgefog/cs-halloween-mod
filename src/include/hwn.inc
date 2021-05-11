@@ -4,20 +4,21 @@
             Added player preview when choosing cosmetics
             Force equipment change is now available on all spawn points
             Players can no longer cast spells during freezetime and with the FL_FROZEN flag
-            Improved Monoculus NPC
-            Improved NPC navigation
+            Reduced Monoculus HP
+            Added Monoculus levels
             Power Up spell now heals
-            Power Up spell optimization
             Reworked lightning spell
             Increased fireball speed
             Increased blinkball speed
             Event points are no longer created at enemy spawn
             Added spell groups (common, rare)
             Spellbook now indicates a spell group with different particles
+            Improved NPC targeting and navigation
             Added spell flags to the spells api
             Added event points API
             Added Gifts API
             Improved magic glow particle
+            Power Up spell optimization
             Player burn api optimization
             Many performance optimizations
             Round logic moved to the separate API
@@ -28,17 +29,17 @@
             Added hwn_spellbook_max_rare_spell_count cvar
 
         Fixes:
-            Fixed bots cosmetics
+            Fixed Power Up spell jump behavior
             Fixed jump animation for Power Up spell
-            Fixed powerup spell jump behavior
-            Fixed gift spawn task
-            Fixed temp entities with ignoreRounds flag behavior
             Fixed bug when monoculus can shoot while in stun
             Fixed crit sound volume
             Fixed invisibility spell fade effect
+            Fixed gift spawn task
+            Fixed temp entities with ignoreRounds flag behavior
+            Fixed bots cosmetics
 
         Credits:
-            iwillnotleave (player burn api and power spell optimization)
+            iwillnotleave (player burn api and Power Up spell optimization)
 
     6.2.0
         Additions and improvements:
