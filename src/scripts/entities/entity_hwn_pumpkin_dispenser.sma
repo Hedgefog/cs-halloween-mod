@@ -4,6 +4,7 @@
 #include <fakemeta>
 #include <xs>
 
+#include <api_rounds>
 #include <api_custom_entities>
 
 #define PLUGIN "[Custom Entity] Hwn Pumpkin Dispenser"
@@ -55,7 +56,7 @@ public plugin_end()
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-public Hwn_Gamemode_Fw_RoundStart()
+public Round_Fw_RoundStart()
 {
     if (!g_dispenserCount) {
         return;
@@ -85,9 +86,9 @@ public OnSpawn(ent)
     }
 
     if (!g_dispenserCount) {
-        g_dispensers = ArrayCreate(1);
-        g_dispenserDelay = ArrayCreate(1);
-        g_dispenserImpulse = ArrayCreate(1);
+        g_dispensers = ArrayCreate();
+        g_dispenserDelay = ArrayCreate();
+        g_dispenserImpulse = ArrayCreate();
     }
 
     new index = g_dispenserCount;

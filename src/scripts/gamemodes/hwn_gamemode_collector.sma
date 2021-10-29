@@ -5,6 +5,7 @@
 #include <hamsandwich>
 #include <fun>
 
+#include <api_rounds>
 #include <api_custom_entities>
 
 #include <hwn>
@@ -12,6 +13,10 @@
 
 #define PLUGIN "[Hwn] Gamemode Collector"
 #define AUTHOR "Hedgehog Fog"
+
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
 
 #define BUCKET_ENTITY_CLASSNAME "hwn_bucket"
 #define LOOT_ENTITY_CLASSNAME "hwn_item_pumpkin"
@@ -28,8 +33,8 @@ new g_fwTeamPointsChanged;
 new g_fwOvertime;
 new g_fwWinnerTeam;
 
-new Array:g_playerPoints;
-new Array:g_teamPoints;
+new g_playerPoints[MAX_PLAYERS + 1] = { 0, ... };
+new g_teamPoints[TEAM_COUNT];
 new g_teamPointsToSpawnBoss;
 new bool:g_isOvertime;
 
@@ -70,16 +75,6 @@ public plugin_init()
 
     g_maxPlayers = get_maxplayers();
 
-    g_playerPoints = ArrayCreate(1, g_maxPlayers+1);
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerPoints, 0);
-    }
-
-    g_teamPoints = ArrayCreate(1, TEAM_COUNT);
-    for (new i = 0; i < TEAM_COUNT; ++i) {
-        ArrayPushCell(g_teamPoints, 0);
-    }
-
     g_cvarTeamPointsLimit = register_cvar("hwn_collector_teampoints_limit", "50");
     g_cvarRoundTime = register_cvar("hwn_collector_roundtime", "10.0");
     g_cvarRoundTimeOvertime = register_cvar("hwn_collector_roundtime_overtime", "30");
@@ -103,12 +98,6 @@ public plugin_natives()
     register_native("Hwn_Collector_SetTeamPoints", "Native_SetTeamPoints");
     register_native("Hwn_Collector_IsOvertime", "Native_IsOvertime");
     register_native("Hwn_Collector_ObjectiveBlocked", "Native_ObjectiveBlocked");
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_playerPoints);
-    ArrayDestroy(g_teamPoints);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -205,27 +194,7 @@ public OnPlayerKilled(id)
         return;
     }
 
-    new points = GetPlayerPoints(id);
-
-    if (!points) {
-        return;
-    }
-
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
-
-    new bpEnt = CE_Create(BACKPACK_ENTITY_CLASSNAME, vOrigin);
-
-    if (bpEnt) {
-        set_pev(bpEnt, pev_iuser2, points);
-        dllfunc(DLLFunc_Spawn, bpEnt);
-
-        static Float:vVelocity[3];
-        UTIL_RandomVector(256.0, 256.0, vVelocity);
-        set_pev(bpEnt, pev_velocity, vVelocity);
-    }
-
-    SetPlayerPoints(id, 0);
+    ExtractPlayerPoints(id);
 }
 
 public OnTargetKilled(ent)
@@ -238,7 +207,7 @@ public OnTargetKilled(ent)
     Hwn_Bosses_GetCurrent(bossEnt);
 
     if (ent != bossEnt && pev(ent, pev_flags) & FL_MONSTER) { // Monster kill reward
-        static Float:vOrigin[3];
+        new Float:vOrigin[3];
         pev(ent, pev_origin, vOrigin);
 
         new Float:fSpellChance = get_pcvar_float(g_cvarNpcDropChanceSpell);
@@ -269,7 +238,7 @@ public Hwn_Fw_ConfigLoaded()
     SetWofTask();
 }
 
-public Hwn_Gamemode_Fw_NewRound()
+public Round_Fw_NewRound()
 {
     if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
         return;
@@ -282,17 +251,17 @@ public Hwn_Gamemode_Fw_NewRound()
     g_isOvertime = false;
 }
 
-public Hwn_Gamemode_Fw_RoundStart()
+public Round_Fw_RoundStart()
 {
     if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
         return;
     }
     
     new roundTime = floatround(get_pcvar_float(g_cvarRoundTime) * 60);
-    Hwn_Gamemode_SetRoundTime(roundTime);
+    Round_SetTime(roundTime);
 }
 
-public Hwn_Gamemode_Fw_RoundExpired()
+public Round_Fw_RoundExpired()
 {
     if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
         return;
@@ -308,8 +277,8 @@ public Hwn_Gamemode_Fw_RoundExpired()
     if (tTeamPoints == ctTeamPoints) {
         new overtime = get_pcvar_num(g_cvarRoundTimeOvertime);
         if (overtime > 0) {
-            new roundTime = Hwn_Gamemode_GetRoundTime() + overtime;
-            Hwn_Gamemode_SetRoundTime(roundTime);
+            new roundTime = Round_GetTime() + overtime;
+            Round_SetTime(roundTime);
 
             g_isOvertime = true;
 
@@ -338,8 +307,8 @@ public Hwn_Wof_Fw_Roll_Start()
 
 public Hwn_Bosses_Fw_BossSpawn(ent, Float:fLifeTime)
 {
-    new roundTime = Hwn_Gamemode_GetRoundTime() + floatround(fLifeTime);
-    Hwn_Gamemode_SetRoundTime(roundTime);
+    new roundTime = Round_GetTime() + floatround(fLifeTime);
+    Round_SetTime(roundTime);
     g_teamPointsToSpawnBoss = 0;
 }
 
@@ -347,28 +316,52 @@ public Hwn_Bosses_Fw_BossSpawn(ent, Float:fLifeTime)
 
 GetPlayerPoints(id)
 {
-    return ArrayGetCell(g_playerPoints, id);
+    return g_playerPoints[id];
 }
 
-SetPlayerPoints(id, count, bool:silent = false)
+SetPlayerPoints(id, count)
 {
-    ArraySetCell(g_playerPoints, id, count);
+    g_playerPoints[id] = count;
+    ExecuteForward(g_fwPlayerPointsChanged, g_fwResult, id);
+}
 
-    if (!silent) {
-        ExecuteForward(g_fwPlayerPointsChanged, g_fwResult, id);
+bool:ExtractPlayerPoints(id)
+{
+    new points = GetPlayerPoints(id);
+    if (!points) {
+        return false;
     }
+
+    static Float:vOrigin[3];
+    pev(id, pev_origin, vOrigin);
+
+    new bpEnt = CE_Create(BACKPACK_ENTITY_CLASSNAME, vOrigin);
+    if (!bpEnt) {
+        return false;
+    }
+
+    set_pev(bpEnt, pev_iuser2, points);
+    dllfunc(DLLFunc_Spawn, bpEnt);
+
+    static Float:vVelocity[3];
+    UTIL_RandomVector(256.0, 256.0, vVelocity);
+    set_pev(bpEnt, pev_velocity, vVelocity);
+
+    SetPlayerPoints(id, 0);
+
+    return true;
 }
 
 GetTeamPoints(team)
 {
-    return ArrayGetCell(g_teamPoints, team);
+    return g_teamPoints[team];
 }
 
-SetTeamPoints(team, count, bool:silent = false)
+SetTeamPoints(team, count)
 {
     new teamPointsToBossSpawn = get_pcvar_num(g_cvarTeamPointsToBossSpawn);
     if (teamPointsToBossSpawn > 0) {
-        new countDiff = count - ArrayGetCell(g_teamPoints, team);
+        new countDiff = count - g_teamPoints[team];
         if (countDiff > 0) {
             g_teamPointsToSpawnBoss += countDiff;
 
@@ -379,29 +372,28 @@ SetTeamPoints(team, count, bool:silent = false)
         }
     }
 
-    ArraySetCell(g_teamPoints, team, count);
+    g_teamPoints[team] = count;
 
     new teamPointsLimit = get_pcvar_num(g_cvarTeamPointsLimit);
     if (count >= teamPointsLimit) {
         DispatchWin(team);
     }
 
-    if (!silent) {
-        ExecuteForward(g_fwTeamPointsChanged, g_fwResult, team);
-    }
+    ExecuteForward(g_fwTeamPointsChanged, g_fwResult, team);
 }
 
 ResetVariables()
 {
     for (new team = 0; team < TEAM_COUNT; ++team) {
-        SetTeamPoints(team, 0, .silent = true);
-        g_teamPointsToSpawnBoss = 0;
+        g_teamPoints[team] = 0;
     }
 
     for (new id = 1; id <= g_maxPlayers; ++id) {
-        SetPlayerPoints(id, 0, .silent = true);
+        g_playerPoints[id] = 0;
         Hwn_Spell_SetPlayerSpell(id, -1, 0);
     }
+
+    g_teamPointsToSpawnBoss = 0;
 }
 
 SetWofTask()

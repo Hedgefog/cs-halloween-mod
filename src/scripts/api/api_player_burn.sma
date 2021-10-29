@@ -8,7 +8,9 @@
 #define VERSION    "0.3.1"
 #define AUTHOR    "Hedgehog Fog"
 
-#define MAX_PLAYERS            32
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
 
 #define CBASEPLAYER_LINUX_OFFSET 5
 #define m_flVelocityModifier 108
@@ -18,14 +20,12 @@
 #define DMG_BURN_PAINSHOCK    0.5
 #define DMG_BURN_AMOUNT        3.0
 
-new Array:g_playerAttacker;
+new g_playerAttacker[MAX_PLAYERS + 1] = { 0, ... };
 
 new g_flagPlayerBurn;
 
 new g_sprFlame;
 new g_sprSmoke;
-
-new g_maxPlayers;
 
 new const g_szSndBurn[] = "ambience/burning1.wav";
 
@@ -44,14 +44,6 @@ public plugin_init()
     RegisterHam(Ham_Spawn, "player", "on_player_spawn", .Post = 1);
     RegisterHam(Ham_Killed, "player", "on_player_killed", .Post = 0);
     RegisterHam(Ham_TakeDamage, "player", "on_player_takeDamage", .Post = 1);
-    RegisterHam(Ham_Player_PostThink, "player", "on_player_prethink", .Post = 1);
-
-    g_maxPlayers = get_maxplayers();
-
-    g_playerAttacker = ArrayCreate(1, g_maxPlayers+1);
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerAttacker, 0);
-    }
 }
 
 public plugin_natives()
@@ -60,11 +52,6 @@ public plugin_natives()
     register_native("burn_player", "native_burn_player");
     register_native("extinguish_player", "native_extinguish_player");
     register_native("is_player_burn", "native_is_player_burn");
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_playerAttacker);
 }
 
 /*----[ Natives ]----*/
@@ -112,7 +99,7 @@ burn_player(id, attacker, burnTime)
 
     g_flagPlayerBurn |= (1 << (id & 31));
 
-    ArraySetCell(g_playerAttacker, id, attacker);
+    g_playerAttacker[id] = attacker;
 
     remove_task(id+TASKID_SUM_BURN);
 
@@ -128,7 +115,7 @@ extinguish_player(id)
     remove_task(id+TASKID_SUM_BURN);
     g_flagPlayerBurn &= ~(1 << (id & 31));
 
-    ArraySetCell(g_playerAttacker, id, 0);
+    g_playerAttacker[id] = 0;
     emit_sound(id, CHAN_VOICE, g_szSndBurn, VOL_NORM, ATTN_NORM, SND_STOP, PITCH_NORM);
 }
 
@@ -151,7 +138,7 @@ public on_player_killed(victim, attacker)
     }
 
     if(!attacker) {
-        SetHamParamEntity(2, ArrayGetCell(g_playerAttacker, victim));
+        SetHamParamEntity(2, g_playerAttacker[victim]);
     }
 
     extinguish_player(victim);
@@ -181,18 +168,6 @@ public on_player_takeDamage(victim, inflictor, attacker, Float:damage, damageTyp
     new Float:fPainShock = get_pdata_float(victim, m_flVelocityModifier, CBASEPLAYER_LINUX_OFFSET);
     fPainShock = fPainShock/DMG_BURN_PAINSHOCK*0.80;
     set_pdata_float(victim, m_flVelocityModifier, fPainShock, CBASEPLAYER_LINUX_OFFSET);
-}
-
-public on_player_prethink(id)
-{
-    if (~pev(id, pev_flags) & FL_INWATER)
-        return;
-
-    if (!is_user_alive(id))
-        return;
-
-    if(is_player_burn(id))
-        extinguish_player(id);
 }
 
 /*----[ Tasks ]----*/
@@ -236,6 +211,11 @@ public task_player_burn_damage(taskID)
 
     if(!is_user_alive(id))
         return;
+
+    if (pev(id, pev_flags) & FL_INWATER) {
+        extinguish_player(id);
+        return;
+    }
 
     UTIL_CS_DamagePlayer(id, DMG_BURN_AMOUNT, DMG_BURN, 0, 0);
 }

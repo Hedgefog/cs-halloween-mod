@@ -63,10 +63,6 @@ public plugin_init()
     register_event("ResetHUD", "OnResetHUD", "b");
     register_message(get_user_msgid("HideWeapon"), "OnMessageHideWeapon");
 
-    CE_RegisterHook(CEFunction_Spawn, "hwn_item_gift", "OnGiftSpawn");
-    CE_RegisterHook(CEFunction_Killed, "hwn_item_gift", "OnGiftKilled");
-    CE_RegisterHook(CEFunction_Picked, "hwn_item_gift", "OnGiftPicked");
-
     CE_RegisterHook(CEFunction_Picked, "hwn_item_spellbook", "OnSpellbookPicked");
     CE_RegisterHook(CEFunction_Picked, "hwn_item_pumpkin", "OnPumpkinPicked");
     CE_RegisterHook(CEFunction_Picked, "hwn_item_pumpkin_big", "OnPumpkinPicked");
@@ -176,25 +172,19 @@ public OnPlayerSpawn(id)
     show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_MENU_HELP");
 }
 
-public OnGiftSpawn(ent)
+public Hwn_Gifts_Fw_GiftSpawn(id)
 {
-    new owner = pev(ent, pev_owner);
-
     SetupNotificationMessage(HUD_POS_NOTIFICATION_GIFT_SPAWN);
-    show_dhudmessage(owner, "%L", LANG_PLAYER, "HWN_GIFT_SPAWN");
+    show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_GIFT_SPAWN");
 }
 
-public OnGiftKilled(ent, bool:picked)
+public Hwn_Gifts_Fw_GiftDisappear(id)
 {
-    if (!picked) {
-        new owner = pev(ent, pev_owner);
-
-        SetupNotificationMessage(HUD_POS_NOTIFICATION_GIFT_DISAPPEARED);
-        show_dhudmessage(owner, "%L", LANG_PLAYER, "HWN_GIFT_DISAPPEARED");
-    }
+    SetupNotificationMessage(HUD_POS_NOTIFICATION_GIFT_DISAPPEARED);
+    show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_GIFT_DISAPPEARED");
 }
 
-public OnGiftPicked(ent, id)
+public Hwn_Gifts_Fw_GiftPicked(id)
 {
     static szName[128];
     get_user_name(id, szName, charsmax(szName));

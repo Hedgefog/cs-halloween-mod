@@ -13,7 +13,7 @@
 #include <xs>
 
 #define PLUGIN	"[API] Custom Entities"
-#define VERSION	"1.2.1"
+#define VERSION	"1.2.2"
 #define AUTHOR	"Hedgehog Fog"
 
 #define CE_BASE_CLASSNAME "info_target"
@@ -70,6 +70,11 @@ enum _:CEData
 	CEData_StartOrigin
 };
 
+enum _:KVD {
+	KVD_Key[64],
+	KVD_Value[64]
+}
+
 /*--------------------------------[ Variables ]--------------------------------*/
 
 new g_ptrBaseClassname;
@@ -94,13 +99,13 @@ new Array:g_tmpEntities;
 new g_lastCEIdx = 0;
 new g_lastCEEnt = 0;
 
+new Array:g_ceKvd;
+
 public plugin_init()
 {
 	register_plugin(PLUGIN, VERSION, AUTHOR);
-	
-	if (g_lastCEEnt) {
-		dllfunc(DLLFunc_Spawn, g_lastCEEnt); // spawn last handled entity
-	}
+
+	SpawnLatestCe();
 	
 	RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
 	RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "OnKilled", .Post = 0);
@@ -136,6 +141,10 @@ public plugin_end()
 	
 	if (g_worldEntities) {
 		ArrayDestroy(g_worldEntities);
+	}
+
+	if (g_ceKvd != Invalid_Array) {
+		ArrayDestroy(g_ceKvd);
 	}
 }
 
@@ -322,26 +331,17 @@ public OnKeyValue(ent, kvd)
 	static szValue[32];
 	get_kvd(kvd, KV_Value, szValue, charsmax(szValue));
 	
-	if (equal(szKey, "classname"))
-	{
-		if (g_lastCEEnt) {
-			dllfunc(DLLFunc_Spawn, g_lastCEEnt); // spawn last handled entity
-			g_lastCEEnt = 0;
-		}
-	
-		if (TrieGetCell(g_entityHandlers, szValue, g_lastCEIdx)) {
-			g_lastCEEnt = Create(szValue, .temp = false); // clone entity
-		}
+	if (equal(szKey, "classname")) {
+		SpawnLatestCe();
 
-		return;
+		if (TrieGetCell(g_entityHandlers, szValue, g_lastCEIdx)) {
+			g_lastCEEnt = Create (szValue, .temp = false); // clone entity
+		}
 	}
-	
-	if (!g_lastCEEnt) {
-		return;
+
+	if (g_lastCEEnt) {
+		AddKvd(szKey, szValue);
 	}
-	
-	DispatchKeyValue(g_lastCEEnt, szKey, szValue); // dispatch kvd to cloned entity
-	ExecuteFunction(CEFunction_KVD, g_lastCEIdx, g_lastCEEnt, szKey, szValue);
 }
 
 public OnSpawn(ent)
@@ -372,9 +372,9 @@ public OnSpawn(ent)
 
 public OnTouch(ent, id)
 {
-	if (pev(ent, pev_flags) & ~FL_ONGROUND) {
-		return;
-	}
+	// if (pev(ent, pev_flags) & ~FL_ONGROUND) {
+	// 	return;
+	// }
 
 	if (!is_user_connected(id)) {
 		return;
@@ -416,7 +416,7 @@ public OnKilled(ent, killer)
 public OnNewRound()
 {
 	Cleanup();
-	RespawnEntities();
+	set_task(0.1, "TaskRespawnEntities");
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -436,15 +436,15 @@ Register(
 	if (!g_entityCount) {
 		g_entityHandlers = TrieCreate();
 		g_entityName = ArrayCreate(32);
-		g_entityPluginID = ArrayCreate(1);
-		g_entityModelIndex = ArrayCreate(1);
+		g_entityPluginID = ArrayCreate();
+		g_entityModelIndex = ArrayCreate();
 		g_entityMaxs = ArrayCreate(3);
 		g_entityMins = ArrayCreate(3);
-		g_entityLifeTime = ArrayCreate(1);
-		g_entityRespawnTime = ArrayCreate(1);
-		g_entityIgnoreRounds = ArrayCreate(1);
-		g_entityPreset = ArrayCreate(1);
-		g_entityHooks = ArrayCreate(1);
+		g_entityLifeTime = ArrayCreate();
+		g_entityRespawnTime = ArrayCreate();
+		g_entityIgnoreRounds = ArrayCreate();
+		g_entityPreset = ArrayCreate();
+		g_entityHooks = ArrayCreate();
 	}
 
 	new index = g_entityCount;
@@ -659,20 +659,34 @@ Cleanup()
 	{
 		new ent = ArrayGetCell(g_tmpEntities, i);
 		
-		if (ent && pev_valid(ent))
-		{
-			new ceIdx = GetHandlerByEntity(ent);
-			if (ceIdx == -1) {
-				log_error(0, "%s Entity %i is not a custom entity.", LOG_PREFIX, ent);
-				continue;
-			}
-
-			new ignoreRounds = ArrayGetCell(g_entityIgnoreRounds, ceIdx);
-			if (!ignoreRounds) {
-				Remove(ent);
-				ArrayDeleteItem(g_tmpEntities, i);
-			}
+		if (!ent || !pev_valid(ent)) {
+			continue;
 		}
+
+		new ceIdx = GetHandlerByEntity(ent);
+		if (ceIdx == -1) {
+			log_error(0, "%s Entity %i is not a custom entity.", LOG_PREFIX, ent);
+			continue;
+		}
+
+		new ignoreRounds = ArrayGetCell(g_entityIgnoreRounds, ceIdx);
+		if (!ignoreRounds) {
+			Remove(ent);
+			ArrayDeleteItem(g_tmpEntities, i);
+		}
+	}
+
+	// update temp entities refs
+	new newSize = ArraySize(g_tmpEntities);
+	for (new i = 0; i < newSize; ++i) {
+		new ent = ArrayGetCell(g_tmpEntities, i);
+		
+		if (!ent || !pev_valid(ent)) {
+			continue;
+		}
+
+		new Array:ceData = GetPData(ent);
+		ArraySetCell(ceData, CEData_TempIndex, i);
 	}
 }
 
@@ -687,6 +701,12 @@ RespawnEntities()
 		new ent = ArrayGetCell(g_worldEntities, i);
 		if (ent) {
 			Respawn(ent);
+
+			new szModel[64];
+			pev(ent, pev_model, szModel, charsmax(szModel));
+			if (szModel[0] == '*') {
+				engfunc(EngFunc_SetModel, ent, szModel);
+			}
 		}
 	}
 }
@@ -758,6 +778,56 @@ ApplyPreset(ent, preset)
 			set_pev(ent, pev_movetype, MOVETYPE_FLY);
 			set_pev(ent, pev_takedamage, DAMAGE_NO);
 		}
+	}
+}
+
+AddKvd(const szKey[], const szValue[])
+{
+	if (g_ceKvd == Invalid_Array) {
+		g_ceKvd = ArrayCreate(KVD);
+	}
+
+	new kvd[KVD];
+	copy(kvd[KVD_Key], charsmax(kvd[KVD_Key]), szKey);
+	copy(kvd[KVD_Value], charsmax(kvd[KVD_Value]), szValue);
+	ArrayPushArray(g_ceKvd, kvd);
+}
+
+SpawnLatestCe()
+{
+	if (!g_lastCEEnt) {
+		return;
+	}
+
+	if (g_ceKvd != Invalid_Array) {
+		new size = ArraySize(g_ceKvd);
+		for (new i = 0; i < size; ++i) {
+			new kvd[KVD];
+			ArrayGetArray(g_ceKvd, i, kvd);
+			DispatchKeyValue(g_lastCEEnt, kvd[KVD_Key], kvd[KVD_Value]); // dispatch kvd to cloned entity
+			ExecuteFunction(CEFunction_KVD, g_lastCEIdx, g_lastCEEnt, kvd[KVD_Key], kvd[KVD_Value]);
+		}
+	}
+
+	dllfunc(DLLFunc_Spawn, g_lastCEEnt); // spawn last handled entity
+
+	if (g_ceKvd != Invalid_Array) {
+		new size = ArraySize(g_ceKvd);
+		for (new i = 0; i < size; ++i) {
+			new kvd[KVD];
+			ArrayGetArray(g_ceKvd, i, kvd);
+
+			if (equal(kvd[KVD_Key], "model") && kvd[KVD_Value][0] == '*') {
+				engfunc(EngFunc_SetModel, g_lastCEEnt, kvd[KVD_Value]);
+			}
+		}
+	}
+
+	g_lastCEEnt = 0;
+
+	if (g_ceKvd != Invalid_Array) {
+		ArrayDestroy(g_ceKvd);
+		g_ceKvd = Invalid_Array;
 	}
 }
 
@@ -954,4 +1024,9 @@ public TaskRemove(taskID)
 {
 	new ent = taskID - TASKID_SUM_REMOVE;
 	Remove(ent);
+}
+
+public TaskRespawnEntities()
+{
+	RespawnEntities();
 }

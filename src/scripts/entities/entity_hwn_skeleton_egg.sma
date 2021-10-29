@@ -47,7 +47,7 @@ public OnRemove(ent)
 
 public Birth(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     new skeletonEnt = CE_Create("hwn_npc_skeleton_small", vOrigin);

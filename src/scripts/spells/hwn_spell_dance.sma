@@ -5,11 +5,16 @@
 #include <hamsandwich>
 #include <xs>
 
+#include <api_rounds>
 #include <hwn>
 #include <hwn_utils>
 
 #define PLUGIN "[Hwn] Dance Spell"
 #define AUTHOR "Hedgehog Fog"
+
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
 
 #define LIGHT_RANGE 24
 #define LIGHT_LIFETIME 5
@@ -32,12 +37,14 @@ new g_hWofSpell;
 
 new g_maxPlayers;
 
-new Array:g_playerLastAngle;
-new Array:g_playerLastViewAngle;
+new Float:g_playerLastAngle[MAX_PLAYERS + 1][3];
+new Float:g_playerLastViewAngle[MAX_PLAYERS + 1][3];
 
 public plugin_precache()
 {
     precache_sound(g_szSndLoop);
+
+    g_hWofSpell = Hwn_Wof_Spell_Register("Dance", "Invoke");
 }
 
 public plugin_init()
@@ -46,23 +53,12 @@ public plugin_init()
 
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled");
 
-    g_hWofSpell = Hwn_Wof_Spell_Register("Dance", "Invoke");
-
     g_maxPlayers = get_maxplayers();
 
-    g_playerLastAngle = ArrayCreate(3, g_maxPlayers+1);
-    g_playerLastViewAngle = ArrayCreate(3, g_maxPlayers+1);
-
     for (new id = 0; id <= g_maxPlayers; ++id) {
-        ArrayPushCell(g_playerLastAngle, 0);
-        ArrayPushCell(g_playerLastViewAngle, 0);
+        xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastAngle[id]);
+        xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastViewAngle[id]);
     }
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_playerLastAngle);
-    ArrayDestroy(g_playerLastViewAngle);
 }
 
 
@@ -84,7 +80,7 @@ public Hwn_Wof_Fw_Effect_Start(spellIdx)
     }
 }
 
-public Hwn_Gamemode_Fw_NewRound()
+public Round_Fw_NewRound()
 {
     for (new i = 1; i <= g_maxPlayers; ++i) {
         Revoke(i);
@@ -120,8 +116,8 @@ public Invoke(id)
 public Revoke(id)
 {
     remove_task(id);
-    ArraySetArray(g_playerLastAngle, id, {0, 0, 0});
-    ArraySetArray(g_playerLastViewAngle, id, {0, 0, 0});
+    xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastAngle[id]);
+    xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastViewAngle[id]);
 }
 
 public PlaySound(id)
@@ -134,12 +130,6 @@ public CheckDance(id)
     if (!is_user_alive(id)) {
         return;
     }
-
-    new Float:vLastAngles[3];
-    ArrayGetArray(g_playerLastAngle, id, vLastAngles);
-
-    new Float:vLastViewAngles[3];
-    ArrayGetArray(g_playerLastViewAngle, id, vLastViewAngles);
 
     static Float:vViewAngles[3];
     pev(id, pev_v_angle, vViewAngles);
@@ -169,15 +159,18 @@ public CheckDance(id)
 
     UTIL_Message_Dlight(vOrigin, LIGHT_RANGE, color, LIGHT_LIFETIME, LIGHT_DECAY_RATE);
 
-    if (xs_vec_len(vLastAngles) > 0
-        && xs_vec_len(vLastViewAngles) > 0
-        && get_distance_f(vLastAngles, vAngles) <= DANCE_MIN_MOVE_ANGLE
-        && get_distance_f(vLastViewAngles, vViewAngles) <= DANCE_MIN_VIEW_ANGLE
+    if (xs_vec_len(g_playerLastAngle[id]) > 0
+        && xs_vec_len(g_playerLastViewAngle[id]) > 0
+        && get_distance_f(g_playerLastAngle[id], vAngles) <= DANCE_MIN_MOVE_ANGLE
+        && (
+            get_distance_f(g_playerLastViewAngle[id], vViewAngles) <= DANCE_MIN_VIEW_ANGLE
+                || get_distance_f(g_playerLastAngle[id], vAngles) > 0.1 // restrict forward movement on "camera dance"
+        )
         && pev(id, pev_flags) & FL_ONGROUND
     ) {
         UTIL_CS_DamagePlayer(id, EFFECT_DAMAGE);
     }
     
-    ArraySetArray(g_playerLastAngle, id, vAngles);
-    ArraySetArray(g_playerLastViewAngle, id, vViewAngles);
+    xs_vec_copy(vAngles, g_playerLastAngle[id]);
+    xs_vec_copy(vViewAngles, g_playerLastViewAngle[id]);
 }

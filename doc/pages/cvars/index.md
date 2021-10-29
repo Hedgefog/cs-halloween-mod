@@ -36,6 +36,7 @@
 | hwn_collector_npc_drop_chance_spell     | Chance that NPC drop spellbook on death                               | 10.0          |
 | hwn_collector_teampoints_to_boss_spawn  | Total team points to spawn boss (0 - to disable)                      | 20            |
 | hwn_spellbook_max_spell_count           | Max count of spells that are given for spellbook pickup               | 3             |
+| hwn_spellbook_max_rare_spell_count      | Max count of rare spells that are given for spellbook pickup          | 1             |
 | hwn_pumpkin_mutate_chance               | Chance mutation pumpkin in a spooky pumpkin                           | 20.0          |
 | hwn_pumpkin_pickup_flash                | Enable/Disable flash effect on filling the bucket                     | 1             |
 | hwn_spells_give %spell%                 | Give spell by index (Admin Access)                                    |               |
@@ -58,5 +59,7 @@
 | hwn_crits_toggle %playerId%             | Toggle crits for player (Admin Acces)                                 | caller        |
 | hwn_hud_collector_hide_timer            | Enable/Disable hide timer hud in collector gamemode                   | 1             |
 | hwn_hud_collector_hide_money            | Enable/Disable hide money hud in collector gamemode                   | 1             |
+| hwn_pcosmetic_menu_preview              | Enable/Disable player cosmetic preview                                | 1             |
+| hwn_pcosmetic_menu_preview_light        | Enable/Disable light source in player cosmetic preview                | 1             |
 | hwn_bots_spells                         | Enable/Disable spells for bots                                        | 1             |
 | hwn_bots_cosmetics                      | Number of cosmetic items for bots                                     | 2             |

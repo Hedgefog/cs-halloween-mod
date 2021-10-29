@@ -170,7 +170,7 @@ public OnSpawn(ent)
     
     NPC_Create(ent);
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     UTIL_Message_Dlight(vOrigin, IsSmall(ent) ? 8 : 16, {HWN_COLOR_SECONDARY}, 20, 8);
@@ -195,7 +195,7 @@ public OnKilled(ent, killer)
     DisappearEffect(ent);
 
     if (!IsSmall(ent)) {
-        static Float:vOrigin[3];
+        new Float:vOrigin[3];
         pev(ent, pev_origin, vOrigin);
 
         for (new i = 0; i < SKELETON_EGG_COUNT; ++i) {
@@ -207,7 +207,7 @@ public OnKilled(ent, killer)
 
             dllfunc(DLLFunc_Spawn, eggEnt);
 
-            static Float:vVelocity[3];
+            new Float:vVelocity[3];
             xs_vec_set(vVelocity, random_float(-96.0, 96.0), random_float(-96.0, 96.0), 128.0);
             set_pev(eggEnt, pev_velocity, vVelocity);
         }
@@ -233,7 +233,7 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 242, floatround(fDamage/4));
 }
 
-Action:Attack(ent, target, &Action:action)
+bool:Attack(ent, target, &Action:action)
 {
     new Float:fHitRange = IsSmall(ent) ? NPC_Small_HitRange : NPC_HitRange;
     new Float:fHitDelay = IsSmall(ent) ? NPC_Small_HitDelay : NPC_HitDelay;
@@ -248,32 +248,28 @@ Action:Attack(ent, target, &Action:action)
     }
 
     static Float:vTarget[3];
-    if (NPC_GetTarget(ent, fSpeed, vTarget))
-    {
-        if (get_distance_f(vOrigin, vTarget) >= fHitRange - 4.0) {
-            action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
+    if (!NPC_GetTarget(ent, fSpeed, vTarget)) {
+        NPC_SetEnemy(ent, 0);
+        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+        return false;
+    }
+    
+    if (get_distance_f(vOrigin, vTarget) < fHitRange * 0.95) {
+        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+    } else {
+        action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
+        NPC_MoveToTarget(ent, vTarget, NPC_Speed);
+    }
 
-            if (pev(ent, pev_sequence) == Sequence_Attack) {
-                set_pev(ent, pev_sequence, Sequence_RunAttack);
-            }
+    if (random(100) < 10) {
+        if (IsSmall(ent)) {
+            NPC_EmitVoice(ent, g_szSndSmallIdleList[random(sizeof(g_szSndSmallIdleList))]);
         } else {
-            set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+            NPC_EmitVoice(ent, g_szSndIdleList[random(sizeof(g_szSndIdleList))]);
         }
-
-        if (random(100) < 10) {
-            if (IsSmall(ent)) {
-                NPC_EmitVoice(ent, g_szSndSmallIdleList[random(sizeof(g_szSndSmallIdleList))]);
-            } else {
-                NPC_EmitVoice(ent, g_szSndIdleList[random(sizeof(g_szSndIdleList))]);
-            }
-        }
-
-        NPC_MoveToTarget(ent, vTarget, fSpeed);
     }
-    else
-    {
-        set_pev(ent, pev_enemy, 0);
-    }
+
+    return true;
 }
 
 RemoveTasks(ent)
@@ -285,10 +281,10 @@ RemoveTasks(ent)
 
 DisappearEffect(ent)
 {
-    static Float:vVelocity[3];
+    new Float:vVelocity[3];
     UTIL_RandomVector(-48.0, 48.0, vVelocity);
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     UTIL_Message_Dlight(vOrigin, IsSmall(ent) ? 8 : 16, {HWN_COLOR_SECONDARY}, 10, 32);
 
@@ -326,9 +322,9 @@ public TaskThink(taskID)
         return;
     }
 
+    new enemy = pev(ent, pev_enemy);
     new Action:action = Action_Idle;
 
-    new enemy = pev(ent, pev_enemy);
     if (NPC_IsValidEnemy(enemy)) {
         Attack(ent, enemy, action);
     } else {

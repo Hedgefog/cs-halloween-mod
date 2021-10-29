@@ -59,7 +59,7 @@ public OnSpawn(ent)
     set_pev(ent, pev_solid, SOLID_TRIGGER);
     set_pev(ent, pev_movetype, MOVETYPE_TOSS);
 
-    set_pev(ent, pev_rendermode, kRenderTransTexture);\
+    set_pev(ent, pev_rendermode, kRenderTransTexture);
     set_pev(ent, pev_renderamt, 0.0);
     set_pev(ent, pev_modelindex, g_sprNull);
 

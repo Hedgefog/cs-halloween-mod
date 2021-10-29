@@ -13,6 +13,10 @@
 #define PLUGIN "[Hwn] Spells"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 const Float:SpellCooldown = 1.0;
 
 new Trie:g_spells;
@@ -20,16 +24,15 @@ new Array:g_spellName;
 new Array:g_spellDictKey;
 new Array:g_spellPluginID;
 new Array:g_spellCastFuncID;
+new Array:g_spellFlags;
 new g_spellCount = 0;
 
 new g_fwCast;
 new g_fwResult;
 
-new Array:g_playerSpell;
-new Array:g_playerSpellAmount;
-new Array:g_playerNextCast;
-
-new g_maxPlayers;
+new g_playerSpell[MAX_PLAYERS + 1] = { -1, ... };
+new g_playerSpellAmount[MAX_PLAYERS + 1] = { 0, ... };
+new Float:g_playerNextCast[MAX_PLAYERS + 1] = { 0.0, ... };
 
 public plugin_init()
 {
@@ -37,19 +40,7 @@ public plugin_init()
 
     register_concmd("hwn_spells_give", "OnClCmd_Give", ADMIN_CVAR);
 
-    g_maxPlayers = get_maxplayers();
-
     g_fwCast = CreateMultiForward("Hwn_Spell_Fw_Cast", ET_IGNORE, FP_CELL, FP_CELL);
-
-    g_playerSpell = ArrayCreate(1, g_maxPlayers+1);
-    g_playerSpellAmount = ArrayCreate(1, g_maxPlayers+1);
-    g_playerNextCast = ArrayCreate(1, g_maxPlayers+1);
-
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerSpell, -1);
-        ArrayPushCell(g_playerSpellAmount, 0);
-        ArrayPushCell(g_playerNextCast, 0);
-    }
 }
 
 public plugin_natives()
@@ -59,6 +50,7 @@ public plugin_natives()
     register_native("Hwn_Spell_GetName", "Native_GetName");
     register_native("Hwn_Spell_GetHandler", "Native_GetHandler");
     register_native("Hwn_Spell_GetCount", "Native_GetCount");
+    register_native("Hwn_Spell_GetFlags", "Native_GetFlags");
 
     register_native("Hwn_Spell_GetPlayerSpell", "Native_GetPlayerSpell");
     register_native("Hwn_Spell_SetPlayerSpell", "Native_SetPlayerSpell");
@@ -74,11 +66,8 @@ public plugin_end()
         ArrayDestroy(g_spellDictKey);
         ArrayDestroy(g_spellCastFuncID);
         ArrayDestroy(g_spellPluginID);
+        ArrayDestroy(g_spellFlags);
     }
-
-    ArrayDestroy(g_playerSpell);
-    ArrayDestroy(g_playerSpellAmount);
-    ArrayDestroy(g_playerNextCast);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -88,11 +77,13 @@ public Native_Register(pluginID, argc)
     new szName[32];
     get_string(1, szName, charsmax(szName));
 
+    new Hwn_SpellFlags:flags = Hwn_SpellFlags:get_param(2);
+
     new szCastCallback[32];
-    get_string(2, szCastCallback, charsmax(szCastCallback));
+    get_string(3, szCastCallback, charsmax(szCastCallback));
     new castFuncID = get_func_id(szCastCallback, pluginID);
 
-    return Register(szName, pluginID, castFuncID);
+    return Register(szName, flags, pluginID, castFuncID);
 }
 
 public Native_CastPlayerSpell(pluginID, argc)
@@ -105,11 +96,7 @@ public Native_GetPlayerSpell(pluginID, argc)
 {
     new id = get_param(1);
 
-    if (!g_playerSpell) {
-        return -1;
-    }
-
-    new amount = ArrayGetCell(g_playerSpellAmount, id);
+    new amount = g_playerSpellAmount[id];
     if (amount <= 0) {
         return -1;
     }
@@ -118,7 +105,7 @@ public Native_GetPlayerSpell(pluginID, argc)
         set_param_byref(2, amount);
     }
 
-    return ArrayGetCell(g_playerSpell, id);
+    return g_playerSpell[id];
 }
 
 public Native_SetPlayerSpell(pluginID, argc)
@@ -170,6 +157,13 @@ public Native_GetDictionaryKey(pluginID, argc)
     set_string(2, szDictKey, maxlen);
 }
 
+public Hwn_SpellFlags:Native_GetFlags()
+{
+    new spellIdx = get_param(1);
+
+    return ArrayGetCell(g_spellFlags, spellIdx);
+}
+
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 #if AMXX_VERSION_NUM < 183
@@ -187,7 +181,7 @@ public OnClCmd_Give(id, level, cid)
         return PLUGIN_HANDLED;
     }
     
-    static szArgs[4];
+    new szArgs[4];
     read_args(szArgs, charsmax(szArgs));
 
     if (szArgs[0] == '^0') {
@@ -209,11 +203,11 @@ public OnClCmd_Give(id, level, cid)
 
 SetPlayerSpell(id, spell, amount)
 {
-    ArraySetCell(g_playerSpell, id, spell);
-    ArraySetCell(g_playerSpellAmount, id, amount);
+    g_playerSpell[id] = spell;
+    g_playerSpellAmount[id] = amount;
 }
 
-Register(const szName[], pluginID, castFuncID)
+Register(const szName[], Hwn_SpellFlags:flags, pluginID, castFuncID)
 {
     if (!g_spellCount) {
         g_spells = TrieCreate();
@@ -221,6 +215,7 @@ Register(const szName[], pluginID, castFuncID)
         g_spellDictKey = ArrayCreate(48);
         g_spellCastFuncID = ArrayCreate();
         g_spellPluginID = ArrayCreate();
+        g_spellFlags = ArrayCreate();
     }
 
     new spellIdx = g_spellCount;
@@ -229,6 +224,7 @@ Register(const szName[], pluginID, castFuncID)
     ArrayPushString(g_spellName, szName);
     ArrayPushCell(g_spellPluginID, pluginID);
     ArrayPushCell(g_spellCastFuncID, castFuncID);
+    ArrayPushCell(g_spellFlags, flags);
 
     new szDictKey[48];
     UTIL_CreateDictKey(szName, "HWN_SPELL_", szDictKey, charsmax(szDictKey));
@@ -246,27 +242,27 @@ Register(const szName[], pluginID, castFuncID)
 
 CastPlayerSpell(id)
 {
-    if (g_playerSpell == Invalid_Array) {
-        return;
-    }
-
     if (!is_user_alive(id)) {
         return;
     }
 
-    new spellAmount = ArrayGetCell(g_playerSpellAmount, id);
+    if (pev(id, pev_flags) & FL_FROZEN) {
+        return;
+    }
+
+    new spellAmount = g_playerSpellAmount[id];
     if (spellAmount <= 0) {
         return;
     }
 
     new Float:gametime = get_gametime();
-    new Float:nextCast = ArrayGetCell(g_playerNextCast, id);
+    new Float:nextCast = g_playerNextCast[id];
 
     if (gametime < nextCast) {
         return;
     }
 
-    new spellIdx = ArrayGetCell(g_playerSpell, id);
+    new spellIdx = g_playerSpell[id];
     new pluginID = ArrayGetCell(g_spellPluginID, spellIdx);
     new funcID = ArrayGetCell(g_spellCastFuncID, spellIdx);
 
@@ -274,8 +270,8 @@ CastPlayerSpell(id)
         callfunc_push_int(id);
 
         if (callfunc_end() == PLUGIN_CONTINUE) {
-            ArraySetCell(g_playerSpellAmount, id, --spellAmount);
-            ArraySetCell(g_playerNextCast, id, gametime + SpellCooldown);
+            g_playerSpellAmount[id] = --spellAmount;
+            g_playerNextCast[id] = gametime + SpellCooldown;
 
             ExecuteForward(g_fwCast, g_fwResult, id, spellIdx);
         }

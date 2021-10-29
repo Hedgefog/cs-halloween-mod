@@ -2,6 +2,7 @@
 
 #include <amxmodx>
 #include <fakemeta>
+#include <fakemeta_util>
 #include <hamsandwich>
 #include <xs>
 
@@ -14,6 +15,8 @@
 
 #define PLUGIN "[Hwn] Blink Spell"
 #define AUTHOR "Hedgehog Fog"
+
+const SpellballSpeed = 600;
 
 const Float:EffectRadius = 64.0;
 new const EffectColor[3] = {0, 0, 255};
@@ -32,6 +35,8 @@ public plugin_precache()
     precache_model(g_szSprSpellBall);
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
+
+    g_hSpell = Hwn_Spell_Register("Blink", Hwn_SpellFlag_Throwable, "OnCast");
 }
 
 public plugin_init()
@@ -39,8 +44,7 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
-
-    g_hSpell = Hwn_Spell_Register("Blink", "OnCast");
+    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 
@@ -51,7 +55,7 @@ public plugin_init()
 
 public OnCast(id)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, _, g_szSprSpellBall, _, 0.75, 10.0);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
 
     if (!ent) {
         return PLUGIN_HANDLED;
@@ -85,6 +89,19 @@ public OnTouch(ent, target)
     CE_Kill(ent);
 }
 
+public OnPlayerSpawn(id)
+{
+    if (!is_user_alive(id)) {
+        return;
+    }
+
+    new ent = -1;
+    while ((ent = fm_find_ent_by_owner(ent, SPELLBALL_ENTITY_CLASSNAME, id)) > 0) {
+        set_pev(ent, pev_owner, 0);
+        CE_Kill(ent);
+    }
+}
+
 public OnSpellballKilled(ent)
 {
     new spellIdx = pev(ent, pev_iuser1);
@@ -106,7 +123,7 @@ Detonate(ent)
         return;
     }
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     new hull = (pev(ent, pev_flags) & FL_DUCKING) ? HULL_HEAD : HULL_HUMAN;
@@ -119,7 +136,7 @@ Detonate(ent)
 
 BlinkEffect(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     emit_sound(ent, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);

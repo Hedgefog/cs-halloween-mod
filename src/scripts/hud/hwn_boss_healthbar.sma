@@ -71,7 +71,7 @@ public Hwn_Bosses_Fw_BossSpawn(ent)
 
     pev(ent, pev_health, g_fBossHealth);
 
-    static Float:vMaxs[3];
+    new Float:vMaxs[3];
     pev(ent, pev_maxs, vMaxs);
     g_fHealthBarOffsetZ = vMaxs[2] + HEALTHBAR_Z_OFFSET;
 

@@ -16,6 +16,10 @@
 #define PLUGIN "[Hwn] Bosses"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 #define TASKID_SPAWN_BOSS 0
 #define TASKID_REMOVE_BOSS 1
 
@@ -44,7 +48,7 @@ new Array:g_bossesNames;
 new Array:g_bossesDictKeys;
 new Array:g_bossSpawnPoints;
 
-new Array:g_playerTotalDamage;
+new g_playerTotalDamage[MAX_PLAYERS + 1] = { 0, ... };
 
 new g_bossEnt = -1;
 new g_bossIdx = -1;
@@ -60,12 +64,6 @@ public plugin_init()
     RegisterHam(Ham_Touch, "trigger_hurt", "OnHurtTouch", .Post = 0);
     RegisterHam(Ham_TakeDamage, "player", "OnPlayerTakeDamage", .Post = 0);
 
-    g_maxPlayers = get_maxplayers();
-    g_playerTotalDamage = ArrayCreate(1, g_maxPlayers+1);
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerTotalDamage, 0);
-    }
-
     g_cvarBossSpawnDelay = register_cvar("hwn_boss_spawn_delay", "300.0");
     g_cvarBossLifeTime = register_cvar("hwn_boss_life_time", "120.0");
     g_cvarBossMinDamageToWin = register_cvar("hwn_boss_min_damage_to_win", "300");
@@ -79,13 +77,13 @@ public plugin_init()
 
     register_concmd("hwn_boss_spawn", "OnClCmd_SpawnBoss", ADMIN_CVAR);
 
+    g_maxPlayers = get_maxplayers();
+
     CreateBossSpawnTask();
 }
 
 public plugin_end()
 {
-    ArrayDestroy(g_playerTotalDamage);
-
     if (g_bosses != Invalid_Array) {
         ArrayDestroy(g_bosses);
         ArrayDestroy(g_bossesNames);
@@ -188,7 +186,7 @@ public Native_GetDictionaryKey(pluginID, argc)
 
 public client_putinserver(id)
 {
-    ArraySetCell(g_playerTotalDamage, id, 0);
+    g_playerTotalDamage[id] = 0;
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -250,8 +248,7 @@ public OnTargetTakeDamage(ent, inflictor, attacker, Float:fDamage)
         return HAM_IGNORED;
     }
 
-    new totalDamage = ArrayGetCell(g_playerTotalDamage, attacker) + floatround(fDamage);
-    ArraySetCell(g_playerTotalDamage, attacker, totalDamage);
+    g_playerTotalDamage[attacker] += floatround(fDamage);
 
     return HAM_HANDLED;
 }
@@ -283,7 +280,7 @@ public OnHurtTouch(ent, toucher)
         return HAM_IGNORED;
     }
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     ArrayGetArray(g_bossSpawnPoints, g_bossSpawnPoint, vOrigin);
     engfunc(EngFunc_SetOrigin, g_bossEnt, vOrigin);
 
@@ -319,7 +316,7 @@ SpawnBoss()
     new targetCount = ArraySize(g_bossSpawnPoints);
     new targetIdx = random(targetCount);
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     ArrayGetArray(g_bossSpawnPoints, targetIdx, vOrigin);
 
     g_bossEnt = CE_Create(szClassname, vOrigin);
@@ -372,7 +369,7 @@ CreateBossSpawnTask()
 ResetPlayerTotalDamage()
 {
     for (new i = 1; i <= g_maxPlayers; ++i) {
-        ArraySetCell(g_playerTotalDamage, i, 0);
+        g_playerTotalDamage[i] = 0;
     }
 }
 
@@ -384,7 +381,7 @@ SelectWinners()
             continue;
         }
 
-        new damage = ArrayGetCell(g_playerTotalDamage, id);
+        new damage = g_playerTotalDamage[id];
         if (damage >= get_pcvar_num(g_cvarBossMinDamageToWin))
         {
             ExecuteForward(g_fwWinner, g_fwResult, id);

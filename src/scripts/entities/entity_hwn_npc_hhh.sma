@@ -46,7 +46,7 @@ enum _:HHH
 {
     HHH_AStar_Idx,
     Array:HHH_AStar_Path,
-    Array:HHH_AStar_Target,
+    Float:HHH_AStar_Target[3],
     Float:HHH_AStar_ArrivalTime,
     Float:HHH_AStar_NextSearch
 };
@@ -96,6 +96,7 @@ const Float:NPC_Speed               = 300.0;
 const Float:NPC_Damage              = 80.0;
 const Float:NPC_HitRange            = 96.0;
 const Float:NPC_HitDelay            = 0.75;
+const Float:NPC_ViewRange           = 2048.0;
 
 new g_sprBlood;
 new g_sprBloodSpray;
@@ -156,6 +157,7 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "OnKill");
 
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
+    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTakeDamage", .Post = 1);
 
     g_cvarUseAstar = register_cvar("hwn_npc_hhh_use_astar", "1");
 }
@@ -201,7 +203,7 @@ public Hwn_Bosses_Fw_BossTeleport(ent, handler)
 
 public OnSpawn(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PRIMARY}, 60, 4);
@@ -277,17 +279,6 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
         return HAM_IGNORED;
     }
 
-    if (UTIL_IsPlayer(attacker)) {
-        static Float:vOrigin[3];
-        pev(attacker, pev_origin, vOrigin);
-        /*if (!NPC_IsReachable(ent, vOrigin)) {
-            return HAM_SUPERCEDE;
-        } else */
-        if (random(100) < 30) {
-            set_pev(ent, pev_enemy, attacker);
-        }
-    }
-
     static Float:vEnd[3];
     get_tr2(trace, TR_vecEndPos, vEnd);
 
@@ -297,6 +288,27 @@ public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, d
     }
 
     return HAM_HANDLED;
+}
+
+public OnTakeDamage(ent, inflictor, attacker, Float:fDamage)
+{
+    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
+        return;
+    }
+
+    if (UTIL_IsPlayer(attacker) && NPC_IsValidEnemy(attacker)) {
+        static Float:vOrigin[3];
+        pev(ent, pev_origin, vOrigin);
+
+        static Float:vTarget[3];
+        pev(attacker, pev_origin, vTarget);
+
+        if (get_distance_f(vOrigin, vTarget) <= NPC_HitRange && NPC_IsVisible(ent, vTarget)) {
+            if (get_gametime() - NPC_GetEnemyTime(ent) > 6.0) {
+                NPC_SetEnemy(ent, attacker);
+            }
+        }
+    }
 }
 
 /*--------------------------------[ Callbacks ]--------------------------------*/
@@ -325,14 +337,12 @@ public AStar_OnPathDone(astarIdx, Array:path, Float:Distance, NodesAdded, NodesV
 
 HHH_Create(ent)
 {
-    new Array:hhh = ArrayCreate(HHH);
+    new Array:hhh = ArrayCreate(1, HHH);
     for (new i = 0; i < HHH; ++i) {
         ArrayPushCell(hhh, 0);
     }
 
-    new Array:target = ArrayCreate(3, 1);
-    ArraySetCell(hhh, HHH_AStar_Target, target);
-    ArrayPushArray(target, Float:{0.0, 0.0, 0.0});
+    ArraySetArray(hhh, HHH_AStar_Target, Float:{0.0, 0.0, 0.0});
 
     set_pev(ent, pev_iuser2, hhh);
 }
@@ -340,9 +350,6 @@ HHH_Create(ent)
 HHH_Destroy(ent)
 {
     new Array:hhh = any:pev(ent, pev_iuser2);
-
-    new Array:target = ArrayGetCell(hhh, HHH_AStar_Target);
-    ArrayDestroy(target);
 
     new Array:path = ArrayGetCell(hhh, HHH_AStar_Path);
     if (path != Invalid_Array) {
@@ -357,6 +364,43 @@ Array:HHH_Get(ent)
     return Array:pev(ent, pev_iuser2);
 }
 
+bool:Attack(ent, target, &Action:action)
+{
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    new bool:canHit = NPC_CanHit(ent, target, NPC_HitRange);
+    if (canHit && !task_exists(ent+TASKID_SUM_HIT)) {
+        action = Action_Attack;
+        NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.5);
+        set_task(NPC_HitDelay, "TaskHit", ent+TASKID_SUM_HIT);
+    } else {
+        if (random(100) < 10) {
+            NPC_EmitVoice(ent, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
+        }
+    }
+
+    static Float:vTarget[3];
+    if (!NPC_GetTarget(ent, NPC_Speed, vTarget)) {
+        NPC_SetEnemy(ent, 0);
+        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+        return false;
+    }
+
+    if (get_distance_f(vOrigin, vTarget) < NPC_HitRange * 0.95) {
+        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+    } else {
+        action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
+        NPC_EmitFootStep(ent, g_szSndStep[random(sizeof(g_szSndStep))]);
+        ScreenShakeEffect(ent);
+        NPC_MoveToTarget(ent, vTarget, NPC_Speed);    
+    }
+
+    AStar_Reset(ent);
+
+    return true;
+}
+
 AStar_FindPath(ent)
 {
     new enemy = pev(ent, pev_enemy);
@@ -367,14 +411,45 @@ AStar_FindPath(ent)
     static Float:vTarget[3];
     pev(enemy, pev_origin, vTarget);
 
-    new Float:fDistanceToFloor = UTIL_GetDistanceToFloor(vOrigin, ent);// + 8.0;
-    new astarIdx = AStarThreaded(vOrigin, vTarget, "AStar_OnPathDone", 30, DONT_IGNORE_MONSTERS, ent, floatround(fDistanceToFloor), 50);
+    static Float:vMins[3];
+    pev(ent, pev_mins, vMins);
+
+    new astarIdx = AStarThreaded(vOrigin, vTarget, "AStar_OnPathDone", 30, DONT_IGNORE_MONSTERS, ent, floatround(-vMins[2]), 50);
 
     new Array:hhh = HHH_Get(ent);
     ArraySetCell(hhh, HHH_AStar_Idx, astarIdx);
 
     if (astarIdx != -1) {
         g_astarEnt[astarIdx] = ent;
+    }
+}
+
+bool:AStar_Attack(ent, &Action:action)
+{
+    new enemy = pev(ent, pev_enemy);
+
+    new Float:fGametime = get_gametime();
+
+    new Array:hhh = HHH_Get(ent);
+    new astarIdx = ArrayGetCell(hhh, HHH_AStar_Idx);
+    new Array:path = ArrayGetCell(hhh, HHH_AStar_Path);
+    new Float:fNextSearch = ArrayGetCell(hhh, HHH_AStar_NextSearch);
+
+    if (astarIdx == -1) {
+        if (NPC_IsValidEnemy(enemy) || NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange, .reachableOnly = false, .visibleOnly = false)) {
+            AStar_FindPath(ent);
+            ArraySetCell(hhh, HHH_AStar_NextSearch, fGametime + 10.0);
+        }
+
+        // NPC_PlayAction(ent, g_actions[Action_Idle]);
+    } else if (path != Invalid_Array) {
+        AStar_ProcessPath(ent, path);
+        NPC_EmitFootStep(ent, g_szSndStep[random(sizeof(g_szSndStep))]);
+        action = Action_Run;
+    } else {
+        if (fGametime > fNextSearch) {
+            AStar_Reset(ent);
+        }
     }
 }
 
@@ -388,8 +463,7 @@ AStar_ProcessPath(ent, Array:path)
     pev(ent, pev_origin, vOrigin);
 
     static Float:vTarget[3];
-    new Array:target = ArrayGetCell(hhh, HHH_AStar_Target);
-    ArrayGetArray(target, 0, vTarget);
+    ArrayGetArray(hhh, HHH_AStar_Target, vTarget);
 
     if (ArraySize(path) > 0) {
         if (get_gametime() >= fArrivalTime) {
@@ -401,14 +475,13 @@ AStar_ProcessPath(ent, Array:path)
                 vTarget[i] = float(curStep[i]);
             }
 
-            //if (NPC_IsReachable(ent, vTarget)) {
-            new Float:fDistance = get_distance_f(vOrigin, vTarget);
-            ArraySetArray(target, 0, vTarget);
-
-            ArraySetCell(hhh, HHH_AStar_ArrivalTime, get_gametime() + (fDistance/NPC_Speed));
-            /*} else {
+            if (NPC_IsReachable(ent, vTarget)) {
+                new Float:fDistance = get_distance_f(vOrigin, vTarget);
+                ArraySetArray(hhh, HHH_AStar_Target, vTarget);
+                ArraySetCell(hhh, HHH_AStar_ArrivalTime, get_gametime() + (fDistance/NPC_Speed));
+            } else {
                 AStar_Reset(ent);
-            }*/
+            }
         }
 
         NPC_PlayAction(ent, g_actions[Action_Run]);
@@ -436,6 +509,35 @@ AStar_Reset(ent)
 
     ArraySetCell(hhh, HHH_AStar_Idx, -1);
     ArraySetCell(hhh, HHH_AStar_Path, Invalid_Array);
+}
+
+ScreenShakeEffect(ent)
+{
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    for (new id = 1; id <= g_maxPlayers; ++id) {
+        if (!is_user_connected(id)) {
+            continue;
+        }
+
+        if (!is_user_alive(id)) {
+            continue;
+        }
+
+        static Float:vUserOrigin[3];
+        pev(id, pev_origin, vUserOrigin);
+
+        if (get_distance_f(vOrigin, vUserOrigin) > 512.0) {
+            continue;
+        }
+
+        message_begin(MSG_ONE, get_user_msgid("ScreenShake"), .player = id);
+        write_short(UTIL_FixedUnsigned16(8.0, 1<<12));
+        write_short(UTIL_FixedUnsigned16(1.0, 1<<12));
+        write_short(UTIL_FixedUnsigned16(1.0, 1<<8));
+        message_end();
+    }
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
@@ -494,108 +596,18 @@ public TaskThink(ent)
         message_end();
     }
 
-    new bool:astarRequired = false;
-
     new enemy = pev(ent, pev_enemy);
-    if (NPC_IsValidEnemy(enemy))
-    {
-        if (!Attack(ent, enemy) && (get_pcvar_num(g_cvarUseAstar) > 0)) {
-            astarRequired = !NPC_FindEnemy(ent, g_maxPlayers);
-        }
-    }
-    else
-    {
-        if (NPC_FindEnemy(ent, g_maxPlayers)) {
-            NPC_PlayAction(ent, g_actions[Action_Idle]);
-        } else {
-            astarRequired = get_pcvar_num(g_cvarUseAstar) > 0;
-        }
+    new Action:action = Action_Idle;
+
+    if (
+        (!NPC_IsValidEnemy(enemy) || !Attack(ent, enemy, action))
+            && !NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange)
+            && get_pcvar_num(g_cvarUseAstar) > 0
+    ) {
+        AStar_Attack(ent, action);
     }
 
-    new Float:fGametime = get_gametime();
-
-    if (astarRequired)
-    {
-        new Array:hhh = HHH_Get(ent);
-        new astarIdx = ArrayGetCell(hhh, HHH_AStar_Idx);
-        new Array:path = ArrayGetCell(hhh, HHH_AStar_Path);
-        new Float:fNextSearch = ArrayGetCell(hhh, HHH_AStar_NextSearch);
-
-        if (astarIdx == -1) {
-            if (NPC_IsValidEnemy(enemy) || NPC_FindEnemy(ent, g_maxPlayers, .reachableOnly = false)) {
-                AStar_FindPath(ent);
-                ArraySetCell(hhh, HHH_AStar_NextSearch, fGametime + 10.0);
-            }
-
-            NPC_PlayAction(ent, g_actions[Action_Idle]);
-        } else if (path != Invalid_Array) {
-            AStar_ProcessPath(ent, path);
-            NPC_EmitFootStep(ent, g_szSndStep[random(sizeof(g_szSndStep))]);
-        } else {
-            if (fGametime > fNextSearch) {
-                AStar_Reset(ent);
-            }
-
-            NPC_PlayAction(ent, g_actions[Action_Idle]);
-        }
-    }
+    NPC_PlayAction(ent, g_actions[action]);
 
     set_task(g_fThinkDelay, "TaskThink", ent);
-}
-
-bool:Attack(ent, target)
-{
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-
-    new bool:canHit = NPC_CanHit(ent, target, NPC_HitRange);
-
-    if (canHit && !task_exists(ent+TASKID_SUM_HIT)) {
-        set_task(NPC_HitDelay, "TaskHit", ent+TASKID_SUM_HIT);
-        NPC_PlayAction(ent, g_actions[Action_RunAttack]);
-        NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.5);
-    }
-
-    static Float:vTarget[3];
-    if (NPC_GetTarget(ent, NPC_Speed, vTarget)) {
-        if (!canHit) {
-            NPC_PlayAction(ent, g_actions[Action_Run]);
-
-            if (random(100) < 10) {
-                NPC_EmitVoice(ent, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
-            }
-
-            NPC_EmitFootStep(ent, g_szSndStep[random(sizeof(g_szSndStep))]);
-        }
-
-        AStar_Reset(ent);
-        NPC_MoveToTarget(ent, vTarget, NPC_Speed);
-
-        for (new id = 1; id <= g_maxPlayers; ++id) {
-            if (!is_user_connected(id)) {
-                continue;
-            }
-
-            if (!is_user_alive(id)) {
-                continue;
-            }
-
-            static Float:vUserOrigin[3];
-            pev(id, pev_origin, vUserOrigin);
-
-            if (get_distance_f(vOrigin, vUserOrigin) > 512.0) {
-                continue;
-            }
-
-            message_begin(MSG_ONE, get_user_msgid("ScreenShake"), .player = id);
-            write_short(UTIL_FixedUnsigned16(8.0, 1<<12));
-            write_short(UTIL_FixedUnsigned16(1.0, 1<<12));
-            write_short(UTIL_FixedUnsigned16(1.0, 1<<8));
-            message_end();
-        }
-
-        return true;
-    }
-
-    return false;
 }

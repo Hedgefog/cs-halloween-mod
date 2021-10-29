@@ -1,4 +1,46 @@
 /*
+    6.3.0
+        Additions and improvements:
+            Added player preview when choosing cosmetics
+            Force equipment change is now available on all spawn points
+            Players can no longer cast spells during freezetime and with the FL_FROZEN flag
+            Reduced Monoculus HP
+            Added Monoculus levels
+            Power Up spell now heals
+            Reworked lightning spell
+            Increased fireball speed
+            Increased blinkball speed
+            Event points are no longer created at enemy spawn
+            Added spell groups (common, rare)
+            Spellbook now indicates a spell group with different particles
+            Improved NPC targeting and navigation
+            Added spell flags to the spells api
+            Added event points API
+            Added Gifts API
+            Improved magic glow particle
+            Power Up spell optimization
+            Player burn api optimization
+            Many performance optimizations
+            Round logic moved to the separate API
+
+        Cvars:
+            Added hwn_pcosmetic_menu_preview cvar
+            Added hwn_pcosmetic_menu_preview_light cvar
+            Added hwn_spellbook_max_rare_spell_count cvar
+
+        Fixes:
+            Fixed Power Up spell jump behavior
+            Fixed jump animation for Power Up spell
+            Fixed bug when monoculus can shoot while in stun
+            Fixed crit sound volume
+            Fixed invisibility spell fade effect
+            Fixed gift spawn task
+            Fixed temp entities with ignoreRounds flag behavior
+            Fixed bots cosmetics
+
+        Credits:
+            iwillnotleave (player burn api and Power Up spell optimization)
+
     6.2.0
         Additions and improvements:
             New team bucket
@@ -24,6 +66,7 @@
             Improved custom lighting for default gamemode
             Improved overheal spell effect
             Increased spawn range
+            Added flash and wave bucket effect on win
 
         Cvars:
             Added hwn_collector_roundtime cvar
@@ -83,6 +126,7 @@
 
         Cvars:
             Added hwn_spellbook_max_spell_count cvar
+            Added hwn_spellbook_max_rare_spell_count cvar
             Added hwn_bucket_collect_flash cvar
             Added hwn_pumpkin_pickup_flash cvar
             Added hwn_wof_effect_time cvar
@@ -255,7 +299,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.2.0"
+#define HWN_VERSION "6.3.0"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
@@ -265,9 +309,28 @@ enum Hwn_GamemodeFlags (<<=1)
     Hwn_GamemodeFlag_SpecialEquip
 };
 
+enum Hwn_SpellFlags (<<=1)
+{
+    Hwn_SpellFlag_None,
+    Hwn_SpellFlag_Rare = 1,
+    Hwn_SpellFlag_Throwable,
+    Hwn_SpellFlag_Applicable,
+    Hwn_SpellFlag_Ability,
+    Hwn_SpellFlag_Heal,
+    Hwn_SpellFlag_Damage,
+    Hwn_SpellFlag_Radius
+};
+
 /*--------------------------------[ Core ]--------------------------------*/
 
 forward Hwn_Fw_ConfigLoaded();
+
+/*--------------------------------[ Event Points ]--------------------------------*/
+
+native Hwn_EventPoints_Add(const Float:vOrigin[3]);
+native Hwn_EventPoints_GetCount();
+native Hwn_EventPoints_Get(pointIdx, Float:vOrigin[3]);
+native Hwn_EventPoints_GetRandom(Float:vOrigin[3]);
 
 /*--------------------------------[ Gamemode ]--------------------------------*/
 
@@ -275,20 +338,11 @@ native Hwn_Gamemode_Register(const szName[], Hwn_GamemodeFlags:flags = Hwn_Gamem
 native Hwn_Gamemode_Activate();
 native Hwn_Gamemode_DispatchWin(team);
 native Hwn_Gamemode_GetCurrent();
-native bool:Hwn_Gamemode_IsPlayerOnSpawn(id);
+native bool:Hwn_Gamemode_IsPlayerOnSpawn(id, bool:ignoreTeam = false);
 native Hwn_Gamemode_GetHandler(const szName[]);
-native Hwn_Gamemode_SetRoundTime(time);
-native Hwn_Gamemode_GetRoundTime();
-native Hwn_Gamemode_GetRoundTimeLeft();
+native Hwn_GamemodeFlags:Hwn_Gamemode_GetFlags();
 
-forward Hwn_Gamemode_Fw_NewRound();
-forward Hwn_Gamemode_Fw_RoundStart();
-forward Hwn_Gamemode_Fw_RoundEnd();
-forward Hwn_Gamemode_Fw_RoundExpired();
-
-/*--------------------------------[ Default Gamemode ]--------------------------------*/
-
-native bool:Hwn_Gamemode_FindEventPoint(Float:vOrigin[3]);
+forward Hwn_Gamemode_Fw_Activated(gamemode);
 
 /*--------------------------------[ Collector Gamemode ]--------------------------------*/
 
@@ -304,13 +358,23 @@ forward Hwn_Collector_Fw_PlayerPoints(id);
 forward Hwn_Collector_Fw_Overtime(time);
 forward Hwn_Collector_Fw_WinnerTeam(team);
 
+/*--------------------------------[ Gifts ]--------------------------------*/
+native Hwn_Gifts_AddTarget(const Float:vOrigin[3]);
+native Hwn_Gifts_GetTargetCount();
+native Hwn_Gifts_GetTarget(targetIdx, Float:vOrigin[3]);
+
+forward Hwn_Gifts_Fw_GiftSpawn(id, ent);
+forward Hwn_Gifts_Fw_GiftPicked(id, ent);
+forward Hwn_Gifts_Fw_GiftDisappear(id, ent);
+
 /*--------------------------------[ Spells ]--------------------------------*/
 
-native Hwn_Spell_Register(const szName[], const szCastCallback[]);
+native Hwn_Spell_Register(const szName[], Hwn_SpellFlags:flags = Hwn_SpellFlag_None, const szCastCallback[]);
 native Hwn_Spell_GetCount();
 native Hwn_Spell_GetName(spell, szOutput[], maxlen);
 native Hwn_Spell_GetHandler(const szName[]);
 native Hwn_Spell_GetDictionaryKey(spell, szOutput[], maxlen);
+native Hwn_SpellFlags:Hwn_Spell_GetFlags(spell);
 
 native Hwn_Spell_GetPlayerSpell(id, &amount = 0);
 native Hwn_Spell_SetPlayerSpell(id, spell, amount = 0);
@@ -368,6 +432,7 @@ forward Hwn_PEquipment_Fw_Changed(id);
 
 /*--------------------------------[ Menu ]--------------------------------*/
 
+native Hwn_Menu_Open(id);
 native Hwn_Menu_AddItem(const szTitle[], const szCallback[]);
 
 /*--------------------------------[ Crits ]--------------------------------*/

@@ -43,6 +43,7 @@ const Float:NPC_Speed = 160.0; // for jump velocity
 const Float:NPC_Damage = 10.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.5;
+const Float:NPC_ViewRange = 1024.0;
 
 const Float:ENTITY_LifeTime = 30.0;
 const Float:ENTITY_RespawnTime = 30.0;
@@ -146,7 +147,7 @@ public OnSpawn(ent)
 {
     NPC_Create(ent);
 
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     new Float:fHealth = NPC_Health;
@@ -163,9 +164,9 @@ public OnSpawn(ent)
     set_pev(ent, pev_rendercolor, {HWN_COLOR_ORANGE_DIRTY_F});
     set_pev(ent, pev_health, fHealth);
 
-    EmitRandomLaugh(ent);
-
     engfunc(EngFunc_DropToFloor, ent);
+
+    EmitRandomLaugh(ent);
 
     RemoveTasks(ent);
     set_task(0.0, "TaskThink", ent);
@@ -240,7 +241,7 @@ Attack(ent, target, &Action:action)
                 }
             }
         } else {
-            set_pev(ent, pev_enemy, 0);
+            NPC_SetEnemy(ent, 0);
         }
     }
 }
@@ -254,10 +255,10 @@ RemoveTasks(ent)
 
 DisappearEffect(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    static Float:vVelocity[3];
+    new Float:vVelocity[3];
     UTIL_RandomVector(-16.0, 16.0, vVelocity);
 
     UTIL_Message_Dlight(vOrigin, isBig(ent) ? 16 : 8, {HWN_COLOR_YELLOW}, 10, 32);
@@ -288,25 +289,27 @@ MutatePumpkin(ent, bool:big = false) {
         return;
     }
 
-    if (random(100) <= chance) {
-        static Float:vOrigin[3];
-        pev(ent, pev_origin, vOrigin);
-
-        new monsterEnt = CE_Create(big ? ENTITY_NAME_SP_BIG : ENTITY_NAME_SP, vOrigin);
-        if (!monsterEnt) {
-            return;
-        }
-
-        static Float:vAngles[3];
-        for (new i = 0; i < 3; ++i) {
-            vAngles[i] = 0.0;
-        }
-
-        vAngles[1] = random_float(0.0, 360.0);
-        set_pev(monsterEnt, pev_angles, vAngles);
-
-        dllfunc(DLLFunc_Spawn, monsterEnt);
+    if (random(100) > chance) {
+        return;
     }
+
+    new Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    new monsterEnt = CE_Create(big ? ENTITY_NAME_SP_BIG : ENTITY_NAME_SP, vOrigin);
+    if (!monsterEnt) {
+        return;
+    }
+
+    new Float:vAngles[3];
+    for (new i = 0; i < 3; ++i) {
+        vAngles[i] = 0.0;
+    }
+
+    vAngles[1] = random_float(0.0, 360.0);
+    set_pev(monsterEnt, pev_angles, vAngles);
+
+    dllfunc(DLLFunc_Spawn, monsterEnt);
 }
 
 bool:isBig(ent) {
@@ -363,7 +366,7 @@ public TaskThink(taskID)
         if (NPC_IsValidEnemy(enemy)) {
             Attack(ent, enemy, action);
         } else {
-            NPC_FindEnemy(ent, g_maxPlayers);
+            NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange);
         }
     } else {
         action = Action_JumpFloat;

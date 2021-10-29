@@ -15,6 +15,10 @@
 #define PLUGIN    "[Hwn] Player Equipment"
 #define AUTHOR    "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 new const g_weaponIndexes[] =
 {
     0,
@@ -28,24 +32,15 @@ new const g_weaponIndexes[] =
 new g_fwResult;
 new g_fwEquipmentChanged;
 
-new Array:g_playerEquipment;
+new g_playerEquipment[MAX_PLAYERS + 1] = { 0, ... };
 
 new g_weaponMenu;
-
-new g_maxPlayers;
 
 static g_szMenuTitle[32];
 
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-
-    g_maxPlayers = get_maxplayers();
-
-    g_playerEquipment = ArrayCreate(1, g_maxPlayers+1);
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerEquipment, 0);
-    }
 
     g_fwEquipmentChanged = CreateMultiForward("Hwn_PEquipment_Event_Changed", ET_IGNORE, FP_CELL);
 
@@ -62,11 +57,6 @@ public plugin_natives()
     register_native("Hwn_PEquipment_GiveHealth", "Native_GiveHealth");
     register_native("Hwn_PEquipment_GiveArmor", "Native_GiveArmor");
     register_native("Hwn_PEquipment_GiveAmmo", "Native_GiveAmmo");
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_playerEquipment);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -109,7 +99,7 @@ public Native_GiveAmmo(pluginID, argc)
 public client_connect(id)
 {
     new equipment = is_user_bot(id) ? random(sizeof(g_weaponIndexes)) : 0;
-    ArraySetCell(g_playerEquipment, id, equipment);
+    g_playerEquipment[id] = equipment;
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -143,7 +133,7 @@ Equip(id)
     give_item(id, WeaponEntityNames[CSW_GLOCK18]);
     cs_set_user_bpammo(id, CSW_MP5NAVY, WeaponMaxBPAmmo[CSW_MP5NAVY]);
 
-    new equipment = ArrayGetCell(g_playerEquipment, id);
+    new equipment = g_playerEquipment[id];
     new wpnIdx = g_weaponIndexes[equipment];
 
     if (wpnIdx) {
@@ -216,7 +206,7 @@ public MenuHandler(id, menu, item)
 {
     if(item != MENU_EXIT)
     {
-        ArraySetCell(g_playerEquipment, id, item);
+        g_playerEquipment[id] = item;
         ExecuteForward(g_fwEquipmentChanged, g_fwResult, id);
     }
 
@@ -232,7 +222,7 @@ public MenuCallback(id, menu, item)
     new szText[128];
     new weaponIndex = g_weaponIndexes[item];
 
-    new equipment = ArrayGetCell(g_playerEquipment, id);
+    new equipment = g_playerEquipment[id];
     if(item == equipment) {
         format(szText, charsmax(szText), "\y%s", WeaponNames[weaponIndex]);
     } else {

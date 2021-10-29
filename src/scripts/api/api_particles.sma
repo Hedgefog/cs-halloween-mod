@@ -1,16 +1,23 @@
 #pragma semicolon 1
 
 #include <amxmodx>
+#include <engine>
 #include <fakemeta>
 #include <xs>
+
+#include <api_particles>
 
 #define PLUGIN "[API] Particles"
 #define VERSION "1.0.0"
 #define AUTHOR "Hedgehog Fog"
 
+#define IsPlayer(%1) (1 <= %1 <= 32)
+
 #define TASKID_SUM_TARGET_TICK 1000
 #define TASKID_SUM_REMOVE_TARGET 2000
 #define TASKID_SUM_REMOVE_PARTICLE 3000
+
+const Float:MaxVisibleDistance = 2048.0;
 
 new Trie:g_particles;
 new Array:g_particlePluginID;
@@ -26,15 +33,21 @@ new g_particleCount = 0;
 new g_ptrTargetClassname;
 new g_ptrParticleClassname;
 
+new g_maxPlayers;
+
 public plugin_precache()
 {
     g_ptrTargetClassname = engfunc(EngFunc_AllocString, "info_target");
     g_ptrParticleClassname = engfunc(EngFunc_AllocString, "env_sprite");
+
+    register_forward(FM_AddToFullPack, "OnAddToFullPack", 0);
 }
 
 public plugin_init()
 {
     register_plugin(PLUGIN, VERSION, AUTHOR);
+
+    g_maxPlayers = get_maxplayers();
 }
 
 public plugin_end()
@@ -69,7 +82,9 @@ public Native_Register(pluginID, argc)
     get_string(2, szTransformCallback, charsmax(szTransformCallback));
     new funcID = get_func_id(szTransformCallback, pluginID);
 
-    new Array:sprites = any:get_param(3);
+    new sprites[API_PARTICLES_MAX_SPRITES];
+    get_array(3, sprites, sizeof(sprites));
+
     new Float:fLifeTime = get_param_f(4);
     new Float:fScale = get_param_f(5);
     new renderMode = get_param(6);
@@ -98,13 +113,48 @@ public Native_Remove(pluginID, argc)
     RemoveParticles(ent);
 }
 
-RegisterParticle(const szName[], pluginID, funcID, Array:sprites, Float:fLifeTime, Float:fScale, renderMode, Float:fRenderAmt, spawnCount)
+
+public OnAddToFullPack(es, e, ent, host, hostflags, player, pSet)
+{
+    if (!IsPlayer(host)) {
+        return FMRES_IGNORED;
+    }
+
+    if (!is_user_connected(host)) {
+        return FMRES_IGNORED;
+    }
+
+    if (!pev_valid(ent)) {
+        return FMRES_IGNORED;
+    }
+
+    static szClassname[32];
+    pev(ent, pev_classname, szClassname, charsmax(szClassname));
+
+    if (equal(szClassname, "_particle")) {
+        new owner = pev(ent, pev_owner);
+
+        if (!owner || !pev_valid(owner)) {
+            return FMRES_IGNORED;
+        }
+
+        if (pev(owner, pev_iuser3) & (1<<(host&31))) {
+            return FMRES_IGNORED;
+        }
+
+        return FMRES_SUPERCEDE;
+    }
+
+    return FMRES_IGNORED;
+}
+
+RegisterParticle(const szName[], pluginID, funcID, const sprites[API_PARTICLES_MAX_SPRITES], Float:fLifeTime, Float:fScale, renderMode, Float:fRenderAmt, spawnCount)
 {
     if (!g_particleCount) {
         g_particles = TrieCreate();
         g_particlePluginID = ArrayCreate();
         g_particleFuncID = ArrayCreate();
-        g_particleSprites = ArrayCreate();
+        g_particleSprites = ArrayCreate(API_PARTICLES_MAX_SPRITES);
         g_particleLifeTime = ArrayCreate();
         g_particleScale = ArrayCreate();
         g_particleRenderMode = ArrayCreate();
@@ -122,7 +172,7 @@ RegisterParticle(const szName[], pluginID, funcID, Array:sprites, Float:fLifeTim
     ArrayPushCell(g_particleRenderMode, renderMode);
     ArrayPushCell(g_particleRenderAmt, fRenderAmt);
     ArrayPushCell(g_particleSpawnCount, spawnCount);
-    ArrayPushCell(g_particleSprites, sprites);
+    ArrayPushArray(g_particleSprites, sprites);
 
     g_particleCount++;
 
@@ -145,6 +195,8 @@ SpawnParticles(const szName[], const Float:vOrigin[3], Float:fPlayTime)
     dllfunc(DLLFunc_Spawn, ent);
 
     set_pev(ent, pev_iuser1, index);
+    set_pev(ent, pev_iuser2, 0);
+    set_pev(ent, pev_iuser3, 0);
 
     set_task(0.04, "TaskTargetTick", ent+TASKID_SUM_TARGET_TICK, _, _, "b");
 
@@ -162,6 +214,42 @@ RemoveParticles(ent)
     dllfunc(DLLFunc_Think, ent);
 }
 
+UpdateVisibleFlag(ent)
+{   
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    new playerVisibleFlags = 0;
+    for (new id = 1; id <= g_maxPlayers; ++id) {
+        if (!is_user_connected(id)) {
+            continue;
+        }
+
+        if (!is_in_viewcone(id, vOrigin, 1)) {
+            continue;
+        }
+
+        static Float:vPlayerOrigin[3];
+        pev(id, pev_origin, vPlayerOrigin);
+        vPlayerOrigin[2] += 16.0;
+
+        if (get_distance_f(vOrigin, vPlayerOrigin) > MaxVisibleDistance) {
+            continue;
+        }
+
+        engfunc(EngFunc_TraceLine, vPlayerOrigin, vOrigin, IGNORE_MONSTERS, id, 0);
+
+        static Float:fFraction;
+        get_tr2(0, TR_flFraction, fFraction);
+
+        if (fFraction == 1.0) {
+            playerVisibleFlags |= (1<<(id&31));
+        }
+    }
+
+    set_pev(ent, pev_iuser3, playerVisibleFlags);
+}
+
 public TaskRemoveTarget(taskID)
 {
     new ent = taskID - TASKID_SUM_REMOVE_TARGET;
@@ -172,15 +260,18 @@ public TaskTargetTick(taskID)
 {
     new ent = taskID - TASKID_SUM_TARGET_TICK;
     new index = pev(ent, pev_iuser1);
+    new tickIndex = pev(ent, pev_iuser2);
 
-    new pluginID            = ArrayGetCell(g_particlePluginID, index);
-    new funcID                = ArrayGetCell(g_particleFuncID, index);
-    new Float:fLifeTime        = ArrayGetCell(g_particleLifeTime, index);
-    new Float:fScale        = ArrayGetCell(g_particleScale, index);
-    new renderMode            = ArrayGetCell(g_particleRenderMode, index);
-    new Float:fRenderAmt    = ArrayGetCell(g_particleRenderAmt, index);
-    new spawnCount            = ArrayGetCell(g_particleSpawnCount, index);
-    new Array:sprites        = ArrayGetCell(g_particleSprites, index);
+    new pluginID = ArrayGetCell(g_particlePluginID, index);
+    new funcID = ArrayGetCell(g_particleFuncID, index);
+    new Float:fLifeTime = ArrayGetCell(g_particleLifeTime, index);
+    new Float:fScale = ArrayGetCell(g_particleScale, index);
+    new renderMode = ArrayGetCell(g_particleRenderMode, index);
+    new Float:fRenderAmt = ArrayGetCell(g_particleRenderAmt, index);
+    new spawnCount = ArrayGetCell(g_particleSpawnCount, index);
+
+    static sprites[API_PARTICLES_MAX_SPRITES];
+    ArrayGetArray(g_particleSprites, index, sprites);
 
     static Float:vOrigin[3];
     static Float:vVelocity[3];
@@ -193,30 +284,32 @@ public TaskTargetTick(taskID)
         if (callfunc_begin_i(funcID, pluginID) == 1) {
             callfunc_push_array(_:vOrigin, 3);
             callfunc_push_array(_:vVelocity, 3);
+            callfunc_push_int(ent);
+            callfunc_push_int(tickIndex);
             callfunc_end();
-        }
-
-        static modelindex;
-        {
-            new size = ArraySize(sprites);
-            modelindex = ArrayGetCell(sprites, random(size));
         }
 
         static particleEnt;
         {
             particleEnt = engfunc(EngFunc_CreateNamedEntity, g_ptrParticleClassname);
             engfunc(EngFunc_SetOrigin, particleEnt, vOrigin);
+            set_pev(particleEnt, pev_classname, "_particle");
             set_pev(particleEnt, pev_velocity, vVelocity);
-            set_pev(particleEnt, pev_modelindex, modelindex);
+            set_pev(particleEnt, pev_modelindex, sprites[random(strlen(sprites))]);
             set_pev(particleEnt, pev_solid, SOLID_TRIGGER);
             set_pev(particleEnt, pev_movetype, MOVETYPE_NOCLIP);
             set_pev(particleEnt, pev_rendermode, renderMode);
             set_pev(particleEnt, pev_renderamt, fRenderAmt);
             set_pev(particleEnt, pev_scale, fScale);
+            set_pev(particleEnt, pev_owner, ent);
 
             set_task(fLifeTime, "TaskRemoveParticle", particleEnt+TASKID_SUM_REMOVE_PARTICLE);
         }
     }
+
+    UpdateVisibleFlag(ent);
+
+    set_pev(ent, pev_iuser2, tickIndex + 1);
 }
 
 public TaskRemoveParticle(taskID)

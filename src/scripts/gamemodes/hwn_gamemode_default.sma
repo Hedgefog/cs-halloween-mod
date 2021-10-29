@@ -155,8 +155,8 @@ public TaskEvent()
         return;
     }
 
-    static Float:vOrigin[3];
-    if (!Hwn_Gamemode_FindEventPoint(vOrigin)) {
+    new Float:vOrigin[3];
+    if (!Hwn_EventPoints_GetRandom(vOrigin)) {
         return;
     }
 

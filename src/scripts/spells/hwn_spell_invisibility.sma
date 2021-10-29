@@ -5,6 +5,7 @@
 #include <hamsandwich>
 #include <xs>
 
+#include <api_rounds>
 #include <screenfade_util>
 
 #include <hwn>
@@ -14,7 +15,11 @@
 #define PLUGIN "[Hwn] Invisibility Spell"
 #define AUTHOR "Hedgehog Fog"
 
-const Float:EffectTime = 10.0;
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
+const Float:EffectTime = 9.9;
 const Float:EffectRadius = 16.0;
 new const EffectColor[3] = {255, 255, 255};
 
@@ -26,8 +31,8 @@ new const g_szSndDetonate[] = "hwn/spells/spell_stealth.wav";
 new g_sprEffectTrace;
 
 new g_playerSpellEffectFlag = 0;
-new Array:g_playerSpellEffectStart;
-new Array:g_playerSpellEffectTime;
+new Float:g_playerSpellEffectStart[MAX_PLAYERS + 1] = { 0.0, ... };
+new Float:g_playerSpellEffectTime[MAX_PLAYERS + 1] = { 0.0, ... };
 
 new g_hWofSpell;
 
@@ -36,8 +41,15 @@ new g_maxPlayers;
 public plugin_precache()
 {
     g_sprEffectTrace = precache_model("sprites/xbeam4.spr");
-
     precache_sound(g_szSndDetonate);
+
+    Hwn_Spell_Register(
+        "Invisibility",
+        Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability,
+        "Cast"
+    );
+
+    g_hWofSpell = Hwn_Wof_Spell_Register("Invisibility", "Invoke", "Revoke");
 }
 
 public plugin_init()
@@ -46,26 +58,9 @@ public plugin_init()
 
     RegisterHam(Ham_Killed, "player", "Revoke", .Post = 1);
 
-    Hwn_Spell_Register("Invisibility", "Cast");
-    g_hWofSpell = Hwn_Wof_Spell_Register("Invisibility", "Invoke", "Revoke");
-
     register_message(get_user_msgid("ScreenFade"), "OnMessage_ScreenFade");
 
     g_maxPlayers = get_maxplayers();
-
-    g_playerSpellEffectStart = ArrayCreate(1, g_maxPlayers+1);
-    g_playerSpellEffectTime = ArrayCreate(1, g_maxPlayers+1);
-
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_playerSpellEffectStart, 0.0);
-        ArrayPushCell(g_playerSpellEffectTime, 0.0);
-    }
-}
-
-public plugin_end()
-{
-    ArrayDestroy(g_playerSpellEffectStart);
-    ArrayDestroy(g_playerSpellEffectTime);
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -79,7 +74,7 @@ public plugin_end()
     Revoke(id);
 }
 
-public Hwn_Gamemode_Fw_NewRound()
+public Round_Fw_NewRound()
 {
     for (new i = 1; i <= g_maxPlayers; ++i) {
         Revoke(i);
@@ -138,8 +133,8 @@ SetSpellEffect(id, bool:value, Float:fTime = 0.0)
 {
     if (value) {
         FadeEffect(id, fTime);
-        ArraySetCell(g_playerSpellEffectStart, id, get_gametime());
-        ArraySetCell(g_playerSpellEffectTime, id, fTime);
+        g_playerSpellEffectStart[id] = get_gametime();
+        g_playerSpellEffectTime[id] = fTime;
         g_playerSpellEffectFlag |= (1 << (id & 31));
     } else {
         RemoveFadeEffect(id);
@@ -164,7 +159,7 @@ SetInvisibility(ent, bool:value)
 
 FadeEffect(id, Float:fTime, bool:external = true)
 {
-    UTIL_ScreenFade(id, FadeEffectColor, -1.0, fTime > FadeEffectMaxTime ? FadeEffectMaxTime : fTime, 128, FFADE_IN, .bExternal = external);
+    UTIL_ScreenFade(id, FadeEffectColor, -1.0, fTime > FadeEffectMaxTime ? (FadeEffectMaxTime + 0.1) : fTime, 128, FFADE_IN, .bExternal = external);
 
     if (external) {
         new iterationCount = floatround(fTime / FadeEffectMaxTime, floatround_ceil);
@@ -181,10 +176,10 @@ RemoveFadeEffect(id)
 
 DetonateEffect(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    static Float:vMins[3];
+    new Float:vMins[3];
     pev(ent, pev_mins, vMins);
 
     vOrigin[2] += vMins[2];
@@ -197,8 +192,8 @@ DetonateEffect(ent)
 
 public TaskFixInvisibleEffect(id)
 {
-    new Float:fStart = Float:ArrayGetCell(g_playerSpellEffectStart, id);
-    new Float:fTime = Float:ArrayGetCell(g_playerSpellEffectTime, id);
+    new Float:fStart = g_playerSpellEffectStart[id];
+    new Float:fTime = g_playerSpellEffectTime[id];
     new Float:fTimeleft =  fStart > 0.0 ? fTime - (get_gametime() - fStart) : 0.0;
 
     if (fTimeleft > 0.0) {

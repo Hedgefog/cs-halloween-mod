@@ -8,6 +8,10 @@
 #define PLUGIN "[Hwn] Bots Spells"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
 #define SPELL_CHECK_DELAY 0.5
 #define SPELL_CAST_CHANCE 50.0
 #define SPELL_CHECK_RADIUS 1024.0
@@ -24,7 +28,7 @@ enum SpellType
 
 new g_cvarEnabled;
 new Trie:g_spellTypes;
-new Array:g_lastSpellCast;
+new Float:g_lastSpellCast[MAX_PLAYERS + 1] = { 0.0, ... };
 
 new g_maxPlayers;
 
@@ -49,16 +53,11 @@ public plugin_init()
     TrieSetCell(g_spellTypes, "Overheal", SpellType_Heal);
 
     g_maxPlayers = get_maxplayers();
-    g_lastSpellCast = ArrayCreate(1, g_maxPlayers + 1);
-    for (new i = 0; i <= g_maxPlayers; ++i) {
-        ArrayPushCell(g_lastSpellCast, 0);
-    }
 }
 
 public plugin_end()
 {
     TrieDestroy(g_spellTypes);
-    ArrayDestroy(g_lastSpellCast);
 }
 
 public client_connect(id)
@@ -98,7 +97,7 @@ public TaskThink(id)
         return;
     }
 
-    new Float:fLastCast = ArrayGetCell(g_lastSpellCast, id);
+    new Float:fLastCast = g_lastSpellCast[id];
     if (get_gametime() - fLastCast < SPELL_CAST_DELAY) {
         return;
     }
@@ -112,7 +111,7 @@ public TaskThink(id)
     }
 
     Hwn_Spell_CastPlayerSpell(id);
-    ArraySetCell(g_lastSpellCast, id, get_gametime());
+    g_lastSpellCast[id] = get_gametime();
 }
 
 bool:CheckSpellCast(id)

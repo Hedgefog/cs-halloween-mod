@@ -1,12 +1,13 @@
 const path = require('path');
+const os = require('os');
 
-const userConfig = false;
+const compilerExecutable = os.platform() === 'win32' ? 'amxxpc.exe' : 'amxxpc';
 
 module.exports = {
     version: '1.0.0',
     compiler: {
         dir: path.resolve('./compiler'),
-        executable: path.resolve('./compiler/amxxpc')
+        executable: path.resolve('./compiler/', compilerExecutable)
     },
     project: {
         includeDir: path.resolve('./src/include'),

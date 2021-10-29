@@ -114,18 +114,28 @@ stock UTIL_CS_DamagePlayer(victim, Float:fDamage, dmgbits = DMG_GENERIC, attacke
     #endif
 }
 
-stock Float:UTIL_GetDistanceToFloor(const Float:vOrigin[3], ignoreEnt = 0)
+stock Float:UTIL_GetDistanceToFloor(ent, const Float:vOrigin[3])
 {
-    new Float:vTarget[3];
+    static Float:vTarget[3];
     xs_vec_copy(vOrigin, vTarget);
     vTarget[2] -= 8192.0;
 
     new trace = create_tr2();
-    engfunc(EngFunc_TraceLine, vOrigin, vTarget, IGNORE_MONSTERS, ignoreEnt, trace);
-    get_tr2(trace, TR_vecEndPos, vTarget);
+    engfunc(EngFunc_TraceMonsterHull, ent, vOrigin, vTarget, IGNORE_MONSTERS, ent, trace);
+
+    static Float:fFraction;
+    get_tr2(trace, TR_flFraction, fFraction);
+    
+    if (fFraction == 1.0) {
+        return -1.0;
+    }
+
+    static Float:vEnd[3];
+    get_tr2(trace, TR_vecEndPos, vEnd);
+
     free_tr2(trace);
 
-    return (vOrigin[2] - vTarget[2]);
+    return vOrigin[2] - vEnd[2];
 }
 
 stock bool:UTIL_IsPointVisible(const Float:vOrigin1[3], const Float:vOrigin2[3], ignoreEnt = 0)
@@ -161,6 +171,36 @@ stock UTIL_GetDirectionVector(ent, Float:vOut[3], Float:fLength = 1.0)
     xs_vec_normalize(vOut, vOut);
     xs_vec_mul_scalar(vOut, fLength, vOut);
     vOut[2] = -vOut[2];
+}
+
+stock bool:UTIL_IsTraceOpen(trace)
+{   
+    if (get_tr2(trace, TR_AllSolid)) {
+        return false;
+    }
+
+    if (get_tr2(trace, TR_StartSolid)) {
+        return false;
+    }
+
+    new Float:fFraction;
+    get_tr2(trace, TR_flFraction, fFraction);
+
+    if (fFraction < 1.0) {
+        return false;
+    }
+
+    return true;
+}
+
+stock bool:UTIL_IsOpen(const Float:vOrigin1[3], const Float:vOrigin2[3], ent = 0, ignoreFlags = IGNORE_MONSTERS)
+{
+    new trace = create_tr2();
+    engfunc(EngFunc_TraceLine, vOrigin1, vOrigin2, ignoreFlags, ent, trace);
+    new bool:isOpen = UTIL_IsTraceOpen(trace);
+    free_tr2(trace);
+
+    return isOpen;
 }
 
 stock bool:UTIL_TurnTo(ent, const Float:vTarget[3], const bool:lockAxis[3] = {true, false, false}, const Float:fMaxAngle = -1.0)
@@ -323,11 +363,9 @@ stock UTIL_RandomVector(Float:min, Float:max, Float:vOut[3])
     }
 }
 
-stock Array:UTIL_FindUsersNearby(Float:vOrigin[3], Float:fDistance, team = 0, bool:alive = true, maxPlayers = 32)
+stock UTIL_FindUsersNearby(startId = 0, Float:vOrigin[3], Float:fDistance, team = 0, bool:alive = true, maxPlayers = 32)
 {
-    new Array:users = ArrayCreate(1, maxPlayers);
-
-    for (new id = 1; id <= maxPlayers; ++id)
+    for (new id = startId + 1; id <= maxPlayers; ++id)
     {
         if (!is_user_connected(id)) {
             continue;
@@ -348,10 +386,10 @@ stock Array:UTIL_FindUsersNearby(Float:vOrigin[3], Float:fDistance, team = 0, bo
             continue;
         }
 
-        ArrayPushCell(users, id);
+        return id;
     }
 
-    return users;
+    return 0;
 }
 
 stock UTIL_FixedUnsigned16(const Float:fValue, const scale)
@@ -422,28 +460,19 @@ stock UTIL_GetItemPlayer(ent)
     #endif
 }
 
-stock Array:UTIL_FindEntityNearby(const Float:vOrigin[3], const Float:fRadius)
+stock UTIL_FindEntityNearby(startEnt = 0, const Float:vOrigin[3], const Float:fRadius)
 {
-    new Array:arr = ArrayCreate();
 
-    new target;
-    new prevTarget;
-    while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, fRadius)) != 0)
-    {
-        if (prevTarget >= target) {
-            break; // infinite loop fix
-        }
-
-        prevTarget = target;
-
-        if (!pev_valid(target)) {
-            continue;
-        }
-
-        ArrayPushCell(arr, target);
+    new target = engfunc(EngFunc_FindEntityInSphere, startEnt, vOrigin, fRadius);
+    if (target <= startEnt) {
+        return 0; // infinite loop fix
     }
 
-    return arr;
+    if (!pev_valid(target)) {
+        return 0;
+    }
+
+    return target;
 }
 
 stock bool:UTIL_EntityIntersects(ent1, ent2)
@@ -876,4 +905,20 @@ stock bool:UTIL_IsLocalizationExists(const szKey[])
     new szNotFound[] = "ML_NOTFOUND:";
 
     return !equali(szBuffer, szNotFound, sizeof(szNotFound) - 1);
+}
+
+stock UTIL_PushFromOrigin(const Float:vOrigin[3], ent, Float:fImpulse)
+{
+    static Float:vTargetOrigin[3];
+    pev(ent, pev_origin, vTargetOrigin);
+
+    static Float:vVelocity[3];
+    xs_vec_sub(vTargetOrigin, vOrigin, vVelocity);
+    xs_vec_normalize(vVelocity, vVelocity);
+    xs_vec_mul_scalar(vVelocity, fImpulse, vVelocity);
+
+    static Float:vTargetVelocity[3];
+    pev(ent, pev_velocity, vTargetVelocity);
+    xs_vec_add(vTargetVelocity, vVelocity, vTargetVelocity);
+    set_pev(ent, pev_velocity, vTargetVelocity);
 }

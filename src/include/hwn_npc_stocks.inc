@@ -1,14 +1,19 @@
 #include <hwn_utils>
 
+#define STEP_HEIGHT 18.0
+#define HEAD_TO_MAXS_RATIO 0.21875
+
 enum _:NPC
 {
     Float:NPC_NextAttack,
     Float:NPC_NextAction,
     Float:NPC_NextVoice,
     Float:NPC_NextFootStep,
-    Float:NPC_LastReachablePoint,
+    Float:NPC_LastReachablePoint[3],
     Float:NPC_ReachTime,
-    Float:NPC_LastRotation
+    Float:NPC_LastRotation,
+    Float:NPC_ViewZOffset,
+    Float:NPC_EnemyTime
 }
 
 enum NPC_Action
@@ -18,16 +23,21 @@ enum NPC_Action
     Float:NPC_Action_Time
 };
 
-stock NPC_Create(ent)
+stock NPC_Create(ent, Float:fViewZOffset = -1.0)
 {
     new Array:npcData = ArrayCreate(1, _:NPC);
     for (new i = 0; i < _:NPC; ++i) {
         ArrayPushCell(npcData, 0);
     }
 
-    new Array:lastReachablePoint = ArrayCreate(3, 1);
-    ArrayPushArray(lastReachablePoint, Float:{0.0, 0.0, 0.0});
-    ArraySetCell(npcData, NPC_LastReachablePoint, lastReachablePoint);
+    ArraySetArray(npcData, NPC_LastReachablePoint, Float:{0.0, 0.0, 0.0});
+
+    if (fViewZOffset == -1.0) {
+        new Float:vMaxs[3];
+        pev(ent, pev_maxs, vMaxs);
+
+        ArraySetCell(npcData, NPC_ViewZOffset, vMaxs[2] * (1.0 - HEAD_TO_MAXS_RATIO));
+    } 
 
     set_pev(ent, pev_iuser1, npcData);
 }
@@ -35,9 +45,6 @@ stock NPC_Create(ent)
 stock NPC_Destroy(ent)
 {
     new Array:npcData = NPC_GetData(ent);
-    new Array:lastReachablePoint = ArrayGetCell(npcData, NPC_LastReachablePoint);
-    ArrayDestroy(lastReachablePoint);
-
     ArrayDestroy(npcData);
 }
 
@@ -147,10 +154,54 @@ stock bool:NPC_Hit(
 
 stock bool:NPC_IsReachable(ent, const Float:vTarget[3])
 {
+    if ((~pev(ent, pev_flags) & FL_ONGROUND) && pev(ent, pev_movetype) != MOVETYPE_FLY) {
+        return false;
+    }
+
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    if (!NPC_IsVisible(vOrigin, vTarget, ent)) {
+    static Float:_vTarget[3];
+    xs_vec_copy(vTarget, _vTarget);
+    if (_vTarget[2] < vOrigin[2]) {
+        _vTarget[2] = vOrigin[2];
+    }
+
+    if (!UTIL_IsOpen(vOrigin, _vTarget, ent)) {
+        return false;
+    }
+
+    static Float:vMins[3];
+    pev(ent, pev_mins, vMins);
+
+    static Float:vLeftSide[3];
+    vLeftSide[0] = vOrigin[0] + vMins[0];
+    vLeftSide[1] = vOrigin[1] + vMins[1];
+    vLeftSide[2] = vOrigin[2];
+
+    static Float:vTargetLeftSide[3];
+    vTargetLeftSide[0] = _vTarget[0] + vMins[0];
+    vTargetLeftSide[1] = _vTarget[1] + vMins[1];
+    vTargetLeftSide[2] = _vTarget[2];
+
+    if (!UTIL_IsOpen(vLeftSide, vTargetLeftSide, ent)) {
+        return false;
+    }
+
+    static Float:vMaxs[3];
+    pev(ent, pev_maxs, vMaxs);
+
+    static Float:vRightSide[3];
+    vRightSide[0] = vOrigin[0] + vMaxs[0];
+    vRightSide[1] = vOrigin[1] + vMaxs[1];
+    vRightSide[2] = vOrigin[2];
+
+    static Float:vTargetRightSide[3];
+    vTargetRightSide[0] = _vTarget[0] + vMaxs[0];
+    vTargetRightSide[1] = _vTarget[1] + vMaxs[1];
+    vTargetRightSide[2] = _vTarget[2];
+
+    if (!UTIL_IsOpen(vRightSide, vTargetRightSide, ent)) {
         return false;
     }
 
@@ -158,125 +209,81 @@ stock bool:NPC_IsReachable(ent, const Float:vTarget[3])
         return true;
     }
 
-    static Float:vMins[3];
-    pev(ent, pev_mins, vMins);
+    new Float:fDistance = get_distance_f(vOrigin, _vTarget);
+    new steps = floatround(fDistance / 32.0);
 
-    static Float:vMaxs[3];
-    pev(ent, pev_maxs, vMaxs);
-
-    {
-        if (!NPC_IsVisibleWrapper(
-            vOrigin[0], vOrigin[1], vOrigin[2] + vMaxs[2],
-            vTarget[0], vTarget[1], vTarget[2] + vMaxs[2],
-            ent
-        )) {
-            return false;
-        }
-
-        if (
-            !NPC_IsVisibleWrapper(
-                vOrigin[0], vOrigin[1], vOrigin[2] - vMins[2],
-                vTarget[0], vTarget[1], vTarget[2] - vMins[2],
-                ent
-            )
-            &&
-            !NPC_IsVisibleWrapper(
-                vOrigin[0], vOrigin[1], vOrigin[2] - vMins[2],
-                vTarget[0], vTarget[1], vOrigin[2] - vMins[2],
-                ent
-            )
-        ) {
-            return false;
-        }
+    if (steps < 1) {
+        return true;
     }
 
-
-    static Float:vSide1[3];
-    static Float:vSide2[3];
-    NPC_GetSideLine(ent, vSide1, vSide2, vMaxs[0]);
-    {
-        {
-            static Float:vTargetSide1[3];
-            xs_vec_sub(vSide1, vOrigin, vTargetSide1);
-            xs_vec_add(vTargetSide1, vTarget, vTargetSide1);
-
-            if (!NPC_IsVisible(vSide1, vTargetSide1, ent)) {
-                return false;
-            }
-        }
-
-        {
-            static Float:vTargetSide2[3];
-            xs_vec_sub(vSide2, vOrigin, vTargetSide2);
-            xs_vec_add(vTargetSide2, vTarget, vTargetSide2);
-
-            if (!NPC_IsVisible(vSide2, vTargetSide2, ent)) {
-                return false;
-            }
-        }
+    //Get direction vetor
+    static Float:vStep[3];
+    xs_vec_sub(_vTarget, vOrigin, vStep);
+    
+    static Float:vStepOrigin[3];
+    if (!NPC_TestStep(ent, vOrigin, vStep, vStepOrigin)) {
+        return false;
     }
+    
+    xs_vec_normalize(vStep, vStep);
+    xs_vec_mul_scalar(vStep, 32.0, vStep);
 
-    new Float:fDistance = get_distance_f(vOrigin, vTarget);
-    new steps = floatround(fDistance/32.0);
+    xs_vec_copy(vOrigin, vStepOrigin);
 
-    if (steps > 1)
-    {
-        new Float:zOffset = UTIL_GetDistanceToFloor(vTarget, pev(ent, pev_enemy));
-        vOrigin[2] -= zOffset - UTIL_GetDistanceToFloor(vOrigin, ent);
-
-        //Get direction vetor
-        static Float:vDirectionVector[3]; {
-            xs_vec_sub(vTarget, vOrigin, vDirectionVector);
-            xs_vec_normalize(vDirectionVector, vDirectionVector);
-            xs_vec_mul_scalar(vDirectionVector, 32.0, vDirectionVector);
-        }
-
-        new Float:fZDiff = vOrigin[2] - vTarget[2];
-        for (new i = 0; i < steps; ++i)
-        {
-            new Float:fMax = zOffset + 8.0;
-
-            if (vOrigin[2] > vTarget[2]) {
-                fMax += fZDiff;
-            }
-
-            xs_vec_add(vOrigin, vDirectionVector, vOrigin);
-            xs_vec_add(vSide1, vDirectionVector, vSide1);
-            xs_vec_add(vSide2, vDirectionVector, vSide2);
-
-            static Float:fDistanceToFloor;
-            fDistanceToFloor = UTIL_GetDistanceToFloor(vOrigin, ent);
-
-            if (fDistanceToFloor > fMax) {
-                fDistanceToFloor = UTIL_GetDistanceToFloor(vSide1, ent);
-            }
-
-            if (fDistanceToFloor > fMax) {
-                fDistanceToFloor = UTIL_GetDistanceToFloor(vSide2, ent);
-            }
-
-            if (fDistanceToFloor > fMax) {
-                return false;
-            }
-
-            if (!NPC_IsVisibleWrapper(
-                vOrigin[0], vOrigin[1], vOrigin[2],
-                vOrigin[0], vOrigin[1], vOrigin[2] - (fDistanceToFloor - zOffset),
-                ent
-            )) {
-                return false;
-            }
-
-            if (vOrigin[2] > vTarget[2]) {
-                fZDiff += zOffset - fDistanceToFloor;
-            }
+    for (new i = 0; i < steps; ++i) {
+        if (!NPC_TestStep(ent, vStepOrigin, vStep, vStepOrigin)) {
+            return false;
         }
     }
 
     return true;
 }
 
-stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly = true)
+stock bool:NPC_TestStep(ent, const Float:vOrigin[3], const Float:vStep[3], Float:vStepOrigin[3])
+{
+    static Float:vMins[3];
+    pev(ent, pev_mins, vMins);
+    
+    static Float:_vStepOrigin[3];
+    xs_vec_copy(vStepOrigin, _vStepOrigin);
+    xs_vec_add(vOrigin, vStep, _vStepOrigin);
+
+    // check wall
+    static Float:vStepStart[3];
+    xs_vec_copy(vOrigin, vStepStart);
+    vStepStart[2] += vMins[2] + STEP_HEIGHT;
+
+    static Float:vStepEnd[3];
+    xs_vec_copy(_vStepOrigin, vStepEnd);
+    vStepEnd[2] += vMins[2] + STEP_HEIGHT;
+
+    if (!UTIL_IsOpen(vStepStart, vStepEnd, ent)) {
+        return false;
+    }
+
+    _vStepOrigin[2] += STEP_HEIGHT; // add height to the step
+
+    new Float:fDistanceToFloor = UTIL_GetDistanceToFloor(ent, _vStepOrigin);
+    if (fDistanceToFloor < 0.0) { // check if falling or solid
+        static Float:vEnd[3];
+        xs_vec_copy(_vStepOrigin, vEnd);
+        vEnd[2] -= -vMins[2] + STEP_HEIGHT;
+        return false;
+    }
+
+    if (fDistanceToFloor >= STEP_HEIGHT) { // subtract step height if not needed
+        fDistanceToFloor -= STEP_HEIGHT;
+        _vStepOrigin[2] -= STEP_HEIGHT;
+    }
+
+    _vStepOrigin[2] -= fDistanceToFloor; // apply possible height change
+
+    xs_vec_copy(_vStepOrigin, vStepOrigin); // copy result
+
+    return true;
+}
+
+stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly = true, bool:visibleOnly = true)
 {
     new enemy = pev(ent, pev_enemy);
     if (!enemy) {
@@ -286,25 +293,29 @@ stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
+    static Float:vMins[3];
+    pev(ent, pev_mins, vMins);
+
+    static Float:vEnemyMins[3];
+    pev(enemy, pev_mins, vEnemyMins);
+
     pev(enemy, pev_origin, vTarget);
 
+    vTarget[2] = vTarget[2] + vEnemyMins[2] - vMins[2];
+
     new Array:npcData = NPC_GetData(ent);
-    new Array:lastReachablePoint = ArrayGetCell(npcData, NPC_LastReachablePoint);
 
     new Float:fGameTime = get_gametime();
-    if (!reachableOnly || NPC_IsReachable(ent, vTarget))
-    {
+    if ((!visibleOnly || NPC_IsVisible(ent, vTarget)) && (!reachableOnly || NPC_IsReachable(ent, vTarget))) {
         new Float:fDistance = get_distance_f(vOrigin, vTarget);
         new Float:fReachTime = fGameTime + fDistance/fSpeed;
 
         ArraySetCell(npcData, NPC_ReachTime, fReachTime);
-        ArraySetArray(lastReachablePoint, 0, vTarget);
-    }
-    else
-    {
+        ArraySetArray(npcData, NPC_LastReachablePoint, vTarget);
+    } else {
         new Float:fReachTime = ArrayGetCell(npcData, NPC_ReachTime);
         if (fGameTime < fReachTime) {
-            ArrayGetArray(lastReachablePoint, 0, vTarget);
+            ArrayGetArray(npcData, NPC_LastReachablePoint, vTarget);
         } else {
             return false;
         }
@@ -313,9 +324,17 @@ stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly
     return true;
 }
 
-stock bool:NPC_FindEnemy(ent, maxplayers = 32, bool:reachableOnly = true)
+stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool:reachableOnly = true, bool:visibleOnly = true)
 {
-    new Array:targets = ArrayCreate();
+    new nearestPlayer = 0;
+    new Float:fNearestPlayerDistance = -1.0;
+
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    static Float:vMins[3];
+    pev(ent, pev_mins, vMins);
+
     for (new i = 1; i <= maxplayers; ++i)
     {
         if (!is_user_connected(i)) {
@@ -330,76 +349,37 @@ stock bool:NPC_FindEnemy(ent, maxplayers = 32, bool:reachableOnly = true)
             continue;
         }
 
-        static Float:vOrigin[3];
-        pev(i, pev_origin, vOrigin);
+        static Float:vTarget[3];
+        pev(i, pev_origin, vTarget);
 
-        if (reachableOnly && !NPC_IsReachable(ent, vOrigin)) {
+        new Float:fDistance = get_distance_f(vOrigin, vTarget);
+        if (fMaxDistance > 0 && fDistance > fMaxDistance) {
             continue;
         }
 
-        ArrayPushCell(targets, i);
+        if (visibleOnly && !NPC_IsVisible(ent, vTarget)) {
+            continue;
+        }
+
+        static Float:vEnemyMins[3];
+        pev(i, pev_mins, vEnemyMins);
+        vTarget[2] = vTarget[2] + vEnemyMins[2] - vMins[2];
+
+        if (reachableOnly && !NPC_IsReachable(ent, vTarget)) {
+            continue;
+        }
+
+        if (fNearestPlayerDistance < 0 || fDistance < fNearestPlayerDistance) {
+            nearestPlayer = i;
+            fNearestPlayerDistance = fDistance;
+        }
     }
 
-    new size = ArraySize(targets);
-    if (size > 0) {
-        new index = random(size);
-        new enemy = ArrayGetCell(targets, index);
-        set_pev(ent, pev_enemy, enemy);
+    if (nearestPlayer) {
+        NPC_SetEnemy(ent, nearestPlayer);
     }
 
-    ArrayDestroy(targets);
-
-    return (size > 0);
-}
-
-stock bool:NPC_IsVisible(const Float:vOrigin1[3], const Float:vOrigin2[3], ent = 0)
-{
-    new trace = create_tr2();
-    engfunc(EngFunc_TraceLine, vOrigin1, vOrigin2, IGNORE_MONSTERS, ent, trace);
-
-    new Float:fraction;
-    get_tr2(trace, TR_flFraction, fraction);
-
-    free_tr2(trace);
-    return (fraction == 1.0);
-}
-
-stock bool:NPC_IsVisibleWrapper(Float:vOriginX, Float:vOriginY, Float:vOriginZ, Float:vTargetX, Float:vTargetY, Float:vTargetZ, ent = 0)
-{
-    static Float:vOrigin[3];
-    vOrigin[0] = vOriginX;
-    vOrigin[1] = vOriginY;
-    vOrigin[2] = vOriginZ;
-
-    static Float:vTarget[3];
-    vTarget[0] = vTargetX;
-    vTarget[1] = vTargetY;
-    vTarget[2] = vTargetZ;
-
-    return NPC_IsVisible(vOrigin, vTarget, ent);
-}
-
-stock NPC_GetSideLine(ent, Float:vOrigin1[3], Float:vOrigin2[3], Float:fLength = 48.0)
-{
-    static Float:vAngles[3];
-    pev(ent, pev_angles, vAngles);
-
-    static Float:vDirection[3];
-    angle_vector(vAngles, ANGLEVECTOR_FORWARD, vDirection);
-
-    xs_vec_mul_scalar(vDirection, fLength/2, vDirection);
-    vDirection[2] = 0.0;
-
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-
-    new Float:fTemp;
-    fTemp = vDirection[0];
-    vDirection[0] = vDirection[1];
-    vDirection[1] = fTemp;
-
-    xs_vec_sub(vOrigin, vDirection, vOrigin1);
-    xs_vec_add(vOrigin, vDirection, vOrigin2);
+    return !!nearestPlayer;
 }
 
 stock NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed, Float:fMaxAnglePerSecond = 180.0)
@@ -482,4 +462,31 @@ stock bool:NPC_CanHit(ent, enemy, Float:fHitRange)
 stock NPC_IsValidEnemy(enemy)
 {
     return (enemy && is_user_alive(enemy) && !UTIL_IsInvisible(enemy) && pev(enemy, pev_takedamage) != DAMAGE_NO);
+}
+
+stock NPC_IsVisible(ent, const Float:vTarget[3])
+{
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    new Array:npcData = NPC_GetData(ent);
+    vOrigin[2] += Float:ArrayGetCell(npcData, NPC_ViewZOffset);
+
+    return UTIL_IsOpen(vOrigin, vTarget, ent);
+}
+
+stock NPC_SetEnemy(ent, enemy)
+{
+    set_pev(ent, pev_enemy, enemy);
+
+    if (enemy) {
+        new Array:npcData = NPC_GetData(ent);
+        ArraySetCell(npcData, NPC_EnemyTime, get_gametime());
+    }
+}
+
+stock Float:NPC_GetEnemyTime(ent)
+{
+    new Array:npcData = NPC_GetData(ent);
+    return ArrayGetCell(npcData, NPC_EnemyTime);
 }

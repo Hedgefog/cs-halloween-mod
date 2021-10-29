@@ -65,24 +65,13 @@ public OnKilled(ent, attacker)
 
 PumpkinRadiusDamage(ent, owner)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     new target;
-    new prevTarget;
-    while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EXPLOSION_RADIUS * 2)) > 0)
+    while ((target = UTIL_FindEntityNearby(target, vOrigin, EXPLOSION_RADIUS * 2)) > 0)
     {
-        if (prevTarget >= target) {
-            break; // infinite loop fix
-        }
-
-        prevTarget = target;
-
         if (ent == target) {
-            continue;
-        }
-
-        if (!pev_valid(target)) {
             continue;
         }
 
@@ -109,11 +98,11 @@ PumpkinRadiusDamage(ent, owner)
 
 ExplosionEffect(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 16.0;
 
-    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    engfunc(EngFunc_MessageBegin, MSG_ALL, SVC_TEMPENTITY, vOrigin, 0);
     write_byte(TE_EXPLOSION);
     engfunc(EngFunc_WriteCoord, vOrigin[0]);
     engfunc(EngFunc_WriteCoord, vOrigin[1]);
@@ -124,7 +113,7 @@ ExplosionEffect(ent)
     write_byte(0);
     message_end();
 
-    static Float:vVelocity[3];
+    new Float:vVelocity[3];
     UTIL_RandomVector(-128.0, 128.0, vVelocity);
 
     UTIL_Message_BreakModel(vOrigin, Float:{16.0, 16.0, 16.0}, vVelocity, 32, g_mdlGibs, 4, 25, 0);

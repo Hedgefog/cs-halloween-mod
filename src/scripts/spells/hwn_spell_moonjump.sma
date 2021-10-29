@@ -4,6 +4,8 @@
 #include <fakemeta>
 #include <hamsandwich>
 
+#include <api_rounds>
+
 #include <hwn>
 #include <hwn_utils>
 
@@ -25,6 +27,14 @@ new g_maxPlayers;
 public plugin_precache()
 {
     precache_sound(g_szSndDetonate);
+
+    Hwn_Spell_Register(
+        "Moon Jump",
+        Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability,
+        "Cast"
+    );
+
+    g_hWofSpell = Hwn_Wof_Spell_Register("Moon Jump", "Invoke", "Revoke");
 }
 
 public plugin_init()
@@ -32,9 +42,6 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHam(Ham_Killed, "player", "Revoke", .Post = 1);
-
-    Hwn_Spell_Register("Moon Jump", "Cast");
-    g_hWofSpell = Hwn_Wof_Spell_Register("Moon Jump", "Invoke", "Revoke");
 
     g_maxPlayers = get_maxplayers();
 }
@@ -50,7 +57,7 @@ public plugin_init()
     Revoke(id);
 }
 
-public Hwn_Gamemode_Fw_NewRound()
+public Round_Fw_NewRound()
 {
     for (new i = 1; i <= g_maxPlayers; ++i) {
         Revoke(i);
@@ -119,7 +126,7 @@ SetGravity(id, bool:value)
 
 DetonateEffect(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     UTIL_Message_Dlight(vOrigin, EffectRadius, EffectColor, 5, 80);

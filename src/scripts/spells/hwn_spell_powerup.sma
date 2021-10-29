@@ -7,11 +7,17 @@
 #include <fun>
 #include <xs>
 
+#include <api_rounds>
+
 #include <hwn>
 #include <hwn_utils>
 
 #define PLUGIN "[Hwn] Power Up Spell"
 #define AUTHOR "Hedgehog Fog"
+
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
 
 #define JUMP_SPEED 320.0
 #define JUMP_DELAY 0.175
@@ -30,7 +36,7 @@ new const g_szSndJump[] = "hwn/spells/spell_powerup_jump.wav";
 new g_sprTrail;
 
 new g_playerSpellEffectFlag = 0;
-new Array:g_playerLastJump;
+new Float:g_playerLastJump[MAX_PLAYERS + 1] = { 0.0, ... };
 
 new g_hWofSpell;
 
@@ -41,6 +47,20 @@ public plugin_precache()
     g_sprTrail = precache_model("sprites/zbeam2.spr");
     precache_sound(g_szSndDetonate);
     precache_sound(g_szSndJump);
+
+    Hwn_Spell_Register(
+        "Power Up",
+        (
+            Hwn_SpellFlag_Applicable
+                | Hwn_SpellFlag_Ability
+                | Hwn_SpellFlag_Damage
+                | Hwn_SpellFlag_Heal
+                | Hwn_SpellFlag_Rare
+        ),
+        "Cast"
+    );
+
+    g_hWofSpell = Hwn_Wof_Spell_Register("Power Up", "Invoke", "Revoke");
 }
 
 public plugin_cfg()
@@ -52,7 +72,7 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Player_PreThink, "player", "OnPlayerPreThink", .Post = 0);
+    RegisterHam(Ham_Player_Jump, "player", "OnPlayerJump", .Post = 1);
     RegisterHam(Ham_Item_PreFrame, "player", "OnPlayerItemPreFrame", .Post = 1);
     RegisterHam(Ham_TakeDamage, "player", "OnPlayerTakeDamage", .Post = 0);
     RegisterHam(Ham_Killed, "player", "Revoke", .Post = 1);
@@ -62,30 +82,16 @@ public plugin_init()
             continue;
         }
 
-        static szWeaponName[32];
+        new szWeaponName[32];
         get_weaponname(i, szWeaponName, charsmax(szWeaponName));
 
         RegisterHam(Ham_Weapon_PrimaryAttack, szWeaponName, "OnWeaponAttack", .Post = 1);
         RegisterHam(Ham_Weapon_SecondaryAttack, szWeaponName, "OnWeaponAttack", .Post = 1);
     }
 
-    Hwn_Spell_Register("Power Up", "Cast");
-    g_hWofSpell = Hwn_Wof_Spell_Register("Power Up", "Invoke", "Revoke");
-    
     g_maxPlayers = get_maxplayers();
-
-    g_playerLastJump = ArrayCreate(1, g_maxPlayers + 1);
-
-    for (new i = 1; i <= g_maxPlayers; ++i) {
-      ArrayPushCell(g_playerLastJump, 0.0);
-    }
-
 }
 
-public plugin_end()
-{
-    ArrayDestroy(g_playerLastJump);
-}
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
@@ -98,7 +104,7 @@ public plugin_end()
     Revoke(id);
 }
 
-public Hwn_Gamemode_Fw_NewRound()
+public Round_Fw_NewRound()
 {
     for (new i = 1; i <= g_maxPlayers; ++i) {
         Revoke(i);
@@ -124,7 +130,7 @@ public OnWeaponAttack(ent)
     return HAM_HANDLED;
 }
 
-public OnPlayerPreThink(id)
+public OnPlayerJump(id)
 {
     if (!is_user_alive(id)) {
         return HAM_IGNORED;
@@ -134,10 +140,9 @@ public OnPlayerPreThink(id)
         return HAM_IGNORED;
     }
 
-    new button = pev(id, pev_button);
     new oldButton = pev(id, pev_oldbuttons);
 
-    if ((button & IN_JUMP) && (~oldButton & IN_JUMP)) {
+    if (~oldButton & IN_JUMP) {
         ProcessPlayerJump(id);
     }
 
@@ -197,6 +202,7 @@ public Invoke(id)
     Revoke(id);
 
     SetSpellEffect(id, true);
+    Heal(id);
     JumpEffect(id);
     ExecuteHamB(Ham_Item_PreFrame, id);
     emit_sound(id, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
@@ -235,15 +241,15 @@ ProcessPlayerJump(id)
     new flags = pev(id, pev_flags);
 
     if (~flags & FL_ONGROUND) {
-        new Float:fLastJump = ArrayGetCell(g_playerLastJump, id);
-        
-        if (get_gametime() - fLastJump > JUMP_DELAY) {
-            Jump(id);
+        if (get_gametime() - g_playerLastJump[id] < JUMP_DELAY) {
+            return;
         }
+
+        Jump(id);
     }
 
     JumpEffect(id);
-    ArraySetCell(g_playerLastJump, id, get_gametime());
+    g_playerLastJump[id] = get_gametime();
 }
 
 Jump(id)
@@ -257,6 +263,7 @@ Jump(id)
     vVelocity[2] = JUMP_SPEED;
     
     set_pev(id, pev_velocity, vVelocity);
+    set_pev(id, pev_gaitsequence, 6);
 
     emit_sound(id, CHAN_STATIC , g_szSndJump, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
@@ -335,4 +342,14 @@ GetMoveVector(id, Float:vOut[3])
     vOut[2] = 0.0;
 
     xs_vec_normalize(vOut, vOut);
+}
+
+Heal(id)
+{
+    new Float:fHealth;
+    pev(id, pev_health, fHealth);
+
+    if (fHealth < 100.0) {
+        set_pev(id, pev_health, 100.0);
+    }
 }

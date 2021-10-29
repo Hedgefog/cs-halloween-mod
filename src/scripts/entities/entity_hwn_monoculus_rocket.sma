@@ -141,24 +141,12 @@ public TaskThink(ent)
 
 RocketRadiusDamage(ent, owner)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
     new target;
-    new prevTarget;
-    while ((target = engfunc(EngFunc_FindEntityInSphere, target, vOrigin, EXPLOSION_RADIUS * 2)) > 0)
-    {
-        if (prevTarget >= target) {
-            break; // infinite loop fix
-        }
-
-        prevTarget = target;
-
+    while ((target = UTIL_FindEntityNearby(target, vOrigin, EXPLOSION_RADIUS * 2)) != 0) {
         if (ent == target) {
-            continue;
-        }
-
-        if (!pev_valid(target)) {
             continue;
         }
 
@@ -185,11 +173,11 @@ RocketRadiusDamage(ent, owner)
 
 ExplosionEffect(ent)
 {
-    static Float:vOrigin[3];
+    new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 16.0;
 
-    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    engfunc(EngFunc_MessageBegin, MSG_ALL, SVC_TEMPENTITY, vOrigin, 0);
     write_byte(TE_EXPLOSION);
     engfunc(EngFunc_WriteCoord, vOrigin[0]);
     engfunc(EngFunc_WriteCoord, vOrigin[1]);
