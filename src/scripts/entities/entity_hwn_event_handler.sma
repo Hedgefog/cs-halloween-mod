@@ -114,7 +114,7 @@ public Hwn_Bosses_Fw_BossTeleport(ent)
     Dispatch("boss_teleport", ent);
 }
 
-public Hwn_Bosses_Fw_Winner(id)
+public Hwn_Bosses_Fw_Winner(id, damage)
 {
     Dispatch("boss_winner", id);
 }

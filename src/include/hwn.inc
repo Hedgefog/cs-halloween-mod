@@ -418,7 +418,7 @@ forward Hwn_Bosses_Fw_BossSpawn(ent, Float:fLifeTime);
 forward Hwn_Bosses_Fw_BossKill(ent);
 forward Hwn_Bosses_Fw_BossEscape(ent);
 forward Hwn_Bosses_Fw_BossTeleport(ent, handler);
-forward Hwn_Bosses_Fw_Winner(id);
+forward Hwn_Bosses_Fw_Winner(id, damage);
 
 /*--------------------------------[ Player Equipment ]--------------------------------*/
 

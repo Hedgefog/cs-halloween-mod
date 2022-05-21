@@ -89,7 +89,7 @@ public Hwn_Collector_Fw_PlayerPoints(id)
     UpdatePlayerPoints(id);
 }
 
-public Hwn_Bosses_Fw_Winner(id)
+public Hwn_Bosses_Fw_Winner(id, damage)
 {
     new szName[128];
     get_user_name(id, szName, charsmax(szName));
