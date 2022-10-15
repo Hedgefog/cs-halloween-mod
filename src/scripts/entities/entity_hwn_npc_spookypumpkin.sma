@@ -38,8 +38,8 @@ enum Action
     Action_Attack,
 };
 
-const Float:NPC_Health = 70.0;
-const Float:NPC_Speed = 160.0; // for jump velocity
+const Float:NPC_Health = 100.0;
+const Float:NPC_Speed = 200.0; // for jump velocity
 const Float:NPC_Damage = 10.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.5;
