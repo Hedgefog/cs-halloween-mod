@@ -276,7 +276,7 @@ public Round_Fw_RoundExpired()
 
     if (tTeamPoints == ctTeamPoints) {
         new overtime = get_pcvar_num(g_cvarRoundTimeOvertime);
-        if (overtime > 0) {
+        if (tTeamPoints > 0 && overtime > 0) {
             new roundTime = Round_GetTime() + overtime;
             Round_SetTime(roundTime);
 
