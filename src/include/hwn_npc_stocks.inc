@@ -463,7 +463,7 @@ stock bool:NPC_CanHit(ent, enemy, Float:fHitRange)
     return result;
 }
 
-stock NPC_IsValidEnemy(enemy)
+stock bool:NPC_IsValidEnemy(enemy)
 {
     return (enemy && is_user_alive(enemy) && !UTIL_IsInvisible(enemy) && pev(enemy, pev_takedamage) != DAMAGE_NO);
 }
