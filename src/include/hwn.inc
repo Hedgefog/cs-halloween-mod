@@ -13,6 +13,7 @@
             Improved Monoculus NPC AI
             Improved collector gamemode win conditions
             Add glow for Monoculus NPC
+            Increased light level for default gamemode 
 
         Cvars:
             Added hwn_objective_marks cvar
