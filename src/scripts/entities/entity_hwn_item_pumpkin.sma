@@ -115,7 +115,7 @@ public OnPickup(ent, id)
     {
         case PumpkinType_Crits:
         {
-            GiveCrits(id, 1.0);
+            GiveCrits(id, 2.0);
         }
         case PumpkinType_Equipment:
         {
