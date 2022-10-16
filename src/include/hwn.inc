@@ -14,7 +14,7 @@
             Improved Skeleton NPC AI
             Improved collector gamemode win conditions
             Add glow for Monoculus NPC
-            Increased light level for default gamemode 
+            Increased light level for default gamemode
 
         Cvars:
             Added hwn_objective_marks cvar
@@ -417,6 +417,8 @@ native Hwn_Wof_Spell_GetDictionaryKey(spell, szOutput[], maxlen);
 native Hwn_Wof_Roll();
 native Hwn_Wof_Abort();
 native Hwn_Wof_Effect_GetCurrentSpell();
+native Float:Hwn_Wof_Effect_GetStartTime();
+native Float:Hwn_Wof_Effect_GetDuration();
 
 forward Hwn_Wof_Fw_Roll_Start();
 forward Hwn_Wof_Fw_Roll_End();
