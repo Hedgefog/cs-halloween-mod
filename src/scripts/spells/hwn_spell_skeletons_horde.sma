@@ -28,6 +28,7 @@ new const g_szSprSpellBall[] = "sprites/xsmoke1.spr";
 new g_mdlGibs;
 
 new g_hSpell;
+new g_hWofSpell;
 new g_hCeSpellball;
 
 public plugin_precache()
@@ -43,6 +44,8 @@ public plugin_precache()
         Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Radius | Hwn_SpellFlag_Rare,
         "Cast"
     );
+
+    g_hWofSpell = Hwn_Wof_Spell_Register("Skeletons Horde", "Invoke");
 }
 
 public plugin_init()
@@ -90,6 +93,32 @@ public OnSpellballKilled(ent)
     Detonate(ent);
 }
 
+/*--------------------------------[ Forwards ]--------------------------------*/
+
+public Hwn_Wof_Fw_Effect_Start(spellIdx)
+{
+    if (g_hWofSpell != spellIdx) {
+        return;
+    }
+
+    Hwn_Wof_Abort();
+
+    new target = -1;
+    while ((target = engfunc(EngFunc_FindEntityByString, target, "classname", "hwn_pumpkin_dispenser")) != 0) {
+        static Float:vOrigin[3];
+        pev(target, pev_origin, vOrigin);
+
+        static Float:vecDir[3];
+        pev(target, pev_angles, vecDir);
+        angle_vector(vecDir, ANGLEVECTOR_UP, vecDir);
+        xs_vec_mul_scalar(vecDir, -64.0, vecDir);
+
+        xs_vec_add(vOrigin, vecDir, vOrigin);
+
+        SpawnEggs(vOrigin);
+    }
+}
+
 /*--------------------------------[ Methods ]--------------------------------*/
 
 public Cast(id)
@@ -106,6 +135,8 @@ public Cast(id)
     return PLUGIN_CONTINUE;
 }
 
+public Invoke(id) {}
+
 Detonate(ent)
 {
     new owner = pev(ent, pev_owner);
@@ -117,6 +148,12 @@ Detonate(ent)
 
     UTIL_FindPlaceToTeleport(ent, vOrigin, vOrigin, HULL_HUMAN);
 
+    SpawnEggs(vOrigin, team, owner);
+
+    DetonateEffect(ent);
+}
+
+SpawnEggs(const Float:vOrigin[3], team = 0, owner = 0) {
     for (new i = 0; i < SKELETON_EGG_COUNT; ++i) {
         new eggEnt = CE_Create(SKELETON_EGG_ENTITY_NAME, vOrigin);
 
@@ -124,17 +161,18 @@ Detonate(ent)
             continue;
         }
 
-        set_pev(eggEnt, pev_origin, vOrigin);
         set_pev(eggEnt, pev_team, team);
-        dllfunc(DLLFunc_Spawn, eggEnt);
         set_pev(eggEnt, pev_owner, owner);
+        dllfunc(DLLFunc_Spawn, eggEnt);
+
+        static Float:vNewOrigin[3];
+        UTIL_FindPlaceToTeleport(eggEnt, vOrigin, vNewOrigin, HULL_HUMAN);
+        set_pev(eggEnt, pev_origin, vNewOrigin);
 
         new Float:vVelocity[3];
         xs_vec_set(vVelocity, random_float(-96.0, 96.0), random_float(-96.0, 96.0), 128.0);
         set_pev(eggEnt, pev_velocity, vVelocity);
     }
-
-    DetonateEffect(ent);
 }
 
 DetonateEffect(ent)
