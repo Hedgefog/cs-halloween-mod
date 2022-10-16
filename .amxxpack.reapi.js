@@ -4,9 +4,9 @@ module.exports = Object.assign(require('./.amxxpack.json'), {
     './.thirdparty/reapi/addons/amxmodx/scripting/include'
   ],
   output: {
-    plugins: 'C:/Program Files (x86)/Steam/steamapps/common/Half-Life/cstrike/addons/amxmodx/plugins',
-    scripts: 'C:/Program Files (x86)/Steam/steamapps/common/Half-Life/cstrike/addons/amxmodx/scripting',
-    include: 'C:/Program Files (x86)/Steam/steamapps/common/Half-Life/cstrike/addons/amxmodx/scripting/include',
-    assets: 'C:/Program Files (x86)/Steam/steamapps/common/Half-Life/cstrike'
+    plugins: './dist/reapi/addons/amxmodx/plugins',
+    scripts: './dist/reapi/addons/amxmodx/scripting',
+    include: './dist/reapi/addons/amxmodx/scripting/include',
+    assets: './dist/reapi'
   }
 });
