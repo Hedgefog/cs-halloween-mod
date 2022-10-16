@@ -11,6 +11,7 @@
             Increased Spooky Pumpkin NPC health
             Increased Spooky Pumpkin NPC speed
             Improved Monoculus NPC AI
+            Improved Skeleton NPC AI
             Improved collector gamemode win conditions
             Add glow for Monoculus NPC
             Increased light level for default gamemode 

@@ -152,6 +152,7 @@ public plugin_init()
 
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttackPre", .Post = 0);
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
+    RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);
     RegisterHam(Ham_Killed, "player", "OnPlayerKilledPre", .Post = 0);
 
     g_maxPlayers = get_maxplayers();
@@ -182,13 +183,14 @@ public OnSpawn(ent)
     set_pev(ent, pev_renderamt, 4.0);
     set_pev(ent, pev_health, fHealth);
     set_pev(ent, pev_groupinfo, 128);
+    set_pev(ent, pev_fuser1, 0.0);
 
     engfunc(EngFunc_DropToFloor, ent);
 
     NPC_PlayAction(ent, g_actions[Action_Spawn]);
     
     RemoveTasks(ent);
-    set_task(2.0, "TaskThink", ent);
+    set_pev(ent, pev_nextthink, get_gametime() + 2.0);
 
     UpdateColor(ent);
 }
@@ -240,6 +242,54 @@ public OnTraceAttackPre(ent, attacker, Float:fDamage, Float:vDirection[3], trace
     return HAM_HANDLED;
 }
 
+public OnThink(ent)
+{
+    if (g_ceHandler != CE_GetHandlerByEntity(ent) && g_ceHandlerSmall != CE_GetHandlerByEntity(ent)) {
+        return HAM_IGNORED;
+    }
+
+    if (pev(ent, pev_deadflag) != DEAD_NO) {
+        return HAM_IGNORED;
+    }
+
+    new enemy = pev(ent, pev_enemy);
+    new Action:action = Action_Idle;
+    new bool:isValidEnemy = NPC_IsValidEnemy(enemy);
+
+    static Float:fLastUpdate;
+    pev(ent, pev_fuser1, fLastUpdate);
+    new bool:shouldUpdate = get_gametime() - fLastUpdate >= g_fThinkDelay;
+
+    if (isValidEnemy) {
+        Attack(ent, enemy, action, shouldUpdate);
+    }
+
+    if (shouldUpdate) {
+        UpdateColor(ent);
+
+        if (!isValidEnemy) {
+            new team = pev(ent, pev_team);
+            NPC_FindEnemy(ent, g_maxPlayers, .team = team);
+        } else {
+            if (random(100) < 10) {
+                if (IsSmall(ent)) {
+                    NPC_EmitVoice(ent, g_szSndSmallIdleList[random(sizeof(g_szSndSmallIdleList))]);
+                } else {
+                    NPC_EmitVoice(ent, g_szSndIdleList[random(sizeof(g_szSndIdleList))]);
+                }
+            }
+        }
+
+        set_pev(ent, pev_fuser1, get_gametime());
+
+        NPC_PlayAction(ent, g_actions[action]);
+    }
+
+    set_pev(ent, pev_nextthink, get_gametime() + 0.01);
+
+    return HAM_HANDLED;
+}
+
 public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
 {
     if (g_ceHandler != CE_GetHandlerByEntity(ent) && g_ceHandlerSmall != CE_GetHandlerByEntity(ent)) {
@@ -271,8 +321,7 @@ public OnPlayerKilledPre(id, killer)
     return HAM_HANDLED;
 }
 
-
-bool:Attack(ent, target, &Action:action)
+bool:Attack(ent, target, &Action:action, bool:checkTarget = true)
 {
     new Float:fHitRange = IsSmall(ent) ? NPC_Small_HitRange : NPC_HitRange;
     new Float:fHitDelay = IsSmall(ent) ? NPC_Small_HitDelay : NPC_HitDelay;
@@ -281,31 +330,23 @@ bool:Attack(ent, target, &Action:action)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    if (NPC_CanHit(ent, target, fHitRange) && !task_exists(ent+TASKID_SUM_HIT)) {
+    if (checkTarget && NPC_CanHit(ent, target, fHitRange) && !task_exists(ent+TASKID_SUM_HIT)) {
         set_task(fHitDelay, "TaskHit", ent+TASKID_SUM_HIT);
         action = Action_Attack;
     }
 
     static Float:vTarget[3];
-    if (!NPC_GetTarget(ent, fSpeed, vTarget)) {
+    if (checkTarget && !NPC_GetTarget(ent, fSpeed, vTarget)) {
         NPC_SetEnemy(ent, 0);
         set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
         return false;
     }
     
-    if (get_distance_f(vOrigin, vTarget) < fHitRange * 0.95) {
+    if (checkTarget && get_distance_f(vOrigin, vTarget) < fHitRange * 0.95) {
         set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
     } else {
         action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
         NPC_MoveToTarget(ent, vTarget, NPC_Speed);
-    }
-
-    if (random(100) < 10) {
-        if (IsSmall(ent)) {
-            NPC_EmitVoice(ent, g_szSndSmallIdleList[random(sizeof(g_szSndSmallIdleList))]);
-        } else {
-            NPC_EmitVoice(ent, g_szSndIdleList[random(sizeof(g_szSndIdleList))]);
-        }
     }
 
     return true;
@@ -360,34 +401,6 @@ public TaskHit(taskID)
     new Float:fDamage = IsSmall(ent) ? NPC_Small_Damage : NPC_Damage;
 
     NPC_Hit(ent, fDamage, fHitRange, fHitDelay);
-}
-
-public TaskThink(taskID)
-{
-    new ent = taskID;
-
-    if (pev(ent, pev_deadflag) != DEAD_NO) {
-        return;
-    }
-
-    if (!pev_valid(ent)) {
-        return;
-    }
-
-    new enemy = pev(ent, pev_enemy);
-    new team = pev(ent, pev_team);
-    new Action:action = Action_Idle;
-
-    if (NPC_IsValidEnemy(enemy)) {
-        Attack(ent, enemy, action);
-    } else {
-        NPC_FindEnemy(ent, g_maxPlayers, .team = team);
-    }
-
-    NPC_PlayAction(ent, g_actions[action]);
-    UpdateColor(ent);
-
-    set_task(g_fThinkDelay, "TaskThink", ent);
 }
 
 bool:IsSmall(ent) {
