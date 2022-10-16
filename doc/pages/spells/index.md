@@ -27,6 +27,9 @@
 > Increase your fire rate
 > Allows you to do multi-jump
 
+# Skeletons Horde
+> Summons skeletons to play on your team
+
 # Dance (Wheel of Fate only)
 > Dance or die
 
