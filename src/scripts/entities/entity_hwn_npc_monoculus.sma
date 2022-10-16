@@ -118,7 +118,7 @@ new const g_actions[Action][NPC_Action] =
 const Float:NPC_Health = 8000.0;
 const Float:NPC_HealthPerLevel = 3000.0;
 const Float:NPC_Speed = 16.0;
-const Float:NPC_HitRange = 2048.0;
+const Float:NPC_HitRange = 3072.0;
 const Float:NPC_AttackDelay = 0.33;
 
 new g_sprBlood;
