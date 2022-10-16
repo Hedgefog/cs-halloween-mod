@@ -12,6 +12,19 @@
 #define PLUGIN "[Hwn] Objective Marks"
 #define AUTHOR "Hedgehog Fog"
 
+#if !defined MAX_PLAYERS
+    #define MAX_PLAYERS 32
+#endif
+
+#if AMXX_VERSION_NUM < 183
+    stock Float:xs_vec_distance(const Float:vec1[], const Float:vec2[])
+    {
+        return xs_sqrt((vec1[0]-vec2[0]) * (vec1[0]-vec2[0]) +
+            (vec1[1]-vec2[1]) * (vec1[1]-vec2[1]) +
+            (vec1[2]-vec2[2]) * (vec1[2]-vec2[2]));
+    }
+#endif
+
 #define MARK_CLASSNAME "_mark"
 #define SPRITE_WIDTH 128.0
 #define SPRITE_HEIGHT 128.0
