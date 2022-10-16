@@ -23,10 +23,8 @@ new const EffectColor[3] = {HWN_COLOR_SECONDARY};
 
 new const g_szSndCast[] = "hwn/spells/spell_skeletons_horde_cast.wav";
 new const g_szSndDetonate[] = "hwn/spells/spell_skeletons_horde_rise.wav";
-new const g_szSndBreak[]    = "hwn/npc/skeleton/skeleton_break.wav";
 new const g_szSprFireball[] = "sprites/xsmoke1.spr";
 
-new g_sprEffect;
 new g_mdlGibs;
 
 new g_hSpell;
@@ -34,7 +32,6 @@ new g_hCeSpellball;
 
 public plugin_precache()
 {
-    g_sprEffect = precache_model("sprites/plasma.spr");
     g_mdlGibs = precache_model("models/bonegibs.mdl");
     precache_model(g_szSprFireball);
 
