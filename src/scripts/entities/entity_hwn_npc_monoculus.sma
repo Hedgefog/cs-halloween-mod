@@ -254,6 +254,16 @@ public OnSpawn(ent)
     set_pev(ent, pev_health, fHealth);
     set_pev(ent, pev_movetype, MOVETYPE_FLY);
 
+    new Float:fRenderColor[3] = {HWN_COLOR_PRIMARY_F};
+    for (new i = 0; i < 3; ++i) {
+        fRenderColor[i] *= 0.2;
+    }
+
+    set_pev(ent, pev_rendermode, kRenderNormal);
+    set_pev(ent, pev_renderfx, kRenderFxGlowShell);
+    set_pev(ent, pev_renderamt, 4.0);
+    set_pev(ent, pev_rendercolor, fRenderColor);
+
     NPC_Create(ent, 0.0);
     new Array:monoculus = Monoculus_Create(ent);
 
