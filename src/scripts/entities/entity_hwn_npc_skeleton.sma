@@ -241,6 +241,24 @@ public OnTraceAttackPre(ent, attacker, Float:fDamage, Float:vDirection[3], trace
     return HAM_HANDLED;
 }
 
+public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
+{
+    if (g_ceHandler != CE_GetHandlerByEntity(ent) && g_ceHandlerSmall != CE_GetHandlerByEntity(ent)) {
+        return HAM_IGNORED;
+    }
+
+    new team = pev(ent, pev_team);
+    if (UTIL_IsPlayer(attacker) && UTIL_GetPlayerTeam(attacker) == team) {
+        return HAM_HANDLED;
+    }
+
+    static Float:vEnd[3];
+    get_tr2(trace, TR_vecEndPos, vEnd);
+    UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 242, floatround(fDamage/4));
+
+    return HAM_HANDLED;
+}
+
 public OnThink(ent)
 {
     if (g_ceHandler != CE_GetHandlerByEntity(ent) && g_ceHandlerSmall != CE_GetHandlerByEntity(ent)) {
@@ -284,24 +302,6 @@ public OnThink(ent)
     }
 
     set_pev(ent, pev_nextthink, get_gametime() + 0.01);
-
-    return HAM_HANDLED;
-}
-
-public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
-{
-    if (g_ceHandler != CE_GetHandlerByEntity(ent) && g_ceHandlerSmall != CE_GetHandlerByEntity(ent)) {
-        return HAM_IGNORED;
-    }
-
-    new team = pev(ent, pev_team);
-    if (UTIL_IsPlayer(attacker) && UTIL_GetPlayerTeam(attacker) == team) {
-        return HAM_HANDLED;
-    }
-
-    static Float:vEnd[3];
-    get_tr2(trace, TR_vecEndPos, vEnd);
-    UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 242, floatround(fDamage/4));
 
     return HAM_HANDLED;
 }
