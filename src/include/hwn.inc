@@ -1,4 +1,18 @@
 /*
+    6.4.0
+        Add Skeletons Horde spell
+        Added objective marks
+        Add player highlight
+        Reduced Monoculus rocket damage
+        Increased Monoculus NPC hit range
+        Increased crit pumpkin effect duration
+        Increased Skeleton NPC damage
+        Increased Spooky Pumpkin NPC health
+        Increased Spooky Pumpkin NPC speed
+        Improved Monoculus NPC AI
+        Improved collector gamemode win conditions
+        Add glow for Monoculus NPC
+
     6.3.0
         Additions and improvements:
             Added player preview when choosing cosmetics
@@ -299,7 +313,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.3.0"
+#define HWN_VERSION "6.4.0"
 
 enum Hwn_GamemodeFlags (<<=1)
 {
