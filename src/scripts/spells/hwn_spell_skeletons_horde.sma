@@ -23,7 +23,7 @@ new const EffectColor[3] = {HWN_COLOR_SECONDARY};
 
 new const g_szSndCast[] = "hwn/spells/spell_skeletons_horde_cast.wav";
 new const g_szSndDetonate[] = "hwn/spells/spell_skeletons_horde_rise.wav";
-new const g_szSprFireball[] = "sprites/xsmoke1.spr";
+new const g_szSprSpellBall[] = "sprites/xsmoke1.spr";
 
 new g_mdlGibs;
 
@@ -33,7 +33,7 @@ new g_hCeSpellball;
 public plugin_precache()
 {
     g_mdlGibs = precache_model("models/bonegibs.mdl");
-    precache_model(g_szSprFireball);
+    precache_model(g_szSprSpellBall);
 
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
@@ -94,7 +94,7 @@ public OnSpellballKilled(ent)
 
 public Cast(id)
 {
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, SpellballSpeed, g_szSprFireball, _, 0.5, 10.0);
+    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.5, 10.0);
     if (!ent) {
         return PLUGIN_HANDLED;
     }
