@@ -70,7 +70,8 @@ enum _:Monoculus
     Float:Monoculus_DamageToStun,
     bool:Monoculus_IsAngry,
     bool:Monoculus_IsStunned,
-    bool:Monoculus_NextPortal
+    bool:Monoculus_NextPortal,
+    bool:Monoculus_LastAction
 };
 
 new const g_szSndAttack[][128] = {
@@ -276,6 +277,7 @@ public OnSpawn(ent)
     ArraySetCell(monoculus, Monoculus_IsStunned, false);
     ArraySetCell(monoculus, Monoculus_DamageToStun, get_pcvar_float(g_cvarDamageToStun));
     ArraySetCell(monoculus, Monoculus_IsAngry, false);
+    ArraySetCell(monoculus, Monoculus_LastAction, get_gametime());
 
     ClearTasks(ent);
 
@@ -431,11 +433,13 @@ public TaskThink(ent)
         return;
     }
 
+    new Array:monoculus = Monoculus_Get(ent);
+
     if (pev(ent, pev_takedamage) == DAMAGE_NO) {
         set_pev(ent, pev_takedamage, DAMAGE_AIM);
+        ArraySetCell(monoculus, Monoculus_LastAction, get_gametime());
     }
 
-    new Array:monoculus = Monoculus_Get(ent);
     new bool:isStunned = ArrayGetCell(monoculus, Monoculus_IsStunned);
 
     if (!isStunned) {
@@ -447,6 +451,11 @@ public TaskThink(ent)
 
             NPC_FindEnemy(ent, g_maxPlayers);
             NPC_PlayAction(ent, g_actions[Action_Idle]);
+        }
+
+        new Float:fLastAction = ArrayGetCell(monoculus, Monoculus_LastAction);
+        if (get_gametime() - fLastAction > 5.0) {
+            JumpToPortal(ent);
         }
     }
 
@@ -481,6 +490,8 @@ bool:Attack(ent, target)
 
         NPC_PlayAction(ent, g_actions[Action_Idle]);
     }
+
+    ArraySetCell(monoculus, Monoculus_LastAction, get_gametime());
 
     return true;
 }
@@ -533,6 +544,7 @@ Stun(ent)
     remove_task(ent+TASKID_SUM_SHOT);
     remove_task(ent+TASKID_SUM_JUMP_TO_PORTAL);
     set_task(g_actions[Action_Stunned][NPC_Action_Time], "TaskRemoveStun", ent+TASKID_SUM_REMOVE_STUN);
+    ArraySetCell(monoculus, Monoculus_LastAction, get_gametime());
 }
 
 MakeAngry(ent)
@@ -545,6 +557,8 @@ MakeAngry(ent)
         ArraySetCell(monoculus, Monoculus_IsAngry, true);
         set_task(get_pcvar_float(g_cvarAngryTime), "TaskCalmDown", ent+TASKID_SUM_CALM_DOWN);
     }
+
+    ArraySetCell(monoculus, Monoculus_LastAction, get_gametime());
 }
 
 SetHeight(ent, Float:fHeight, Float:fSpeed = NPC_Speed)
@@ -653,7 +667,9 @@ JumpToPortal(ent)
     ArraySetCell(monoculus, Monoculus_NextPortal, portalIdx);
 
     NPC_PlayAction(ent, g_actions[Action_TeleportIn]);
+    remove_task(ent+TASKID_SUM_TELEPORT);
     set_task(g_actions[Action_TeleportIn][NPC_Action_Time], "TaskTeleport", ent+TASKID_SUM_TELEPORT);
+    ArraySetCell(monoculus, Monoculus_LastAction, get_gametime());
 }
 
 CreateJumpToPortalTask(ent)
