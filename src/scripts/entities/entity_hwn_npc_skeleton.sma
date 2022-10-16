@@ -14,7 +14,6 @@
 #define AUTHOR "Hedgehog Fog"
 
 #define TASKID_SUM_HIT 1000
-#define TASKID_SUM_IDLE_SOUND 2000
 
 #define ENTITY_NAME "hwn_npc_skeleton"
 #define ENTITY_NAME_SMALL "hwn_npc_skeleton_small"
@@ -50,13 +49,13 @@ enum Action
 };
 
 const Float:NPC_Health = 100.0;
-const Float:NPC_Speed = 280.0;
+const Float:NPC_Speed = 250.0;
 const Float:NPC_Damage = 16.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.35;
 
 const Float:NPC_Small_Health = 50.0;
-const Float:NPC_Small_Speed = 300.0;
+const Float:NPC_Small_Speed = 280.0;
 const Float:NPC_Small_Damage = 8.0;
 const Float:NPC_Small_HitRange = 32.0;
 const Float:NPC_Small_HitDelay = 0.35;
@@ -265,8 +264,6 @@ public OnThink(ent)
     }
 
     if (shouldUpdate) {
-        UpdateColor(ent);
-
         if (!isValidEnemy) {
             new team = pev(ent, pev_team);
             NPC_FindEnemy(ent, g_maxPlayers, .team = team);
@@ -280,9 +277,10 @@ public OnThink(ent)
             }
         }
 
-        set_pev(ent, pev_fuser1, get_gametime());
-
         NPC_PlayAction(ent, g_actions[action]);
+        UpdateColor(ent);
+
+        set_pev(ent, pev_fuser1, get_gametime());
     }
 
     set_pev(ent, pev_nextthink, get_gametime() + 0.01);
@@ -330,23 +328,29 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = true)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    if (checkTarget && NPC_CanHit(ent, target, fHitRange) && !task_exists(ent+TASKID_SUM_HIT)) {
-        set_task(fHitDelay, "TaskHit", ent+TASKID_SUM_HIT);
-        action = Action_Attack;
-    }
-
     static Float:vTarget[3];
     if (checkTarget && !NPC_GetTarget(ent, fSpeed, vTarget)) {
         NPC_SetEnemy(ent, 0);
         set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
         return false;
     }
-    
-    if (checkTarget && get_distance_f(vOrigin, vTarget) < fHitRange * 0.95) {
-        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
-    } else {
+
+    static Float:vTargetVelocity[3];
+    pev(target, pev_velocity, vTargetVelocity);
+
+    new bool:canHit = NPC_CanHit(ent, target, fHitRange);
+    new bool:shouldRun = !canHit || xs_vec_len(vTargetVelocity) > fHitRange;
+
+    if (checkTarget && canHit && !task_exists(ent+TASKID_SUM_HIT)) {
+        set_task(fHitDelay, "TaskHit", ent+TASKID_SUM_HIT);
+        action = Action_Attack;
+    }
+
+    if (shouldRun) {
         action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
         NPC_MoveToTarget(ent, vTarget, NPC_Speed);
+    } else {
+        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
     }
 
     return true;
@@ -356,7 +360,6 @@ RemoveTasks(ent)
 {
     remove_task(ent);
     remove_task(ent+TASKID_SUM_HIT);
-    remove_task(ent+TASKID_SUM_IDLE_SOUND);
 }
 
 DisappearEffect(ent)
