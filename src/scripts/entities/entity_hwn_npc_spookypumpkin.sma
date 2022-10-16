@@ -48,7 +48,7 @@ const Float:NPC_ViewRange = 1024.0;
 const Float:ENTITY_LifeTime = 30.0;
 const Float:ENTITY_RespawnTime = 30.0;
 
-const Float:SP_BigScaleMul = 1.5;
+const Float:SP_BigScaleMul = 2.0;
 const Float:SP_JumpVelocityZ = 160.0;
 const Float:SP_AttackJumpVelocityZ = 256.0;
 
