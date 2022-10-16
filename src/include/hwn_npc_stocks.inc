@@ -135,6 +135,11 @@ stock bool:NPC_Hit(
     new bool:hit = false;
 
     new target = get_tr2(trace, TR_pHit);
+    if (target == -1) {
+        engfunc(EngFunc_TraceHull, vOrigin, vTarget, DONT_IGNORE_MONSTERS, HULL_HEAD, ent, trace);
+        target = get_tr2(trace, TR_pHit);
+    }
+
     if (target != -1) {
         if (is_user_alive(target)) {
             UTIL_CS_DamagePlayer(target, fDamage, DMG_PARALYZE, ent, ent);
