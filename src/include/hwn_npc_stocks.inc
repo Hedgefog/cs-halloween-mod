@@ -324,7 +324,7 @@ stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly
     return true;
 }
 
-stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool:reachableOnly = true, bool:visibleOnly = true)
+stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool:reachableOnly = true, bool:visibleOnly = true, team = 0)
 {
     new nearestPlayer = 0;
     new Float:fNearestPlayerDistance = -1.0;
@@ -346,6 +346,10 @@ stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool
         }
 
         if (UTIL_IsInvisible(i)) {
+            continue;
+        }
+
+        if (UTIL_GetPlayerTeam(i) == team) {
             continue;
         }
 

@@ -150,7 +150,9 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
+    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttackPre", .Post = 0);
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
+    RegisterHam(Ham_Killed, "player", "OnPlayerKilledPre", .Post = 0);
 
     g_maxPlayers = get_maxplayers();
 }
@@ -178,7 +180,6 @@ public OnSpawn(ent)
     set_pev(ent, pev_rendermode, kRenderNormal);
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 4.0);
-    set_pev(ent, pev_rendercolor, {HWN_COLOR_SECONDARY_F});
     set_pev(ent, pev_health, fHealth);
     set_pev(ent, pev_groupinfo, 128);
 
@@ -188,6 +189,8 @@ public OnSpawn(ent)
     
     RemoveTasks(ent);
     set_task(2.0, "TaskThink", ent);
+
+    UpdateColor(ent);
 }
 
 public OnKilled(ent, killer)
@@ -205,6 +208,8 @@ public OnKilled(ent, killer)
                 continue;
             }
 
+            set_pev(eggEnt, pev_team, pev(ent, pev_team));
+            set_pev(eggEnt, pev_owner, pev(ent, pev_owner));
             dllfunc(DLLFunc_Spawn, eggEnt);
 
             new Float:vVelocity[3];
@@ -221,17 +226,51 @@ public OnRemove(ent)
     DisappearEffect(ent);
 }
 
+public OnTraceAttackPre(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
+{
+    if (g_ceHandler != CE_GetHandlerByEntity(ent) && g_ceHandlerSmall != CE_GetHandlerByEntity(ent)) {
+        return HAM_IGNORED;
+    }
+
+    new team = pev(ent, pev_team);
+    if (UTIL_IsPlayer(attacker) && UTIL_GetPlayerTeam(attacker) == team) {
+        return HAM_SUPERCEDE;
+    }
+
+    return HAM_HANDLED;
+}
+
 public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
 {
     if (g_ceHandler != CE_GetHandlerByEntity(ent) && g_ceHandlerSmall != CE_GetHandlerByEntity(ent)) {
-        return;
+        return HAM_IGNORED;
+    }
+
+    new team = pev(ent, pev_team);
+    if (UTIL_IsPlayer(attacker) && UTIL_GetPlayerTeam(attacker) == team) {
+        return HAM_HANDLED;
     }
 
     static Float:vEnd[3];
     get_tr2(trace, TR_vecEndPos, vEnd);
-
     UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 242, floatround(fDamage/4));
+
+    return HAM_HANDLED;
 }
+
+public OnPlayerKilledPre(id, killer)
+{
+    new ceHandler = CE_GetHandlerByEntity(killer);
+    if (ceHandler == g_ceHandler || ceHandler == g_ceHandlerSmall) {
+        new owner = pev(killer, pev_owner);
+        if (owner) {
+            SetHamParamEntity(2, owner);
+        }
+    }
+
+    return HAM_HANDLED;
+}
+
 
 bool:Attack(ent, target, &Action:action)
 {
@@ -293,6 +332,19 @@ DisappearEffect(ent)
     emit_sound(ent, CHAN_BODY, g_szSndBreak, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
+UpdateColor(ent) {
+    new team = pev(ent, pev_team);
+
+    switch (team) {
+        case 0:
+            set_pev(ent, pev_rendercolor, {HWN_COLOR_SECONDARY_F});
+        case 1:
+            set_pev(ent, pev_rendercolor, {HWN_COLOR_RED_F});
+        case 2:
+            set_pev(ent, pev_rendercolor, {HWN_COLOR_BLUE_F});
+    }
+}
+
 /*--------------------------------[ Tasks ]--------------------------------*/
 
 public TaskHit(taskID)
@@ -323,15 +375,17 @@ public TaskThink(taskID)
     }
 
     new enemy = pev(ent, pev_enemy);
+    new team = pev(ent, pev_team);
     new Action:action = Action_Idle;
 
     if (NPC_IsValidEnemy(enemy)) {
         Attack(ent, enemy, action);
     } else {
-        NPC_FindEnemy(ent, g_maxPlayers);
+        NPC_FindEnemy(ent, g_maxPlayers, .team = team);
     }
 
     NPC_PlayAction(ent, g_actions[action]);
+    UpdateColor(ent);
 
     set_task(g_fThinkDelay, "TaskThink", ent);
 }

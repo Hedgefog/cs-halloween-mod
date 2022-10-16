@@ -206,7 +206,7 @@ public OnTargetKilled(ent)
     static bossEnt;
     Hwn_Bosses_GetCurrent(bossEnt);
 
-    if (ent != bossEnt && pev(ent, pev_flags) & FL_MONSTER) { // Monster kill reward
+    if (ent != bossEnt && pev(ent, pev_flags) & FL_MONSTER && !pev(ent, pev_team)) { // Monster kill reward
         new Float:vOrigin[3];
         pev(ent, pev_origin, vOrigin);
 
