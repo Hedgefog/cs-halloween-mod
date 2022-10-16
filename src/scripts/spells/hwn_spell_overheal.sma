@@ -48,7 +48,6 @@ public plugin_init()
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-
 public Hwn_Wof_Fw_Effect_Start(spellIdx)
 {
     if (g_hWofSpell == spellIdx) {
