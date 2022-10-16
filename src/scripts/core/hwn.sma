@@ -14,6 +14,8 @@
 new g_fwConfigLoaded;
 new g_fwResult;
 
+new g_pCvarVersion;
+
 public plugin_precache()
 {
     register_cvar("hwn_fps", "25");
@@ -24,6 +26,12 @@ public plugin_precache()
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+
+    g_pCvarVersion = register_cvar("hwn_version", HWN_VERSION, FCVAR_SERVER);
+
+#if AMXX_VERSION_NUM > 182
+    hook_cvar_change(g_pCvarVersion, "OnVersionCvarChange");
+#endif
 
     g_fwConfigLoaded = CreateMultiForward("Hwn_Fw_ConfigLoaded", ET_IGNORE);
 }
@@ -37,6 +45,12 @@ public plugin_natives()
 {
     register_library("hwn");
 }
+
+#if AMXX_VERSION_NUM > 182
+public OnVersionCvarChange() {
+    set_pcvar_string(g_pCvarVersion, HWN_VERSION);
+}
+#endif
 
 LoadConfig()
 {
