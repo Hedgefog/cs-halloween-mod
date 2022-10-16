@@ -42,7 +42,7 @@ public plugin_precache()
     precache_sound(g_szSndDetonate);
 
     g_hSpell = Hwn_Spell_Register(
-        "Skeleton Horde",
+        "Skeletons Horde",
         Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Radius | Hwn_SpellFlag_Rare,
         "Cast"
     );
