@@ -1,17 +1,27 @@
 /*
     6.4.0
-        Add Skeletons Horde spell
-        Added objective marks
-        Add player highlight
-        Reduced Monoculus rocket damage
-        Increased Monoculus NPC hit range
-        Increased crit pumpkin effect duration
-        Increased Skeleton NPC damage
-        Increased Spooky Pumpkin NPC health
-        Increased Spooky Pumpkin NPC speed
-        Improved Monoculus NPC AI
-        Improved collector gamemode win conditions
-        Add glow for Monoculus NPC
+        Additions and improvements:
+            Add Skeletons Horde spell
+            Added objective marks
+            Add player highlight
+            Reduced Monoculus rocket damage
+            Increased Monoculus NPC hit range
+            Increased crit pumpkin effect duration
+            Increased Skeleton NPC damage
+            Increased Spooky Pumpkin NPC health
+            Increased Spooky Pumpkin NPC speed
+            Improved Monoculus NPC AI
+            Improved collector gamemode win conditions
+            Add glow for Monoculus NPC
+
+        Cvars:
+            Added hwn_objective_marks cvar
+            Added hwn_player_highlight cvar
+            Added hwn_player_highlight_primary_brightness cvar
+            Added hwn_player_highlight_secondary_brightness cvar
+
+        Fixes:
+            Fixed errors related to the blink spellball
 
     6.3.0
         Additions and improvements:
