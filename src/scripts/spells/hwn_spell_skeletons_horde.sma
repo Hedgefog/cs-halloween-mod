@@ -182,9 +182,9 @@ DetonateEffect(ent)
 
     new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
-    UTIL_Message_Dlight(vOrigin, 16, {HWN_COLOR_SECONDARY}, 10, 32);
+    UTIL_Message_Dlight(vOrigin, 36, {HWN_COLOR_SECONDARY}, 30, 12);
 
-    UTIL_Message_BreakModel(vOrigin, Float:{16.0, 16.0, 16.0}, vVelocity, 10, g_mdlGibs, 20, 25, 0);
+    UTIL_Message_BreakModel(vOrigin, Float:{16.0, 16.0, 16.0}, vVelocity, 30, g_mdlGibs, 20, 25, 0);
 
     emit_sound(ent, CHAN_BODY , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
