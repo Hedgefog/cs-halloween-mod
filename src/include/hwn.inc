@@ -15,6 +15,7 @@
             Improved collector gamemode win conditions
             Add glow for Monoculus NPC
             Increased light level for default gamemode
+            Reduced Ghost NPC speed
 
         Cvars:
             Added hwn_objective_marks cvar
@@ -409,7 +410,7 @@ native Hwn_Spell_CastPlayerSpell(id);
 forward Hwn_Spell_Fw_Cast(id, spellIdx);
 
 /*--------------------------------[ Wheel of Fate ]--------------------------------*/
-native Hwn_Wof_Spell_Register(const szName[], const szInvokeCallback[], const szRevokeCallback[] = "");
+native Hwn_Wof_Spell_Register(const szName[], const szInvokeCallback[] = "", const szRevokeCallback[] = "");
 native Hwn_Wof_Spell_GetCount();
 native Hwn_Wof_Spell_GetName(spell, szOutput[], maxlen);
 native Hwn_Wof_Spell_GetHandler(const szName[]);
