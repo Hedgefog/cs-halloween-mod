@@ -17,17 +17,6 @@
           uses: actions/setup-node@v1
           with:
             node-version: 12
-        - name: Install Zip
-          uses: montudor/action-zip@v0.1.0
-        - name: Download thirdparty
-          run: |
-            mkdir downloads
-            wget https://www.amxmodx.org/release/amxmodx-1.8.2-base-linux.tar.gz -P ./downloads
-            wget https://www.amxmodx.org/release/amxmodx-1.8.2-cstrike-linux.tar.gz -P ./downloads
-            wget https://github.com/s1lentq/reapi/releases/download/5.12.0.192/reapi_5.12.0.192-dev.zip -P ./downloads
-            wget 'https://svn.aghl.ru:8443/svn/s1lentq/!svn/ver/415/AMXX%20modules/RoundControl/AMXX%20Pawn/include/roundcontrol.inc' --no-check-certificate -P ./downloads
-            wget 'https://svn.aghl.ru:8443/svn/s1lentq/!svn/ver/416/AMXX%20modules/RoundControl/bin/roundcontrol_amxx.dll' --no-check-certificate -P ./downloads
-            wget 'https://svn.aghl.ru:8443/svn/s1lentq/!svn/ver/412/AMXX%20modules/RoundControl/bin/roundcontrol_amxx_i386.so' --no-check-certificate -P ./downloads
         - name: Setup Build Variables
           id: buildvars
           uses: actions/github-script@v3
@@ -45,18 +34,6 @@
               } catch (err) {
                 core.setFailed(err.message);
               }
-        - name: Setup compiler
-          run: |
-            mkdir ./compiler
-            tar --strip-components=3 -zxf ./downloads/amxmodx-1.8.2-base-linux.tar.gz -C ./compiler addons/amxmodx/scripting
-            tar --strip-components=3 -zxf ./downloads/amxmodx-1.8.2-cstrike-linux.tar.gz -C ./compiler addons/amxmodx/scripting
-            mkdir -p ./thirdparty/reapi
-            unzip ./downloads/reapi_5.12.0.192-dev.zip -d ./thirdparty/reapi
-            mkdir -p ./thirdparty/round-control/addons/amxmodx/modules
-            cp ./downloads/roundcontrol_amxx.dll ./thirdparty/round-control/addons/amxmodx/modules/roundcontrol_amxx.dll
-            cp ./downloads/roundcontrol_amxx_i386.so ./thirdparty/round-control/addons/amxmodx/modules/roundcontrol_amxx_i386.so
-            mkdir -p ./thirdparty/round-control/addons/amxmodx/scripting/include
-            cp ./downloads/roundcontrol.inc ./thirdparty/round-control/addons/amxmodx/scripting/include/roundcontrol.inc
         - name: Install Dependencies
           run: npm install
         - name: Build project
@@ -80,8 +57,8 @@
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
             upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: ./dist/bundles/alliedmods/hwn-${{ steps.buildvars.outputs.tagversion }}-addons.zip
-            asset_name: hwn-${{ steps.buildvars.outputs.tagversion }}-addons-src.zip
+            asset_path: ./dist/bundles/alliedmods/halloween-mod-${{ steps.buildvars.outputs.tagversion }}-addons-src.zip
+            asset_name: halloween-mod-${{ steps.buildvars.outputs.tagversion }}-addons-src.zip
             asset_content_type: application/zip
         - name: Upload Release Addons
           id: upload-release-addons
@@ -90,8 +67,8 @@
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
             upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: ./dist/bundles/full/hwn-${{ steps.buildvars.outputs.tagversion }}-addons.zip
-            asset_name: hwn-${{ steps.buildvars.outputs.tagversion }}-addons.zip
+            asset_path: ./dist/bundles/halloween-mod-${{ steps.buildvars.outputs.tagversion }}-addons.zip
+            asset_name: halloween-mod-${{ steps.buildvars.outputs.tagversion }}-addons.zip
             asset_content_type: application/zip
         - name: Upload Release Addons ReAPI
           id: upload-release-addons-reapi
@@ -100,8 +77,8 @@
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
             upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: ./dist/bundles/full/hwn-${{ steps.buildvars.outputs.tagversion }}-addons-reapi.zip
-            asset_name: hwn-${{ steps.buildvars.outputs.tagversion }}-addons-reapi.zip
+            asset_path: ./dist/bundles/halloween-mod-${{ steps.buildvars.outputs.tagversion }}-addons-reapi.zip
+            asset_name: halloween-mod-${{ steps.buildvars.outputs.tagversion }}-addons-reapi.zip
             asset_content_type: application/zip
         - name: Upload Release Resources
           id: upload-release-resources
@@ -110,8 +87,8 @@
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
             upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: ./dist/bundles/full/hwn-${{ steps.buildvars.outputs.tagversion }}-resources.zip
-            asset_name: hwn-${{ steps.buildvars.outputs.tagversion }}-resources.zip
+            asset_path: ./dist/bundles/halloween-mod-${{ steps.buildvars.outputs.tagversion }}-resources.zip
+            asset_name: halloween-mod-${{ steps.buildvars.outputs.tagversion }}-resources.zip
             asset_content_type: application/zip
         - name: Upload Release SDK
           id: upload-release-sdk
@@ -120,8 +97,8 @@
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
             upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: ./dist/bundles/sdk/hwn-${{ steps.buildvars.outputs.tagversion }}-sdk.zip
-            asset_name: hwn-${{ steps.buildvars.outputs.tagversion }}-sdk.zip
+            asset_path: ./dist/bundles/sdk/halloween-mod-${{ steps.buildvars.outputs.tagversion }}-sdk.zip
+            asset_name: halloween-mod-${{ steps.buildvars.outputs.tagversion }}-sdk.zip
             asset_content_type: application/zip
         - name: Cleanup
           run: |

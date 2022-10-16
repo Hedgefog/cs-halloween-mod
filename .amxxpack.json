@@ -1,0 +1,31 @@
+{
+  "compiler": {
+    "version": "1.8.2",
+    "dev": false,
+    "addons": ["cstrike"]
+  },
+  "thirdparty": {
+    "dependencies": [
+      {
+        "name": "reapi",
+        "url": "https://github.com/s1lentq/reapi/releases/download/5.21.0.252/reapi-bin-5.21.0.252.zip"
+      },
+      {
+        "name": "round-control",
+        "url": "https://forums.alliedmods.net/attachment.php?attachmentid=158323&d=1477933599"
+      }
+    ]
+  },
+  "include": [
+    "./.compiler/include"
+  ],
+  "input": {
+    "scripts": "./src/scripts",
+    "include": "./src/include",
+    "assets": "./assets"
+  },
+  "output": {},
+  "rules": {
+    "flatCompilation": true
+  }
+}
