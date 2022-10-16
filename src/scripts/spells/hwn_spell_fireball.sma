@@ -45,7 +45,7 @@ public plugin_precache()
         "Cast"
     );
 
-    g_hWofSpell = Hwn_Wof_Spell_Register("Fire", "Invoke");
+    g_hWofSpell = Hwn_Wof_Spell_Register("Fire", "Invoke", "Revoke");
 }
 
 public plugin_init()
@@ -57,15 +57,6 @@ public plugin_init()
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
-}
-
-/*--------------------------------[ Forwards ]--------------------------------*/
-
-public Hwn_Wof_Fw_Effect_Start(spellIdx)
-{
-    if (g_hWofSpell == spellIdx) {
-        Hwn_Wof_Abort();
-    }
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -125,8 +116,17 @@ public Invoke(id, Float:fTime)
         return;
     }
 
-    burn_player(id, 0, floatround(fTime));
+    burn_player(id, 0);
     DetonateEffect(id);
+}
+
+public Revoke(id, Float:fTime)
+{
+    if (!is_user_alive(id)) {
+        return;
+    }
+
+    extinguish_player(id);
 }
 
 Detonate(ent)
