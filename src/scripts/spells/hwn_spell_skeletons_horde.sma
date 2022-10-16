@@ -21,8 +21,8 @@ const SpellballSpeed = 720;
 
 new const EffectColor[3] = {HWN_COLOR_SECONDARY};
 
-new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
-new const g_szSndDetonate[] = "hwn/spells/spell_fireball_impact.wav";
+new const g_szSndCast[] = "hwn/spells/spell_skeletons_horde_cast.wav";
+new const g_szSndDetonate[] = "hwn/spells/spell_skeletons_horde_rise.wav";
 new const g_szSndBreak[]    = "hwn/npc/skeleton/skeleton_break.wav";
 new const g_szSprFireball[] = "sprites/xsmoke1.spr";
 
@@ -151,5 +151,5 @@ DetonateEffect(ent)
 
     UTIL_Message_BreakModel(vOrigin, Float:{16.0, 16.0, 16.0}, vVelocity, 10, g_mdlGibs, 20, 25, 0);
 
-    emit_sound(ent, CHAN_BODY, g_szSndBreak, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(ent, CHAN_BODY , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
