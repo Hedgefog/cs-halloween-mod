@@ -4,6 +4,8 @@
             Add Skeletons Horde spell
             Added objective marks
             Add player highlight
+            Added Magic Wheel of Fate spell
+            Remove Fortune Wheel of Fate spell
             Reduced Monoculus rocket damage
             Increased Monoculus NPC hit range
             Increased crit pumpkin effect duration
