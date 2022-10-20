@@ -116,6 +116,7 @@ public Hwn_Wof_Fw_Effect_Start(spellIdx)
         xs_vec_add(vOrigin, vecDir, vOrigin);
 
         SpawnEggs(vOrigin);
+        DetonateEffect(target);
     }
 }
 
