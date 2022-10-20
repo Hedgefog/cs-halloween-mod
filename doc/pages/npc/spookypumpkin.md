@@ -7,8 +7,8 @@
 
 ### STATS
 
-- **Health**: 70 (140 hp for big pumpkin)
-- **Speed** : 160 ups jump (jump velocity)
+- **Health**: 100 (200 hp for big pumpkin)
+- **Speed** : 200 ups jump (jump velocity)
 - **Damage**: 10 (15 for big pumpkin)
 - **Hit Range**: 48 units
 - **Hit Delay**: 0.5 sec
