@@ -1,11 +1,11 @@
 /*
     6.4.0
         Additions and improvements:
-            Add Skeletons Horde spell
+            Added Skeletons Horde spell
             Added objective marks
-            Add player highlight
+            Added player highlight
             Added Magic Wheel of Fate spell
-            Remove Fortune Wheel of Fate spell
+            Removed Fortune Wheel of Fate spell
             Reduced Monoculus rocket damage
             Increased Monoculus NPC hit range
             Increased crit pumpkin effect duration
@@ -15,7 +15,7 @@
             Improved Monoculus NPC AI
             Improved Skeleton NPC AI
             Improved collector gamemode win conditions
-            Add glow for Monoculus NPC
+            Added glow for Monoculus NPC
             Increased light level for default gamemode
             Reduced Ghost NPC speed
 
