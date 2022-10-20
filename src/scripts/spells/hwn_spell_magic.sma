@@ -25,7 +25,7 @@ public Invoke(id, Float:fTime)
         return;
     }
 
-    new playerSpell = Hwn_Spell_GetPlayerSpell(id, amount);
+    new playerSpell = Hwn_Spell_GetPlayerSpell(id);
     if (playerSpell >= 0) {
         return;
     }
