@@ -348,11 +348,9 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = true)
     new bool:shouldRun = !canHit || xs_vec_len(vTargetVelocity) > fHitRange;
 
     if (shouldRun) {
-        shouldRun = NPC_MoveToTarget(ent, vTarget, NPC_Speed);
+        NPC_MoveToTarget(ent, vTarget, NPC_Speed);
         action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
-    }
-
-    if (!shouldRun) {
+    } else {
         set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
     }
 
