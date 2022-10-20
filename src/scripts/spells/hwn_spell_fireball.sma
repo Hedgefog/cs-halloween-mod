@@ -28,7 +28,6 @@ new const g_szSprFireball[] = "sprites/xsmoke1.spr";
 new g_sprEffect;
 
 new g_hSpell;
-new g_hWofSpell;
 new g_hCeSpellball;
 
 public plugin_precache()
@@ -45,7 +44,7 @@ public plugin_precache()
         "Cast"
     );
 
-    g_hWofSpell = Hwn_Wof_Spell_Register("Fire", "Invoke", "Revoke");
+    Hwn_Wof_Spell_Register("Fire", "Invoke", "Revoke");
 }
 
 public plugin_init()
