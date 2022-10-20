@@ -68,7 +68,7 @@ stock NPC_PlayAction(ent, action[NPC_Action], bool:supercede = false)
     ArraySetCell(npcData, NPC_NextAction, fGametime + action[NPC_Action_Time]);
 }
 
-stock NPC_EmitVoice(ent, const szSound[], Float:fPlayTime = 1.0, bool:supercede = false)
+stock NPC_EmitVoice(ent, const szSound[], Float:fPlayTime = 1.0, bool:supercede = false, Float:fVolume = VOL_NORM)
 {
     new Array:npcData = NPC_GetData(ent);
 
@@ -77,7 +77,7 @@ stock NPC_EmitVoice(ent, const szSound[], Float:fPlayTime = 1.0, bool:supercede 
         return;
     }
 
-    emit_sound(ent, CHAN_VOICE, szSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(ent, CHAN_VOICE, szSound, fVolume, ATTN_NORM, 0, PITCH_NORM);
 
     ArraySetCell(npcData, NPC_NextVoice, fGametime + fPlayTime);
 }
@@ -391,7 +391,7 @@ stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool
     return !!nearestPlayer;
 }
 
-stock NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed, Float:fMaxAnglePerSecond = 180.0)
+stock bool:NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed, Float:fMaxAnglePerSecond = 180.0)
 {
     new bool:lockAxis[3] = {true, false, true};
     lockAxis[0] = pev(ent, pev_movetype) != MOVETYPE_FLY;
@@ -413,6 +413,8 @@ stock NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed, Float:fMaxAngl
     }
 
     ArraySetCell(npcData, NPC_LastRotation, fGameTime);
+
+    return turnResult;
 }
 
 stock NPC_MoveForward(ent, Float:fSpeed)

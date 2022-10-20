@@ -339,17 +339,20 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = true)
     pev(target, pev_velocity, vTargetVelocity);
 
     new bool:canHit = NPC_CanHit(ent, target, fHitRange);
-    new bool:shouldRun = !canHit || xs_vec_len(vTargetVelocity) > fHitRange;
 
     if (checkTarget && canHit && !task_exists(ent+TASKID_SUM_HIT)) {
         set_task(fHitDelay, "TaskHit", ent+TASKID_SUM_HIT);
         action = Action_Attack;
     }
 
+    new bool:shouldRun = !canHit || xs_vec_len(vTargetVelocity) > fHitRange;
+
     if (shouldRun) {
+        shouldRun = NPC_MoveToTarget(ent, vTarget, NPC_Speed);
         action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
-        NPC_MoveToTarget(ent, vTarget, NPC_Speed);
-    } else {
+    }
+
+    if (!shouldRun) {
         set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
     }
 
