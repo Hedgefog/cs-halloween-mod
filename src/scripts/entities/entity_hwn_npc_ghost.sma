@@ -186,7 +186,7 @@ Attack(ent, target)
     else
     {
         if (random(100) < 10) {
-            NPC_EmitVoice(ent, g_szSndIdle[random(sizeof(g_szSndIdle))], 4.0);
+            NPC_EmitVoice(ent, g_szSndIdle[random(sizeof(g_szSndIdle))], 4.0, _, 0.5);
         }
 
         static Float:vDirection[3];
