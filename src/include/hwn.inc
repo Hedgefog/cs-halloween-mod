@@ -12,18 +12,20 @@
             Increased Skeleton NPC damage
             Increased Spooky Pumpkin NPC health
             Increased Spooky Pumpkin NPC speed
+            Reduced Ghost NPC speed
+            Rare spells appear less frequently now
             Improved Monoculus NPC AI
             Improved Skeleton NPC AI
             Improved collector gamemode win conditions
             Added glow for Monoculus NPC
             Increased light level for default gamemode
-            Reduced Ghost NPC speed
 
         Cvars:
             Added hwn_objective_marks cvar
             Added hwn_player_highlight cvar
             Added hwn_player_highlight_primary_brightness cvar
             Added hwn_player_highlight_secondary_brightness cvar
+            Added hwn_spellbook_rare_chance cvar
 
         Fixes:
             Fixed errors related to the blink spellball
