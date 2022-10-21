@@ -5,6 +5,7 @@
             Added objective marks
             Added player highlight
             Added Magic Wheel of Fate spell
+            Added a random bonus drop from the bucket when scoring points
             Removed Fortune Wheel of Fate spell
             Reduced Monoculus rocket damage
             Increased Monoculus NPC hit range
@@ -26,6 +27,7 @@
             Added hwn_player_highlight_primary_brightness cvar
             Added hwn_player_highlight_secondary_brightness cvar
             Added hwn_spellbook_rare_chance cvar
+            Added hwn_bucket_bonus_chance cvar
 
         Fixes:
             Fixed errors related to the blink spellball
