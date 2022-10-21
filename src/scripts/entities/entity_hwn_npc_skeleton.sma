@@ -329,14 +329,18 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = true)
     pev(ent, pev_origin, vOrigin);
 
     static Float:vTarget[3];
-    if (checkTarget && !NPC_GetTarget(ent, fSpeed, vTarget)) {
-        NPC_SetEnemy(ent, 0);
-        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
-        return false;
-    }
+    if (checkTarget) {
+        if (!NPC_GetTarget(ent, fSpeed, vTarget)) {
+            NPC_SetEnemy(ent, 0);
+            set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+            set_pev(ent, pev_vuser1, vOrigin);
+            return false;
+        }
 
-    static Float:vTargetVelocity[3];
-    pev(target, pev_velocity, vTargetVelocity);
+        set_pev(ent, pev_vuser1, vTarget);
+    } else {
+        pev(ent, pev_vuser1, vTarget);
+    }
 
     new bool:canHit = NPC_CanHit(ent, target, fHitRange);
 
@@ -344,6 +348,9 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = true)
         set_task(fHitDelay, "TaskHit", ent+TASKID_SUM_HIT);
         action = Action_Attack;
     }
+
+    static Float:vTargetVelocity[3];
+    pev(target, pev_velocity, vTargetVelocity);
 
     new bool:shouldRun = !canHit || xs_vec_len(vTargetVelocity) > fHitRange;
 
