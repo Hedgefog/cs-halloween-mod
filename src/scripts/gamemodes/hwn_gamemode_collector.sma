@@ -328,19 +328,21 @@ SetPlayerPoints(id, count)
 bool:ExtractPlayerPoints(id)
 {
     new points = GetPlayerPoints(id);
-    if (!points) {
-        return false;
-    }
 
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
 
-    new bpEnt = CE_Create(BACKPACK_ENTITY_CLASSNAME, vOrigin);
+    new bool:isBackpack = points > 1;
+    new bpEnt = CE_Create(isBackpack ? BACKPACK_ENTITY_CLASSNAME : LOOT_ENTITY_CLASSNAME, vOrigin);
     if (!bpEnt) {
         return false;
     }
 
-    set_pev(bpEnt, pev_iuser2, points);
+    if (isBackpack) {
+        set_pev(bpEnt, pev_iuser2, points);
+    }
+
+    set_pev(bpEnt, pev_iuser1, Hwn_PumpkinType_Default);
     dllfunc(DLLFunc_Spawn, bpEnt);
 
     static Float:vVelocity[3];

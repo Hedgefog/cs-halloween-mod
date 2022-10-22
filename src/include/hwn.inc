@@ -6,6 +6,7 @@
             Added player highlight
             Added Magic Wheel of Fate spell
             Added a random bonus drop from the bucket when scoring points
+            Players now always drop pumpkin in collector gamemode
             Removed Fortune Wheel of Fate spell
             Reduced Monoculus rocket damage
             Increased Monoculus NPC hit range
@@ -333,6 +334,15 @@
 
 #define HWN_TITLE "Halloween Mod"
 #define HWN_VERSION "6.4.0"
+
+enum _:Hwn_PumpkinType
+{
+    Hwn_PumpkinType_Uninitialized = 0,
+    Hwn_PumpkinType_Default,
+    Hwn_PumpkinType_Crits,
+    Hwn_PumpkinType_Equipment,
+    Hwn_PumpkinType_Health
+};
 
 enum Hwn_GamemodeFlags (<<=1)
 {
