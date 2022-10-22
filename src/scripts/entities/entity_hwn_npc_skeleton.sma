@@ -50,13 +50,13 @@ enum Action
 
 const Float:NPC_Health = 100.0;
 const Float:NPC_Speed = 230.0;
-const Float:NPC_Damage = 16.0;
+const Float:NPC_Damage = 12.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.35;
 
 const Float:NPC_Small_Health = 50.0;
 const Float:NPC_Small_Speed = 250.0;
-const Float:NPC_Small_Damage = 8.0;
+const Float:NPC_Small_Damage = 6.0;
 const Float:NPC_Small_HitRange = 32.0;
 const Float:NPC_Small_HitDelay = 0.35;
 
