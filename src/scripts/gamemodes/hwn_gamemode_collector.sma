@@ -332,6 +332,10 @@ bool:ExtractPlayerPoints(id)
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
 
+    if (!Hwn_Gamemode_IsPlayerOnSpawn(id) && !points) {
+        return false;
+    }
+
     new bool:isBackpack = points > 1;
     new bpEnt = CE_Create(isBackpack ? BACKPACK_ENTITY_CLASSNAME : LOOT_ENTITY_CLASSNAME, vOrigin);
     if (!bpEnt) {
