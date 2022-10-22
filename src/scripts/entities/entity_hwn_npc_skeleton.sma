@@ -49,13 +49,13 @@ enum Action
 };
 
 const Float:NPC_Health = 100.0;
-const Float:NPC_Speed = 250.0;
+const Float:NPC_Speed = 230.0;
 const Float:NPC_Damage = 16.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.35;
 
 const Float:NPC_Small_Health = 50.0;
-const Float:NPC_Small_Speed = 280.0;
+const Float:NPC_Small_Speed = 250.0;
 const Float:NPC_Small_Damage = 8.0;
 const Float:NPC_Small_HitRange = 32.0;
 const Float:NPC_Small_HitDelay = 0.35;
@@ -224,7 +224,6 @@ public OnRemove(ent)
 {
     RemoveTasks(ent);
     NPC_Destroy(ent);
-    DisappearEffect(ent);
 }
 
 public OnTraceAttackPre(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
@@ -366,7 +365,6 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = true)
 
 RemoveTasks(ent)
 {
-    remove_task(ent);
     remove_task(ent+TASKID_SUM_HIT);
 }
 
