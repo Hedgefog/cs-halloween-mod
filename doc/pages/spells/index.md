@@ -35,3 +35,6 @@
 
 # Dance (Wheel of Fate only)
 > Dance or die
+
+# Magic (Wheel of Fate only)
+> Gives a random spell to each player
