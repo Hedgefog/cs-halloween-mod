@@ -397,7 +397,7 @@ stock UTIL_GetPlayerTeam(id)
 stock Float:UTIL_GetNextPrimaryAttack(ent)
 {
     #if defined _reapi_included
-        return get_member(ent, m_flNextPrimaryAttack);
+        return get_member(ent, m_Weapon_flNextPrimaryAttack);
     #else
         return get_pdata_float(ent, m_flNextPrimaryAttack, 4);
     #endif
@@ -406,7 +406,7 @@ stock Float:UTIL_GetNextPrimaryAttack(ent)
 stock UTIL_SetNextPrimaryAttack(ent, Float:fValue)
 {
     #if defined _reapi_included
-        set_member(ent, m_flNextPrimaryAttack, fValue);
+        set_member(ent, m_Weapon_flNextPrimaryAttack, fValue);
     #else
         set_pdata_float(ent, m_flNextPrimaryAttack, fValue, 4);
     #endif
@@ -415,7 +415,7 @@ stock UTIL_SetNextPrimaryAttack(ent, Float:fValue)
 stock Float:UTIL_GetNextSecondaryAttack(ent)
 {
     #if defined _reapi_included
-        return get_member(ent, m_flNextSecondaryAttack);
+        return get_member(ent, m_Weapon_flNextSecondaryAttack);
     #else
         return get_pdata_float(ent, m_flNextSecondaryAttack, 4);
     #endif
@@ -424,7 +424,7 @@ stock Float:UTIL_GetNextSecondaryAttack(ent)
 stock UTIL_SetNextSecondaryAttack(ent, Float:fValue)
 {
     #if defined _reapi_included
-        set_member(ent, m_flNextSecondaryAttack, fValue);
+        set_member(ent, m_Weapon_flNextSecondaryAttack, fValue);
     #else
         set_pdata_float(ent, m_flNextSecondaryAttack, fValue, 4);
     #endif
