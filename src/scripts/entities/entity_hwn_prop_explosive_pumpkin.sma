@@ -88,8 +88,7 @@ PumpkinRadiusDamage(ent, owner)
 
         new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE);
 
-        client_print(target, print_chat, "Damage: %f", fDamage);
-        ExecuteHamB(Ham_TakeDamage, target, ent, target == owner ? 0 : owner, fDamage, DMG_GENERIC);
+        ExecuteHamB(Ham_TakeDamage, target, ent, target == owner ? 0 : owner, fDamage, DMG_ALWAYSGIB);
     }
 }
 
