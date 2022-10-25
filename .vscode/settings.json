@@ -2,6 +2,8 @@
   "amxxpawn.compiler.executablePath": "${workspaceRoot}/compiler/amxxpc.exe",
   "amxxpawn.compiler.includePaths": [
       "${workspaceRoot}/.compiler/include",
+      "${workspaceRoot}/.thirdparty/reapi/addons/amxmodx/scripting/include",
+      "${workspaceRoot}/.thirdparty/round-control/roundcontrol_2.2/addons/amxmodx/scripting/include",
       "${workspaceRoot}/src/include"
   ]
 }
