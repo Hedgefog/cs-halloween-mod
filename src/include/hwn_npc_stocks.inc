@@ -139,7 +139,7 @@ stock bool:NPC_Hit(
             ExecuteHamB(Ham_TraceAttack, target, ent, fDamage, vDirection, trace, DMG_GENERIC);
             rg_multidmg_apply(ent, ent);
         #else
-            ExecuteHamB(Ham_TakeDamage, target, ent, ent, fDamage, DMG_PARALYZE);
+            ExecuteHamB(Ham_TakeDamage, target, ent, ent, fDamage, DMG_GENERIC);
         #endif
 
         hit = UTIL_IsPlayer(target);
