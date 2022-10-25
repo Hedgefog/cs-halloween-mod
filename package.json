@@ -17,7 +17,7 @@
   "author": "Hedgehog Fog",
   "license": "MIT",
   "devDependencies": {
-    "amxxpack": "^1.0.2",
+    "amxxpack": "^1.1.1",
     "concurrently": "^7.4.0",
     "gulp": "^4.0.2",
     "gulp-file": "^0.4.0",
