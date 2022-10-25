@@ -30,8 +30,8 @@
 # Skeletons Horde
 > Summons skeletons to play on your team
 
+# Intangibility
+> Immunity to bullets and impacts
+
 # Dance (Wheel of Fate only)
 > Dance or die
-
-# Fortune (Wheel of Fate only)
-> No effect
