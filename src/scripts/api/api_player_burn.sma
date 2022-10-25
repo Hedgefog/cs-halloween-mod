@@ -5,7 +5,7 @@
 #include <fakemeta>
 
 #define PLUGIN    "[API] Player Burn"
-#define VERSION    "0.3.1"
+#define VERSION    "0.3.2"
 #define AUTHOR    "Hedgehog Fog"
 
 #if !defined MAX_PLAYERS
@@ -18,7 +18,7 @@
 #define TASKID_SUM_BURN        1000
 
 #define DMG_BURN_PAINSHOCK    0.5
-#define DMG_BURN_AMOUNT        3.0
+#define DMG_BURN_AMOUNT        4.0
 
 new g_playerAttacker[MAX_PLAYERS + 1] = { 0, ... };
 
@@ -217,19 +217,11 @@ public task_player_burn_damage(taskID)
         return;
     }
 
-    UTIL_CS_DamagePlayer(id, DMG_BURN_AMOUNT, DMG_BURN, 0, 0);
+    ExecuteHamB(Ham_TakeDamage, id, 0, 0, DMG_BURN_AMOUNT, DMG_BURN);
 }
 
 public task_player_extinguish(taskID)
 {
     new id = taskID - TASKID_SUM_BURN;
     extinguish_player(id);
-}
-
-stock UTIL_CS_DamagePlayer(victim, Float:fDamage, dmgbits = DMG_GENERIC, attacker = 0, inflictor = 0)
-{
-    new armorType = get_pdata_int(victim, 112);
-    set_pdata_int(victim, 112, 0);
-    ExecuteHamB(Ham_TakeDamage, victim, inflictor, attacker, fDamage, dmgbits);
-    set_pdata_int(victim, 112, armorType);
 }

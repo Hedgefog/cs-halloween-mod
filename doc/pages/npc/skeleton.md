@@ -13,7 +13,7 @@
 
 - **Health**: 100 (50 hp for small skeletons)
 - **Speed** : 250 ups (300 ups for small skeletons)
-- **Damage**: 16 (8 damage for small skeletons)
+- **Damage**: 24 (12 damage for small skeletons)
 - **Hit Range**: 48 units (32 units for small skeletons)
 - **Hit Delay**: 0.35 sec
 - **Respawn Time**: 30 sec

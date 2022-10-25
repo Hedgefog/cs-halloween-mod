@@ -17,7 +17,7 @@
 #define ENTITY_NAME "hwn_monoculus_rocket"
 
 #define EXPLOSION_RADIUS 128.0
-#define EXPLOSION_DAMAGE 80.0
+#define EXPLOSION_DAMAGE 160.0
 #define EXPLOSION_SPRITE_SIZE 80.0
 
 new g_sprSmoke;
@@ -163,11 +163,7 @@ RocketRadiusDamage(ent, owner)
 
         new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE, false, target);
 
-        if (UTIL_IsPlayer(target)) {
-            UTIL_CS_DamagePlayer(target, fDamage, DMG_ALWAYSGIB, owner, owner);
-        } else {
-            ExecuteHamB(Ham_TakeDamage, target, owner, owner, fDamage, DMG_GENERIC);
-        }
+        ExecuteHamB(Ham_TakeDamage, target, owner, owner, fDamage, DMG_ALWAYSGIB);
     }
 }
 

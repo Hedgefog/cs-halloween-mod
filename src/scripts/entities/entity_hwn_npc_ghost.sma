@@ -21,7 +21,7 @@
 #define ENTITY_NAME "hwn_npc_ghost"
 
 const Float:NPC_Speed = 100.0;
-const Float:NPC_Damage = 10.0;
+const Float:NPC_Damage = 20.0;
 const Float:NPC_HitRange = 32.0;
 const Float:NPC_HitDelay = 3.0;
 

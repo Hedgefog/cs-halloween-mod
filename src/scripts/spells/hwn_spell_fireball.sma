@@ -15,7 +15,7 @@
 #define PLUGIN "[Hwn] Fireball Spell"
 #define AUTHOR "Hedgehog Fog"
 
-const Float:FireballDamage = 30.0;
+const Float:FireballDamage = 60.0;
 const FireballSpeed = 720;
 
 const Float:EffectRadius = 64.0;
@@ -155,17 +155,19 @@ Detonate(ent)
 
         new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EffectRadius, FireballDamage);
 
-        if (UTIL_IsPlayer(target)) {
-            if (team == UTIL_GetPlayerTeam(target)) {
-                continue;
-            }
-
-            UTIL_CS_DamagePlayer(target, fDamage, DMG_BURN, owner, 0);
-            burn_player(target, owner, 15);
-            UTIL_PushFromOrigin(vOrigin, target, 512.0);
-        } else {
-            ExecuteHamB(Ham_TakeDamage, target, 0, owner, fDamage, DMG_BURN);
+        if (UTIL_IsTeammate(target, team)) {
+            continue;
         }
+
+        if (UTIL_IsPlayer(target)) {
+            burn_player(target, owner, 15);
+        }
+
+        if (UTIL_IsPlayer(target) || pev(target, pev_flags) & FL_MONSTER) {
+            UTIL_PushFromOrigin(vOrigin, target, 512.0);
+        }
+
+        ExecuteHamB(Ham_TakeDamage, target, 0, owner, fDamage, DMG_BURN);
     }
 
     DetonateEffect(ent);

@@ -9,7 +9,7 @@
 
 - **Health**: 100 (200 hp for big pumpkin)
 - **Speed** : 200 ups jump (jump velocity)
-- **Damage**: 10 (15 for big pumpkin)
+- **Damage**: 20 (40 for big pumpkin)
 - **Hit Range**: 48 units
 - **Hit Delay**: 0.5 sec
 - **Respawn Time**: 30 sec

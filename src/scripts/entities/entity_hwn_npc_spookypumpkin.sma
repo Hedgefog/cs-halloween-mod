@@ -40,7 +40,7 @@ enum Action
 
 const Float:NPC_Health = 100.0;
 const Float:NPC_Speed = 200.0; // for jump velocity
-const Float:NPC_Damage = 10.0;
+const Float:NPC_Damage = 20.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.5;
 const Float:NPC_ViewRange = 1024.0;

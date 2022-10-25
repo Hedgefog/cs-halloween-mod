@@ -14,7 +14,7 @@
 > Burn player
 
 # Lightning
-> Spawns magic ball on cast. Magic ball has no gravity and move forward, damage enemies in radius for 15 hp each 0.5 second and sucks them in.
+> Spawns magic ball on cast. Magic ball has no gravity and move forward, damage enemies in radius for 30 hp each 0.5 second and sucks them in.
 
 # Moon Jump
 > Sets gravity of caster's gravity to moon gravity for 25 seconds.

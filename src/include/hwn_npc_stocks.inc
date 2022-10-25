@@ -1,3 +1,5 @@
+#tryinclude <reapi>
+
 #include <hwn_utils>
 
 #define STEP_HEIGHT 18.0
@@ -101,8 +103,7 @@ stock bool:NPC_Hit(
     Float:fDamage,
     Float:fRange,
     Float:fAttackDelay,
-    const Float:vOffset[3] = {0.0, 0.0, 0.0},
-    bool:correctByEnemy = true
+    const Float:vOffset[3] = {0.0, 0.0, 0.0}
 )
 {
     static Float:vOrigin[3];
@@ -111,28 +112,14 @@ stock bool:NPC_Hit(
     static Float:vDirection[3];
     UTIL_GetDirectionVector(ent, vDirection);
 
-    // correction of z axis by enemy origin
-    new enemy = pev(ent, pev_enemy);
-    if (correctByEnemy && enemy) {
-        static Float:vTemp[3];
-        pev(enemy, pev_origin, vTemp);
-        xs_vec_sub(vTemp, vOrigin, vTemp);
-        xs_vec_normalize(vTemp, vTemp);
-
-        vDirection[2] = vTemp[2];
-        xs_vec_normalize(vDirection, vDirection);
-    }
-
-    xs_vec_mul_scalar(vDirection, fRange, vDirection);
-
     static Float:vTarget[3];
-    xs_vec_add(vOrigin, vDirection, vTarget);
+    xs_vec_mul_scalar(vDirection, fRange, vTarget);
+    xs_vec_add(vTarget, vOrigin, vTarget);
     xs_vec_add(vTarget, vOffset, vTarget);
 
     new trace = create_tr2();
-    engfunc(EngFunc_TraceLine, vOrigin, vTarget, DONT_IGNORE_MONSTERS, ent, trace);
 
-    new bool:hit = false;
+    engfunc(EngFunc_TraceLine, vOrigin, vTarget, DONT_IGNORE_MONSTERS, ent, trace);
 
     new target = get_tr2(trace, TR_pHit);
     if (target == -1) {
@@ -140,13 +127,22 @@ stock bool:NPC_Hit(
         target = get_tr2(trace, TR_pHit);
     }
 
-    if (target != -1) {
-        if (is_user_alive(target)) {
-            UTIL_CS_DamagePlayer(target, fDamage, DMG_PARALYZE, ent, ent);
-            hit = true;
-        } else {
+    new bool:hit = target != -1;
+
+    if (hit) {
+        #if defined _reapi_included
+            get_tr2(trace, TR_vecEndPos, vTarget);
+            xs_vec_sub(vOrigin, vTarget, vDirection);
+            xs_vec_normalize(vDirection, vDirection);
+
+            rg_multidmg_clear();
+            ExecuteHamB(Ham_TraceAttack, target, ent, fDamage, vDirection, trace, DMG_GENERIC);
+            rg_multidmg_apply(ent, ent);
+        #else
             ExecuteHamB(Ham_TakeDamage, target, ent, ent, fDamage, DMG_PARALYZE);
-        }
+        #endif
+
+        hit = UTIL_IsPlayer(target);
     }
 
     free_tr2(trace);
