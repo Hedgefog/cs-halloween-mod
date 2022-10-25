@@ -2,6 +2,7 @@
     6.4.0
         Additions and improvements:
             Added Skeletons Horde spell
+            Added Intangibility spell
             Added objective marks
             Added player highlight
             Added Magic Wheel of Fate spell
