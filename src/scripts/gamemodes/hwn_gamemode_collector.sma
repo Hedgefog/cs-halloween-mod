@@ -332,7 +332,7 @@ bool:ExtractPlayerPoints(id)
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
 
-    if (!Hwn_Gamemode_IsPlayerOnSpawn(id) && !points) {
+    if (Hwn_Gamemode_IsPlayerOnSpawn(id) && !points) {
         return false;
     }
 
