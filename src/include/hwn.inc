@@ -23,6 +23,7 @@
             Improved collector gamemode win conditions
             Added glow for Monoculus NPC
             Increased light level for default gamemode
+            Added Ukrainian translation
 
         Cvars:
             Added hwn_objective_marks cvar
