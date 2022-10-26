@@ -28,7 +28,7 @@ const Float:SpellballSpeed = 320.0;
 const Float:SpellballLifeTime = 5.0;
 const Float:SpellballMagnetism = 320.0;
 
-const Float:EffectDamage = 15.0;
+const Float:EffectDamage = 30.0;
 const Float:EffectDamageDelay = 0.5;
 const Float:EffectLightningDelay = 0.1;
 const Float:EffectRadius = 96.0;
@@ -215,19 +215,17 @@ RadiusDamage(ent, bool:push = false)
 
         new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EffectRadius * EffectDamageRadiusMultiplier, EffectDamage, false, target);
 
-        if (UTIL_IsPlayer(target)) {
-            if (team == UTIL_GetPlayerTeam(target)) {
-                continue;
-            }
+        if (UTIL_IsTeammate(target, team)) {
+            continue;
+        }
 
-            UTIL_CS_DamagePlayer(target, fDamage, DMG_SHOCK, owner, 0);
-
-            if (push) {
+        if (push) {
+            if (UTIL_IsPlayer(target) || pev(target, pev_flags) & FL_MONSTER) {
                 UTIL_PushFromOrigin(vOrigin, target, SpellballMagnetism);
             }
-        } else {
-            ExecuteHamB(Ham_TakeDamage, target, 0, owner, fDamage, DMG_SHOCK);
         }
+
+        ExecuteHamB(Ham_TakeDamage, target, 0, owner, fDamage, DMG_SHOCK);
     }
 }
 

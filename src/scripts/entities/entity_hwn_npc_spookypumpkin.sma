@@ -38,9 +38,9 @@ enum Action
     Action_Attack,
 };
 
-const Float:NPC_Health = 70.0;
-const Float:NPC_Speed = 160.0; // for jump velocity
-const Float:NPC_Damage = 10.0;
+const Float:NPC_Health = 100.0;
+const Float:NPC_Speed = 200.0; // for jump velocity
+const Float:NPC_Damage = 20.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.5;
 const Float:NPC_ViewRange = 1024.0;
@@ -48,7 +48,7 @@ const Float:NPC_ViewRange = 1024.0;
 const Float:ENTITY_LifeTime = 30.0;
 const Float:ENTITY_RespawnTime = 30.0;
 
-const Float:SP_BigScaleMul = 1.5;
+const Float:SP_BigScaleMul = 2.0;
 const Float:SP_JumpVelocityZ = 160.0;
 const Float:SP_AttackJumpVelocityZ = 256.0;
 

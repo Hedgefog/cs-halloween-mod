@@ -1,3 +1,5 @@
+#tryinclude <reapi>
+
 #include <hwn_utils>
 
 #define STEP_HEIGHT 18.0
@@ -68,7 +70,7 @@ stock NPC_PlayAction(ent, action[NPC_Action], bool:supercede = false)
     ArraySetCell(npcData, NPC_NextAction, fGametime + action[NPC_Action_Time]);
 }
 
-stock NPC_EmitVoice(ent, const szSound[], Float:fPlayTime = 1.0, bool:supercede = false)
+stock NPC_EmitVoice(ent, const szSound[], Float:fPlayTime = 1.0, bool:supercede = false, Float:fVolume = VOL_NORM)
 {
     new Array:npcData = NPC_GetData(ent);
 
@@ -77,7 +79,7 @@ stock NPC_EmitVoice(ent, const szSound[], Float:fPlayTime = 1.0, bool:supercede 
         return;
     }
 
-    emit_sound(ent, CHAN_VOICE, szSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(ent, CHAN_VOICE, szSound, fVolume, ATTN_NORM, 0, PITCH_NORM);
 
     ArraySetCell(npcData, NPC_NextVoice, fGametime + fPlayTime);
 }
@@ -101,8 +103,7 @@ stock bool:NPC_Hit(
     Float:fDamage,
     Float:fRange,
     Float:fAttackDelay,
-    const Float:vOffset[3] = {0.0, 0.0, 0.0},
-    bool:correctByEnemy = true
+    const Float:vOffset[3] = {0.0, 0.0, 0.0}
 )
 {
     static Float:vOrigin[3];
@@ -111,37 +112,37 @@ stock bool:NPC_Hit(
     static Float:vDirection[3];
     UTIL_GetDirectionVector(ent, vDirection);
 
-    // correction of z axis by enemy origin
-    new enemy = pev(ent, pev_enemy);
-    if (correctByEnemy && enemy) {
-        static Float:vTemp[3];
-        pev(enemy, pev_origin, vTemp);
-        xs_vec_sub(vTemp, vOrigin, vTemp);
-        xs_vec_normalize(vTemp, vTemp);
-
-        vDirection[2] = vTemp[2];
-        xs_vec_normalize(vDirection, vDirection);
-    }
-
-    xs_vec_mul_scalar(vDirection, fRange, vDirection);
-
     static Float:vTarget[3];
-    xs_vec_add(vOrigin, vDirection, vTarget);
+    xs_vec_mul_scalar(vDirection, fRange, vTarget);
+    xs_vec_add(vTarget, vOrigin, vTarget);
     xs_vec_add(vTarget, vOffset, vTarget);
 
     new trace = create_tr2();
+
     engfunc(EngFunc_TraceLine, vOrigin, vTarget, DONT_IGNORE_MONSTERS, ent, trace);
 
-    new bool:hit = false;
-
     new target = get_tr2(trace, TR_pHit);
-    if (target != -1) {
-        if (is_user_alive(target)) {
-            UTIL_CS_DamagePlayer(target, fDamage, DMG_PARALYZE, ent, ent);
-            hit = true;
-        } else {
-            ExecuteHamB(Ham_TakeDamage, target, ent, ent, fDamage, DMG_PARALYZE);
-        }
+    if (target == -1) {
+        engfunc(EngFunc_TraceHull, vOrigin, vTarget, DONT_IGNORE_MONSTERS, HULL_HEAD, ent, trace);
+        target = get_tr2(trace, TR_pHit);
+    }
+
+    new bool:hit = target != -1;
+
+    if (hit) {
+        #if defined _reapi_included
+            get_tr2(trace, TR_vecEndPos, vTarget);
+            xs_vec_sub(vOrigin, vTarget, vDirection);
+            xs_vec_normalize(vDirection, vDirection);
+
+            rg_multidmg_clear();
+            ExecuteHamB(Ham_TraceAttack, target, ent, fDamage, vDirection, trace, DMG_GENERIC);
+            rg_multidmg_apply(ent, ent);
+        #else
+            ExecuteHamB(Ham_TakeDamage, target, ent, ent, fDamage, DMG_GENERIC);
+        #endif
+
+        hit = UTIL_IsPlayer(target);
     }
 
     free_tr2(trace);
@@ -324,7 +325,7 @@ stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly
     return true;
 }
 
-stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool:reachableOnly = true, bool:visibleOnly = true)
+stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool:reachableOnly = true, bool:visibleOnly = true, team = 0)
 {
     new nearestPlayer = 0;
     new Float:fNearestPlayerDistance = -1.0;
@@ -346,6 +347,10 @@ stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool
         }
 
         if (UTIL_IsInvisible(i)) {
+            continue;
+        }
+
+        if (UTIL_GetPlayerTeam(i) == team) {
             continue;
         }
 
@@ -382,7 +387,7 @@ stock bool:NPC_FindEnemy(ent, maxplayers = 32, Float:fMaxDistance = 3072.0, bool
     return !!nearestPlayer;
 }
 
-stock NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed, Float:fMaxAnglePerSecond = 180.0)
+stock bool:NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed, Float:fMaxAnglePerSecond = 180.0)
 {
     new bool:lockAxis[3] = {true, false, true};
     lockAxis[0] = pev(ent, pev_movetype) != MOVETYPE_FLY;
@@ -398,12 +403,19 @@ stock NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed, Float:fMaxAngl
 
     new bool:turnResult = UTIL_TurnTo(ent, vTarget, lockAxis, fMaxAngle);
 
-    if (fSpeed > 0.0 && turnResult) {
-        set_pev(ent, pev_speed, fSpeed);
-        NPC_MoveForward(ent, fSpeed);
+    if (turnResult) {
+        static Float:vOrigin[3];
+        pev(ent, pev_origin, vOrigin);
+
+        if (fSpeed > 0.0 && get_distance_f(vOrigin, vTarget) > 1.0) {
+            set_pev(ent, pev_speed, fSpeed);
+            NPC_MoveForward(ent, fSpeed);
+        }
     }
 
     ArraySetCell(npcData, NPC_LastRotation, fGameTime);
+
+    return turnResult;
 }
 
 stock NPC_MoveForward(ent, Float:fSpeed)
@@ -459,7 +471,7 @@ stock bool:NPC_CanHit(ent, enemy, Float:fHitRange)
     return result;
 }
 
-stock NPC_IsValidEnemy(enemy)
+stock bool:NPC_IsValidEnemy(enemy)
 {
     return (enemy && is_user_alive(enemy) && !UTIL_IsInvisible(enemy) && pev(enemy, pev_takedamage) != DAMAGE_NO);
 }

@@ -16,7 +16,7 @@
 #define ENTITY_NAME "hwn_prop_explosive_pumpkin"
 
 #define EXPLOSION_RADIUS 128.0
-#define EXPLOSION_DAMAGE 130.0
+#define EXPLOSION_DAMAGE 250.0
 #define EXPLOSION_SPRITE_SIZE 80.0
 
 new g_mdlGibs;
@@ -88,11 +88,7 @@ PumpkinRadiusDamage(ent, owner)
 
         new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE);
 
-        if (UTIL_IsPlayer(target)) {
-            UTIL_CS_DamagePlayer(target, fDamage, DMG_ALWAYSGIB, target == owner ? 0 : owner, ent);
-        } else {
-            ExecuteHamB(Ham_TakeDamage, target, ent, owner, fDamage, DMG_GENERIC);
-        }
+        ExecuteHamB(Ham_TakeDamage, target, ent, target == owner ? 0 : owner, fDamage, DMG_ALWAYSGIB);
     }
 }
 

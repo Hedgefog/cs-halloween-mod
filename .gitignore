@@ -1,15 +1,9 @@
 *.amxx
 *.max
 *.log
-*.amxp
-
-*.user.*
 
 node_modules/
 
-compiler/
-thirdparty/*/**
-
 dist/
-dist_reapi/
-bundles/
+.compiler/
+.thirdparty/

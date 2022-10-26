@@ -32,6 +32,7 @@ new bool:g_isPrecaching;
 
 new g_cvarMaxSpellCount;
 new g_cvarMaxRareSpellCount;
+new g_cvarRareChance;
 
 new g_ceHandler;
 
@@ -70,6 +71,7 @@ public plugin_precache()
 
     g_cvarMaxSpellCount = register_cvar("hwn_spellbook_max_spell_count", "3");
     g_cvarMaxRareSpellCount = register_cvar("hwn_spellbook_max_rare_spell_count", "1");
+    g_cvarRareChance = register_cvar("hwn_spellbook_rare_chance", "30");
 }
 
 public Hwn_Fw_ConfigLoaded()
@@ -79,13 +81,13 @@ public Hwn_Fw_ConfigLoaded()
 
 public OnSpawn(ent)
 {
-    new spellCount = Hwn_Spell_GetCount();
-    if (!spellCount) {
+    new spell = RandomSpell();
+
+    if (spell == -1) {
         CE_Remove(ent);
         return;
     }
 
-    new spell = random(spellCount);
     new bool:isRare = !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare);
 
     set_pev(ent, pev_spell, spell);
@@ -166,6 +168,31 @@ public TaskThink(ent)
     }
 
     set_task(1.0, "TaskThink", ent);
+}
+
+RandomSpell() {
+    new bool:isRare = random(100) < get_pcvar_num(g_cvarRareChance);
+
+    new spellCount = Hwn_Spell_GetCount();
+    if (!spellCount) {
+        return - 1;
+    }
+
+    new Array:spells = ArrayCreate(_, spellCount);
+
+    for (new spell = 0; spell < spellCount; ++spell) {
+        if (isRare != !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare)) {
+            continue;
+        }
+
+        ArrayPushCell(spells, spell);
+    }
+
+    new spell = ArrayGetCell(spells, random(ArraySize(spells)));
+
+    ArrayDestroy(spells);
+
+    return spell;
 }
 
 CreateParticles(ent)

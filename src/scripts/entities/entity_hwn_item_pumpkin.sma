@@ -25,15 +25,10 @@
 #define FLASH_RADIUS_BIG 24
 #define FLASH_DECAY_RATE_BIG 24
 
-enum _:PumpkinType
+new const Float:g_fLootTypeColor[Hwn_PumpkinType][3] =
 {
-    PumpkinType_Crits,
-    PumpkinType_Equipment,
-    PumpkinType_Health
-};
-
-new const Float:g_fLootTypeColor[PumpkinType][3] =
-{
+    {0.0, 0.0, 0.0},
+    {HWN_COLOR_SECONDARY_F},
     {HWN_COLOR_PRIMARY_F},
     {HWN_COLOR_YELLOW_F},
     {HWN_COLOR_RED_F}
@@ -93,14 +88,14 @@ public OnSpawn(ent)
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 4.0);
 
-    if (isBig(ent)) {
-        set_pev(ent, pev_iuser1, -1);
-        set_pev(ent, pev_rendercolor, Float:{HWN_COLOR_SECONDARY_F});
-    } else {
-        new type = random(PumpkinType);
-        set_pev(ent, pev_iuser1, type);
-        set_pev(ent, pev_rendercolor, g_fLootTypeColor[type]);
+    new type = pev(ent, pev_iuser1);
+    if (type == Hwn_PumpkinType_Uninitialized) {
+        static minType = Hwn_PumpkinType_Default + 1;
+        type = minType + random(Hwn_PumpkinType - minType);
     }
+
+    set_pev(ent, pev_iuser1, type);
+    set_pev(ent, pev_rendercolor, g_fLootTypeColor[type]);
 
     set_pev(ent, pev_framerate, 1.0);
 
@@ -113,16 +108,16 @@ public OnPickup(ent, id)
 
     switch (type)
     {
-        case PumpkinType_Crits:
+        case Hwn_PumpkinType_Crits:
         {
-            GiveCrits(id, 1.0);
+            GiveCrits(id, 2.0);
         }
-        case PumpkinType_Equipment:
+        case Hwn_PumpkinType_Equipment:
         {
             Hwn_PEquipment_GiveAmmo(id);
             Hwn_PEquipment_GiveArmor(id, 30);
         }
-        case PumpkinType_Health:
+        case Hwn_PumpkinType_Health:
         {
             Hwn_PEquipment_GiveHealth(id, 30);
         }

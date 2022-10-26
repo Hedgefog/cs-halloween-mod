@@ -20,8 +20,8 @@
 
 #define ENTITY_NAME "hwn_npc_ghost"
 
-const Float:NPC_Speed = 150.0;
-const Float:NPC_Damage = 10.0;
+const Float:NPC_Speed = 100.0;
+const Float:NPC_Damage = 20.0;
 const Float:NPC_HitRange = 32.0;
 const Float:NPC_HitDelay = 3.0;
 
@@ -186,7 +186,7 @@ Attack(ent, target)
     else
     {
         if (random(100) < 10) {
-            NPC_EmitVoice(ent, g_szSndIdle[random(sizeof(g_szSndIdle))], 4.0);
+            NPC_EmitVoice(ent, g_szSndIdle[random(sizeof(g_szSndIdle))], 4.0, _, 0.5);
         }
 
         static Float:vDirection[3];

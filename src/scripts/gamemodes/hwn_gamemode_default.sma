@@ -35,7 +35,7 @@ new g_cvarChangeLighting;
 new g_customSkyIdx = -1;
 
 new g_defaultLigthStyle[] = "0";
-new g_customLigthStyle[] = "e";
+new g_customLigthStyle[] = "g";
 new g_defaultSkyName[32];
 new g_defaultSkyColor[3];
 new g_prevChangeLightingCvarVal;

@@ -1,3 +1,5 @@
+#tryinclude <reapi>
+
 #define MENU_CHOOSEAPPEARANCE 3
 #define JOIN_CHOOSEAPPEARANCE 4
 
@@ -95,23 +97,9 @@ stock bool:UTIL_IsPlayer(id)
     return (id > 0 && id < 33);
 }
 
-stock UTIL_CS_DamagePlayer(victim, Float:fDamage, dmgbits = DMG_GENERIC, attacker = 0, inflictor = 0)
-{
-    #if defined _reapi_included
-        new armorType = get_member(victim, m_iKevlar);
-        set_member(victim, m_iKevlar, 0);
-    #else
-        new armorType = get_pdata_int(victim, m_iKevlar);
-        set_pdata_int(victim, m_iKevlar, 0);
-    #endif
-
-    ExecuteHamB(Ham_TakeDamage, victim, inflictor, attacker, fDamage, dmgbits);
-
-    #if defined _reapi_included
-        set_member(victim, m_iKevlar, armorType);
-    #else
-        set_pdata_int(victim, m_iKevlar, armorType);
-    #endif
+stock bool:UTIL_IsTeammate(ent, team) {
+    new targetTeam = UTIL_IsPlayer(ent) ? UTIL_GetPlayerTeam(ent) : pev(ent, pev_team);
+    return team == targetTeam;
 }
 
 stock Float:UTIL_GetDistanceToFloor(ent, const Float:vOrigin[3])
@@ -409,7 +397,7 @@ stock UTIL_GetPlayerTeam(id)
 stock Float:UTIL_GetNextPrimaryAttack(ent)
 {
     #if defined _reapi_included
-        return get_member(ent, m_flNextPrimaryAttack);
+        return get_member(ent, m_Weapon_flNextPrimaryAttack);
     #else
         return get_pdata_float(ent, m_flNextPrimaryAttack, 4);
     #endif
@@ -418,7 +406,7 @@ stock Float:UTIL_GetNextPrimaryAttack(ent)
 stock UTIL_SetNextPrimaryAttack(ent, Float:fValue)
 {
     #if defined _reapi_included
-        set_member(ent, m_flNextPrimaryAttack, fValue);
+        set_member(ent, m_Weapon_flNextPrimaryAttack, fValue);
     #else
         set_pdata_float(ent, m_flNextPrimaryAttack, fValue, 4);
     #endif
@@ -427,7 +415,7 @@ stock UTIL_SetNextPrimaryAttack(ent, Float:fValue)
 stock Float:UTIL_GetNextSecondaryAttack(ent)
 {
     #if defined _reapi_included
-        return get_member(ent, m_flNextSecondaryAttack);
+        return get_member(ent, m_Weapon_flNextSecondaryAttack);
     #else
         return get_pdata_float(ent, m_flNextSecondaryAttack, 4);
     #endif
@@ -436,7 +424,7 @@ stock Float:UTIL_GetNextSecondaryAttack(ent)
 stock UTIL_SetNextSecondaryAttack(ent, Float:fValue)
 {
     #if defined _reapi_included
-        set_member(ent, m_flNextSecondaryAttack, fValue);
+        set_member(ent, m_Weapon_flNextSecondaryAttack, fValue);
     #else
         set_pdata_float(ent, m_flNextSecondaryAttack, fValue, 4);
     #endif

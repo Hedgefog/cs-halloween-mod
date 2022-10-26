@@ -95,10 +95,13 @@ public OnPlayerSpawn(id)
         return;
     }
 
-    new ent = -1;
-    while ((ent = fm_find_ent_by_owner(ent, SPELLBALL_ENTITY_CLASSNAME, id)) > 0) {
-        set_pev(ent, pev_owner, 0);
-        CE_Kill(ent);
+    new target = -1;
+    while ((target = engfunc(EngFunc_FindEntityByString, target, "classname", SPELLBALL_ENTITY_CLASSNAME)) != 0) {
+        if (pev(target, pev_iuser1) != g_hSpell) {
+            continue;
+        }
+
+        set_pev(target, pev_owner, 0);
     }
 }
 
@@ -118,6 +121,10 @@ public OnSpellballKilled(ent)
 Detonate(ent)
 {
     new owner = pev(ent, pev_owner);
+
+    if (!owner) {
+        return;
+    }
 
     if (!is_user_alive(owner)) {
         return;

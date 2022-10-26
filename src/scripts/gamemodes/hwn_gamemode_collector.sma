@@ -206,7 +206,7 @@ public OnTargetKilled(ent)
     static bossEnt;
     Hwn_Bosses_GetCurrent(bossEnt);
 
-    if (ent != bossEnt && pev(ent, pev_flags) & FL_MONSTER) { // Monster kill reward
+    if (ent != bossEnt && pev(ent, pev_flags) & FL_MONSTER && !pev(ent, pev_team)) { // Monster kill reward
         new Float:vOrigin[3];
         pev(ent, pev_origin, vOrigin);
 
@@ -276,7 +276,7 @@ public Round_Fw_RoundExpired()
 
     if (tTeamPoints == ctTeamPoints) {
         new overtime = get_pcvar_num(g_cvarRoundTimeOvertime);
-        if (overtime > 0) {
+        if (tTeamPoints > 0 && overtime > 0) {
             new roundTime = Round_GetTime() + overtime;
             Round_SetTime(roundTime);
 
@@ -328,19 +328,25 @@ SetPlayerPoints(id, count)
 bool:ExtractPlayerPoints(id)
 {
     new points = GetPlayerPoints(id);
-    if (!points) {
-        return false;
-    }
 
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
 
-    new bpEnt = CE_Create(BACKPACK_ENTITY_CLASSNAME, vOrigin);
+    if (Hwn_Gamemode_IsPlayerOnSpawn(id) && !points) {
+        return false;
+    }
+
+    new bool:isBackpack = points > 1;
+    new bpEnt = CE_Create(isBackpack ? BACKPACK_ENTITY_CLASSNAME : LOOT_ENTITY_CLASSNAME, vOrigin);
     if (!bpEnt) {
         return false;
     }
 
-    set_pev(bpEnt, pev_iuser2, points);
+    if (isBackpack) {
+        set_pev(bpEnt, pev_iuser2, points);
+    }
+
+    set_pev(bpEnt, pev_iuser1, Hwn_PumpkinType_Default);
     dllfunc(DLLFunc_Spawn, bpEnt);
 
     static Float:vVelocity[3];

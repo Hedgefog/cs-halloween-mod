@@ -355,7 +355,7 @@ IntersectKill()
         }
 
         if (UTIL_EntityIntersects(id, g_bossEnt)) {
-            UTIL_CS_DamagePlayer(id, BOSS_SPAWN_DAMAGE, DMG_ALWAYSGIB, g_bossEnt, g_bossEnt);
+            ExecuteHamB(Ham_TakeDamage, id, g_bossEnt, g_bossEnt, BOSS_SPAWN_DAMAGE, DMG_ALWAYSGIB);
         }
     }
 }

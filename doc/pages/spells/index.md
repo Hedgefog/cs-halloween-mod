@@ -14,7 +14,7 @@
 > Burn player
 
 # Lightning
-> Spawns magic ball on cast. Magic ball has no gravity and move forward, damage enemies in radius for 15 hp each 0.5 second and sucks them in.
+> Spawns magic ball on cast. Magic ball has no gravity and move forward, damage enemies in radius for 30 hp each 0.5 second and sucks them in.
 
 # Moon Jump
 > Sets gravity of caster's gravity to moon gravity for 25 seconds.
@@ -27,8 +27,14 @@
 > Increase your fire rate
 > Allows you to do multi-jump
 
+# Skeletons Horde
+> Summons skeletons to play on your team
+
+# Intangibility
+> Immunity to bullets and impacts
+
 # Dance (Wheel of Fate only)
 > Dance or die
 
-# Fortune (Wheel of Fate only)
-> No effect
+# Magic (Wheel of Fate only)
+> Gives a random spell to each player
