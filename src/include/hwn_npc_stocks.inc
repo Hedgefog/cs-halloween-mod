@@ -403,9 +403,14 @@ stock bool:NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed, Float:fMa
 
     new bool:turnResult = UTIL_TurnTo(ent, vTarget, lockAxis, fMaxAngle);
 
-    if (fSpeed > 0.0 && turnResult) {
-        set_pev(ent, pev_speed, fSpeed);
-        NPC_MoveForward(ent, fSpeed);
+    if (turnResult) {
+        static Float:vOrigin[3];
+        pev(ent, pev_origin, vOrigin);
+
+        if (fSpeed > 0.0 && get_distance_f(vOrigin, vTarget) > 1.0) {
+            set_pev(ent, pev_speed, fSpeed);
+            NPC_MoveForward(ent, fSpeed);
+        }
     }
 
     ArraySetCell(npcData, NPC_LastRotation, fGameTime);
