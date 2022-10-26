@@ -33,6 +33,7 @@ new g_spellCount = 0;
 new g_spellIdx = -1;
 new bool:g_effectStarted = false;
 new Float:g_fEffectTime;
+new Float:g_fEffectStartTime;
 
 new g_cvarEffectTime;
 
@@ -96,6 +97,8 @@ public plugin_natives()
     register_native("Hwn_Wof_Effect_GetCurrentSpell", "Native_Effect_GetCurrentSpell");
     register_native("Hwn_Wof_Roll", "Native_Roll");
     register_native("Hwn_Wof_Abort", "Native_Abort");
+    register_native("Hwn_Wof_Effect_GetStartTime", "Native_Effect_GetStartTime");
+    register_native("Hwn_Wof_Effect_GetDuration", "Native_Effect_GetDuration");
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -173,6 +176,14 @@ public Native_Effect_GetCurrentSpell(pluginID, argc)
     }
 
     return g_spellIdx;
+}
+
+public Float:Native_Effect_GetStartTime(pluginID, argc) {
+    return g_fEffectStartTime;
+}
+
+public Float:Native_Effect_GetDuration(pluginID, argc) {
+    return g_fEffectTime;
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -278,6 +289,7 @@ EndRoll()
 
 StartEffect()
 {
+    g_fEffectStartTime = get_gametime();
     g_fEffectTime = get_pcvar_float(g_cvarEffectTime);
     g_effectStarted = true;
 
@@ -359,6 +371,10 @@ CallInvoke(id)
     new pluginID = ArrayGetCell(g_spellPluginID, g_spellIdx);
     new funcID = ArrayGetCell(g_spellInvokeFuncID, g_spellIdx);
 
+    if (funcID < 0) {
+        return;
+    }
+
     if (callfunc_begin_i(funcID, pluginID) == 1) {
         callfunc_push_int(id);
         callfunc_push_float(g_fEffectTime);
@@ -391,6 +407,7 @@ Reset()
 {
     g_spellIdx = -1;
     g_effectStarted = false;
+    g_fEffectStartTime = 0.0;
     remove_task(TASKID_ROLL_END);
     remove_task(TASKID_EFFECT_END);
 }

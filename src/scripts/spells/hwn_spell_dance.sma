@@ -24,7 +24,7 @@
 #define LIGHT_COLOR_MIN 128
 #define SOUND_DURATION 4.0
 #define DANCE_CHECK_DELAY 0.25
-#define HEALTH_TO_DIE 150.0
+#define HEALTH_TO_DIE 250.0
 #define DANCE_MIN_MOVE_ANGLE 45.0
 #define DANCE_MIN_VIEW_ANGLE 5.0
 #define EFFECT_DAMAGE HEALTH_TO_DIE / EffectTime * DANCE_CHECK_DELAY
@@ -168,7 +168,7 @@ public CheckDance(id)
         )
         && pev(id, pev_flags) & FL_ONGROUND
     ) {
-        UTIL_CS_DamagePlayer(id, EFFECT_DAMAGE);
+        ExecuteHamB(Ham_TakeDamage, id, 0, 0, EFFECT_DAMAGE, DMG_GENERIC);
     }
     
     xs_vec_copy(vAngles, g_playerLastAngle[id]);

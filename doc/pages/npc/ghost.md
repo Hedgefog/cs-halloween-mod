@@ -9,7 +9,7 @@
 
 - **Health**: 1
 - **Speed** : 100 ups
-- **Damage**: 10
+- **Damage**: 20
 - **Hit Range**: 32 units
 - **Hit Delay**: 3 sec
 - **Respawn Time**: 30 sec

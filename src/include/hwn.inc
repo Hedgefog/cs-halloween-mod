@@ -1,4 +1,41 @@
 /*
+    6.4.0
+        Additions and improvements:
+            Added Skeletons Horde spell
+            Added Intangibility spell
+            Added objective marks
+            Added player highlight
+            Added Magic Wheel of Fate spell
+            Added a random bonus drop from the bucket when scoring points
+            Players now always drop pumpkin in collector gamemode
+            Removed Fortune Wheel of Fate spell
+            Reduced Monoculus rocket damage
+            Increased Monoculus NPC hit range
+            Increased crit pumpkin effect duration
+            Increased Skeleton NPC damage
+            Increased Spooky Pumpkin NPC health
+            Increased Spooky Pumpkin NPC speed
+            Reduced Ghost NPC speed
+            Rare spells appear less frequently now
+            Improved HHH NPC AI
+            Improved Monoculus NPC AI
+            Improved Skeleton NPC AI
+            Improved collector gamemode win conditions
+            Added glow for Monoculus NPC
+            Increased light level for default gamemode
+            Added Ukrainian translation
+
+        Cvars:
+            Added hwn_objective_marks cvar
+            Added hwn_player_highlight cvar
+            Added hwn_player_highlight_primary_brightness cvar
+            Added hwn_player_highlight_secondary_brightness cvar
+            Added hwn_spellbook_rare_chance cvar
+            Added hwn_bucket_bonus_chance cvar
+
+        Fixes:
+            Fixed errors related to the blink spellball
+
     6.3.0
         Additions and improvements:
             Added player preview when choosing cosmetics
@@ -299,7 +336,16 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.3.0"
+#define HWN_VERSION "6.4.0"
+
+enum _:Hwn_PumpkinType
+{
+    Hwn_PumpkinType_Uninitialized = 0,
+    Hwn_PumpkinType_Default,
+    Hwn_PumpkinType_Crits,
+    Hwn_PumpkinType_Equipment,
+    Hwn_PumpkinType_Health
+};
 
 enum Hwn_GamemodeFlags (<<=1)
 {
@@ -383,7 +429,7 @@ native Hwn_Spell_CastPlayerSpell(id);
 forward Hwn_Spell_Fw_Cast(id, spellIdx);
 
 /*--------------------------------[ Wheel of Fate ]--------------------------------*/
-native Hwn_Wof_Spell_Register(const szName[], const szInvokeCallback[], const szRevokeCallback[] = "");
+native Hwn_Wof_Spell_Register(const szName[], const szInvokeCallback[] = "", const szRevokeCallback[] = "");
 native Hwn_Wof_Spell_GetCount();
 native Hwn_Wof_Spell_GetName(spell, szOutput[], maxlen);
 native Hwn_Wof_Spell_GetHandler(const szName[]);
@@ -391,12 +437,14 @@ native Hwn_Wof_Spell_GetDictionaryKey(spell, szOutput[], maxlen);
 native Hwn_Wof_Roll();
 native Hwn_Wof_Abort();
 native Hwn_Wof_Effect_GetCurrentSpell();
+native Float:Hwn_Wof_Effect_GetStartTime();
+native Float:Hwn_Wof_Effect_GetDuration();
 
 forward Hwn_Wof_Fw_Roll_Start();
 forward Hwn_Wof_Fw_Roll_End();
 forward Hwn_Wof_Fw_Effect_Start(spellIdx);
 forward Hwn_Wof_Fw_Effect_End(spellIdx);
-forward Hwn_Wof_Fw_Effect_Invoke(id, spellIdx, g_fEffectTime);
+forward Hwn_Wof_Fw_Effect_Invoke(id, spellIdx, Float:fEffectTime);
 forward Hwn_Wof_Fw_Effect_Revoke(id, spellIdx);
 forward Hwn_Wof_Fw_Abort();
 
@@ -418,7 +466,7 @@ forward Hwn_Bosses_Fw_BossSpawn(ent, Float:fLifeTime);
 forward Hwn_Bosses_Fw_BossKill(ent);
 forward Hwn_Bosses_Fw_BossEscape(ent);
 forward Hwn_Bosses_Fw_BossTeleport(ent, handler);
-forward Hwn_Bosses_Fw_Winner(id);
+forward Hwn_Bosses_Fw_Winner(id, damage);
 
 /*--------------------------------[ Player Equipment ]--------------------------------*/
 

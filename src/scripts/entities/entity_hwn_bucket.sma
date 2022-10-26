@@ -91,6 +91,7 @@ new g_cvarBucketCollectFlash;
 new g_cvarBucketBonusHealth;
 new g_cvarBucketBonusArmor;
 new g_cvarBucketBonusAmmo;
+new g_cvarBucketBonusChance;
 
 new g_ceHandler;
 new Float:g_fThinkDelay;
@@ -138,6 +139,7 @@ public plugin_precache()
     g_cvarBucketBonusHealth = register_cvar("hwn_bucket_bonus_health", "10");
     g_cvarBucketBonusArmor = register_cvar("hwn_bucket_bonus_armor", "10");
     g_cvarBucketBonusAmmo = register_cvar("hwn_bucket_bonus_ammo", "1");
+    g_cvarBucketBonusChance = register_cvar("hwn_bucket_bonus_chance", "5");
 
     g_buckets = ArrayCreate(1, 2);
 }
@@ -213,6 +215,7 @@ public OnSpawn(ent)
     set_pev(ent, pev_rendercolor, g_vTeamColor[Team:team]);
     set_pev(ent, pev_health, float(get_pcvar_num(g_cvarBucketHealth)));
     set_pev(ent, pev_body, 0);
+    set_pev(ent, pev_iuser4, 0);
 
     engfunc(EngFunc_DropToFloor, ent);
 
@@ -408,6 +411,7 @@ public TaskThink(ent)
         Hwn_PEquipment_GiveArmor(id, get_pcvar_num(g_cvarBucketBonusArmor));
         Hwn_PEquipment_GiveAmmo(id, get_pcvar_num(g_cvarBucketBonusAmmo));
 
+        LuckyDrop(ent);
         isCollected = true;
         g_fNextCollectTime[id] = fGametime + 1.0;
     }
@@ -473,6 +477,17 @@ bool:TakePlayerPoint(ent, id)
     return true;
 }
 
+bool:LuckyDrop(ent) {
+    new chance = pev(ent, pev_iuser4);
+
+    if (random(100) < chance) {
+        DropSpellbook(ent);
+        set_pev(ent, pev_iuser4, 0);
+    } else {
+        set_pev(ent, pev_iuser4, chance + get_pcvar_num(g_cvarBucketBonusChance));
+    }
+}
+
 bool:ExtractPoints(ent, count = 1)
 {
     if (Hwn_Collector_ObjectiveBlocked()) {
@@ -489,16 +504,9 @@ bool:ExtractPoints(ent, count = 1)
     count = teamPoints > count ? count : teamPoints;
 
     Hwn_Collector_SetTeamPoints(team, teamPoints - count);
-    
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-
-    new Float:vMaxs[3];
-    pev(ent, pev_maxs, vMaxs);
-    vOrigin[2] += vMaxs[2];
 
     for (new i = 0; i < count; ++i) {
-        DropPumpkin(vOrigin);
+        DropPumpkin(ent);
     }
 
     PlayActionSequence(ent, Sequence_Pop, ACTION_POP_DURATION);
@@ -506,23 +514,58 @@ bool:ExtractPoints(ent, count = 1)
     return true;
 }
 
-bool:DropPumpkin(const Float:vOrigin[3])
+bool:DropPumpkin(ent)
 {
-    new pumpkinEnt = CE_Create("hwn_item_pumpkin", vOrigin);
+    new pumpkinEnt = CE_Create("hwn_item_pumpkin", Float:{0.0, 0.0, 0.0});
     if (!pumpkinEnt) {
         return false;
     }
 
-    new Float:vVelocity[3];
-    vVelocity[0] = random_float(-640.0, 640.0);
-    vVelocity[1] = random_float(-640.0, 640.0);
-    vVelocity[2] = random_float(0.0, 256.0);
-
-    set_pev(pumpkinEnt, pev_velocity, vVelocity);
-
     dllfunc(DLLFunc_Spawn, pumpkinEnt);
+    DropEntity(ent, pumpkinEnt);
 
     return true;
+}
+
+bool:DropSpellbook(ent)
+{
+    new spellbookEnt = CE_Create("hwn_item_spellbook", Float:{0.0, 0.0, 0.0});
+    if (!spellbookEnt) {
+        return false;
+    }
+
+    dllfunc(DLLFunc_Spawn, spellbookEnt);
+    DropEntity(ent, spellbookEnt);
+
+    return true;
+}
+
+bool:DropEntity(ent, other, Float:fSpeed = 320.0, Float:fNoise = 0.3725)
+{
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    static Float:vMaxs[3];
+    pev(ent, pev_maxs, vMaxs);
+    vOrigin[2] += vMaxs[2];
+
+    static Float:vOtherMins[3];
+    pev(ent, pev_mins, vOtherMins);
+    vOrigin[2] -= vOtherMins[2];
+
+    static Float:vVelocity[3];
+    vVelocity[0] = random_float(-1.0, 1.0);
+    vVelocity[1] = random_float(-1.0, 1.0);
+    vVelocity[2] = 0.0;
+
+    new Float:fSpeedMaxError = fSpeed * fNoise;
+
+    xs_vec_normalize(vVelocity, vVelocity);
+    xs_vec_mul_scalar(vVelocity, fSpeed + random_float(-fSpeedMaxError, fSpeedMaxError), vVelocity);
+    vVelocity[2] = 150.0;
+
+    engfunc(EngFunc_SetOrigin, other, vOrigin);
+    set_pev(other, pev_velocity, vVelocity);
 }
 
 PlayActionSequence(ent, sequence, Float:fDuration)

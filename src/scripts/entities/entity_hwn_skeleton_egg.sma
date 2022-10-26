@@ -13,6 +13,7 @@
 #define AUTHOR "Hedgehog Fog"
 
 #define ENTITY_NAME "hwn_skeleton_egg"
+#define ENTITY_NAME_BIG "hwn_skeleton_egg_big"
 
 public plugin_init()
 {
@@ -30,6 +31,16 @@ public plugin_precache()
 
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
+
+    CE_Register(
+        .szName = ENTITY_NAME_BIG,
+        .vMins = Float:{-12.0, -12.0, -32.0},
+        .vMaxs = Float:{12.0, 12.0, 32.0},
+        .preset = CEPreset_Prop
+    );
+
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_BIG, "OnSpawn");
+    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME_BIG, "OnRemove");
 }
 
 public OnSpawn(ent)
@@ -50,8 +61,14 @@ public Birth(ent)
     new Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    new skeletonEnt = CE_Create("hwn_npc_skeleton_small", vOrigin);
+    new skeletonEnt = CE_Create(
+        IsBig(ent) ? "hwn_npc_skeleton" : "hwn_npc_skeleton_small",
+        vOrigin
+    );
+
     if (skeletonEnt) {
+        set_pev(skeletonEnt, pev_team, pev(ent, pev_team));
+        set_pev(skeletonEnt, pev_owner, pev(ent, pev_owner));
         dllfunc(DLLFunc_Spawn, skeletonEnt);
     }
 
@@ -60,4 +77,8 @@ public Birth(ent)
     if (UTIL_IsStuck(skeletonEnt)) {
         CE_Kill(skeletonEnt);
     }
+}
+
+bool:IsBig(ent) {
+    return CE_GetHandlerByEntity(ent) == CE_GetHandler(ENTITY_NAME_BIG);
 }
