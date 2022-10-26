@@ -14,7 +14,9 @@
 new g_fwConfigLoaded;
 new g_fwResult;
 
-new g_pCvarVersion;
+#if AMXX_VERSION_NUM > 182
+    new g_pCvarVersion;
+#endif
 
 public plugin_precache()
 {
@@ -27,9 +29,10 @@ public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    g_pCvarVersion = register_cvar("hwn_version", HWN_VERSION, FCVAR_SERVER);
+    register_cvar("hwn_version", HWN_VERSION, FCVAR_SERVER);
 
 #if AMXX_VERSION_NUM > 182
+    g_pCvarVersion = get_cvar_pointer("hwn_version");
     hook_cvar_change(g_pCvarVersion, "OnVersionCvarChange");
 #endif
 
@@ -47,9 +50,9 @@ public plugin_natives()
 }
 
 #if AMXX_VERSION_NUM > 182
-public OnVersionCvarChange() {
-    set_pcvar_string(g_pCvarVersion, HWN_VERSION);
-}
+    public OnVersionCvarChange() {
+        set_pcvar_string(g_pCvarVersion, HWN_VERSION);
+    }
 #endif
 
 LoadConfig()
