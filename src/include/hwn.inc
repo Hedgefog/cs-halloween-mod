@@ -17,6 +17,7 @@
             Increased Spooky Pumpkin NPC speed
             Reduced Ghost NPC speed
             Rare spells appear less frequently now
+            Improved HHH NPC AI
             Improved Monoculus NPC AI
             Improved Skeleton NPC AI
             Improved collector gamemode win conditions
