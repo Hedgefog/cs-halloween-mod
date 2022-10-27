@@ -1,6 +1,9 @@
 ![Alt Text](./images/demo.gif)
 ## 🎃 Halloween Mod 🇺🇦
-__Version:__ 6.4.0
+![GitHub package.json version](https://img.shields.io/github/package-json/v/hedgefog/cs-halloween-mod)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/hedgefog/cs-halloween-mod/CI)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/hedgefog/cs-halloween-mod)
+![GitHub all releases](https://img.shields.io/github/downloads/hedgefog/cs-halloween-mod/total)
 
 ### 📄 About
 __Halloween Mod__ is a powerful Halloween-themed core for your __Counter-Strike__ server with completely new game modes, NPCs, bosses, spells, cosmetics, and more.
