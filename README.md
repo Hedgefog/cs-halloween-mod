@@ -1,20 +1,20 @@
 ![Alt Text](./images/demo.gif)
-### Halloween Mod for Counter-Strike 1.6 🇺🇦
+## 🎃 Halloween Mod 🇺🇦
 __Version:__ 6.4.0
 
-### What is Halloween Mod?
-Halloween mod is a powerful Halloween-themed core for your server with completely new game modes, NPCs, bosses, spells, cosmetics, and more.
+### 📄 What is Halloween Mod?
+Halloween Mod is a powerful Halloween-themed core for your Counter-Strike server with completely new game modes, NPCs, bosses, spells, cosmetics, and more.
 
-### Download latest:
+### 🔽 Download latest:
 - [Releases](./releases)
 
-### Documentation
+### 📖 Documentation
 - [Index](./doc/pages/index.md)
 
-### Special Thanks:
+### 🙏 Special Thanks:
 - [Credits](./CREDITS.md)
 
-### Deployment
+### 🔧 Deployment
 - Clone repository.
 - Extract compiler executable and includes to _"compiler"_ folder of project.
 - Extract ReAPI module to _"thirdparty/reapi"_ folder of project (example: _"thirdparty/reapi/addons"_).
