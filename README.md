@@ -2,11 +2,16 @@
 ## 🎃 Halloween Mod 🇺🇦
 __Version:__ 6.4.0
 
-### 📄 What is Halloween Mod?
-Halloween Mod is a powerful Halloween-themed core for your Counter-Strike server with completely new game modes, NPCs, bosses, spells, cosmetics, and more.
+### 📄 About
+__Halloween Mod__ is a powerful Halloween-themed core for your __Counter-Strike__ server with completely new game modes, NPCs, bosses, spells, cosmetics, and more.
 
 ### 🔽 Download latest:
 - [Releases](./releases)
+
+### 🔄 Requirements
+- Amx Mod X 1.8.2+
+- RegameDLL + ReAPI or RoundControl
+- Metamod-R or Metamod-P (for windows)
 
 ### 📖 Documentation
 - [Index](./doc/pages/index.md)
@@ -16,8 +21,6 @@ Halloween Mod is a powerful Halloween-themed core for your Counter-Strike server
 
 ### 🔧 Deployment
 - Clone repository.
-- Extract compiler executable and includes to _"compiler"_ folder of project.
-- Extract ReAPI module to _"thirdparty/reapi"_ folder of project (example: _"thirdparty/reapi/addons"_).
 - Install dependencies `npm i`
 
 #### Customize builder
