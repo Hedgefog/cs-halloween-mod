@@ -1,5 +1,5 @@
 ![Alt Text](./images/demo.gif)
-### Halloween Mod for Counter-Strike 1.6
+### Halloween Mod for Counter-Strike 1.6 🇺🇦
 __Version:__ 6.4.0
 
 ### What is Halloween Mod?
