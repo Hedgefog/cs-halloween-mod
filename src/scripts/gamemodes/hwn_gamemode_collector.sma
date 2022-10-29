@@ -27,9 +27,12 @@
 
 #define TEAM_COUNT 4
 
+new const g_szSndPointCollected[] = "hwn/misc/collected.wav";
+
 new g_fwResult;
 new g_fwPlayerPointsChanged;
 new g_fwTeamPointsChanged;
+new g_fwTeamPointsScored;
 new g_fwOvertime;
 new g_fwWinnerTeam;
 
@@ -52,6 +55,8 @@ new g_maxPlayers;
 
 public plugin_precache()
 {
+    precache_sound(g_szSndPointCollected);
+
     CE_RegisterHook(CEFunction_Spawn, BUCKET_ENTITY_CLASSNAME, "OnBucketSpawn");
     CE_RegisterHook(CEFunction_Picked, LOOT_ENTITY_CLASSNAME, "OnLootPickup");
     CE_RegisterHook(CEFunction_Picked, BACKPACK_ENTITY_CLASSNAME, "OnBackpackPickup");
@@ -85,6 +90,7 @@ public plugin_init()
 
     g_fwPlayerPointsChanged = CreateMultiForward("Hwn_Collector_Fw_PlayerPoints", ET_IGNORE, FP_CELL);
     g_fwTeamPointsChanged = CreateMultiForward("Hwn_Collector_Fw_TeamPoints", ET_IGNORE, FP_CELL);
+    g_fwTeamPointsScored = CreateMultiForward("Hwn_Collector_Fw_TeamPointsScored", ET_IGNORE, FP_CELL, FP_CELL, FP_CELL);
     g_fwOvertime = CreateMultiForward("Hwn_Collector_Fw_Overtime", ET_IGNORE, FP_CELL);
     g_fwWinnerTeam = CreateMultiForward("Hwn_Collector_Fw_WinnerTeam", ET_IGNORE, FP_CELL);
 }
@@ -98,6 +104,7 @@ public plugin_natives()
     register_native("Hwn_Collector_SetTeamPoints", "Native_SetTeamPoints");
     register_native("Hwn_Collector_IsOvertime", "Native_IsOvertime");
     register_native("Hwn_Collector_ObjectiveBlocked", "Native_ObjectiveBlocked");
+    register_native("Hwn_Collector_ScorePlayerPointsToTeam", "Native_ScorePlayerPointsToTeam");
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -140,6 +147,13 @@ public bool:Native_IsOvertime(pluginID, argc)
 public bool:Native_ObjectiveBlocked(pluginID, argc)
 {
     return Hwn_Bosses_GetCurrent() != -1;
+}
+
+public bool:Native_ScorePlayerPointsToTeam(pluginID, argc) {
+    new id = get_param(1);
+    new count = get_param(2);
+
+    return ScorePlayerPointsToTeam(id, count);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -386,6 +400,29 @@ SetTeamPoints(team, count)
     }
 
     ExecuteForward(g_fwTeamPointsChanged, g_fwResult, team);
+}
+
+bool:ScorePlayerPointsToTeam(id, count) {
+    if (Hwn_Collector_ObjectiveBlocked()) {
+        return false;
+    }
+
+    new playerPoints = GetPlayerPoints(id);
+    if (playerPoints < count) {
+        return false;
+    }
+
+    new team = UTIL_GetPlayerTeam(id);
+    new teamPoints = GetTeamPoints(team);
+
+    SetPlayerPoints(id, playerPoints - count);
+    SetTeamPoints(team, teamPoints + count);
+    ExecuteHamB(Ham_AddPoints, id, 1, false);
+
+    client_cmd(id, "spk %s", g_szSndPointCollected);
+    ExecuteForward(g_fwTeamPointsScored, g_fwResult, team, count, id);
+
+    return true;
 }
 
 ResetVariables()

@@ -74,7 +74,6 @@ new Float:g_fNextCollectTime[33];
 new g_sprBlood;
 
 new const g_szSndBoil[] = "hwn/misc/cauldron_boil.wav";
-new const g_szSndPointCollected[] = "hwn/misc/collected.wav";
 
 new const g_szSndHit[][] =
 {
@@ -107,7 +106,6 @@ public plugin_precache()
     g_sprPotionBeam = precache_model("sprites/streak.spr");
 
     precache_sound(g_szSndBoil);
-    precache_sound(g_szSndPointCollected);
 
     for (new i = 0; i < sizeof(g_szSndHit); ++i) {
         precache_sound(g_szSndHit[i]);
@@ -454,25 +452,11 @@ ClearTasks(ent)
 
 bool:TakePlayerPoint(ent, id)
 {
-    if (Hwn_Collector_ObjectiveBlocked()) {
+    if (!Hwn_Collector_ScorePlayerPointsToTeam(id, 1)) {
         return false;
     }
-
-    new playerPoints = Hwn_Collector_GetPlayerPoints(id);
-    if (playerPoints <= 0) {
-        return false;
-    }
-
-    new team = UTIL_GetPlayerTeam(id);
-    new teamPoints = Hwn_Collector_GetTeamPoints(team);
-
-    Hwn_Collector_SetPlayerPoints(id, playerPoints-  1);
-    Hwn_Collector_SetTeamPoints(team, teamPoints + 1);
-
-    ExecuteHamB(Ham_AddPoints, id, 1, false);
 
     PumpkinThrowEffect(ent, id);
-    client_cmd(id, "spk %s", g_szSndPointCollected);
 
     return true;
 }

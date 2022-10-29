@@ -398,11 +398,13 @@ native Hwn_Collector_GetTeamPoints(team);
 native Hwn_Collector_SetTeamPoints(team, count);
 native bool:Hwn_Collector_IsOvertime();
 native bool:Hwn_Collector_ObjectiveBlocked();
+native bool:Hwn_Collector_ScorePlayerPointsToTeam(id, count);
 
 forward Hwn_Collector_Fw_TeamPoints(team);
 forward Hwn_Collector_Fw_PlayerPoints(id);
 forward Hwn_Collector_Fw_Overtime(time);
 forward Hwn_Collector_Fw_WinnerTeam(team);
+forward Hwn_Collector_Fw_TeamPointsScored(team, count, id);
 
 /*--------------------------------[ Gifts ]--------------------------------*/
 native Hwn_Gifts_AddTarget(const Float:vOrigin[3]);
