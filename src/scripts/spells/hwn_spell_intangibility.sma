@@ -160,12 +160,8 @@ SetSpellEffect(id, bool:value)
 
     if (is_user_connected(id)) {
         if (value) {
-            set_pev(id, pev_rendermode, kRenderTransTexture);
-            set_pev(id, pev_renderamt, 100.0);
             set_pev(id, pev_renderfx, kRenderFxHologram);
         } else {
-            set_pev(id, pev_rendermode, kRenderNormal);
-            set_pev(id, pev_renderamt, 0.0);
             set_pev(id, pev_renderfx, kRenderFxNone);
         }
     }
