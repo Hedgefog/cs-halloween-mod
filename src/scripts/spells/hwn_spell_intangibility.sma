@@ -18,6 +18,8 @@
     #define MAX_PLAYERS 32
 #endif
 
+#define STATUS_ICON "suit_empty"
+
 const Float:EffectTime = 10.0;
 
 new const g_szSndDetonate[] = "hwn/spells/spell_intangibility.wav";
@@ -165,6 +167,8 @@ SetSpellEffect(id, bool:value)
             set_pev(id, pev_renderfx, kRenderFxNone);
         }
     }
+
+    UTIL_Message_StatusIcon(id, value, STATUS_ICON, {HWN_COLOR_PRIMARY});
 }
 
 DetonateEffect(ent)
