@@ -187,10 +187,8 @@ Detonate(ent)
         ExecuteHamB(Ham_TakeDamage, target, ent, owner, SpellballDamage, DMG_ALWAYSGIB);
     }
 
-    if (UTIL_FindPlaceToTeleport(owner, vOrigin, vOrigin, hull, DONT_IGNORE_MONSTERS)) {
-        engfunc(EngFunc_SetOrigin, owner, vOrigin);
-    } else {
-        ExecuteHamB(Ham_TakeDamage, owner, ent, owner, SpellballDamage, DMG_ALWAYSGIB);
+    if (UTIL_IsStuck(owner)) {
+        ExecuteHamB(Ham_TakeDamage, owner, 0, 0, SpellballDamage, DMG_ALWAYSGIB);
     }
 }
 
