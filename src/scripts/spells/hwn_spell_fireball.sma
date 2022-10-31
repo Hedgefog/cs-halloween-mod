@@ -146,20 +146,11 @@ Detonate(ent)
             continue;
         }
 
-        if (target == owner) {
+        if (target != owner && UTIL_IsTeammate(target, team)) {
             continue;
         }
 
-        static Float:vTargetOrigin[3];
-        pev(target, pev_origin, vTargetOrigin);
-
-        new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EffectRadius, FireballDamage);
-
-        if (UTIL_IsTeammate(target, team)) {
-            continue;
-        }
-
-        if (UTIL_IsPlayer(target)) {
+        if (target != owner && UTIL_IsPlayer(target)) {
             burn_player(target, owner, 15);
         }
 
@@ -167,7 +158,12 @@ Detonate(ent)
             UTIL_PushFromOrigin(vOrigin, target, 512.0);
         }
 
-        ExecuteHamB(Ham_TakeDamage, target, 0, owner, fDamage, DMG_BURN);
+        static Float:vTargetOrigin[3];
+        pev(target, pev_origin, vTargetOrigin);
+
+        new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EffectRadius, FireballDamage);
+
+        ExecuteHamB(Ham_TakeDamage, target, ent, owner, fDamage, DMG_BURN);
     }
 
     DetonateEffect(ent);

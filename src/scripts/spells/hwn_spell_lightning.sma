@@ -225,7 +225,7 @@ RadiusDamage(ent, bool:push = false)
             }
         }
 
-        ExecuteHamB(Ham_TakeDamage, target, 0, owner, fDamage, DMG_SHOCK);
+        ExecuteHamB(Ham_TakeDamage, target, ent, owner, fDamage, DMG_SHOCK);
     }
 }
 
