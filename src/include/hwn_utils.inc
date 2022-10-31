@@ -489,7 +489,7 @@ stock bool:UTIL_EntityIntersects(ent1, ent2)
     return true;
 }
 
-stock bool:UTIL_FindPlaceToTeleport(ent, const Float:vTarget[3], Float:vOut[3], hull = HULL_POINT)
+stock bool:UTIL_FindPlaceToTeleport(ent, const Float:vTarget[3], Float:vOut[3], hull = HULL_POINT, ignoreFlags = DONT_IGNORE_MONSTERS)
 {
     static Float:vMins[3];
     pev(ent, pev_mins, vMins);
@@ -497,23 +497,41 @@ stock bool:UTIL_FindPlaceToTeleport(ent, const Float:vTarget[3], Float:vOut[3], 
     static Float:vMaxs[3];
     pev(ent, pev_maxs, vMaxs);
 
-    if (UTIL_IsOpenHull(vTarget, hull, ent)) {
+    if (UTIL_IsOpenHull(vTarget, hull, ent, ignoreFlags)) {
         xs_vec_copy(vTarget, vOut);
         return true;
     }
 
-    for (new i = 0; i < 3; ++i) {
+    static const Float:vDirections[][3] = {
+        { 1.0, 0.0, 0.0 },
+        { 0.0, 1.0, 0.0 },
+        { 0.0, 0.0, 1.0 },
+        { 1.0, 1.0, 0.0 },
+        { 0.0, 1.0, 1.0 },
+        { 1.0, 0.0, 1.0 },
+        { 1.0, 1.0, 1.0 }
+    };
+    
+    new directionsNum = sizeof(vDirections);
+
+    for (new i = 0; i < directionsNum; ++i) {
         static Float:vNewTarget[3];
         xs_vec_copy(vTarget, vNewTarget);
 
-        vNewTarget[i] = vTarget[i] - vMins[i];
-        if (UTIL_IsOpenHull(vNewTarget, hull, ent)) {
+        for (new j = 0; j < 3; ++j) {
+            vNewTarget[j] = vTarget[j] + (vMins[j] * vDirections[i][j]);
+        }
+
+        if (UTIL_IsOpenHull(vNewTarget, hull, ent, ignoreFlags)) {
             xs_vec_copy(vNewTarget, vOut);
             return true;
         }
 
-        vNewTarget[i] = vTarget[i] - vMaxs[i];
-        if (UTIL_IsOpenHull(vNewTarget, hull, ent)) {
+        for (new j = 0; j < 3; ++j) {
+            vNewTarget[j] = vTarget[j] + (vMaxs[j] * vDirections[i][j]);
+        }
+
+        if (UTIL_IsOpenHull(vNewTarget, hull, ent, ignoreFlags)) {
             xs_vec_copy(vNewTarget, vOut);
             return true;
         }
@@ -522,10 +540,10 @@ stock bool:UTIL_FindPlaceToTeleport(ent, const Float:vTarget[3], Float:vOut[3], 
     return false;
 }
 
-stock bool:UTIL_IsOpenHull(const Float:vOrigin[3], hull, ignoreEnt = 0)
+stock bool:UTIL_IsOpenHull(const Float:vOrigin[3], hull, ignoreEnt = 0, ignoreFlags = DONT_IGNORE_MONSTERS)
 {
     new trace = create_tr2();
-    engfunc(EngFunc_TraceHull, vOrigin, vOrigin, 0, hull, ignoreEnt, trace);
+    engfunc(EngFunc_TraceHull, vOrigin, vOrigin, ignoreFlags, hull, ignoreEnt, trace);
     new bool:isVacant = !!get_tr2(trace, TR_InOpen);
     free_tr2(trace);
 
