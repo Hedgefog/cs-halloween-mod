@@ -313,7 +313,12 @@ public OnThink(ent)
 
     if (shouldUpdate) {
         if (!enemy) {
-            NPC_FindEnemy(ent, NPC_ViewRange);
+            NPC_FindEnemy(ent, 128.0, .allowMonsters = true);
+            enemy = NPC_GetEnemy(ent);
+        }
+
+        if (!enemy) {
+            NPC_FindEnemy(ent, NPC_ViewRange, .allowMonsters = false);
             enemy = NPC_GetEnemy(ent);
         }
 
