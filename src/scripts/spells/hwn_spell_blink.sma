@@ -166,7 +166,7 @@ Detonate(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    if (get_distance_f(vOwnerOrigin, vOrigin) > SpellballRadius) {
+    if (get_distance_f(vOwnerOrigin, vOrigin) > EffectRadius) {
         new hull = (pev(ent, pev_flags) & FL_DUCKING) ? HULL_HEAD : HULL_HUMAN;
         UTIL_FindPlaceToTeleport(owner, vOrigin, vOrigin, hull, IGNORE_MONSTERS);
         engfunc(EngFunc_SetOrigin, owner, vOrigin);
@@ -176,7 +176,7 @@ Detonate(ent)
     BlinkEffect(owner);
 
     new target;
-    while ((target = UTIL_FindEntityNearby(target, vOrigin, SpellballRadius)) > 0) {
+    while ((target = UTIL_FindEntityNearby(target, vOrigin, EffectRadius)) > 0) {
         if (owner == target) {
             continue;
         }
