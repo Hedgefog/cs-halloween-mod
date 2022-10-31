@@ -1,4 +1,16 @@
 /*
+    6.5.0
+        Additions and improvements:
+            Remove transparency for intangibility spell effect
+            Add status icon for intangibility spell
+            Increase small skeleton hit range
+            Reworked blink spell
+            Fireball spell can now push the owner and deals low damage
+            Monsters can now attack each other
+
+        Fixes:
+            Pumpkin no longer drops on suicide
+
     6.4.0
         Additions and improvements:
             Added Skeletons Horde spell
@@ -336,7 +348,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.4.0"
+#define HWN_VERSION "6.5.0"
 
 enum _:Hwn_PumpkinType
 {
