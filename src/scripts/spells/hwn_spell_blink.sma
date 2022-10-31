@@ -19,7 +19,7 @@
 const Float:SpellballDamage = 500.0;
 const SpellballSpeed = 600;
 
-const Float:EffectRadius = 64.0;
+const Float:EffectRadius = 48.0;
 new const EffectColor[3] = {0, 0, 255};
 
 new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
@@ -160,18 +160,23 @@ Detonate(ent)
         return;
     }
 
-    new Float:vOrigin[3];
+    static Float:vOwnerOrigin[3];
+    pev(owner, pev_origin, vOwnerOrigin);
+
+    static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    new hull = (pev(ent, pev_flags) & FL_DUCKING) ? HULL_HEAD : HULL_HUMAN;
+    if (get_distance_f(vOwnerOrigin, vOrigin) > SpellballRadius) {
+        new hull = (pev(ent, pev_flags) & FL_DUCKING) ? HULL_HEAD : HULL_HUMAN;
+        UTIL_FindPlaceToTeleport(owner, vOrigin, vOrigin, hull, IGNORE_MONSTERS);
+        engfunc(EngFunc_SetOrigin, owner, vOrigin);
+    }
 
-    UTIL_FindPlaceToTeleport(owner, vOrigin, vOrigin, hull, IGNORE_MONSTERS);
-    engfunc(EngFunc_SetOrigin, owner, vOrigin);
     UTIL_ScreenFade(owner, {0, 0, 255}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
     BlinkEffect(owner);
 
     new target;
-    while ((target = UTIL_FindEntityNearby(target, vOrigin, 36.0)) > 0) {
+    while ((target = UTIL_FindEntityNearby(target, vOrigin, SpellballRadius)) > 0) {
         if (owner == target) {
             continue;
         }
