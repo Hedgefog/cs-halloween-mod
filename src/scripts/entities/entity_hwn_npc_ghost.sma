@@ -45,8 +45,6 @@ new g_particlesEnabled;
 
 new g_playerKiller[MAX_PLAYERS + 1] = { 0, ... };
 
-new g_maxPlayers;
-
 new bool:g_isPrecaching;
 
 public plugin_precache()
@@ -85,8 +83,6 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
-
-    g_maxPlayers = get_maxplayers();
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -116,7 +112,7 @@ public OnSpawn(ent)
     set_pev(ent, pev_health, 1);
 
     if (!UTIL_IsPlayer(pev(ent, pev_enemy))) {
-        NPC_FindEnemy(ent, g_maxPlayers, 0.0, .reachableOnly = false, .visibleOnly = false);
+        NPC_FindEnemy(ent, 0.0, .reachableOnly = false, .visibleOnly = false, .allowMonsters = false);
     }
 
     TaskThink(ent);

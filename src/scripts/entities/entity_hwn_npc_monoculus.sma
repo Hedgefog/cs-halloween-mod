@@ -135,8 +135,6 @@ new g_cvarJumpTimeMax;
 new g_ceHandler;
 new g_bossHandler;
 
-new g_maxPlayers;
-
 new Array:g_portals;
 new Array:g_portalAngles;
 new g_level = 0;
@@ -197,8 +195,6 @@ public plugin_init()
     g_cvarDamageToStun = register_cvar("hwn_npc_monoculus_dmg_to_stun", "2000.0");
     g_cvarJumpTimeMin = register_cvar("hwn_npc_monoculus_jump_time_min", "10.0");
     g_cvarJumpTimeMax = register_cvar("hwn_npc_monoculus_jump_time_max", "20.0");
-
-    g_maxPlayers = get_maxplayers();
 }
 
 public plugin_end()
@@ -264,6 +260,7 @@ public OnSpawn(ent)
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 4.0);
     set_pev(ent, pev_rendercolor, fRenderColor);
+    set_pev(ent, pev_team, 666);
 
     NPC_Create(ent, 0.0);
     new Array:monoculus = Monoculus_Create(ent);
@@ -443,13 +440,13 @@ public TaskThink(ent)
     new bool:isStunned = ArrayGetCell(monoculus, Monoculus_IsStunned);
 
     if (!isStunned) {
-        new enemy = pev(ent, pev_enemy);
-        if (!NPC_IsValidEnemy(enemy) || !Attack(ent, enemy)) {
+        new enemy = NPC_GetEnemy(ent);
+        if (!enemy || !Attack(ent, enemy)) {
             if (random_num(0, 100) < 5) {
                 LookAround(ent);
             }
 
-            NPC_FindEnemy(ent, g_maxPlayers);
+            NPC_FindEnemy(ent, .allowMonsters = false);
             NPC_PlayAction(ent, g_actions[Action_Idle]);
         }
 
@@ -706,8 +703,8 @@ public TaskFloat(taskID)
 {
     new ent = taskID - TASKID_SUM_FLOAT;
 
-    new enemy = pev(ent, pev_enemy);
-    if (NPC_IsValidEnemy(enemy)) {
+    new enemy = NPC_GetEnemy(ent);
+    if (enemy) {
         static Float:vTarget[3];
         pev(enemy, pev_origin, vTarget);
         AlignHeight(ent, vTarget);

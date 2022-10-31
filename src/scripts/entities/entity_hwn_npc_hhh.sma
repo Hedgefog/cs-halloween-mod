@@ -218,6 +218,7 @@ public OnSpawn(ent)
     set_pev(ent, pev_renderamt, 4.0);
     set_pev(ent, pev_rendercolor, fRenderColor);
     set_pev(ent, pev_fuser1, 0.0);
+    set_pev(ent, pev_team, 666);
 
     set_pev(ent, pev_health, NPC_Health);
 
@@ -299,24 +300,24 @@ public OnThink(ent)
         set_pev(ent, pev_takedamage, DAMAGE_AIM);
     }
 
-    new enemy = pev(ent, pev_enemy);
+    new enemy = NPC_GetEnemy(ent);
     new Action:action = Action_Idle;
-    new bool:isValidEnemy = NPC_IsValidEnemy(enemy);
 
     static Float:fLastUpdate;
     pev(ent, pev_fuser1, fLastUpdate);
     new bool:shouldUpdate = get_gametime() - fLastUpdate >= g_fThinkDelay;
 
-    if (isValidEnemy) {
+    if (enemy) {
         Attack(ent, enemy, action, shouldUpdate);
     }
 
     if (shouldUpdate) {
-        if (!isValidEnemy) {
-            isValidEnemy = NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange);
+        if (!enemy) {
+            NPC_FindEnemy(ent, NPC_ViewRange);
+            enemy = NPC_GetEnemy(ent);
         }
 
-        if (!isValidEnemy && get_pcvar_num(g_cvarUseAstar) > 0) {
+        if (!enemy && get_pcvar_num(g_cvarUseAstar) > 0) {
             AStar_Attack(ent, action);
         }
 
@@ -521,8 +522,6 @@ AStar_FindPath(ent)
 
 bool:AStar_Attack(ent, &Action:action)
 {
-    new enemy = pev(ent, pev_enemy);
-
     new Float:fGametime = get_gametime();
 
     new Array:hhh = HHH_Get(ent);
@@ -531,7 +530,8 @@ bool:AStar_Attack(ent, &Action:action)
     new Float:fNextSearch = ArrayGetCell(hhh, HHH_AStar_NextSearch);
 
     if (astarIdx == -1) {
-        if (NPC_IsValidEnemy(enemy) || NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange, .reachableOnly = false, .visibleOnly = false)) {
+        new enemy = NPC_GetEnemy(ent);
+        if (enemy || NPC_FindEnemy(ent, NPC_ViewRange, .reachableOnly = false, .visibleOnly = false, .allowMonsters = false)) {
             AStar_FindPath(ent);
             ArraySetCell(hhh, HHH_AStar_NextSearch, fGametime + 10.0);
         }

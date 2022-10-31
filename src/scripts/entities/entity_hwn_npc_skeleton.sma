@@ -98,8 +98,6 @@ new Float:g_fThinkDelay;
 new g_ceHandler;
 new g_ceHandlerSmall;
 
-new g_maxPlayers;
-
 public plugin_precache()
 {
     g_mdlGibs = precache_model("models/bonegibs.mdl");
@@ -153,8 +151,6 @@ public plugin_init()
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
     RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);
     RegisterHam(Ham_Killed, "player", "OnPlayerKilledPre", .Post = 0);
-
-    g_maxPlayers = get_maxplayers();
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -268,22 +264,20 @@ public OnThink(ent)
         return HAM_IGNORED;
     }
 
-    new enemy = pev(ent, pev_enemy);
+    new enemy = NPC_GetEnemy(ent);
     new Action:action = Action_Idle;
-    new bool:isValidEnemy = NPC_IsValidEnemy(enemy);
 
     static Float:fLastUpdate;
     pev(ent, pev_fuser1, fLastUpdate);
     new bool:shouldUpdate = get_gametime() - fLastUpdate >= g_fThinkDelay;
 
-    if (isValidEnemy) {
+    if (enemy) {
         Attack(ent, enemy, action, shouldUpdate);
     }
 
     if (shouldUpdate) {
-        if (!isValidEnemy) {
-            new team = pev(ent, pev_team);
-            NPC_FindEnemy(ent, g_maxPlayers, .team = team);
+        if (!enemy) {
+            NPC_FindEnemy(ent, 1024.0);
         } else {
             if (random(100) < 10) {
                 if (IsSmall(ent)) {
