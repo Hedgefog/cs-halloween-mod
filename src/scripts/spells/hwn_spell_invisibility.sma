@@ -45,7 +45,7 @@ public plugin_precache()
 
     Hwn_Spell_Register(
         "Invisibility",
-        Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability,
+        Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability | Hwn_SpellFlag_Protection,
         "Cast"
     );
 
