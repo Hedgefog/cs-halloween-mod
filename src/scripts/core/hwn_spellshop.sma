@@ -140,6 +140,10 @@ GetSpellPrice(spell)
 
 bool:CanBuySpell(id, spell)
 {
+    if (!is_user_alive(id)) {
+        return false;
+    }
+
     new price = GetSpellPrice(spell);
 
     if (cs_get_user_money(id) < price) {
@@ -206,6 +210,10 @@ DropPlayerSpell(id)
 
 bool:Open(id) 
 {
+    if (!is_user_alive(id)) {
+        return false;
+    }
+
     if (!get_pcvar_num(g_cvarEnabled)) {
         client_print(id, print_center, "Spell shop is disabled on this server!");
         return false;
