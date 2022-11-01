@@ -215,7 +215,7 @@ bool:Open(id)
     }
 
     if (!get_pcvar_num(g_cvarEnabled)) {
-        client_print(id, print_center, "Spell shop is disabled on this server!");
+        client_print(id, print_center, "%L", id, "HWN_SPELLSHOP_DISABLED");
         return false;
     }
 

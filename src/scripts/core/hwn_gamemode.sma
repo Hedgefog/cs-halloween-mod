@@ -414,7 +414,7 @@ public Hwn_SpellShop_Fw_Open(id)
     }
 
     if (!IsPlayerOnSpawn(id)) {
-        client_print(id, print_center, "Spell shop is only available at the spawn!");
+        client_print(id, print_center, "%L", id, "HWN_SPELLSHOP_NOT_AT_SPAWN");
         return PLUGIN_HANDLED;
     }
 
