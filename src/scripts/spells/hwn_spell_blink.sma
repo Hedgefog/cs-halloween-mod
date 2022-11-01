@@ -36,7 +36,7 @@ public plugin_precache()
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
 
-    g_hSpell = Hwn_Spell_Register("Blink", Hwn_SpellFlag_Throwable, "OnCast");
+    g_hSpell = Hwn_Spell_Register("Blink", Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage, "OnCast");
 }
 
 public plugin_init()
