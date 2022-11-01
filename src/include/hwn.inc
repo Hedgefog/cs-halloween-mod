@@ -364,7 +364,8 @@ enum Hwn_GamemodeFlags (<<=1)
     Hwn_GamemodeFlag_None,
     Hwn_GamemodeFlag_Default = 1,
     Hwn_GamemodeFlag_RespawnPlayers,
-    Hwn_GamemodeFlag_SpecialEquip
+    Hwn_GamemodeFlag_SpecialEquip,
+    Hwn_GamemodeFlag_SpellShop
 };
 
 enum Hwn_SpellFlags (<<=1)
@@ -500,7 +501,13 @@ native Hwn_Menu_AddItem(const szTitle[], const szCallback[]);
 
 /*--------------------------------[ Spell Shop ]--------------------------------*/
 
-native Hwn_SpellShop_Open(id);
+native bool:Hwn_SpellShop_Open(id);
+native bool:Hwn_SpellShop_BuySpell(id, spell);
+native bool:Hwn_SpellShop_CanBuySpell(id, spell);
+native Hwn_SpellShop_GetSpellPrice(spell);
+
+forward Hwn_SpellShop_Fw_Open(id);
+forward Hwn_SpellShop_Fw_BuySpell(id, spell);
 
 /*--------------------------------[ Crits ]--------------------------------*/
 

@@ -27,6 +27,14 @@ new g_cvarPriceRadius;
 new g_cvarPriceProtection;
 new g_cvarPriceMultRare;
 
+new g_fwOpen;
+new g_fwBuySpell;
+
+public plugin_precache()
+{
+    register_dictionary("hwn.txt");
+}
+
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -42,25 +50,55 @@ public plugin_init()
     g_cvarPriceDamage = register_cvar("hwn_spellshop_spell_price_damage", "800");
     g_cvarPriceRadius = register_cvar("hwn_spellshop_spell_price_radius", "650");
     g_cvarPriceProtection = register_cvar("hwn_spellshop_spell_price_protection", "750");
+
+    g_fwOpen = CreateMultiForward("Hwn_SpellShop_Fw_Open", ET_STOP, FP_CELL);
+    g_fwBuySpell = CreateMultiForward("Hwn_SpellShop_Fw_BuySpell", ET_STOP, FP_CELL, FP_CELL);
 }
 
 public plugin_natives()
 {
     register_library("hwn");
     register_native("Hwn_SpellShop_Open", "Native_Open");
+    register_native("Hwn_SpellShop_BuySpell", "Native_BuySpell");
+    register_native("Hwn_SpellShop_CanBuySpell", "Native_CanBuySpell");
+    register_native("Hwn_SpellShop_GetSpellPrice", "Native_GetSpellPrice");
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
 
-public Native_Open(pluginID, argc)
+public bool:Native_Open(pluginID, argc)
 {
     new id = get_param(1);
-    Open(id);
+    return Open(id);
+}
+
+public bool:Native_BuySpell(pluginID, argc)
+{
+    new id = get_param(1);
+    new spell = get_param(2);
+
+    return BuySpell(id, spell);
+}
+
+public bool:Native_CanBuySpell(pluginID, argc)
+{
+    new id = get_param(1);
+    new spell = get_param(2);
+
+    return CanBuySpell(id, spell);
+}
+
+public Native_GetSpellPrice(pluginID, argc)
+{
+    new spell = get_param(1);
+
+    return GetSpellPrice(spell);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-GetSpellPrice(spell) {
+GetSpellPrice(spell)
+{
     new price = get_pcvar_num(g_cvarPrice);
 
     new Hwn_SpellFlags:spellFlags = Hwn_Spell_GetFlags(spell);
@@ -100,12 +138,9 @@ GetSpellPrice(spell) {
     return price;
 }
 
-bool:CanBuySpell(id, spell) {
+bool:CanBuySpell(id, spell)
+{
     new price = GetSpellPrice(spell);
-
-    if (!Hwn_Gamemode_IsPlayerOnSpawn(id)) {
-        return false;
-    }
 
     if (cs_get_user_money(id) < price) {
         return false;
@@ -114,7 +149,38 @@ bool:CanBuySpell(id, spell) {
     return true;
 }
 
-DropPlayerSpell(id) {
+bool:BuySpell(id, spell)
+{
+    if (!CanBuySpell(id, spell)) {
+        return false;
+    }
+
+    new fwResult;
+    ExecuteForward(g_fwBuySpell, fwResult, id, spell);
+
+    if (fwResult != PLUGIN_CONTINUE) {
+        return false;
+    }
+
+    new price = GetSpellPrice(spell);
+    new spellAmount = 0;
+    new currentSpell = Hwn_Spell_GetPlayerSpell(id, spellAmount);
+
+    spellAmount = spell == currentSpell ? spellAmount + 1 : 1;
+
+    if (spell != currentSpell) {
+        DropPlayerSpell(id);
+    }
+
+    new money = cs_get_user_money(id);
+    cs_set_user_money(id, money - price);
+    Hwn_Spell_SetPlayerSpell(id, spell, spellAmount);
+
+    return true;
+}
+
+DropPlayerSpell(id)
+{
     new spellAmount = 0;
     new spell = Hwn_Spell_GetPlayerSpell(id, spellAmount);
 
@@ -138,20 +204,24 @@ DropPlayerSpell(id) {
     set_pev(ent, pev_velocity, vVelocity);
 }
 
-Open(id) 
+bool:Open(id) 
 {
     if (!get_pcvar_num(g_cvarEnabled)) {
         client_print(id, print_center, "Spell shop is disabled on this server!");
-        return;
+        return false;
     }
 
-    if (!Hwn_Gamemode_IsPlayerOnSpawn(id)) {
-        client_print(id, print_center, "Spell shop is only available at the spawn!");
-        return;
+    new fwResult;
+    ExecuteForward(g_fwOpen, fwResult, id);
+
+    if (fwResult != PLUGIN_CONTINUE) {
+        return false;
     }
 
     new menu = CreateMenu(id);
     menu_display(id, menu);
+
+    return true;
 }
 
 CreateMenu(id)
@@ -184,26 +254,9 @@ CreateMenu(id)
 
 public MenuHandler(id, menu, item, page)
 {
-    if (item != MENU_EXIT)
-    {
+    if (item != MENU_EXIT) {
         new spell = item * (page + 1);
-        if (!CanBuySpell(id, spell)) {
-            return PLUGIN_HANDLED;
-        }
-
-        new price = GetSpellPrice(spell);
-        new spellAmount = 0;
-        new currentSpell = Hwn_Spell_GetPlayerSpell(id, spellAmount);
-
-        spellAmount = spell == currentSpell ? spellAmount + 1 : 1;
-
-        if (spell != currentSpell) {
-            DropPlayerSpell(id);
-        }
-
-        new money = cs_get_user_money(id);
-        cs_set_user_money(id, money - price);
-        Hwn_Spell_SetPlayerSpell(id, spell, spellAmount);
+        BuySpell(id, spell);
     }
 
     menu_destroy(menu);

@@ -66,7 +66,7 @@ public plugin_precache()
     g_hGamemode = Hwn_Gamemode_Register(
         .szName = "Collector",
         .flags = (
-            Hwn_GamemodeFlag_RespawnPlayers | Hwn_GamemodeFlag_SpecialEquip
+            Hwn_GamemodeFlag_RespawnPlayers | Hwn_GamemodeFlag_SpecialEquip | Hwn_GamemodeFlag_SpellShop
         )
     );
 }

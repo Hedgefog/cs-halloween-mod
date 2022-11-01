@@ -42,11 +42,14 @@ new Array:g_ctSpawnPoints;
 new g_maxPlayers;
 
 static g_szEquipmentMenuTitle[32];
+static g_szSpellShopMenuTitle[32];
 
 public plugin_precache()
 {
     register_dictionary("hwn.txt");
+
     format(g_szEquipmentMenuTitle, charsmax(g_szEquipmentMenuTitle), "%L", LANG_SERVER, "HWN_EQUIPMENT_MENU_TITLE");
+    format(g_szSpellShopMenuTitle, charsmax(g_szSpellShopMenuTitle), "%L", LANG_SERVER, "HWN_SPELLSHOP_MENU_TITLE");
 
     g_fwGamemodeActivated = CreateMultiForward("Hwn_Gamemode_Fw_Activated", ET_IGNORE, FP_CELL);
 
@@ -380,6 +383,11 @@ public MenuItem_ChangeEquipment(id)
     Hwn_PEquipment_ShowMenu(id);
 }
 
+public MenuItem_SpellShop(id)
+{
+    Hwn_SpellShop_Open(id);
+}
+
 public OnCheckWinConditions()
 {
     if (!g_gamemodeCount) {
@@ -398,6 +406,35 @@ public OnCheckWinConditions()
     return PLUGIN_CONTINUE;
 }
 
+public Hwn_SpellShop_Fw_Open(id)
+{
+    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
+    if (~flags & Hwn_GamemodeFlag_SpellShop) {
+        return PLUGIN_HANDLED;
+    }
+
+    if (!IsPlayerOnSpawn(id)) {
+        client_print(id, print_center, "Spell shop is only available at the spawn!");
+        return PLUGIN_HANDLED;
+    }
+
+    return PLUGIN_CONTINUE;
+}
+
+public Hwn_SpellShop_Fw_BuySpell(id, spell)
+{
+    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
+    if (~flags & Hwn_GamemodeFlag_SpellShop) {
+        return PLUGIN_HANDLED;
+    }
+
+    if (!IsPlayerOnSpawn(id)) {
+        return PLUGIN_HANDLED;
+    }
+
+    return PLUGIN_CONTINUE;
+}
+
 /*--------------------------------[ Methods ]--------------------------------*/
 
 SetGamemode(gamemode)
@@ -406,6 +443,10 @@ SetGamemode(gamemode)
     new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
     if (flags & Hwn_GamemodeFlag_SpecialEquip) {
         Hwn_Menu_AddItem(g_szEquipmentMenuTitle, "MenuItem_ChangeEquipment");
+    }
+
+    if (flags & Hwn_GamemodeFlag_SpellShop) {
+        Hwn_Menu_AddItem(g_szSpellShopMenuTitle, "MenuItem_SpellShop");
     }
 
     new szGamemodeName[32];
