@@ -163,7 +163,7 @@ RocketRadiusDamage(ent, owner)
 
         new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE, false, target);
 
-        ExecuteHamB(Ham_TakeDamage, target, owner, owner, fDamage, DMG_ALWAYSGIB);
+        ExecuteHamB(Ham_TakeDamage, target, ent, owner, fDamage, DMG_ALWAYSGIB);
     }
 }
 

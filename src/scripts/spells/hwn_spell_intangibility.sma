@@ -106,7 +106,7 @@ public OnPlayerTakeDamagePre(id, inflictor, attacker, Float:fDamage, damageBits)
         return HAM_SUPERCEDE;
     }
 
-    if (attacker && pev(attacker, pev_flags) & FL_MONSTER) {
+    if (inflictor && pev(inflictor, pev_flags) & FL_MONSTER) {
         return HAM_SUPERCEDE;
     }
 
