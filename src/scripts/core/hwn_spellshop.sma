@@ -247,7 +247,7 @@ CreateMenu(id)
 
         new price = GetSpellPrice(spell);
       
-        static szText[32];
+        static szText[128];
         format(szText, charsmax(szText), "%L\R\y$%d", id, szSpellName, price);
 
         menu_additem(menu, szText, .callback = callback);
