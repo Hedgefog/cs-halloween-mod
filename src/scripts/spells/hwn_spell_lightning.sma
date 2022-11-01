@@ -244,7 +244,7 @@ DrawLightingBeam(ent)
     xs_vec_mul_scalar(vTarget, EffectRadius, vTarget);
     xs_vec_add(vOrigin, vTarget, vTarget);
 
-    engfunc(EngFunc_MessageBegin, MSG_ALL, SVC_TEMPENTITY, vOrigin, 0);
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
     write_byte(TE_BEAMPOINTS);
     engfunc(EngFunc_WriteCoord, vOrigin[0]);
     engfunc(EngFunc_WriteCoord, vOrigin[1]);

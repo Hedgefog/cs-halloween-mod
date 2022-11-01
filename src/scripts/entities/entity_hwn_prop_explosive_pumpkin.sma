@@ -98,7 +98,7 @@ ExplosionEffect(ent)
     pev(ent, pev_origin, vOrigin);
     vOrigin[2] += 16.0;
 
-    engfunc(EngFunc_MessageBegin, MSG_ALL, SVC_TEMPENTITY, vOrigin, 0);
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
     write_byte(TE_EXPLOSION);
     engfunc(EngFunc_WriteCoord, vOrigin[0]);
     engfunc(EngFunc_WriteCoord, vOrigin[1]);
