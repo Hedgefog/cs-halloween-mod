@@ -260,7 +260,6 @@ public OnSpawn(ent)
     set_pev(ent, pev_renderfx, kRenderFxGlowShell);
     set_pev(ent, pev_renderamt, 4.0);
     set_pev(ent, pev_rendercolor, fRenderColor);
-    set_pev(ent, pev_team, 666);
 
     NPC_Create(ent, 0.0);
     new Array:monoculus = Monoculus_Create(ent);
