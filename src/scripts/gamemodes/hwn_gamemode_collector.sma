@@ -3,6 +3,7 @@
 #include <amxmodx>
 #include <fakemeta>
 #include <hamsandwich>
+#include <cstrike>
 #include <fun>
 
 #include <api_rounds>
@@ -50,6 +51,7 @@ new g_cvarWofEnabled;
 new g_cvarWofDelay;
 new g_cvarNpcDropChanceSpell;
 new g_cvarTeamPointsToBossSpawn;
+new g_cvarTeamPointsReward;
 
 new g_maxPlayers;
 
@@ -87,6 +89,7 @@ public plugin_init()
     g_cvarWofDelay = register_cvar("hwn_collector_wof_delay", "90.0");
     g_cvarNpcDropChanceSpell = register_cvar("hwn_collector_npc_drop_chance_spell", "7.5");
     g_cvarTeamPointsToBossSpawn = register_cvar("hwn_collector_teampoints_to_boss_spawn", "20");
+    g_cvarTeamPointsReward = register_cvar("hwn_collector_teampoints_reward", "150");
 
     g_fwPlayerPointsChanged = CreateMultiForward("Hwn_Collector_Fw_PlayerPoints", ET_IGNORE, FP_CELL);
     g_fwTeamPointsChanged = CreateMultiForward("Hwn_Collector_Fw_TeamPoints", ET_IGNORE, FP_CELL);
@@ -418,6 +421,16 @@ bool:ScorePlayerPointsToTeam(id, count) {
     SetPlayerPoints(id, playerPoints - count);
     SetTeamPoints(team, teamPoints + count);
     ExecuteHamB(Ham_AddPoints, id, 1, false);
+
+    new reward = get_pcvar_num(g_cvarTeamPointsReward);
+
+    #if defined _reapi_included
+        new maxMoney = get_cvar_num("mp_maxmoney");
+    #else
+        static const maxMoney = 1600;
+    #endif
+
+    cs_set_user_money(id, clamp(cs_get_user_money(id) + reward, 0, maxMoney));
 
     client_cmd(id, "spk %s", g_szSndPointCollected);
     ExecuteForward(g_fwTeamPointsScored, g_fwResult, team, count, id);
