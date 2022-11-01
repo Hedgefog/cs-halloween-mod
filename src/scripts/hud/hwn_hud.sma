@@ -41,7 +41,6 @@ new g_hudMsgTeamPoints;
 new g_hudMsgPlayerPoints;
 new g_hudMsgPlayerSpell;
 
-new g_cvarCollectorHideMoney;
 new g_cvarCollectorHideTimer;
 new g_cvarTeamPointsLimit;
 
@@ -70,7 +69,6 @@ public plugin_init()
     g_maxPlayers = get_maxplayers();
     g_hGamemodeCollector = Hwn_Gamemode_GetHandler("Collector");
 
-    g_cvarCollectorHideMoney = register_cvar("hwn_hud_collector_hide_money", "1");
     g_cvarCollectorHideTimer = register_cvar("hwn_hud_collector_hide_timer", "0");
     g_cvarTeamPointsLimit = get_cvar_pointer("hwn_collector_teampoints_limit");
 
@@ -340,10 +338,6 @@ GetHideWeaponFlags()
     new flags = 0;
     if (get_pcvar_num(g_cvarCollectorHideTimer) > 0) {
         flags |= HUD_HIDE_TIMER;
-    }
-
-    if (get_pcvar_num(g_cvarCollectorHideMoney) > 0) {
-        flags |= HUD_HIDE_MONEY;
     }
 
     return flags;
