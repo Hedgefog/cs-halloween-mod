@@ -376,7 +376,8 @@ enum Hwn_SpellFlags (<<=1)
     Hwn_SpellFlag_Ability,
     Hwn_SpellFlag_Heal,
     Hwn_SpellFlag_Damage,
-    Hwn_SpellFlag_Radius
+    Hwn_SpellFlag_Radius,
+    Hwn_SpellFlag_Protection
 };
 
 /*--------------------------------[ Core ]--------------------------------*/

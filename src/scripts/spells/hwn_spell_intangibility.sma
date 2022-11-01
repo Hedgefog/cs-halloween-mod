@@ -36,7 +36,7 @@ public plugin_precache()
 
     Hwn_Spell_Register(
         "Intangibility",
-        Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability,
+        Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability | Hwn_SpellFlag_Protection,
         "Cast"
     );
 
