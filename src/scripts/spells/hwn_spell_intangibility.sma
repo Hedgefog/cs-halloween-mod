@@ -20,7 +20,7 @@
 
 #define STATUS_ICON "suit_empty"
 
-const Float:EffectTime = 10.0;
+const Float:EffectTime = 5.0;
 
 new const g_szSndDetonate[] = "hwn/spells/spell_intangibility.wav";
 
