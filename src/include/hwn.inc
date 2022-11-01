@@ -1,18 +1,30 @@
 /*
     6.5.0
         Additions and improvements:
-            Add spell shop
-            Remove transparency for intangibility spell effect
-            Add status icon for intangibility spell
-            Increase small skeleton hit range
+            Added spell shop
+            Removed transparency for intangibility spell effect
+            Added status icon for intangibility spell
+            Increased small skeleton hit range
             Reworked blink spell
             Fireball spell can now push the owner and deals low damage
             Monsters can now attack each other
             Optimized client messages
+            Added reward for collecting pumpkins
 
         Cvars:
-            Remove hwn_hud_collector_hide_timer cvar
-            Remove hwn_hud_collector_hide_money cvar
+            Added hwn_spellshop
+            Added hwn_spellshop_spell_price
+            Added hwn_spellshop_spell_price_ability
+            Added hwn_spellshop_spell_price_applicable
+            Added hwn_spellshop_spell_price_damage
+            Added hwn_spellshop_spell_price_heal
+            Added hwn_spellshop_spell_price_mult_rare
+            Added hwn_spellshop_spell_price_protection
+            Added hwn_spellshop_spell_price_radius
+            Added hwn_spellshop_spell_price_throwable
+            Added hwn_collector_teampoints_reward
+            Removed hwn_hud_collector_hide_timer cvar
+            Removed hwn_hud_collector_hide_money cvar
 
         Fixes:
             Pumpkin no longer drops on suicide
