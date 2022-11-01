@@ -15,6 +15,7 @@
 #define AUTHOR "Hedgehog Fog"
 
 #define pev_spell pev_iuser1
+#define pev_spell_amount pev_iuser2
 #define pev_eparticle pev_euser1
 
 #define ENTITY_NAME "hwn_item_spellbook"
@@ -81,7 +82,13 @@ public Hwn_Fw_ConfigLoaded()
 
 public OnSpawn(ent)
 {
-    new spell = RandomSpell();
+    new bool:isInitial = !pev(ent, pev_spell_amount);
+
+    if (isInitial) {
+        set_pev(ent, pev_spell, RandomSpell());
+    }
+
+    new spell = pev(ent, pev_spell);
 
     if (spell == -1) {
         CE_Remove(ent);
@@ -89,8 +96,17 @@ public OnSpawn(ent)
     }
 
     new bool:isRare = !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare);
+    new maxSpellCount = isRare ? get_pcvar_num(g_cvarMaxRareSpellCount) : get_pcvar_num(g_cvarMaxSpellCount);
 
-    set_pev(ent, pev_spell, spell);
+    if (maxSpellCount <= 0) {
+        CE_Remove(ent);
+        return;
+    }
+
+    if (isInitial) {
+        set_pev(ent, pev_spell_amount, random(maxSpellCount) + 1);
+    }
+
     set_pev(ent, pev_framerate, 1.0);
 
     new Float:vOrigin[3];
@@ -136,11 +152,8 @@ public OnPickup(ent, id)
 
     new spell = pev(ent, pev_spell);
     new bool:isRare = !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare);
-    new maxSpellCount = isRare ? get_pcvar_num(g_cvarMaxRareSpellCount) : get_pcvar_num(g_cvarMaxSpellCount);
 
-    if (maxSpellCount > 0) {
-        Hwn_Spell_SetPlayerSpell(id, spell, random(maxSpellCount) + 1);
-    }
+    Hwn_Spell_SetPlayerSpell(id, spell, pev(ent, pev_spell_amount));
 
     emit_sound(ent, CHAN_BODY, isRare ? g_szSndPickupRare : g_szSndPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 

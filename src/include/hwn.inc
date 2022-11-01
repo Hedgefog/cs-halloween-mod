@@ -498,6 +498,11 @@ forward Hwn_PEquipment_Fw_Changed(id);
 native Hwn_Menu_Open(id);
 native Hwn_Menu_AddItem(const szTitle[], const szCallback[]);
 
+/*--------------------------------[ Spell Shop ]--------------------------------*/
+
+native Hwn_SpellShop_Open(id);
+
 /*--------------------------------[ Crits ]--------------------------------*/
+
 native Hwn_Crits_Get(id);
 native Hwn_Crits_Set(id, bool:value);

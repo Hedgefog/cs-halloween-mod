@@ -22,11 +22,18 @@ public plugin_init()
 
     register_clcmd("chooseteam", "OnClCmd_ChooseTeam");
     register_clcmd("drop", "OnClCmd_Drop");
+    register_clcmd("buyequip", "OnClCmd_SpellsShop");
+    register_clcmd("hwn_spells_shop_menu", "OnClCmd_SpellsShop");
+
     register_impulse(100, "OnImpulse_100");
 
-    new szMenuTitle[32];
-    format(szMenuTitle, charsmax(szMenuTitle), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_TITLE");
-    Hwn_Menu_AddItem(szMenuTitle, "MenuItemCosmeticCallback");
+    new szCosmeticMenuTitle[32];
+    format(szCosmeticMenuTitle, charsmax(szCosmeticMenuTitle), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_TITLE");
+    Hwn_Menu_AddItem(szCosmeticMenuTitle, "MenuItemCosmeticCallback");
+
+    new szSpellShopMenuTitle[32];
+    format(szSpellShopMenuTitle, charsmax(szSpellShopMenuTitle), "%L", LANG_SERVER, "HWN_SPELLSHOP_MENU_TITLE");
+    Hwn_Menu_AddItem(szSpellShopMenuTitle, "MenuItemSpellShopCallback");
 
     new szChooseTeamText[32];
     format(szChooseTeamText, charsmax(szChooseTeamText), "%L", LANG_SERVER, "TEAM_MENU");
@@ -72,10 +79,20 @@ public OnImpulse_100(id)
     return PLUGIN_HANDLED;
 }
 
+public OnClCmd_SpellsShop(id)
+{
+    Hwn_SpellShop_Open(id);
+}
+
 public ChooseTeam(id)
 {
     g_chooseTeamOverride &= ~(1<<(id&31));
     client_cmd(id, "chooseteam");
+}
+
+public MenuItemSpellShopCallback(id)
+{
+    Hwn_SpellShop_Open(id);
 }
 
 public MenuItemCosmeticCallback(id)

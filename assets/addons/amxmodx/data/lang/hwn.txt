@@ -44,6 +44,7 @@ HWN_WOF_SPELL_MAGIC = Magic
 HWN_WOF_SPELL_DANCE = Dance
 HWN_BOSS_MONOCULUS = Monoculus
 HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Horseless Headless Horsemann
+HWN_SPELLSHOP_MENU_TITLE = Spell Shop
 
 [ru]
 HWN_GIFT_SPAWN = Призрачный Подарок таинственно появился в случайном месте!
@@ -91,6 +92,7 @@ HWN_WOF_SPELL_MAGIC = Магия
 HWN_WOF_SPELL_DANCE = Танцы
 HWN_BOSS_MONOCULUS = Глазастус
 HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Пеший Всадник без Головы
+HWN_SPELLSHOP_MENU_TITLE = Магазин Заклинаний
 
 [ua]
 HWN_GIFT_SPAWN = Примарний Подарунок таємниче з'явився у випадковому місці!
@@ -138,6 +140,7 @@ HWN_WOF_SPELL_MAGIC = Магія
 HWN_WOF_SPELL_DANCE = Танці
 HWN_BOSS_MONOCULUS = Глазастус
 HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Піший Вершник без Голови
+HWN_SPELLSHOP_MENU_TITLE = Магазин Заклинань
 
 [es]
 HWN_GIFT_SPAWN = Un misterioso regalo de ^nHalloween ha aparecido en algun lugar,^nve y encuentralo!
@@ -185,6 +188,7 @@ HWN_WOF_SPELL_MAGIC = Magic
 HWN_WOF_SPELL_DANCE = Dance
 HWN_BOSS_MONOCULUS = Monóculus
 HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Jinete Decapitado sin Montura
+HWN_SPELLSHOP_MENU_TITLE = Spell Shop
 
 [ro]
 HWN_GIFT_SPAWN = Un Cadou Bantuit de Halloween a^naparut in mod misterios undeva,^nasezat doar pentru tine. Du-te si gaseste-l!
@@ -232,6 +236,7 @@ HWN_WOF_SPELL_MAGIC = Magic
 HWN_WOF_SPELL_DANCE = Dance
 HWN_BOSS_MONOCULUS = Monoculus
 HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Horseless Headless Horsemann
+HWN_SPELLSHOP_MENU_TITLE = Spell Shop
 
 [hu]
 HWN_GIFT_SPAWN = Egy Kísérteties Halloweeni Ajándék^nrejtelmesen megjelent valahol,^ncsak a számodra. Menj és találd meg!
@@ -279,6 +284,7 @@ HWN_WOF_SPELL_MAGIC = Magic
 HWN_WOF_SPELL_DANCE = Dance
 HWN_BOSS_MONOCULUS = Monoculus
 HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Horseless Headless Horsemann
+HWN_SPELLSHOP_MENU_TITLE = Spell Shop
 
 [bp]
 HWN_GIFT_SPAWN = Um misterioso Presente de Halloween caiu^nem algum lugar,^n somente para você. Corra e encontre!
@@ -326,3 +332,4 @@ HWN_WOF_SPELL_MAGIC = Magic
 HWN_WOF_SPELL_DANCE = Dance
 HWN_BOSS_MONOCULUS = Monoculus
 HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Cavaleiro Carente de Cavalo e Cabeça
+HWN_SPELLSHOP_MENU_TITLE = Spell Shop
