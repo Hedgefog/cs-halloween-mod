@@ -1,15 +1,22 @@
 /*
     6.5.0
         Additions and improvements:
+            Add spell shop
             Remove transparency for intangibility spell effect
             Add status icon for intangibility spell
             Increase small skeleton hit range
             Reworked blink spell
             Fireball spell can now push the owner and deals low damage
             Monsters can now attack each other
+            Optimized client messages
+
+        Cvars:
+            Remove hwn_hud_collector_hide_timer cvar
+            Remove hwn_hud_collector_hide_money cvar
 
         Fixes:
             Pumpkin no longer drops on suicide
+            Fix intangibility damage resistance rules
 
     6.4.0
         Additions and improvements:
