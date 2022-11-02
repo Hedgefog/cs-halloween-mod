@@ -22,6 +22,7 @@
 
 new g_sprSparkle;
 new g_sprSparklePurple;
+new g_sprSmoke;
 
 new g_particlesEnabled = false;
 
@@ -50,6 +51,7 @@ public plugin_precache()
 
     g_sprSparkle = precache_model("sprites/muz2.spr");
     g_sprSparklePurple = precache_model("sprites/muz7.spr");
+    g_sprSmoke = precache_model("sprites/hwn/magic_smoke.spr");
 
     precache_sound(g_szSndSpawn);
     precache_sound(g_szSndPickup);
@@ -123,6 +125,8 @@ public OnSpawn(ent)
         UTIL_Message_SpriteTrail(vOrigin, vEnd, g_sprSparkle, 6, 1, 1, 32, 16);
         UTIL_Message_SpriteTrail(vOrigin, vEnd, g_sprSparklePurple, 2, 1, 1, 32, 16);
     }
+
+    UTIL_Message_FireField(vOrigin, 32, g_sprSmoke, 3, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
 
     emit_sound(ent, CHAN_BODY, g_szSndSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 

@@ -21,6 +21,7 @@
 #define EXPLOSION_SPRITE_SIZE 80.0
 
 new g_sprSmoke;
+new g_sprExplodeSmoke;
 
 new Float:g_fThinkDelay;
 
@@ -52,6 +53,7 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
 
     g_sprSmoke = precache_model("sprites/black_smoke1.spr");
+    g_sprExplodeSmoke = precache_model("sprites/hwn/magic_smoke.spr");
 
     precache_sound(g_szSndExplode);
 
@@ -183,6 +185,8 @@ ExplosionEffect(ent)
     write_byte(24);
     write_byte(0);
     message_end();
+    
+    UTIL_Message_FireField(vOrigin, 32, g_sprExplodeSmoke, 4, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 15);
 
     emit_sound(ent, CHAN_BODY, g_szSndExplode, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 

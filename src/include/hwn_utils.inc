@@ -348,6 +348,21 @@ stock UTIL_Message_Dlight
     message_end();
 }
 
+stock UTIL_Message_FireField(const Float:vOrigin[3], radius, modelIndex, count, flags, lifeTime)
+{
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_FIREFIELD);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    write_short(radius);
+    write_short(modelIndex);
+    write_byte(count);
+    write_byte(flags);
+    write_byte(lifeTime);
+    message_end();
+}
+
 stock UTIL_RandomVector(Float:min, Float:max, Float:vOut[3])
 {
     for (new i = 0; i < 3; ++i) {

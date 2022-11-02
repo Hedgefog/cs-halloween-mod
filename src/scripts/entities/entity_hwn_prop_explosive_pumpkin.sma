@@ -21,6 +21,7 @@
 
 new g_mdlGibs;
 new g_sprExlplosion;
+new g_sprExplodeSmoke;
 
 new const g_szSndExplode[] = "hwn/misc/pumpkin_explode.wav";
 
@@ -46,6 +47,7 @@ public plugin_precache()
     precache_sound(g_szSndExplode);
 
     g_sprExlplosion = precache_model("sprites/eexplo.spr");
+    g_sprExplodeSmoke = precache_model("sprites/hwn/pumpkin_smoke.spr");
     g_mdlGibs = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
 }
 
@@ -108,6 +110,8 @@ ExplosionEffect(ent)
     write_byte(24);
     write_byte(0);
     message_end();
+
+    UTIL_Message_FireField(vOrigin, 32, g_sprExplodeSmoke, 4, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
 
     new Float:vVelocity[3];
     UTIL_RandomVector(-128.0, 128.0, vVelocity);
