@@ -320,6 +320,11 @@ public OnThink(ent)
 
         if (enemy) {
             Attack(ent, enemy, action, shouldUpdate);
+            enemy = NPC_GetEnemy(ent);
+        }
+
+        if (enemy && shouldUpdate) {
+            AStar_Reset(ent);
         }
 
         if (shouldUpdate) {
@@ -511,8 +516,6 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = false)
     } else {
         NPC_StopMovement(ent);
     }
-
-    AStar_Reset(ent);
 
     return true;
 }
