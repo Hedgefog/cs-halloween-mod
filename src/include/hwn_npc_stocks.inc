@@ -218,7 +218,7 @@ stock bool:NPC_IsReachable(ent, const Float:vTarget[3], ignoreEnt = 0)
         new Float:fDistance = get_distance_f(vOrigin, _vTarget);
         new steps = floatround(fDistance / 32.0);
 
-        if (steps >= 1) {
+        if (steps) {
             //Get direction vetor
             static Float:vStep[3];
             xs_vec_sub(_vTarget, vOrigin, vStep);
