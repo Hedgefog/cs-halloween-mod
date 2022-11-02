@@ -96,6 +96,11 @@ stock bool:UTIL_IsPlayer(id)
     return (id > 0 && id < 33);
 }
 
+stock bool:UTIL_IsMonster(ent)
+{
+    return !!(pev(ent, pev_flags) & FL_MONSTER);
+}
+
 stock bool:UTIL_IsTeammate(ent, team) {
     new targetTeam = UTIL_IsPlayer(ent) ? UTIL_GetPlayerTeam(ent) : pev(ent, pev_team);
     return team == targetTeam;
@@ -912,13 +917,20 @@ stock bool:UTIL_IsLocalizationExists(const szKey[])
     return !equali(szBuffer, szNotFound, sizeof(szNotFound) - 1);
 }
 
-stock UTIL_PushFromOrigin(const Float:vOrigin[3], ent, Float:fImpulse)
+stock UTIL_PushFromOrigin(const Float:vOrigin[3], ent, Float:fImpulse, const bool:lockAxis[3] = {false, false, false})
 {
     static Float:vTargetOrigin[3];
     pev(ent, pev_origin, vTargetOrigin);
 
     static Float:vVelocity[3];
     xs_vec_sub(vTargetOrigin, vOrigin, vVelocity);
+
+    for (new i = 0; i < 3; ++i) {
+        if (lockAxis[i]) {
+            vVelocity[i] = 0.0;
+        }
+    }
+
     xs_vec_normalize(vVelocity, vVelocity);
     xs_vec_mul_scalar(vVelocity, fImpulse, vVelocity);
 
@@ -926,4 +938,16 @@ stock UTIL_PushFromOrigin(const Float:vOrigin[3], ent, Float:fImpulse)
     pev(ent, pev_velocity, vTargetVelocity);
     xs_vec_add(vTargetVelocity, vVelocity, vTargetVelocity);
     set_pev(ent, pev_velocity, vTargetVelocity);
+}
+
+stock UTIL_FindCellArrayValue(Array:arr, value) {
+    new size = ArraySize(arr);
+
+    for (new i = 0; i < size; ++i) {
+        if (ArrayGetCell(arr, i) == value) {
+            return i;
+        }
+    }
+
+    return -1;
 }
