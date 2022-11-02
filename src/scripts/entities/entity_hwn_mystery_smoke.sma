@@ -48,6 +48,7 @@ public plugin_precache()
     );
 
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
+    CE_RegisterHook(CEFunction_KVD, ENTITY_NAME, "OnKeyValue");
 
     g_sprNull = precache_model("sprites/white.spr");
     g_sprTeamSmoke[0] = precache_model("sprites/hwn/magic_smoke.spr");
@@ -76,6 +77,13 @@ public OnSpawn(ent)
     set_pev(ent, pev_fuser1, 0.0);
 
     set_pev(ent, pev_nextthink, get_gametime());
+}
+
+public OnKeyValue(ent, const szKey[], const szValue[])
+{
+    if (equal(szKey, "team")) {
+        set_pev(ent, pev_message, str_to_num(szValue));
+    }
 }
 
 public OnThink(ent)
