@@ -30,6 +30,7 @@
 
         Fixes:
             Fixed NPC movement
+            Fix HHH NPC pathfinding
             Fixed intangibility damage resistance rules
             Pumpkin no longer drops on suicide
 
