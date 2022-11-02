@@ -111,8 +111,10 @@ public OnSpawn(ent)
 
     set_pev(ent, pev_health, 1);
 
-    if (!UTIL_IsPlayer(pev(ent, pev_enemy))) {
-        NPC_FindEnemy(ent, 0.0, .reachableOnly = false, .visibleOnly = false, .allowMonsters = false);
+    new enemy = pev(ent, pev_enemy);
+
+    if (!NPC_IsValidEnemy(enemy)) {
+        NPC_FindEnemy(ent, _, .reachableOnly = false, .visibleOnly = false, .allowMonsters = false);
     }
 
     TaskThink(ent);
@@ -149,13 +151,13 @@ public TaskThink(ent)
         UpdateParticles(ent);
 
         new enemy = pev(ent, pev_enemy);
+
         if (NPC_IsValidEnemy(enemy)) {
             Attack(ent, enemy);
-        } else if (!UTIL_IsPlayer(enemy)) {
-            CE_Kill(ent);
-            return;
-        } else {
+        } else if (UTIL_IsPlayer(enemy) && !is_user_alive(enemy)) {
             Revenge(ent, enemy);
+        } else {
+            CE_Kill(ent);
         }
     }
 
