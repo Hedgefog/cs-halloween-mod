@@ -267,8 +267,8 @@ public OnKill(ent)
         NPC_EmitVoice(ent, g_szSndDying, .supercede = true);
         NPC_PlayAction(ent, g_actions[Action_Shake], .supercede = true);
 
+        NPC_StopMovement(ent);
         set_pev(ent, pev_takedamage, DAMAGE_NO);
-        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
         set_pev(ent, pev_deadflag, DEAD_DYING);
 
         remove_task(ent);
@@ -475,7 +475,7 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = false)
     if (checkTarget) {
         if (!NPC_GetTarget(ent, NPC_Speed, vTarget)) {
             NPC_SetEnemy(ent, 0);
-            set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+            NPC_StopMovement(ent);
             set_pev(ent, pev_vuser1, vOrigin);
             return false;
         }
@@ -509,7 +509,7 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = false)
         action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
         NPC_MoveToTarget(ent, vTarget, NPC_Speed);
     } else {
-        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+        NPC_StopMovement(ent);
     }
 
     AStar_Reset(ent);

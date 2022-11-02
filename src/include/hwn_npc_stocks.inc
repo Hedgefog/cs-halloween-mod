@@ -417,6 +417,17 @@ stock bool:NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed, Float:fMa
     return turnResult;
 }
 
+stock NPC_StopMovement(ent)
+{
+    static Float:vVelocity[3];
+    pev(ent, pev_velocity, vVelocity);
+
+    vVelocity[0] = 0.0;
+    vVelocity[1] = 0.0;
+
+    set_pev(ent, pev_velocity, vVelocity);
+}
+
 stock NPC_MoveForward(ent, Float:fSpeed)
 {
     static Float:vDirection[3];

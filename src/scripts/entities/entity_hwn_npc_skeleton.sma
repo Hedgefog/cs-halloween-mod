@@ -325,7 +325,7 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = true)
     if (checkTarget) {
         if (!NPC_GetTarget(ent, fSpeed, vTarget)) {
             NPC_SetEnemy(ent, 0);
-            set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+            NPC_StopMovement(ent);
             set_pev(ent, pev_vuser1, vOrigin);
             return false;
         }
@@ -351,7 +351,7 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = true)
         NPC_MoveToTarget(ent, vTarget, NPC_Speed);
         action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
     } else {
-        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+        NPC_StopMovement(ent);
     }
 
     return true;
