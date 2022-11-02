@@ -145,6 +145,7 @@ public OnRemove(ent)
 
 public OnKilled(ent)
 {
+    set_pev(ent, pev_spell_amount, 0);
     RemoveParticles(ent);
 }
 
