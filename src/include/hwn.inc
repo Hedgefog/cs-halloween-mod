@@ -1,15 +1,17 @@
 /*
     6.5.0
         Additions and improvements:
+            Added Mystery Smoke spell
             Added spell shop
             Removed transparency for intangibility spell effect
-            Added status icon for intangibility spell
-            Increased small skeleton hit range
-            Reworked blink spell
+            Added status icon for Intangibility spell
+            Increased Small Skeleton NPC hit range
+            Reworked Blink spell
             Fireball spell can now push the owner and deals low damage
             Monsters can now attack each other
-            Optimized client messages
             Added reward for collecting pumpkins
+            Optimized client messages
+            Improved some effects
 
         Cvars:
             Added hwn_spellshop
@@ -27,8 +29,9 @@
             Removed hwn_hud_collector_hide_money cvar
 
         Fixes:
+            Fixed NPC movement
+            Fixed intangibility damage resistance rules
             Pumpkin no longer drops on suicide
-            Fix intangibility damage resistance rules
 
     6.4.0
         Additions and improvements:
