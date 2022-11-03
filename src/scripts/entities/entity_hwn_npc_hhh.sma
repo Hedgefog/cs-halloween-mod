@@ -259,8 +259,8 @@ public OnKill(ent)
         NPC_EmitVoice(ent, g_szSndDying, .supercede = true);
         NPC_PlayAction(ent, g_actions[Action_Shake], .supercede = true);
 
+        NPC_StopMovement(ent);
         set_pev(ent, pev_takedamage, DAMAGE_NO);
-        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
         set_pev(ent, pev_deadflag, DEAD_DYING);
 
         remove_task(ent);
@@ -299,24 +299,29 @@ public OnThink(ent)
         set_pev(ent, pev_takedamage, DAMAGE_AIM);
     }
 
-    new enemy = pev(ent, pev_enemy);
+    new enemy = NPC_GetEnemy(ent);
     new Action:action = Action_Idle;
-    new bool:isValidEnemy = NPC_IsValidEnemy(enemy);
 
     static Float:fLastUpdate;
     pev(ent, pev_fuser1, fLastUpdate);
     new bool:shouldUpdate = get_gametime() - fLastUpdate >= g_fThinkDelay;
 
-    if (isValidEnemy) {
+    if (enemy) {
         Attack(ent, enemy, action, shouldUpdate);
+        enemy = NPC_GetEnemy(ent);
+    }
+
+    if (enemy && shouldUpdate) {
+        AStar_Reset(ent);
     }
 
     if (shouldUpdate) {
-        if (!isValidEnemy) {
-            isValidEnemy = NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange);
+        if (!enemy) {
+            NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange);
+            enemy = NPC_GetEnemy(ent);
         }
 
-        if (!isValidEnemy && get_pcvar_num(g_cvarUseAstar) > 0) {
+        if (!enemy && get_pcvar_num(g_cvarUseAstar) > 0) {
             AStar_Attack(ent, action);
         }
 
@@ -454,7 +459,7 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = false)
     if (checkTarget) {
         if (!NPC_GetTarget(ent, NPC_Speed, vTarget)) {
             NPC_SetEnemy(ent, 0);
-            set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+            NPC_StopMovement(ent);
             set_pev(ent, pev_vuser1, vOrigin);
             return false;
         }
@@ -488,10 +493,8 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = false)
         action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
         NPC_MoveToTarget(ent, vTarget, NPC_Speed);
     } else {
-        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+        NPC_StopMovement(ent);
     }
-
-    AStar_Reset(ent);
 
     return true;
 }

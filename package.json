@@ -1,6 +1,6 @@
 {
   "name": "halloween-mod",
-  "version": "6.4.0",
+  "version": "6.4.1",
   "description": "Halloween Mod",
   "scripts": {
     "build": "npm run build:vanilla && npm run build:reapi",

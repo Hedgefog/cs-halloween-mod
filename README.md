@@ -1,23 +1,29 @@
 ![Alt Text](./images/demo.gif)
-### Halloween Mod for Counter-Strike 1.6
-__Version:__ 6.4.0
+## 🎃 Halloween Mod 🇺🇦
+![GitHub package.json version](https://img.shields.io/github/package-json/v/hedgefog/cs-halloween-mod)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/hedgefog/cs-halloween-mod/CI)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/hedgefog/cs-halloween-mod)
+![GitHub all releases](https://img.shields.io/github/downloads/hedgefog/cs-halloween-mod/total)
 
-### What is Halloween Mod?
-Halloween mod is a powerful Halloween-themed core for your server with completely new game modes, NPCs, bosses, spells, cosmetics, and more.
+### 📄 About
+__Halloween Mod__ is a powerful Halloween-themed core for your __Counter-Strike__ server with completely new game modes, NPCs, bosses, spells, cosmetics, and more.
 
-### Download latest:
+### 🔽 Download latest:
 - [Releases](./releases)
 
-### Documentation
+### 🔄 Requirements
+- Amx Mod X 1.8.2+
+- RegameDLL + ReAPI or RoundControl
+- Metamod-R or Metamod-P (for windows)
+
+### 📖 Documentation
 - [Index](./doc/pages/index.md)
 
-### Special Thanks:
+### 🙏 Special Thanks:
 - [Credits](./CREDITS.md)
 
-### Deployment
+### 🔧 Deployment
 - Clone repository.
-- Extract compiler executable and includes to _"compiler"_ folder of project.
-- Extract ReAPI module to _"thirdparty/reapi"_ folder of project (example: _"thirdparty/reapi/addons"_).
 - Install dependencies `npm i`
 
 #### Customize builder

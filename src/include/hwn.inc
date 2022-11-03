@@ -1,4 +1,9 @@
 /*
+    6.4.1
+        Fixes:
+            Fixed HHH NPC pathfinding
+            Pumpkin no longer drops on suicide
+
     6.4.0
         Additions and improvements:
             Added Skeletons Horde spell
@@ -336,7 +341,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.4.0"
+#define HWN_VERSION "6.4.1"
 
 enum _:Hwn_PumpkinType
 {

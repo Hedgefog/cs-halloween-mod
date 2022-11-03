@@ -188,13 +188,17 @@ public OnMessageStatusIcon(msg, dest, id)
     return PLUGIN_CONTINUE;
 }
 
-public OnPlayerKilled(id)
+public OnPlayerKilled(id, killer)
 {
     if (g_hGamemode != Hwn_Gamemode_GetCurrent()) {
         return;
     }
 
-    ExtractPlayerPoints(id);
+    new points = GetPlayerPoints(id);
+
+    if (points || (killer != id && !Hwn_Gamemode_IsPlayerOnSpawn(id))) {
+        ExtractPlayerPoints(id);
+    }
 }
 
 public OnTargetKilled(ent)
@@ -331,10 +335,6 @@ bool:ExtractPlayerPoints(id)
 
     static Float:vOrigin[3];
     pev(id, pev_origin, vOrigin);
-
-    if (Hwn_Gamemode_IsPlayerOnSpawn(id) && !points) {
-        return false;
-    }
 
     new bool:isBackpack = points > 1;
     new bpEnt = CE_Create(isBackpack ? BACKPACK_ENTITY_CLASSNAME : LOOT_ENTITY_CLASSNAME, vOrigin);
