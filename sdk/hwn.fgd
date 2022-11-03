@@ -147,3 +147,9 @@
     size(-16 -16 0, 16 16 32)
     Studio("models/hwn/npc/spookypumpkin_big.mdl")
 = hwn_npc_spookypumpkin_big []
+
+@PointClass
+    base(Angles, Team)
+    color(90 27 122)
+    size(-64 -64 0, 64 64 128)
+= hwn_mystery_smoke []
