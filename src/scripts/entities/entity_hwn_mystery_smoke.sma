@@ -15,13 +15,11 @@
 
 #define ENTITY_NAME "hwn_mystery_smoke"
 
-#define EFFECT_RADIUS 64.0
-
 #define SMOKE_EMIT_FREQUENCY 0.25
 #define SMOKE_PARTICLES_AMOUNT 5
 #define SMOKE_PARTICLES_LIFETIME 30
 
-const Float:EffectRadius = EFFECT_RADIUS;
+const Float:EffectRadius = 64.0;
 const Float:EffectPushForce = 260.0;
 
 new g_sprTeamSmoke[3];
@@ -34,21 +32,21 @@ new Float:g_fThinkDelay;
 public plugin_init()
 {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-
-    RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
-    RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);
 }
 
 public plugin_precache()
 {
     g_ceHandler = CE_Register(
         .szName = ENTITY_NAME,
-        .vMins = Float:{-EFFECT_RADIUS, -EFFECT_RADIUS, 0.0},
-        .vMaxs = Float:{EFFECT_RADIUS, EFFECT_RADIUS, EFFECT_RADIUS}
+        .vMins = Float:{-64.0, -64.0, 0.0},
+        .vMaxs = Float:{64.0, 64.0, 128.0}
     );
 
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_KVD, ENTITY_NAME, "OnKeyValue");
+
+    RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
+    RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);
 
     g_sprNull = precache_model("sprites/white.spr");
     g_sprTeamSmoke[0] = precache_model("sprites/hwn/magic_smoke.spr");
@@ -98,6 +96,7 @@ public OnThink(ent)
 
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
+    vOrigin[2] += 4.0;
 
     static Float:fLastSmokeEmit;
     pev(ent, pev_fuser1, fLastSmokeEmit);
