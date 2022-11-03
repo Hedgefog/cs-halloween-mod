@@ -286,7 +286,7 @@ stock bool:NPC_TestStep(ent, const Float:vOrigin[3], const Float:vStep[3], Float
 
 stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly = true, bool:visibleOnly = true)
 {
-    new enemy = pev(ent, pev_enemy);
+    new enemy = NPC_GetEnemy(ent);
     if (!enemy) {
         return false;
     }
@@ -418,6 +418,17 @@ stock bool:NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed, Float:fMa
     return turnResult;
 }
 
+stock NPC_StopMovement(ent)
+{
+    static Float:vVelocity[3];
+    pev(ent, pev_velocity, vVelocity);
+
+    vVelocity[0] = 0.0;
+    vVelocity[1] = 0.0;
+
+    set_pev(ent, pev_velocity, vVelocity);
+}
+
 stock NPC_MoveForward(ent, Float:fSpeed)
 {
     static Float:vDirection[3];
@@ -485,6 +496,16 @@ stock NPC_IsVisible(ent, const Float:vTarget[3])
     vOrigin[2] += Float:ArrayGetCell(npcData, NPC_ViewZOffset);
 
     return UTIL_IsOpen(vOrigin, vTarget, ent);
+}
+
+stock NPC_GetEnemy(ent) {
+    new enemy = pev(ent, pev_enemy);
+
+    if (!NPC_IsValidEnemy(enemy)) {
+        enemy = 0;
+    }
+
+    return enemy;
 }
 
 stock NPC_SetEnemy(ent, enemy)
