@@ -30,8 +30,11 @@
 
         Fixes:
             Fixed NPC movement
-            Fix HHH NPC pathfinding
             Fixed intangibility damage resistance rules
+
+    6.4.1
+        Fixes:
+            Fixed HHH NPC pathfinding
             Pumpkin no longer drops on suicide
 
     6.4.0
