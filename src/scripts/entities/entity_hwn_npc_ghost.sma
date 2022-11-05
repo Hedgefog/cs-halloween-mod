@@ -111,9 +111,8 @@ public OnSpawn(ent)
 
     set_pev(ent, pev_health, 1);
 
-    new enemy = pev(ent, pev_enemy);
-
-    if (!NPC_IsValidEnemy(enemy)) {
+    new enemy = NPC_GetEnemy(enemy);
+    if (!enemy) {
         NPC_FindEnemy(ent, _, .reachableOnly = false, .visibleOnly = false, .allowMonsters = false);
     }
 
@@ -205,6 +204,12 @@ Revenge(ent, target)
 {
     new killer = g_playerKiller[target];
     if (killer == target) {
+        killer = 0;
+    }
+
+    new bossEnt;
+    Hwn_Bosses_GetCurrent(bossEnt);
+    if (killer == bossEnt) {
         killer = 0;
     }
 
