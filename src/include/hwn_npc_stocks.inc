@@ -507,6 +507,10 @@ stock bool:NPC_IsValidEnemy(enemy, team = 0, bool:allowMonsters = true)
     if (pev(enemy, pev_takedamage) == DAMAGE_NO) {
         return false;
     }
+
+    if (pev(enemy, pev_solid) < SOLID_BBOX) {
+        return false;
+    }
     
     if (UTIL_IsInvisible(enemy)) {
         return false;
