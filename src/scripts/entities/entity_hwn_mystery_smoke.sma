@@ -15,7 +15,7 @@
 
 #define ENTITY_NAME "hwn_mystery_smoke"
 
-#define SMOKE_DENSITY 0.00032
+#define SMOKE_DENSITY 0.016
 #define SMOKE_PARTICLES_LIFETIME 30
 #define SMOKE_PARTICLE_WIDTH 128.0
 #define SMOKE_EMIT_FREQUENCY 0.25
@@ -92,7 +92,7 @@ public OnThink(ent)
 
     if (get_gametime() >= fNextSmokeEmit) {
         new Float:fLocalDensity = EmitSmoke(ent);
-        new Float:fDelayRatio = 1.0 / floatmax(floatmin(fLocalDensity, 1.0), SMOKE_EMIT_FREQUENCY);
+        new Float:fDelayRatio = 1.0 / floatclamp(fLocalDensity, SMOKE_EMIT_FREQUENCY, 1.0);
         new Float:fDelay = SMOKE_EMIT_FREQUENCY * fDelayRatio;
         set_pev(ent, pev_fuser1, get_gametime() + fDelay);
     }
@@ -247,31 +247,31 @@ Float:EmitSmoke(ent)
     xs_vec_sub(vAbsMax, vAbsMin, vSize);
 
     static Float:vOrigin[3];
-    new Float:fArea = 0.0;
     for (new axis = 0; axis < 2; ++axis) {
         vOrigin[axis] = vAbsMin[axis] + (vSize[axis] / 2);
-        fArea = (fArea ? fArea : 1.0) * vSize[axis];
     }
 
-    static Float:fSpreadRadius = 0.0;
+    new Float:fSpreadRadius = vSize[0] < vSize[1] ? (vSize[0] / 2) : (vSize[1] / 2);
     new Float:fDiff = floatabs(vSize[0] - vSize[1]);
+
     if (vSize[0] > vSize[1]) {
         vOrigin[0] += random_float(-fDiff / 2, fDiff / 2);
-        fSpreadRadius = vSize[1] / 2;
     } else if (vSize[1] > vSize[0]) {
         vOrigin[1] += random_float(-fDiff / 2, fDiff / 2);
-        fSpreadRadius = vSize[0] / 2;
-    } else {
-        fSpreadRadius = vSize[0] / 2;
     }
 
     vOrigin[2] = vAbsMin[2] + 4.0;
+
     fSpreadRadius = floatmax(fSpreadRadius - (SMOKE_PARTICLE_WIDTH / 4), 0.0);
 
     new team = pev(ent, pev_team);
     new teamSmokeIndex = max(0, team < sizeof(g_sprTeamSmoke) ? team : 0);
     new modelIndex = g_sprTeamSmoke[teamSmokeIndex];
-    new Float:fLocalDensity = fArea * SMOKE_DENSITY * SMOKE_EMIT_FREQUENCY;
+    
+    // calculate density based on box perimeter
+    // using square area creates extreme thick smoke for large areas
+    // the main goal is to make smoke looks thick enough for players outside the smoke
+    new Float:fLocalDensity = ((2 * vSize[0]) + (2 * vSize[1])) * SMOKE_DENSITY * SMOKE_EMIT_FREQUENCY;
     new particlesNum = max(floatround(fLocalDensity), 1);
 
     engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
@@ -282,7 +282,7 @@ Float:EmitSmoke(ent)
     write_short(floatround(fSpreadRadius));
     write_short(modelIndex);
     write_byte(particlesNum);
-    write_byte(TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA);
+    write_byte(TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA | TEFIRE_FLAG_PLANAR);
     write_byte(SMOKE_PARTICLES_LIFETIME);
     message_end();
 
