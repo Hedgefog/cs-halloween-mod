@@ -8,7 +8,6 @@
 #define MOON_GRAVIY GRAVITATIONAL_ACCELERATION_MOON / GRAVITATIONAL_ACCELERATION_EARTH
 
 #define HUD_HIDE_TIMER (1<<4)
-#define HUD_HIDE_MONEY (1<<5)
 
 #if AMXX_VERSION_NUM < 183
     #define CSW_NONE                0
@@ -95,6 +94,11 @@ stock bool:UTIL_IsInvisible(ent)
 stock bool:UTIL_IsPlayer(id)
 {
     return (id > 0 && id < 33);
+}
+
+stock bool:UTIL_IsMonster(ent)
+{
+    return !!(pev(ent, pev_flags) & FL_MONSTER);
 }
 
 stock bool:UTIL_IsTeammate(ent, team) {
@@ -344,6 +348,21 @@ stock UTIL_Message_Dlight
     message_end();
 }
 
+stock UTIL_Message_FireField(const Float:vOrigin[3], radius, modelIndex, count, flags, lifeTime)
+{
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    write_byte(TE_FIREFIELD);
+    engfunc(EngFunc_WriteCoord, vOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vOrigin[2]);
+    write_short(radius);
+    write_short(modelIndex);
+    write_byte(count);
+    write_byte(flags);
+    write_byte(lifeTime);
+    message_end();
+}
+
 stock UTIL_RandomVector(Float:min, Float:max, Float:vOut[3])
 {
     for (new i = 0; i < 3; ++i) {
@@ -489,7 +508,7 @@ stock bool:UTIL_EntityIntersects(ent1, ent2)
     return true;
 }
 
-stock bool:UTIL_FindPlaceToTeleport(ent, const Float:vTarget[3], Float:vOut[3], hull = HULL_POINT)
+stock bool:UTIL_FindPlaceToTeleport(ent, const Float:vTarget[3], Float:vOut[3], hull = HULL_POINT, ignoreFlags = DONT_IGNORE_MONSTERS)
 {
     static Float:vMins[3];
     pev(ent, pev_mins, vMins);
@@ -497,23 +516,41 @@ stock bool:UTIL_FindPlaceToTeleport(ent, const Float:vTarget[3], Float:vOut[3], 
     static Float:vMaxs[3];
     pev(ent, pev_maxs, vMaxs);
 
-    if (UTIL_IsOpenHull(vTarget, hull, ent)) {
+    if (UTIL_IsOpenHull(vTarget, hull, ent, ignoreFlags)) {
         xs_vec_copy(vTarget, vOut);
         return true;
     }
 
-    for (new i = 0; i < 3; ++i) {
+    static const Float:vDirections[][3] = {
+        { 1.0, 0.0, 0.0 },
+        { 0.0, 1.0, 0.0 },
+        { 0.0, 0.0, 1.0 },
+        { 1.0, 1.0, 0.0 },
+        { 0.0, 1.0, 1.0 },
+        { 1.0, 0.0, 1.0 },
+        { 1.0, 1.0, 1.0 }
+    };
+    
+    new directionsNum = sizeof(vDirections);
+
+    for (new i = 0; i < directionsNum; ++i) {
         static Float:vNewTarget[3];
         xs_vec_copy(vTarget, vNewTarget);
 
-        vNewTarget[i] = vTarget[i] - vMins[i];
-        if (UTIL_IsOpenHull(vNewTarget, hull, ent)) {
+        for (new j = 0; j < 3; ++j) {
+            vNewTarget[j] = vTarget[j] + (vMins[j] * vDirections[i][j]);
+        }
+
+        if (UTIL_IsOpenHull(vNewTarget, hull, ent, ignoreFlags)) {
             xs_vec_copy(vNewTarget, vOut);
             return true;
         }
 
-        vNewTarget[i] = vTarget[i] - vMaxs[i];
-        if (UTIL_IsOpenHull(vNewTarget, hull, ent)) {
+        for (new j = 0; j < 3; ++j) {
+            vNewTarget[j] = vTarget[j] + (vMaxs[j] * vDirections[i][j]);
+        }
+
+        if (UTIL_IsOpenHull(vNewTarget, hull, ent, ignoreFlags)) {
             xs_vec_copy(vNewTarget, vOut);
             return true;
         }
@@ -522,10 +559,10 @@ stock bool:UTIL_FindPlaceToTeleport(ent, const Float:vTarget[3], Float:vOut[3], 
     return false;
 }
 
-stock bool:UTIL_IsOpenHull(const Float:vOrigin[3], hull, ignoreEnt = 0)
+stock bool:UTIL_IsOpenHull(const Float:vOrigin[3], hull, ignoreEnt = 0, ignoreFlags = DONT_IGNORE_MONSTERS)
 {
     new trace = create_tr2();
-    engfunc(EngFunc_TraceHull, vOrigin, vOrigin, 0, hull, ignoreEnt, trace);
+    engfunc(EngFunc_TraceHull, vOrigin, vOrigin, ignoreFlags, hull, ignoreEnt, trace);
     new bool:isVacant = !!get_tr2(trace, TR_InOpen);
     free_tr2(trace);
 
@@ -895,13 +932,20 @@ stock bool:UTIL_IsLocalizationExists(const szKey[])
     return !equali(szBuffer, szNotFound, sizeof(szNotFound) - 1);
 }
 
-stock UTIL_PushFromOrigin(const Float:vOrigin[3], ent, Float:fImpulse)
+stock UTIL_PushFromOrigin(const Float:vOrigin[3], ent, Float:fImpulse, const bool:lockAxis[3] = {false, false, false})
 {
     static Float:vTargetOrigin[3];
     pev(ent, pev_origin, vTargetOrigin);
 
     static Float:vVelocity[3];
     xs_vec_sub(vTargetOrigin, vOrigin, vVelocity);
+
+    for (new i = 0; i < 3; ++i) {
+        if (lockAxis[i]) {
+            vVelocity[i] = 0.0;
+        }
+    }
+
     xs_vec_normalize(vVelocity, vVelocity);
     xs_vec_mul_scalar(vVelocity, fImpulse, vVelocity);
 
@@ -909,4 +953,16 @@ stock UTIL_PushFromOrigin(const Float:vOrigin[3], ent, Float:fImpulse)
     pev(ent, pev_velocity, vTargetVelocity);
     xs_vec_add(vTargetVelocity, vVelocity, vTargetVelocity);
     set_pev(ent, pev_velocity, vTargetVelocity);
+}
+
+stock UTIL_FindCellArrayValue(Array:arr, value) {
+    new size = ArraySize(arr);
+
+    for (new i = 0; i < size; ++i) {
+        if (ArrayGetCell(arr, i) == value) {
+            return i;
+        }
+    }
+
+    return -1;
 }

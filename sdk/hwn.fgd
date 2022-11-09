@@ -147,3 +147,7 @@
     size(-16 -16 0, 16 16 32)
     Studio("models/hwn/npc/spookypumpkin_big.mdl")
 = hwn_npc_spookypumpkin_big []
+
+@SolidClass
+    base(Team)
+= hwn_mystery_smoke []

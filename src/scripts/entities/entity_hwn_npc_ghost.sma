@@ -45,8 +45,6 @@ new g_particlesEnabled;
 
 new g_playerKiller[MAX_PLAYERS + 1] = { 0, ... };
 
-new g_maxPlayers;
-
 new bool:g_isPrecaching;
 
 public plugin_precache()
@@ -85,8 +83,6 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
-
-    g_maxPlayers = get_maxplayers();
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -115,8 +111,9 @@ public OnSpawn(ent)
 
     set_pev(ent, pev_health, 1);
 
-    if (!UTIL_IsPlayer(pev(ent, pev_enemy))) {
-        NPC_FindEnemy(ent, g_maxPlayers, 0.0, .reachableOnly = false, .visibleOnly = false);
+    new enemy = NPC_GetEnemy(enemy);
+    if (!enemy) {
+        NPC_FindEnemy(ent, _, .reachableOnly = false, .visibleOnly = false, .allowMonsters = false);
     }
 
     TaskThink(ent);
@@ -153,13 +150,13 @@ public TaskThink(ent)
         UpdateParticles(ent);
 
         new enemy = pev(ent, pev_enemy);
+
         if (NPC_IsValidEnemy(enemy)) {
             Attack(ent, enemy);
-        } else if (!UTIL_IsPlayer(enemy)) {
-            CE_Kill(ent);
-            return;
-        } else {
+        } else if (UTIL_IsPlayer(enemy) && !is_user_alive(enemy)) {
             Revenge(ent, enemy);
+        } else {
+            CE_Kill(ent);
         }
     }
 
@@ -207,6 +204,12 @@ Revenge(ent, target)
 {
     new killer = g_playerKiller[target];
     if (killer == target) {
+        killer = 0;
+    }
+
+    new bossEnt;
+    Hwn_Bosses_GetCurrent(bossEnt);
+    if (killer == bossEnt) {
         killer = 0;
     }
 

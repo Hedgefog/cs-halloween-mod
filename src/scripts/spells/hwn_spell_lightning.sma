@@ -151,29 +151,38 @@ public OnPlayerPreThink(id)
         return HAM_IGNORED;
     }
 
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
-    
-    static Float:vCoreOrigin[3];
-    pev(g_playerFocalPointEnt[id], pev_origin, vCoreOrigin);
-
-    new Float:fDistance = get_distance_f(vCoreOrigin, vOrigin);
-
-    if (fDistance > EffectRadius) {
+    if (!Magnetize(g_playerFocalPointEnt[id], id)) {
         g_playerFocalPointEnt[id] = 0;
-        return HAM_IGNORED;
-    }
-
-    if (fDistance > EffectRadius * EffectImpactRadiusMultiplier) {
-        UTIL_PushFromOrigin(vCoreOrigin, id, -SpellballMagnetism);
-    } else {
-        static Float:vCoreVelocity[3];
-        pev(g_playerFocalPointEnt[id], pev_velocity, vCoreVelocity);
-
-        set_pev(id, pev_velocity, vCoreVelocity);
     }
 
     return HAM_HANDLED;
+}
+
+/*--------------------------------[ Methods ]--------------------------------*/
+
+bool:Magnetize(ent, target)
+{
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+
+    static Float:vTargetOrigin[3];
+    pev(target, pev_origin, vTargetOrigin);
+
+    new Float:fDistance = get_distance_f(vOrigin, vTargetOrigin);
+
+    if (fDistance > EffectRadius) {
+        return false;
+    }
+
+    if (fDistance > EffectRadius * EffectImpactRadiusMultiplier) {
+        UTIL_PushFromOrigin(vOrigin, target, -SpellballMagnetism);
+    } else {
+        static Float:vVelocity[3];
+        pev(ent, pev_velocity, vVelocity);
+        set_pev(target, pev_velocity, vVelocity);
+    }
+
+    return true;
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -225,7 +234,7 @@ RadiusDamage(ent, bool:push = false)
             }
         }
 
-        ExecuteHamB(Ham_TakeDamage, target, 0, owner, fDamage, DMG_SHOCK);
+        ExecuteHamB(Ham_TakeDamage, target, ent, owner, fDamage, DMG_SHOCK);
     }
 }
 
@@ -244,7 +253,7 @@ DrawLightingBeam(ent)
     xs_vec_mul_scalar(vTarget, EffectRadius, vTarget);
     xs_vec_add(vOrigin, vTarget, vTarget);
 
-    engfunc(EngFunc_MessageBegin, MSG_ALL, SVC_TEMPENTITY, vOrigin, 0);
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
     write_byte(TE_BEAMPOINTS);
     engfunc(EngFunc_WriteCoord, vOrigin[0]);
     engfunc(EngFunc_WriteCoord, vOrigin[1]);
@@ -305,7 +314,7 @@ public TaskThink(ent)
             continue;
         }
 
-        if (team == UTIL_GetPlayerTeam(target)) {
+        if (UTIL_IsTeammate(target, team)) {
             continue;
         }
 

@@ -71,7 +71,9 @@ enum _:Monoculus
     bool:Monoculus_IsAngry,
     bool:Monoculus_IsStunned,
     bool:Monoculus_NextPortal,
-    bool:Monoculus_LastAction
+    bool:Monoculus_LastAction,
+    bool:Monoculus_NextAction,
+    bool:Monoculus_NextSmokeEmit
 };
 
 new const g_szSndAttack[][128] = {
@@ -123,7 +125,7 @@ const Float:NPC_AttackDelay = 0.33;
 
 new g_sprBlood;
 new g_sprBloodSpray;
-new g_sprSparkle;
+new g_sprSmoke;
 
 new Float:g_fThinkDelay;
 
@@ -134,8 +136,6 @@ new g_cvarJumpTimeMax;
 
 new g_ceHandler;
 new g_bossHandler;
-
-new g_maxPlayers;
 
 new Array:g_portals;
 new Array:g_portalAngles;
@@ -155,7 +155,6 @@ public plugin_precache()
 
     g_sprBlood = precache_model("sprites/blood.spr");
     g_sprBloodSpray = precache_model("sprites/bloodspray.spr");
-    g_sprSparkle = precache_model("sprites/muz7.spr");
 
     for (new i = 0; i < sizeof(g_szSndAttack); ++i) {
         precache_sound(g_szSndAttack[i]);
@@ -177,6 +176,8 @@ public plugin_precache()
     precache_sound(g_szSndDeath);
     precache_sound(g_szSndMoved);
 
+    g_sprSmoke = precache_model("sprites/hwn/magic_smoke.spr");
+
     CE_RegisterHook(CEFunction_Spawn, PORTAL_ENTITY_NAME, "OnPortalSpawn");
 
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
@@ -197,8 +198,6 @@ public plugin_init()
     g_cvarDamageToStun = register_cvar("hwn_npc_monoculus_dmg_to_stun", "2000.0");
     g_cvarJumpTimeMin = register_cvar("hwn_npc_monoculus_jump_time_min", "10.0");
     g_cvarJumpTimeMax = register_cvar("hwn_npc_monoculus_jump_time_max", "20.0");
-
-    g_maxPlayers = get_maxplayers();
 }
 
 public plugin_end()
@@ -278,22 +277,24 @@ public OnSpawn(ent)
     ArraySetCell(monoculus, Monoculus_DamageToStun, get_pcvar_float(g_cvarDamageToStun));
     ArraySetCell(monoculus, Monoculus_IsAngry, false);
     ArraySetCell(monoculus, Monoculus_LastAction, get_gametime());
+    ArraySetCell(monoculus, Monoculus_NextAction, get_gametime() + g_actions[Action_Spawn][NPC_Action_Time]);
+    ArraySetCell(monoculus, Monoculus_NextSmokeEmit, get_gametime());
 
     ClearTasks(ent);
-
     CreateJumpToPortalTask(ent);
-    set_task(g_actions[Action_Spawn][NPC_Action_Time], "TaskThink", ent);
+
+    set_task(g_fThinkDelay, "TaskThink", ent, _, _, "b");
     set_task(1.0, "TaskFloat", ent + TASKID_SUM_FLOAT, _, _, "b");
 }
 
 public OnRemove(ent)
 {
     ClearTasks(ent);
+    remove_task(ent);
 
     {
         new Float:vOrigin[3];
         pev(ent, pev_origin, vOrigin);
-
         TeleportEffect(vOrigin);
     }
 
@@ -306,6 +307,8 @@ public OnKill(ent)
     new deadflag = pev(ent, pev_deadflag);
 
     if (deadflag == DEAD_NO) {
+        new Array:monoculus = Monoculus_Get(ent);
+
         NPC_PlayAction(ent, g_actions[Action_Death], .supercede = true);
 
         set_pev(ent, pev_takedamage, DAMAGE_NO);
@@ -313,7 +316,7 @@ public OnKill(ent)
         set_pev(ent, pev_deadflag, DEAD_DYING);
 
         ClearTasks(ent);
-        set_task(g_actions[Action_Death][NPC_Action_Time], "TaskThink", ent);
+        ArraySetCell(monoculus, Monoculus_NextAction, get_gametime() + g_actions[Action_Death][NPC_Action_Time]);
     } else if (deadflag == DEAD_DEAD) {
         g_level++;
         return PLUGIN_CONTINUE;
@@ -425,41 +428,43 @@ public TaskThink(ent)
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    if (pev(ent, pev_deadflag) == DEAD_DYING) {
-        NPC_EmitVoice(ent, g_szSndDeath, .supercede = true);
-        set_pev(ent, pev_deadflag, DEAD_DEAD);
-        CE_Kill(ent);
-
-        return;
-    }
-
     new Array:monoculus = Monoculus_Get(ent);
+    new Float:fNextAction = ArrayGetCell(monoculus, Monoculus_NextAction);
+    if (fNextAction < get_gametime()) {
+        if (pev(ent, pev_deadflag) == DEAD_DYING) {
+            NPC_EmitVoice(ent, g_szSndDeath, .supercede = true);
+            set_pev(ent, pev_deadflag, DEAD_DEAD);
+            CE_Kill(ent);
 
-    if (pev(ent, pev_takedamage) == DAMAGE_NO) {
-        set_pev(ent, pev_takedamage, DAMAGE_AIM);
-        ArraySetCell(monoculus, Monoculus_LastAction, get_gametime());
-    }
+            return;
+        }
 
-    new bool:isStunned = ArrayGetCell(monoculus, Monoculus_IsStunned);
+        if (pev(ent, pev_takedamage) == DAMAGE_NO) {
+            set_pev(ent, pev_takedamage, DAMAGE_AIM);
+            ArraySetCell(monoculus, Monoculus_LastAction, get_gametime());
+        }
 
-    if (!isStunned) {
-        new enemy = pev(ent, pev_enemy);
-        if (!NPC_IsValidEnemy(enemy) || !Attack(ent, enemy)) {
-            if (random_num(0, 100) < 5) {
-                LookAround(ent);
+        new bool:isStunned = ArrayGetCell(monoculus, Monoculus_IsStunned);
+
+        if (!isStunned) {
+            new enemy = NPC_GetEnemy(ent);
+            if (!enemy || !Attack(ent, enemy)) {
+                if (random_num(0, 100) < 5) {
+                    LookAround(ent);
+                }
+
+                NPC_FindEnemy(ent, .allowMonsters = false);
+                NPC_PlayAction(ent, g_actions[Action_Idle]);
             }
 
-            NPC_FindEnemy(ent, g_maxPlayers);
-            NPC_PlayAction(ent, g_actions[Action_Idle]);
-        }
-
-        new Float:fLastAction = ArrayGetCell(monoculus, Monoculus_LastAction);
-        if (get_gametime() - fLastAction > 5.0) {
-            JumpToPortal(ent);
+            new Float:fLastAction = ArrayGetCell(monoculus, Monoculus_LastAction);
+            if (get_gametime() - fLastAction > 5.0) {
+                JumpToPortal(ent);
+            }
         }
     }
 
-    set_task(g_fThinkDelay, "TaskThink", ent);
+    EmitSmoke(ent);
 }
 
 bool:Attack(ent, target)
@@ -681,16 +686,27 @@ CreateJumpToPortalTask(ent)
 
 TeleportEffect(const Float:vOrigin[3])
 {
-    new Float:vEnd[3];
-    xs_vec_copy(vOrigin, vEnd);
-    vEnd[2] += 8.0;
-
-    UTIL_Message_SpriteTrail(vOrigin, vEnd, g_sprSparkle, 8, 1, 4, 32, 16);
+    UTIL_Message_FireField(vOrigin, 64, g_sprSmoke, 10, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 20);
     UTIL_Message_Dlight(vOrigin, 48, {HWN_COLOR_PRIMARY}, 5, 32);
 }
 
+EmitSmoke(ent) {
+    new Array:monoculus = Monoculus_Get(ent);
+
+    new Float:fNextSmokeEmit = ArrayGetCell(monoculus, Monoculus_NextSmokeEmit);
+
+    if (get_gametime() < fNextSmokeEmit) {
+        return;
+    }
+
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+    UTIL_Message_FireField(vOrigin, 16, g_sprSmoke, 1, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
+
+    ArraySetCell(monoculus, Monoculus_NextSmokeEmit, get_gametime() + 0.1);
+}
+
 ClearTasks(ent) {
-    remove_task(ent);
     remove_task(ent+TASKID_SUM_FLOAT);
     remove_task(ent+TASKID_SUM_SHOT);
     remove_task(ent+TASKID_SUM_CALM_DOWN);
@@ -706,8 +722,8 @@ public TaskFloat(taskID)
 {
     new ent = taskID - TASKID_SUM_FLOAT;
 
-    new enemy = pev(ent, pev_enemy);
-    if (NPC_IsValidEnemy(enemy)) {
+    new enemy = NPC_GetEnemy(ent);
+    if (enemy) {
         static Float:vTarget[3];
         pev(enemy, pev_origin, vTarget);
         AlignHeight(ent, vTarget);

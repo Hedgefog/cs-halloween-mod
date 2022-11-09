@@ -43,6 +43,8 @@ enum Action
 
 enum _:HHH
 {
+    Float:HHH_NextAction,
+    Float:HHH_NextSmokeEmit,
     HHH_AStar_Idx,
     Array:HHH_AStar_Path,
     Float:HHH_AStar_Target[3],
@@ -99,6 +101,7 @@ const Float:NPC_ViewRange           = 2048.0;
 
 new g_sprBlood;
 new g_sprBloodSpray;
+new g_sprSmoke;
 
 new g_mdlGibs;
 
@@ -150,6 +153,7 @@ public plugin_precache()
     precache_sound(g_szSndSpawn);
     precache_sound(g_szSndDying);
     precache_sound(g_szSndDeath);
+    g_sprSmoke = precache_model("sprites/hwn/magic_smoke_tiny.spr");
 
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
@@ -218,6 +222,7 @@ public OnSpawn(ent)
     set_pev(ent, pev_renderamt, 4.0);
     set_pev(ent, pev_rendercolor, fRenderColor);
     set_pev(ent, pev_fuser1, 0.0);
+    set_pev(ent, pev_team, 666);
 
     set_pev(ent, pev_health, NPC_Health);
 
@@ -231,7 +236,10 @@ public OnSpawn(ent)
     NPC_EmitVoice(ent, g_szSndSpawn);
     NPC_PlayAction(ent, g_actions[Action_Spawn]);
 
-    set_pev(ent, pev_nextthink, get_gametime() + 6.0);
+    new Array:hhh = HHH_Get(ent);
+    ArraySetCell(hhh, HHH_NextAction, get_gametime() + 6.0);
+
+    set_pev(ent, pev_nextthink, get_gametime());
 }
 
 public OnRemove(ent)
@@ -282,77 +290,88 @@ public OnThink(ent)
         return HAM_IGNORED;
     }
 
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+    new Array:hhh = HHH_Get(ent);
 
-    if (pev(ent, pev_deadflag) == DEAD_DYING)
-    {
-        UTIL_Message_ExplodeModel(vOrigin, random_float(-512.0, 512.0), g_mdlGibs, 5, 25);
-        NPC_EmitVoice(ent, g_szSndDeath, .supercede = true);
-        set_pev(ent, pev_deadflag, DEAD_DEAD);
-        CE_Kill(ent);
+    new Float:fNextAction = ArrayGetCell(hhh, HHH_NextAction);
+    if (fNextAction < get_gametime()) {
+        static Float:vOrigin[3];
+        pev(ent, pev_origin, vOrigin);
 
-        return HAM_HANDLED;
-    }
+        if (pev(ent, pev_deadflag) == DEAD_DYING)
+        {
+            UTIL_Message_ExplodeModel(vOrigin, random_float(-512.0, 512.0), g_mdlGibs, 5, 25);
+            NPC_EmitVoice(ent, g_szSndDeath, .supercede = true);
+            set_pev(ent, pev_deadflag, DEAD_DEAD);
+            CE_Kill(ent);
 
-    if (pev(ent, pev_takedamage) == DAMAGE_NO) {
-        set_pev(ent, pev_takedamage, DAMAGE_AIM);
-    }
+            return HAM_HANDLED;
+        }
 
-    new enemy = NPC_GetEnemy(ent);
-    new Action:action = Action_Idle;
+        if (pev(ent, pev_takedamage) == DAMAGE_NO) {
+            set_pev(ent, pev_takedamage, DAMAGE_AIM);
+        }
 
-    static Float:fLastUpdate;
-    pev(ent, pev_fuser1, fLastUpdate);
-    new bool:shouldUpdate = get_gametime() - fLastUpdate >= g_fThinkDelay;
+        new enemy = NPC_GetEnemy(ent);
+        new Action:action = Action_Idle;
 
-    if (enemy) {
-        Attack(ent, enemy, action, shouldUpdate);
-        enemy = NPC_GetEnemy(ent);
-    }
+        static Float:fLastUpdate;
+        pev(ent, pev_fuser1, fLastUpdate);
+        new bool:shouldUpdate = get_gametime() - fLastUpdate >= g_fThinkDelay;
 
-    if (enemy && shouldUpdate) {
-        AStar_Reset(ent);
-    }
-
-    if (shouldUpdate) {
-        if (!enemy) {
-            NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange);
+        if (enemy) {
+            Attack(ent, enemy, action, shouldUpdate);
             enemy = NPC_GetEnemy(ent);
         }
 
-        if (!enemy && get_pcvar_num(g_cvarUseAstar) > 0) {
-            AStar_Attack(ent, action);
+        if (enemy && shouldUpdate) {
+            AStar_Reset(ent);
         }
 
-        {
-            static lifeTime;
-            if (!lifeTime) {
-                lifeTime = UTIL_DelayToLifeTime(g_fThinkDelay);
+        if (shouldUpdate) {
+            if (!enemy) {
+                NPC_FindEnemy(ent, 96.0, .allowMonsters = true);
+                enemy = NPC_GetEnemy(ent);
             }
 
-            UTIL_Message_Dlight(vOrigin, 4, {HWN_COLOR_PRIMARY}, lifeTime, 0);
+            if (!enemy) {
+                NPC_FindEnemy(ent, NPC_ViewRange, .allowMonsters = false);
+                enemy = NPC_GetEnemy(ent);
+            }
 
-            engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
-            write_byte(TE_ELIGHT);
-            write_short(0);
-            engfunc(EngFunc_WriteCoord, vOrigin[0]);
-            engfunc(EngFunc_WriteCoord, vOrigin[1]);
-            engfunc(EngFunc_WriteCoord, vOrigin[2]+42.0);
-            write_coord(16);
-            write_byte(64);
-            write_byte(52);
-            write_byte(4);
-            write_byte(lifeTime);
-            write_coord(0);
-            message_end();
+            if (!enemy && get_pcvar_num(g_cvarUseAstar) > 0) {
+                AStar_Attack(ent, action);
+            }
+
+            {
+                static lifeTime;
+                if (!lifeTime) {
+                    lifeTime = UTIL_DelayToLifeTime(g_fThinkDelay);
+                }
+
+                UTIL_Message_Dlight(vOrigin, 4, {HWN_COLOR_PRIMARY}, lifeTime, 0);
+
+                engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+                write_byte(TE_ELIGHT);
+                write_short(0);
+                engfunc(EngFunc_WriteCoord, vOrigin[0]);
+                engfunc(EngFunc_WriteCoord, vOrigin[1]);
+                engfunc(EngFunc_WriteCoord, vOrigin[2]+42.0);
+                write_coord(16);
+                write_byte(64);
+                write_byte(52);
+                write_byte(4);
+                write_byte(lifeTime);
+                write_coord(0);
+                message_end();
+            }
+
+            NPC_PlayAction(ent, g_actions[action]);
+
+            set_pev(ent, pev_fuser1, get_gametime());
         }
-
-        NPC_PlayAction(ent, g_actions[action]);
-
-        set_pev(ent, pev_fuser1, get_gametime());
     }
 
+    EmitSmoke(ent);
     set_pev(ent, pev_nextthink, get_gametime() + 0.01);
 
     return HAM_HANDLED;
@@ -428,6 +447,8 @@ HHH_Create(ent)
     }
 
     ArraySetArray(hhh, HHH_AStar_Target, Float:{0.0, 0.0, 0.0});
+    ArraySetCell(hhh, HHH_NextAction, get_gametime());
+    ArraySetCell(hhh, HHH_NextSmokeEmit, get_gametime());
 
     set_pev(ent, pev_iuser2, hhh);
 }
@@ -524,8 +545,6 @@ AStar_FindPath(ent)
 
 bool:AStar_Attack(ent, &Action:action)
 {
-    new enemy = pev(ent, pev_enemy);
-
     new Float:fGametime = get_gametime();
 
     new Array:hhh = HHH_Get(ent);
@@ -534,7 +553,8 @@ bool:AStar_Attack(ent, &Action:action)
     new Float:fNextSearch = ArrayGetCell(hhh, HHH_AStar_NextSearch);
 
     if (astarIdx == -1) {
-        if (NPC_IsValidEnemy(enemy) || NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange, .reachableOnly = false, .visibleOnly = false)) {
+        new enemy = NPC_GetEnemy(ent);
+        if (enemy || NPC_FindEnemy(ent, NPC_ViewRange, .reachableOnly = false, .visibleOnly = false, .allowMonsters = false)) {
             AStar_FindPath(ent);
             ArraySetCell(hhh, HHH_AStar_NextSearch, fGametime + 10.0);
         }
@@ -636,6 +656,23 @@ ScreenShakeEffect(ent)
         write_short(UTIL_FixedUnsigned16(1.0, 1<<8));
         message_end();
     }
+}
+
+EmitSmoke(ent) {
+    new Array:hhh = HHH_Get(ent);
+
+    new Float:fNextSmokeEmit = ArrayGetCell(hhh, HHH_NextSmokeEmit);
+
+    if (get_gametime() < fNextSmokeEmit) {
+        return;
+    }
+
+    static Float:vOrigin[3];
+    pev(ent, pev_origin, vOrigin);
+    vOrigin[2] += random_float(-16.0, 16.0);
+    UTIL_Message_FireField(vOrigin, 8, g_sprSmoke, 2, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
+
+    ArraySetCell(hhh, HHH_NextSmokeEmit, get_gametime() + 0.1);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/

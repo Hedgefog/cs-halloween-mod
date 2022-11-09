@@ -41,9 +41,8 @@ new g_hudMsgTeamPoints;
 new g_hudMsgPlayerPoints;
 new g_hudMsgPlayerSpell;
 
-new g_cvarCollectorHideMoney;
-new g_cvarCollectorHideTimer;
-new g_cvarTeamPointsLimit;
+new g_cvarCollectorTeamPointsLimit;
+new g_cvarCollectorRoundTime;
 
 new g_maxPlayers;
 
@@ -70,9 +69,8 @@ public plugin_init()
     g_maxPlayers = get_maxplayers();
     g_hGamemodeCollector = Hwn_Gamemode_GetHandler("Collector");
 
-    g_cvarCollectorHideMoney = register_cvar("hwn_hud_collector_hide_money", "1");
-    g_cvarCollectorHideTimer = register_cvar("hwn_hud_collector_hide_timer", "0");
-    g_cvarTeamPointsLimit = get_cvar_pointer("hwn_collector_teampoints_limit");
+    g_cvarCollectorTeamPointsLimit = get_cvar_pointer("hwn_collector_teampoints_limit");
+    g_cvarCollectorRoundTime = get_cvar_pointer("hwn_collector_roundtime");
 
     set_task(1.0, "TaskUpdate", _, _, _, "b");
 }
@@ -246,8 +244,8 @@ UpdateTeamPoints()
     new ctPoints = Hwn_Collector_GetTeamPoints(2);
 
     new teamPointsLimit = 0;
-    if (g_cvarTeamPointsLimit) {
-        teamPointsLimit = get_pcvar_num(g_cvarTeamPointsLimit);
+    if (g_cvarCollectorTeamPointsLimit) {
+        teamPointsLimit = get_pcvar_num(g_cvarCollectorTeamPointsLimit);
     }
 
     set_hudmessage
@@ -338,12 +336,11 @@ SetupNotificationMessage(Float:x = -1.0, Float:y = -1.0, const color[3] = {HUD_C
 GetHideWeaponFlags()
 {
     new flags = 0;
-    if (get_pcvar_num(g_cvarCollectorHideTimer) > 0) {
-        flags |= HUD_HIDE_TIMER;
-    }
 
-    if (get_pcvar_num(g_cvarCollectorHideMoney) > 0) {
-        flags |= HUD_HIDE_MONEY;
+    if (Hwn_Gamemode_GetCurrent() == g_hGamemodeCollector) {
+        if (get_pcvar_float(g_cvarCollectorRoundTime) <= 0.0) {
+            flags |= HUD_HIDE_TIMER;
+        }
     }
 
     return flags;

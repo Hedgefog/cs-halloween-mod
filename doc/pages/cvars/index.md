@@ -57,9 +57,20 @@
 | hwn_crits_sound_hit                     | Enable/Disable crit hit sound                                         | 1             |
 | hwn_crits_sound_shoot                   | Enable/Disable crit shoot sound                                       | 1             |
 | hwn_crits_toggle %playerId%             | Toggle crits for player (Admin Acces)                                 | caller        |
-| hwn_hud_collector_hide_timer            | Enable/Disable hide timer hud in collector gamemode                   | 1             |
-| hwn_hud_collector_hide_money            | Enable/Disable hide money hud in collector gamemode                   | 1             |
 | hwn_pcosmetic_menu_preview              | Enable/Disable player cosmetic preview                                | 1             |
 | hwn_pcosmetic_menu_preview_light        | Enable/Disable light source in player cosmetic preview                | 1             |
 | hwn_bots_spells                         | Enable/Disable spells for bots                                        | 1             |
 | hwn_bots_cosmetics                      | Number of cosmetic items for bots                                     | 2             |
+| hwn_spellbook_rare_chance               | Chance to spawn rare spell                                            | 30            |
+| hwn_bucket_bonus_chance                 | Chance to drop bonus from the bucket when collecting pumpkin          | 5             |
+| hwn_collector_teampoints_reward         | Pumpkin collecting reward                                             | 150           |
+| hwn_spellshop                           | Enable/Disable spellshop                                              | 1             |
+| hwn_spellshop_spell_price               | Spell price in the spell shop                                         | 500           |
+| hwn_spellshop_spell_price_mult_rare     | Price multiplier for rare spells in the shop                          | 1.5           |
+| hwn_spellshop_spell_price_ability       | Ability spell price in the spell shop                                 | 550           |
+| hwn_spellshop_spell_price_applicable    | Applicable spell price in the spell shop                              | 150           |
+| hwn_spellshop_spell_price_damage        | Damage spell price in the spell shop                                  | 800           |
+| hwn_spellshop_spell_price_heal          | Heal spell price in the spell shop                                    | 600           |
+| hwn_spellshop_spell_price_protection    | Protection spell price in the spell shop                              | 750           |
+| hwn_spellshop_spell_price_radius        | Radius spell price in the spell shop                                  | 650           |
+| hwn_spellshop_spell_price_throwable     | Throwable spell price in the spell shop                               | 300           |

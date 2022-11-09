@@ -54,7 +54,7 @@ public plugin_precache()
 
     g_hGamemode = Hwn_Gamemode_Register(
         .szName = "Default",
-        .flags = Hwn_GamemodeFlag_Default
+        .flags = Hwn_GamemodeFlag_Default | Hwn_GamemodeFlag_SpellShop
     );
 
     register_forward(FM_LightStyle, "OnLightStyle", 0);

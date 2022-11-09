@@ -3,6 +3,7 @@
 #include <amxmodx>
 #include <engine>
 #include <fakemeta>
+#include <hamsandwich>
 #include <xs>
 
 #include <api_custom_entities>
@@ -18,6 +19,8 @@
 new g_sprSmoke;
 new g_sprNull;
 
+new g_ceHandler;
+
 new Float:g_fThinkDelay;
 
 public plugin_init()
@@ -27,7 +30,7 @@ public plugin_init()
 
 public plugin_precache()
 {
-    CE_Register(
+    g_ceHandler = CE_Register(
         .szName = ENTITY_NAME,
         .vMins = Float:{-8.0, -8.0, -8.0},
         .vMaxs = Float:{8.0, 8.0, 8.0},
@@ -36,7 +39,9 @@ public plugin_precache()
     );
 
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
+    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
+    RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);
 
     g_sprSmoke = precache_model("sprites/black_smoke1.spr");
     g_sprNull = precache_model("sprites/white.spr");
@@ -63,7 +68,11 @@ public OnSpawn(ent)
     set_pev(ent, pev_renderamt, 0.0);
     set_pev(ent, pev_modelindex, g_sprNull);
 
-    TaskThink(ent);
+    set_pev(ent, pev_nextthink, get_gametime());
+}
+
+public OnKilled(ent) {
+    set_pev(ent, pev_deadflag, DEAD_DEAD);
 }
 
 public OnRemove(ent)
@@ -73,15 +82,12 @@ public OnRemove(ent)
             engfunc(EngFunc_RemoveEntity, pev(ent, euser));
         }
     }
-
-    remove_task(ent);
 }
-/*--------------------------------[ Tasks ]--------------------------------*/
 
-public TaskThink(ent)
+public OnThink(ent)
 {
-    if (!pev_valid(ent)) {
-        return;
+    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
+        return HAM_IGNORED;
     }
 
     static Float:vOrigin[3];
@@ -124,5 +130,7 @@ public TaskThink(ent)
 
     UTIL_Message_Dlight(vOrigin, 16, color, UTIL_DelayToLifeTime(g_fThinkDelay), 0);
 
-    set_task(g_fThinkDelay, "TaskThink", ent);
+    set_pev(ent, pev_nextthink, get_gametime() + g_fThinkDelay);
+
+    return HAM_HANDLED;
 }

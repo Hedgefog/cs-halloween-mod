@@ -16,9 +16,10 @@
 #define PLUGIN "[Hwn] Blink Spell"
 #define AUTHOR "Hedgehog Fog"
 
+const Float:SpellballDamage = 500.0;
 const SpellballSpeed = 600;
 
-const Float:EffectRadius = 64.0;
+const Float:EffectRadius = 48.0;
 new const EffectColor[3] = {0, 0, 255};
 
 new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
@@ -27,7 +28,6 @@ new const g_szSndDetonate[] = "hwn/spells/spell_teleport.wav";
 new g_szSprSpellBall[] = "sprites/enter1.spr";
 
 new g_hSpell;
-
 new g_hCeSpellball;
 
 public plugin_precache()
@@ -36,7 +36,7 @@ public plugin_precache()
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
 
-    g_hSpell = Hwn_Spell_Register("Blink", Hwn_SpellFlag_Throwable, "OnCast");
+    g_hSpell = Hwn_Spell_Register("Blink", Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage, "OnCast");
 }
 
 public plugin_init()
@@ -44,6 +44,7 @@ public plugin_init()
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
+    RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);
     RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
@@ -86,7 +87,36 @@ public OnTouch(ent, target)
         return;
     }
 
+    if (pev(ent, pev_deadflag) == DEAD_DEAD) {
+        return;
+    }
+
     CE_Kill(ent);
+}
+
+public OnThink(ent) {
+    if (!pev_valid(ent)) {
+        return;
+    }
+
+    if (g_hCeSpellball != CE_GetHandlerByEntity(ent)) {
+        return;
+    }
+
+    if (pev(ent, pev_iuser1) != g_hSpell) {
+        return;
+    }
+
+    if (pev(ent, pev_deadflag) == DEAD_DEAD) {
+        return;
+    }
+
+    static Float:vecVelocity[3];
+    pev(ent, pev_velocity, vecVelocity);
+
+    if (!xs_vec_len(vecVelocity)) {
+        CE_Kill(ent);
+    }
 }
 
 public OnPlayerSpawn(id)
@@ -130,14 +160,40 @@ Detonate(ent)
         return;
     }
 
-    new Float:vOrigin[3];
+    static Float:vOwnerOrigin[3];
+    pev(owner, pev_origin, vOwnerOrigin);
+
+    static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
 
-    new hull = (pev(ent, pev_flags) & FL_DUCKING) ? HULL_HEAD : HULL_HUMAN;
-    if (UTIL_FindPlaceToTeleport(owner, vOrigin, vOrigin, hull)) {
+    if (get_distance_f(vOwnerOrigin, vOrigin) > EffectRadius) {
+        new hull = (pev(ent, pev_flags) & FL_DUCKING) ? HULL_HEAD : HULL_HUMAN;
+        UTIL_FindPlaceToTeleport(owner, vOrigin, vOrigin, hull, IGNORE_MONSTERS);
         engfunc(EngFunc_SetOrigin, owner, vOrigin);
-        UTIL_ScreenFade(owner, {0, 0, 255}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
-        BlinkEffect(owner);
+    }
+
+    UTIL_ScreenFade(owner, {0, 0, 255}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
+    BlinkEffect(owner);
+
+    new target;
+    while ((target = UTIL_FindEntityNearby(target, vOrigin, EffectRadius)) > 0) {
+        if (owner == target) {
+            continue;
+        }
+
+        if (pev(target, pev_deadflag) != DEAD_NO) {
+            continue;
+        }
+
+        if (pev(target, pev_takedamage) == DAMAGE_NO) {
+            continue;
+        }
+
+        ExecuteHamB(Ham_TakeDamage, target, ent, owner, SpellballDamage, DMG_ALWAYSGIB);
+    }
+
+    if (UTIL_IsStuck(owner)) {
+        ExecuteHamB(Ham_TakeDamage, owner, 0, 0, SpellballDamage, DMG_ALWAYSGIB);
     }
 }
 

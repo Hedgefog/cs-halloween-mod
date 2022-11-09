@@ -18,7 +18,9 @@
     #define MAX_PLAYERS 32
 #endif
 
-const Float:EffectTime = 10.0;
+#define STATUS_ICON "suit_empty"
+
+const Float:EffectTime = 5.0;
 
 new const g_szSndDetonate[] = "hwn/spells/spell_intangibility.wav";
 
@@ -34,7 +36,7 @@ public plugin_precache()
 
     Hwn_Spell_Register(
         "Intangibility",
-        Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability,
+        Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability | Hwn_SpellFlag_Protection,
         "Cast"
     );
 
@@ -104,7 +106,7 @@ public OnPlayerTakeDamagePre(id, inflictor, attacker, Float:fDamage, damageBits)
         return HAM_SUPERCEDE;
     }
 
-    if (attacker && pev(attacker, pev_flags) & FL_MONSTER) {
+    if (inflictor && pev(inflictor, pev_flags) & FL_MONSTER) {
         return HAM_SUPERCEDE;
     }
 
@@ -160,15 +162,13 @@ SetSpellEffect(id, bool:value)
 
     if (is_user_connected(id)) {
         if (value) {
-            set_pev(id, pev_rendermode, kRenderTransTexture);
-            set_pev(id, pev_renderamt, 100.0);
             set_pev(id, pev_renderfx, kRenderFxHologram);
         } else {
-            set_pev(id, pev_rendermode, kRenderNormal);
-            set_pev(id, pev_renderamt, 0.0);
             set_pev(id, pev_renderfx, kRenderFxNone);
         }
     }
+
+    UTIL_Message_StatusIcon(id, value, STATUS_ICON, {HWN_COLOR_PRIMARY});
 }
 
 DetonateEffect(ent)

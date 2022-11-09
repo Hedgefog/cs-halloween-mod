@@ -22,11 +22,14 @@ public plugin_init()
 
     register_clcmd("chooseteam", "OnClCmd_ChooseTeam");
     register_clcmd("drop", "OnClCmd_Drop");
+    register_clcmd("buyequip", "OnClCmd_SpellsShop");
+    register_clcmd("hwn_spells_shop_menu", "OnClCmd_SpellsShop");
+
     register_impulse(100, "OnImpulse_100");
 
-    new szMenuTitle[32];
-    format(szMenuTitle, charsmax(szMenuTitle), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_TITLE");
-    Hwn_Menu_AddItem(szMenuTitle, "MenuItemCosmeticCallback");
+    new szCosmeticMenuTitle[32];
+    format(szCosmeticMenuTitle, charsmax(szCosmeticMenuTitle), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_TITLE");
+    Hwn_Menu_AddItem(szCosmeticMenuTitle, "MenuItemCosmeticCallback");
 
     new szChooseTeamText[32];
     format(szChooseTeamText, charsmax(szChooseTeamText), "%L", LANG_SERVER, "TEAM_MENU");
@@ -57,6 +60,18 @@ public OnClCmd_Drop(id)
     }
 
     Hwn_PEquipment_ShowMenu(id);
+
+    return PLUGIN_HANDLED;
+}
+
+public OnClCmd_SpellsShop(id)
+{
+    new Hwn_GamemodeFlags:flags = Hwn_Gamemode_GetFlags();
+    if (!(flags & Hwn_GamemodeFlag_SpellShop)) {
+        return PLUGIN_CONTINUE;
+    }
+
+    Hwn_SpellShop_Open(id);
 
     return PLUGIN_HANDLED;
 }

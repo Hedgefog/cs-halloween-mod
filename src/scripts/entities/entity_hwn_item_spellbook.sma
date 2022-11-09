@@ -15,12 +15,14 @@
 #define AUTHOR "Hedgehog Fog"
 
 #define pev_spell pev_iuser1
+#define pev_spell_amount pev_iuser2
 #define pev_eparticle pev_euser1
 
 #define ENTITY_NAME "hwn_item_spellbook"
 
 new g_sprSparkle;
 new g_sprSparklePurple;
+new g_sprSmoke;
 
 new g_particlesEnabled = false;
 
@@ -49,6 +51,7 @@ public plugin_precache()
 
     g_sprSparkle = precache_model("sprites/muz2.spr");
     g_sprSparklePurple = precache_model("sprites/muz7.spr");
+    g_sprSmoke = precache_model("sprites/hwn/magic_smoke.spr");
 
     precache_sound(g_szSndSpawn);
     precache_sound(g_szSndPickup);
@@ -81,7 +84,13 @@ public Hwn_Fw_ConfigLoaded()
 
 public OnSpawn(ent)
 {
-    new spell = RandomSpell();
+    new bool:isInitial = !pev(ent, pev_spell_amount);
+
+    if (isInitial) {
+        set_pev(ent, pev_spell, RandomSpell());
+    }
+
+    new spell = pev(ent, pev_spell);
 
     if (spell == -1) {
         CE_Remove(ent);
@@ -89,8 +98,17 @@ public OnSpawn(ent)
     }
 
     new bool:isRare = !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare);
+    new maxSpellCount = isRare ? get_pcvar_num(g_cvarMaxRareSpellCount) : get_pcvar_num(g_cvarMaxSpellCount);
 
-    set_pev(ent, pev_spell, spell);
+    if (maxSpellCount <= 0) {
+        CE_Remove(ent);
+        return;
+    }
+
+    if (isInitial) {
+        set_pev(ent, pev_spell_amount, random(maxSpellCount) + 1);
+    }
+
     set_pev(ent, pev_framerate, 1.0);
 
     new Float:vOrigin[3];
@@ -107,6 +125,8 @@ public OnSpawn(ent)
         UTIL_Message_SpriteTrail(vOrigin, vEnd, g_sprSparkle, 6, 1, 1, 32, 16);
         UTIL_Message_SpriteTrail(vOrigin, vEnd, g_sprSparklePurple, 2, 1, 1, 32, 16);
     }
+
+    UTIL_Message_FireField(vOrigin, 32, g_sprSmoke, 3, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
 
     emit_sound(ent, CHAN_BODY, g_szSndSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
@@ -125,6 +145,7 @@ public OnRemove(ent)
 
 public OnKilled(ent)
 {
+    set_pev(ent, pev_spell_amount, 0);
     RemoveParticles(ent);
 }
 
@@ -136,11 +157,8 @@ public OnPickup(ent, id)
 
     new spell = pev(ent, pev_spell);
     new bool:isRare = !!(Hwn_Spell_GetFlags(spell) & Hwn_SpellFlag_Rare);
-    new maxSpellCount = isRare ? get_pcvar_num(g_cvarMaxRareSpellCount) : get_pcvar_num(g_cvarMaxSpellCount);
 
-    if (maxSpellCount > 0) {
-        Hwn_Spell_SetPlayerSpell(id, spell, random(maxSpellCount) + 1);
-    }
+    Hwn_Spell_SetPlayerSpell(id, spell, pev(ent, pev_spell_amount));
 
     emit_sound(ent, CHAN_BODY, isRare ? g_szSndPickupRare : g_szSndPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 

@@ -57,7 +57,7 @@ const Float:NPC_HitDelay = 0.35;
 const Float:NPC_Small_Health = 50.0;
 const Float:NPC_Small_Speed = 250.0;
 const Float:NPC_Small_Damage = 12.0;
-const Float:NPC_Small_HitRange = 32.0;
+const Float:NPC_Small_HitRange = 48.0;
 const Float:NPC_Small_HitDelay = 0.35;
 
 new const g_szSndIdleList[][] =
@@ -97,8 +97,6 @@ new Float:g_fThinkDelay;
 
 new g_ceHandler;
 new g_ceHandlerSmall;
-
-new g_maxPlayers;
 
 public plugin_precache()
 {
@@ -153,8 +151,6 @@ public plugin_init()
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
     RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);
     RegisterHam(Ham_Killed, "player", "OnPlayerKilledPre", .Post = 0);
-
-    g_maxPlayers = get_maxplayers();
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -268,22 +264,20 @@ public OnThink(ent)
         return HAM_IGNORED;
     }
 
-    new enemy = pev(ent, pev_enemy);
+    new enemy = NPC_GetEnemy(ent);
     new Action:action = Action_Idle;
-    new bool:isValidEnemy = NPC_IsValidEnemy(enemy);
 
     static Float:fLastUpdate;
     pev(ent, pev_fuser1, fLastUpdate);
     new bool:shouldUpdate = get_gametime() - fLastUpdate >= g_fThinkDelay;
 
-    if (isValidEnemy) {
+    if (enemy) {
         Attack(ent, enemy, action, shouldUpdate);
     }
 
     if (shouldUpdate) {
-        if (!isValidEnemy) {
-            new team = pev(ent, pev_team);
-            NPC_FindEnemy(ent, g_maxPlayers, .team = team);
+        if (!enemy) {
+            NPC_FindEnemy(ent, 1024.0);
         } else {
             if (random(100) < 10) {
                 if (IsSmall(ent)) {
@@ -331,7 +325,7 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = true)
     if (checkTarget) {
         if (!NPC_GetTarget(ent, fSpeed, vTarget)) {
             NPC_SetEnemy(ent, 0);
-            set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+            NPC_StopMovement(ent);
             set_pev(ent, pev_vuser1, vOrigin);
             return false;
         }
@@ -357,7 +351,7 @@ bool:Attack(ent, target, &Action:action, bool:checkTarget = true)
         NPC_MoveToTarget(ent, vTarget, NPC_Speed);
         action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
     } else {
-        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+        NPC_StopMovement(ent);
     }
 
     return true;

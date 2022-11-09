@@ -77,8 +77,6 @@ new Float:g_fThinkDelay;
 new g_ceHandlerSp;
 new g_ceHandlerSpBig;
 
-new g_maxPlayers;
-
 new g_cvarPumpkinMutateChance;
 
 public plugin_precache()
@@ -130,8 +128,6 @@ public plugin_init()
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
 
     g_cvarPumpkinMutateChance = register_cvar("hwn_pumpkin_mutate_chance", "20");
-
-    g_maxPlayers = get_maxplayers();
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -338,8 +334,8 @@ public TaskJump(taskID)
 {
     new ent = taskID - TASKID_SUM_JUMP;
 
-    new enemy = pev(ent, pev_enemy);
-    if (NPC_IsValidEnemy(enemy)) {
+    new enemy = NPC_GetEnemy(ent);
+    if (enemy) {
         static Float:vTarget[3];
         pev(enemy, pev_origin, vTarget);
         NPC_MoveToTarget(ent, vTarget, 0.0);
@@ -362,11 +358,11 @@ public TaskThink(taskID)
 
     new Action:action = Action_Idle;
     if (pev(ent, pev_flags) & FL_ONGROUND) {
-        new enemy = pev(ent, pev_enemy);
-        if (NPC_IsValidEnemy(enemy)) {
+        new enemy = NPC_GetEnemy(ent);
+        if (enemy) {
             Attack(ent, enemy, action);
         } else {
-            NPC_FindEnemy(ent, g_maxPlayers, NPC_ViewRange);
+            NPC_FindEnemy(ent, NPC_ViewRange);
         }
     } else {
         action = Action_JumpFloat;

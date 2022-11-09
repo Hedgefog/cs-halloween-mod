@@ -1,4 +1,37 @@
 /*
+    6.5.0
+        Additions and improvements:
+            Added Mystery Smoke spell
+            Added spell shop
+            Removed transparency for intangibility spell effect
+            Added status icon for Intangibility spell
+            Increased Small Skeleton NPC hit range
+            Reworked Blink spell
+            Fireball spell can now push the owner and deals low damage
+            Monsters can now attack each other
+            Added reward for collecting pumpkins
+            Optimized client messages
+            Improved some effects
+
+        Cvars:
+            Added hwn_spellshop
+            Added hwn_spellshop_spell_price
+            Added hwn_spellshop_spell_price_ability
+            Added hwn_spellshop_spell_price_applicable
+            Added hwn_spellshop_spell_price_damage
+            Added hwn_spellshop_spell_price_heal
+            Added hwn_spellshop_spell_price_mult_rare
+            Added hwn_spellshop_spell_price_protection
+            Added hwn_spellshop_spell_price_radius
+            Added hwn_spellshop_spell_price_throwable
+            Added hwn_collector_teampoints_reward
+            Removed hwn_hud_collector_hide_timer cvar
+            Removed hwn_hud_collector_hide_money cvar
+
+        Fixes:
+            Fixed NPC movement
+            Fixed intangibility damage resistance rules
+
     6.4.1
         Fixes:
             Fixed HHH NPC pathfinding
@@ -341,7 +374,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.4.1"
+#define HWN_VERSION "6.5.0"
 
 enum _:Hwn_PumpkinType
 {
@@ -357,7 +390,8 @@ enum Hwn_GamemodeFlags (<<=1)
     Hwn_GamemodeFlag_None,
     Hwn_GamemodeFlag_Default = 1,
     Hwn_GamemodeFlag_RespawnPlayers,
-    Hwn_GamemodeFlag_SpecialEquip
+    Hwn_GamemodeFlag_SpecialEquip,
+    Hwn_GamemodeFlag_SpellShop
 };
 
 enum Hwn_SpellFlags (<<=1)
@@ -369,7 +403,8 @@ enum Hwn_SpellFlags (<<=1)
     Hwn_SpellFlag_Ability,
     Hwn_SpellFlag_Heal,
     Hwn_SpellFlag_Damage,
-    Hwn_SpellFlag_Radius
+    Hwn_SpellFlag_Radius,
+    Hwn_SpellFlag_Protection
 };
 
 /*--------------------------------[ Core ]--------------------------------*/
@@ -403,11 +438,13 @@ native Hwn_Collector_GetTeamPoints(team);
 native Hwn_Collector_SetTeamPoints(team, count);
 native bool:Hwn_Collector_IsOvertime();
 native bool:Hwn_Collector_ObjectiveBlocked();
+native bool:Hwn_Collector_ScorePlayerPointsToTeam(id, count);
 
 forward Hwn_Collector_Fw_TeamPoints(team);
 forward Hwn_Collector_Fw_PlayerPoints(id);
 forward Hwn_Collector_Fw_Overtime(time);
 forward Hwn_Collector_Fw_WinnerTeam(team);
+forward Hwn_Collector_Fw_TeamPointsScored(team, count, id);
 
 /*--------------------------------[ Gifts ]--------------------------------*/
 native Hwn_Gifts_AddTarget(const Float:vOrigin[3]);
@@ -488,6 +525,17 @@ forward Hwn_PEquipment_Fw_Changed(id);
 native Hwn_Menu_Open(id);
 native Hwn_Menu_AddItem(const szTitle[], const szCallback[]);
 
+/*--------------------------------[ Spell Shop ]--------------------------------*/
+
+native bool:Hwn_SpellShop_Open(id);
+native bool:Hwn_SpellShop_BuySpell(id, spell);
+native bool:Hwn_SpellShop_CanBuySpell(id, spell);
+native Hwn_SpellShop_GetSpellPrice(spell);
+
+forward Hwn_SpellShop_Fw_Open(id);
+forward Hwn_SpellShop_Fw_BuySpell(id, spell);
+
 /*--------------------------------[ Crits ]--------------------------------*/
+
 native Hwn_Crits_Get(id);
 native Hwn_Crits_Set(id, bool:value);
