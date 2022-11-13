@@ -701,7 +701,7 @@ EmitSmoke(ent) {
 
     static Float:vOrigin[3];
     pev(ent, pev_origin, vOrigin);
-    UTIL_Message_FireField(vOrigin, 16, g_sprSmoke, 1, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
+    UTIL_Message_FireField(vOrigin, 16, g_sprSmoke, 2, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
 
     ArraySetCell(monoculus, Monoculus_NextSmokeEmit, get_gametime() + 0.1);
 }
