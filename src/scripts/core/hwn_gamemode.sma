@@ -340,6 +340,7 @@ public OnPlayerSpawn(id)
         set_pev(id, pev_takedamage, DAMAGE_NO);
         remove_task(id + TASKID_SUM_SPAWN_PROTECTION);
         set_task(get_pcvar_float(g_cvarSpawnProtectionTime), "TaskDisableSpawnProtection", id + TASKID_SUM_SPAWN_PROTECTION);
+        UTIL_SetPlayerTeamChange(id, true);
     }
 }
 

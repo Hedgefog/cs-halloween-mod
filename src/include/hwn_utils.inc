@@ -413,6 +413,17 @@ stock UTIL_GetPlayerTeam(id)
     #endif
 }
 
+stock UTIL_SetPlayerTeamChange(id, bool: value)
+{
+    new currentValue = get_pdata_int(id, 125, 5);
+
+    if (value) {
+        set_pdata_int(id, 125, currentValue &  ~(1<<8), 5);
+    } else {
+        set_pdata_int(id, 125, currentValue | (1<<8), 5);
+    }
+}
+
 stock Float:UTIL_GetNextPrimaryAttack(ent)
 {
     #if defined _reapi_included
