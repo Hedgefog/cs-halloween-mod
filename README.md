@@ -12,9 +12,9 @@ __Halloween Mod__ is a powerful Halloween-themed core for your __Counter-Strike_
 - [Releases](./releases)
 
 ### 🔄 Requirements
-- Amx Mod X 1.8.2+
-- RegameDLL + ReAPI or RoundControl
-- Metamod-R or Metamod-P (for windows)
+- [Amx Mod X 1.8.2+](https://www.amxmodx.org/downloads-new.php)
+- [RegameDLL](https://github.com/s1lentq/ReGameDLL_CS) + [ReAPI](https://github.com/s1lentq/reapi) or __RoundControl__ (built into vanilla release)
+- [Metamod-R](https://github.com/theAsmodai/metamod-r) or [Metamod-P](https://github.com/Bots-United/metamod-p) (for windows)
 
 ### 📖 Documentation
 - [Index](./doc/pages/index.md)
