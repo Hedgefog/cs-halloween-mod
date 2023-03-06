@@ -34,6 +34,9 @@
 #define HUD_POS_NOTIFICATION_SPELL_PICKED HUD_POS_NOTIFICATION_INFO
 #define HUD_POS_NOTIFICATION_MOD_MENU HUD_POS_NOTIFICATION_INFO
 #define HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED HUD_POS_NOTIFICATION_INFO
+#define HUD_POS_OBJECTIVE_INFO -1.0, 0.35
+
+new Float:g_flPlayerNextObjectiveBlockMsg[MAX_PLAYERS + 1];
 
 new g_hGamemodeCollector;
 
@@ -158,6 +161,14 @@ public Hwn_Collector_Fw_Overtime(overtime)
     show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_OVERTIME");
 }
 
+public Hwn_Collector_Fw_ObjectiveBlocked(id) {
+    if (g_flPlayerNextObjectiveBlockMsg[id] < get_gametime()) {
+        SetupNotificationMessage(HUD_POS_OBJECTIVE_INFO, .holdTime = 3.0);
+        show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_OBJECTIVE_BLOCKED");
+        g_flPlayerNextObjectiveBlockMsg[id] = get_gametime() + 10.0;
+    }
+}
+
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnPlayerSpawn(id)
@@ -168,6 +179,8 @@ public OnPlayerSpawn(id)
 
     SetupNotificationMessage(HUD_POS_NOTIFICATION_MOD_MENU);
     show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_MENU_HELP");
+
+    g_flPlayerNextObjectiveBlockMsg[id] = 0.0;
 }
 
 public Hwn_Gifts_Fw_GiftSpawn(id)

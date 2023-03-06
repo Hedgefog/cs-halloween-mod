@@ -36,6 +36,7 @@ new g_fwTeamPointsChanged;
 new g_fwTeamPointsScored;
 new g_fwOvertime;
 new g_fwWinnerTeam;
+new g_fwObjectiveBlocked;
 
 new g_playerPoints[MAX_PLAYERS + 1] = { 0, ... };
 new g_teamPoints[TEAM_COUNT];
@@ -96,6 +97,7 @@ public plugin_init()
     g_fwTeamPointsScored = CreateMultiForward("Hwn_Collector_Fw_TeamPointsScored", ET_IGNORE, FP_CELL, FP_CELL, FP_CELL);
     g_fwOvertime = CreateMultiForward("Hwn_Collector_Fw_Overtime", ET_IGNORE, FP_CELL);
     g_fwWinnerTeam = CreateMultiForward("Hwn_Collector_Fw_WinnerTeam", ET_IGNORE, FP_CELL);
+    g_fwObjectiveBlocked = CreateMultiForward("Hwn_Collector_Fw_ObjectiveBlocked", ET_IGNORE, FP_CELL);
 }
 
 public plugin_natives()
@@ -406,12 +408,13 @@ SetTeamPoints(team, count)
 }
 
 bool:ScorePlayerPointsToTeam(id, count) {
-    if (Hwn_Collector_ObjectiveBlocked()) {
+    new playerPoints = GetPlayerPoints(id);
+    if (playerPoints < count) {
         return false;
     }
 
-    new playerPoints = GetPlayerPoints(id);
-    if (playerPoints < count) {
+    if (Hwn_Collector_ObjectiveBlocked()) {
+        ExecuteForward(g_fwObjectiveBlocked, _, id);
         return false;
     }
 

@@ -48,6 +48,7 @@ HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Horseless Headless Horsemann
 HWN_SPELLSHOP_MENU_TITLE = Spells
 HWN_SPELLSHOP_DISABLED = Spell shop is disabled on this server!
 HWN_SPELLSHOP_NOT_AT_SPAWN = Spell shop is only available at the spawn!
+HWN_OBJECTIVE_BLOCKED =  The objective is currently blocked!
 
 [ru]
 HWN_GIFT_SPAWN = Призрачный Подарок таинственно появился в случайном месте!
@@ -99,6 +100,7 @@ HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Пеший Всадник без Гол�
 HWN_SPELLSHOP_MENU_TITLE = Заклинания
 HWN_SPELLSHOP_DISABLED = Магазин Заклинаний отключен на этом сервере!
 HWN_SPELLSHOP_NOT_AT_SPAWN = Магазин Заклинаний доступен только на месте возраждения!
+HWN_OBJECTIVE_BLOCKED =  Сейчас цель заблокирована!
 
 [ua]
 HWN_GIFT_SPAWN = Примарний Подарунок таємниче з'явився у випадковому місці!
@@ -150,6 +152,7 @@ HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Піший Вершник без Гол�
 HWN_SPELLSHOP_MENU_TITLE = Заклинання
 HWN_SPELLSHOP_DISABLED = Магазин Заклинань вимкнено на цьому сервері!
 HWN_SPELLSHOP_NOT_AT_SPAWN = Магазин Заклинань доступний лише на місці відродження!
+HWN_OBJECTIVE_BLOCKED =  Наразі ціль заблокована!
 
 [es]
 HWN_GIFT_SPAWN = Un misterioso regalo de ^nHalloween ha aparecido en algun lugar,^nve y encuentralo!
@@ -201,6 +204,7 @@ HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Jinete Decapitado sin Montura
 HWN_SPELLSHOP_MENU_TITLE = Spells
 HWN_SPELLSHOP_DISABLED = Spell shop is disabled on this server!
 HWN_SPELLSHOP_NOT_AT_SPAWN = Spell shop is only available at the spawn!
+HWN_OBJECTIVE_BLOCKED =  The objective is currently blocked!
 
 [ro]
 HWN_GIFT_SPAWN = Un Cadou Bantuit de Halloween a^naparut in mod misterios undeva,^nasezat doar pentru tine. Du-te si gaseste-l!
@@ -252,6 +256,7 @@ HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Horseless Headless Horsemann
 HWN_SPELLSHOP_MENU_TITLE = Spells
 HWN_SPELLSHOP_DISABLED = Spell shop is disabled on this server!
 HWN_SPELLSHOP_NOT_AT_SPAWN = Spell shop is only available at the spawn!
+HWN_OBJECTIVE_BLOCKED =  The objective is currently blocked!
 
 [hu]
 HWN_GIFT_SPAWN = Egy Kísérteties Halloweeni Ajándék^nrejtelmesen megjelent valahol,^ncsak a számodra. Menj és találd meg!
@@ -303,6 +308,7 @@ HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Horseless Headless Horsemann
 HWN_SPELLSHOP_MENU_TITLE = Spells
 HWN_SPELLSHOP_DISABLED = Spell shop is disabled on this server!
 HWN_SPELLSHOP_NOT_AT_SPAWN = Spell shop is only available at the spawn!
+HWN_OBJECTIVE_BLOCKED =  The objective is currently blocked!
 
 [bp]
 HWN_GIFT_SPAWN = Um misterioso Presente de Halloween caiu^nem algum lugar,^n somente para você. Corra e encontre!
@@ -354,3 +360,4 @@ HWN_BOSS_HORSELESS_HEADLESS_HORSEMANN = Cavaleiro Carente de Cavalo e Cabeça
 HWN_SPELLSHOP_MENU_TITLE = Spells
 HWN_SPELLSHOP_DISABLED = Spell shop is disabled on this server!
 HWN_SPELLSHOP_NOT_AT_SPAWN = Spell shop is only available at the spawn!
+HWN_OBJECTIVE_BLOCKED =  The objective is currently blocked!

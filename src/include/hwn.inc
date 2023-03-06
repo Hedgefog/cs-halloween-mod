@@ -445,6 +445,7 @@ forward Hwn_Collector_Fw_PlayerPoints(id);
 forward Hwn_Collector_Fw_Overtime(time);
 forward Hwn_Collector_Fw_WinnerTeam(team);
 forward Hwn_Collector_Fw_TeamPointsScored(team, count, id);
+forward Hwn_Collector_Fw_ObjectiveBlocked(id);
 
 /*--------------------------------[ Gifts ]--------------------------------*/
 native Hwn_Gifts_AddTarget(const Float:vOrigin[3]);
