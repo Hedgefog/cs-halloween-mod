@@ -17,7 +17,7 @@
 const SpellballSpeed = 720;
 const Float:SmokeLifeTime = 30.0;
 const SmokeStackMaxSize = 8;
-new const Float:SmokeSize[3] = {72.0, 72.0, 72.0};
+new const Float:SmokeSize[3] = {96.0, 96.0, 64.0};
 new const EffectColor[3] = {HWN_COLOR_PRIMARY};
 
 new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
@@ -165,7 +165,7 @@ Detonate(ent)
             continue;
         }
 
-        if (pev(ent, pev_team) != team) {
+        if (pev(target, pev_team) != team) {
             continue;
         }
 
