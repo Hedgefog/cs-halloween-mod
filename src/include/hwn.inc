@@ -382,7 +382,8 @@ enum _:Hwn_PumpkinType
     Hwn_PumpkinType_Default,
     Hwn_PumpkinType_Crits,
     Hwn_PumpkinType_Equipment,
-    Hwn_PumpkinType_Health
+    Hwn_PumpkinType_Health,
+    Hwn_PumpkinType_Gravity
 };
 
 enum Hwn_GamemodeFlags (<<=1)

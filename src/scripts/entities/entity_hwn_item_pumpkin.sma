@@ -18,6 +18,7 @@
 #define ENTITY_NAME_BIG "hwn_item_pumpkin_big"
 
 #define TASKID_SUM_DISABLE_CRITS 1000
+#define TASKID_SUM_DISABLE_GRAVITY 1100
 
 #define FLASH_RADIUS 16
 #define FLASH_LIFETIME 10
@@ -31,7 +32,8 @@ new const Float:g_fLootTypeColor[Hwn_PumpkinType][3] =
     {HWN_COLOR_SECONDARY_F},
     {HWN_COLOR_PRIMARY_F},
     {HWN_COLOR_YELLOW_F},
-    {HWN_COLOR_RED_F}
+    {HWN_COLOR_RED_F},
+    {50.0, 50.0, 50.0},
 };
 
 new const g_szSndItemSpawn[] = "hwn/items/pumpkin/pumpkin_drop.wav";
@@ -121,6 +123,10 @@ public OnPickup(ent, id)
         {
             Hwn_PEquipment_GiveHealth(id, 30);
         }
+        case Hwn_PumpkinType_Gravity:
+        {
+            GiveGravity(id, 2.0);
+        }
     }
 
     static Float:vPlayerOrigin[3];
@@ -148,6 +154,20 @@ GiveCrits(id, Float:fTime)
     set_task(fTime, "TaskDisableCrits", id + TASKID_SUM_DISABLE_CRITS);
 }
 
+GiveGravity(id, Float:fTime)
+{
+    static Float:fGravity;
+    pev(id, pev_gravity, fGravity);
+    
+    if (fGravity != 1.0 && !task_exists(id + TASKID_SUM_DISABLE_GRAVITY)) {
+        return;
+    }
+
+    set_pev(id, pev_gravity, MOON_GRAVIY);
+    remove_task(id + TASKID_SUM_DISABLE_GRAVITY);
+    set_task(fTime, "TaskDisableGravity", id + TASKID_SUM_DISABLE_GRAVITY);
+}
+
 FlashEffect(ent, const Float:vOrigin[3], type)
 {
     if (isBig(ent)) {
@@ -172,4 +192,10 @@ public TaskDisableCrits(taskID)
 {
     new id = taskID - TASKID_SUM_DISABLE_CRITS;
     Hwn_Crits_Set(id, false);
+}
+
+public TaskDisableGravity(taskID)
+{
+    new id = taskID - TASKID_SUM_DISABLE_GRAVITY;
+    set_pev(id, pev_gravity, 1.0);
 }
