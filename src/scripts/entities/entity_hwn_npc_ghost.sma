@@ -111,7 +111,7 @@ public OnSpawn(ent)
 
     set_pev(ent, pev_health, 1);
 
-    new enemy = NPC_GetEnemy(enemy);
+    new enemy = NPC_GetEnemy(ent);
     if (!enemy) {
         NPC_FindEnemy(ent, _, .reachableOnly = false, .visibleOnly = false, .allowMonsters = false);
     }
