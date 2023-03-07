@@ -31,12 +31,13 @@ const EffectRadius = 48;
 new const EffectColor[3] = {HWN_COLOR_PRIMARY};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_powerup.wav";
-new const g_szSndJump[] = "hwn/spells/spell_powerup_jump.wav";
+new const g_szSndJump[] = "hwn/spells/spell_powerup_jump_v2.wav";
 
 new g_sprTrail;
 
 new g_playerSpellEffectFlag = 0;
 new Float:g_playerLastJump[MAX_PLAYERS + 1] = { 0.0, ... };
+new Float:g_fPlayerEffectEnd[MAX_PLAYERS + 1] = { 0.0, ... };
 
 new g_hWofSpell;
 
@@ -194,6 +195,7 @@ public Cast(id)
 
     if (Hwn_Wof_Effect_GetCurrentSpell() != g_hWofSpell) {
         set_task(EffectTime, "Revoke", id);
+        g_fPlayerEffectEnd[id] = get_gametime() + EffectTime;
     }
 }
 
@@ -265,7 +267,9 @@ Jump(id)
     set_pev(id, pev_velocity, vVelocity);
     set_pev(id, pev_gaitsequence, 6);
 
-    emit_sound(id, CHAN_STATIC , g_szSndJump, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    new Float:flTimeRatio = (1.0 - ((g_fPlayerEffectEnd[id] - get_gametime()) / EffectTime));
+    new pitch = PITCH_NORM + floatround(80 * flTimeRatio);
+    emit_sound(id, CHAN_STATIC, g_szSndJump, VOL_NORM, ATTN_NORM, 0, pitch);
 }
 
 public BoostWeaponShootSpeed(ent)
