@@ -53,6 +53,8 @@ const Float:NPC_Speed = 230.0;
 const Float:NPC_Damage = 24.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.35;
+const Float:NPC_LifeTime = 30.0;
+const Float:NPC_RespawnTime = 15.0;
 
 const Float:NPC_Small_Health = 50.0;
 const Float:NPC_Small_Speed = 250.0;
@@ -119,8 +121,8 @@ public plugin_precache()
         .modelIndex = precache_model("models/hwn/npc/skeleton_v2.mdl"),
         .vMins = Float:{-12.0, -12.0, -32.0},
         .vMaxs = Float:{12.0, 12.0, 32.0},
-        .fLifeTime = 30.0,
-        .fRespawnTime = 30.0,
+        .fLifeTime = NPC_LifeTime,
+        .fRespawnTime = NPC_RespawnTime,
         .preset = CEPreset_NPC
     );
 
@@ -129,8 +131,8 @@ public plugin_precache()
         .modelIndex = precache_model("models/hwn/npc/skeleton_small_v3.mdl"),
         .vMins = Float:{-8.0, -8.0, -16.0},
         .vMaxs = Float:{8.0, 8.0, 16.0},
-        .fLifeTime = 30.0,
-        .fRespawnTime = 30.0,
+        .fLifeTime = NPC_LifeTime,
+        .fRespawnTime = NPC_RespawnTime,
         .preset = CEPreset_NPC
     );
 

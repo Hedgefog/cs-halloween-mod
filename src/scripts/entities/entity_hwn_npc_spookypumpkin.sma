@@ -44,9 +44,8 @@ const Float:NPC_Damage = 20.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.5;
 const Float:NPC_ViewRange = 1024.0;
-
-const Float:ENTITY_LifeTime = 30.0;
-const Float:ENTITY_RespawnTime = 30.0;
+const Float:NPC_LifeTime = 30.0;
+const Float:NPC_RespawnTime = 15.0;
 
 const Float:SP_BigScaleMul = 2.0;
 const Float:SP_JumpVelocityZ = 160.0;
@@ -94,8 +93,8 @@ public plugin_precache()
         .modelIndex = precache_model("models/hwn/npc/spookypumpkin.mdl"),
         .vMins = Float:{-12.0, -12.0, 0.0},
         .vMaxs = Float:{12.0, 12.0, 24.0},
-        .fLifeTime = ENTITY_LifeTime,
-        .fRespawnTime = ENTITY_RespawnTime,
+        .fLifeTime = NPC_LifeTime,
+        .fRespawnTime = NPC_RespawnTime,
         .preset = CEPreset_NPC
     );
 
@@ -104,8 +103,8 @@ public plugin_precache()
         .modelIndex = precache_model("models/hwn/npc/spookypumpkin_big.mdl"),
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
-        .fLifeTime = ENTITY_LifeTime,
-        .fRespawnTime = ENTITY_RespawnTime,
+        .fLifeTime = NPC_LifeTime,
+        .fRespawnTime = NPC_RespawnTime,
         .preset = CEPreset_NPC
     );
 
