@@ -141,6 +141,10 @@ public OnPlayerJump(id)
         return HAM_IGNORED;
     }
 
+    if (g_fPlayerEffectEnd[id] < get_gametime()) {
+        return HAM_IGNORED;
+    }
+
     new oldButton = pev(id, pev_oldbuttons);
 
     if (~oldButton & IN_JUMP) {
@@ -267,7 +271,7 @@ Jump(id)
     set_pev(id, pev_velocity, vVelocity);
     set_pev(id, pev_gaitsequence, 6);
 
-    new Float:flTimeRatio = (1.0 - ((g_fPlayerEffectEnd[id] - get_gametime()) / EffectTime));
+    new Float:flTimeRatio = floatclamp(1.0 - ((g_fPlayerEffectEnd[id] - get_gametime()) / EffectTime), 0.0, 1.0);
     new pitch = PITCH_NORM + floatround(80 * flTimeRatio);
     emit_sound(id, CHAN_STATIC, g_szSndJump, VOL_NORM, ATTN_NORM, 0, pitch);
 }
