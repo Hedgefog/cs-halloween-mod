@@ -164,7 +164,7 @@ public Hwn_Collector_Fw_Overtime(overtime)
 public Hwn_Collector_Fw_ObjectiveBlocked(id) {
     if (g_flPlayerNextObjectiveBlockMsg[id] < get_gametime()) {
         SetupNotificationMessage(HUD_POS_OBJECTIVE_INFO, .holdTime = 3.0);
-        show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_OBJECTIVE_BLOCKED");
+        show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_OBJECTIVE_BLOCKED");
         g_flPlayerNextObjectiveBlockMsg[id] = get_gametime() + 10.0;
     }
 }
