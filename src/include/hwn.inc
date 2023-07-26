@@ -1,4 +1,8 @@
 /*
+    6.4.2
+        Fixes:
+            Fixed objective marks spawn
+
     6.4.1
         Fixes:
             Fixed HHH NPC pathfinding
@@ -341,7 +345,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.4.1"
+#define HWN_VERSION "6.4.2"
 
 enum _:Hwn_PumpkinType
 {

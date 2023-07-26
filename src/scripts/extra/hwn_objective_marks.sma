@@ -58,9 +58,10 @@ new g_iszInfoTargetClassname;
 public plugin_precache() {
     g_irgMarks = ArrayCreate(_, MAX_PLAYER_MARKS);
     g_iMarkModelIndex = precache_model("sprites/hwn/mark_cauldron.spr");
+    g_iszInfoTargetClassname = engfunc(EngFunc_AllocString, "info_target");
 
     CE_RegisterHook(CEFunction_Spawn, "hwn_bucket", "OnBucketSpawn_Post");
-    g_iszInfoTargetClassname = engfunc(EngFunc_AllocString, "info_target");
+    CE_RegisterHook(CEFunction_Remove, "hwn_bucket", "OnBucketRemove_Post");
 }
 
 public plugin_init() {
@@ -85,9 +86,17 @@ public OnBucketSpawn_Post(pEntity) {
         return;
     }
 
-    new pMark = CreateMark(pEntity);
-    set_pev(pMark, pev_iuser1, ArraySize(g_irgMarks));
-    ArrayPushCell(g_irgMarks, pMark);
+    if (!pev(pEntity, pev_euser1)) {
+        new pMark = CreateMark(pEntity);
+        set_pev(pEntity, pev_euser1, pMark);
+    }
+}
+
+public OnBucketRemove_Post(pEntity) {
+    new pMark = pev(pEntity, pev_euser1);
+    if (pMark > 0) {
+        DestroyMark(pMark);
+    }
 }
 
 public OnPlayerSpawn_Post(pPlayer) {
@@ -199,8 +208,9 @@ public OnCheckVisibility(pEntity) {
     return FMRES_SUPERCEDE;
 }
 
-CreateMark(pButton) {
+CreateMark(pEntity) {
     new pMark = engfunc(EngFunc_CreateNamedEntity, g_iszInfoTargetClassname);
+    new iMarkIndex = ArraySize(g_irgMarks);
     
     set_pev(pMark, pev_classname, MARK_CLASSNAME);
     set_pev(pMark, pev_scale, SPRITE_SCALE);
@@ -210,15 +220,36 @@ CreateMark(pButton) {
     set_pev(pMark, pev_movetype, MOVETYPE_FLYMISSILE);
     set_pev(pMark, pev_solid, SOLID_NOT);
     set_pev(pMark, pev_spawnflags, SF_SPRITE_STARTON);
-    set_pev(pMark, pev_owner, pButton);
+    set_pev(pMark, pev_owner, pEntity);
+    set_pev(pMark, pev_iuser1, iMarkIndex);
 
     dllfunc(DLLFunc_Spawn, pMark);
 
     static Float:vecOrigin[3];
-    ExecuteHam(Ham_BodyTarget, pButton, 0, vecOrigin);
+    ExecuteHam(Ham_BodyTarget, pEntity, 0, vecOrigin);
     engfunc(EngFunc_SetOrigin, pMark, vecOrigin);
 
+    ArrayPushCell(g_irgMarks, pMark);
+
     return pMark;
+}
+
+DestroyMark(pMark) {
+    new iMarkIndex = pev(pMark, pev_iuser1);
+
+    set_pev(pMark, pev_flags, pev(pMark, pev_flags) | FL_KILLME);
+    dllfunc(DLLFunc_Think, pMark);
+
+    ArrayDeleteItem(g_irgMarks, iMarkIndex);
+    ReindexMarks();
+}
+
+ReindexMarks() {
+    new iMarkCount = ArraySize(g_irgMarks);
+    for (new iMarkIndex = 0; iMarkIndex < iMarkCount; ++iMarkIndex) {
+        new pMark = ArrayGetCell(g_irgMarks, iMarkIndex);
+        set_pev(pMark, pev_iuser1, iMarkIndex);
+    }
 }
 
 CalculateMark(pMark, pPlayer) {

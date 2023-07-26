@@ -1,7 +1,7 @@
 ![Alt Text](./images/demo.gif)
 ## 🎃 Halloween Mod 🇺🇦
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/hedgefog/cs-halloween-mod)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/hedgefog/cs-halloween-mod/CI)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/hedgefog/cs-halloween-mod/build.yml?branch=release)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/hedgefog/cs-halloween-mod)
 ![GitHub all releases](https://img.shields.io/github/downloads/hedgefog/cs-halloween-mod/total)
 
@@ -12,9 +12,10 @@ __Halloween Mod__ is a powerful Halloween-themed core for your __Counter-Strike_
 - [Releases](./releases)
 
 ### 🔄 Requirements
-- Amx Mod X 1.8.2+
-- RegameDLL + ReAPI or RoundControl
-- Metamod-R or Metamod-P (for windows)
+- [Metamod-R](https://github.com/theAsmodai/metamod-r) + [ReHLDS](https://github.com/dreamstalker/rehlds) or [Metamod-P](https://github.com/Bots-United/metamod-p)
+- [RegameDLL](https://github.com/s1lentq/ReGameDLL_CS)
+- [Amx Mod X 1.8.2+](https://www.amxmodx.org/downloads-new.php)
+- [ReAPI](https://github.com/s1lentq/reapi)
 
 ### 📖 Documentation
 - [Index](./doc/pages/index.md)
