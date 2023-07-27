@@ -16,22 +16,20 @@
 
 #define TASKID_SUM_SPAWN_GIFT 1000
 
-new Array:g_giftTargets;
+new Array:g_irgGiftTargets;
 
 new const g_szSndGiftSpawn[] = "hwn/items/gift/gift_spawn.wav";
 new const g_szSndGiftPickup[] = "hwn/items/gift/gift_pickup.wav";
 
-new g_cvarGiftSpawnDelay;
-new g_cvarGiftCosmeticMinTime;
-new g_cvarGiftCosmeticMaxTime;
+new g_pCvarGiftSpawnDelay;
+new g_pCvarGiftCosmeticMinTime;
+new g_pCvarGiftCosmeticMaxTime;
 
-new g_fwResult;
 new g_fwGiftSpawn;
 new g_fwGiftPicked;
 new g_fwGiftDisappear;
 
-public plugin_precache()
-{
+public plugin_precache() {
     precache_sound(g_szSndGiftSpawn);
     precache_sound(g_szSndGiftPickup);
 
@@ -39,28 +37,25 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Killed, GIFT_ENTITY_CLASSNAME, "OnGiftKilled");
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    g_cvarGiftSpawnDelay = register_cvar("hwn_gifts_spawn_delay", "300.0");
-    g_cvarGiftCosmeticMinTime = register_cvar("hwn_gifts_cosmetic_min_time", "450");
-    g_cvarGiftCosmeticMaxTime = register_cvar("hwn_gifts_cosmetic_max_time", "1200");
+    g_pCvarGiftSpawnDelay = register_cvar("hwn_gifts_spawn_delay", "300.0");
+    g_pCvarGiftCosmeticMinTime = register_cvar("hwn_gifts_cosmetic_min_time", "450");
+    g_pCvarGiftCosmeticMaxTime = register_cvar("hwn_gifts_cosmetic_max_time", "1200");
 
     g_fwGiftSpawn = CreateMultiForward("Hwn_Gifts_Fw_GiftSpawn", ET_IGNORE, FP_CELL, FP_CELL);
     g_fwGiftPicked = CreateMultiForward("Hwn_Gifts_Fw_GiftPicked", ET_IGNORE, FP_CELL, FP_CELL);
     g_fwGiftDisappear = CreateMultiForward("Hwn_Gifts_Fw_GiftDisappear", ET_IGNORE, FP_CELL, FP_CELL);
 }
 
-public plugin_end()
-{
-    if (g_giftTargets != Invalid_Array) {
-        ArrayDestroy(g_giftTargets);
+public plugin_end() {
+    if (g_irgGiftTargets != Invalid_Array) {
+        ArrayDestroy(g_irgGiftTargets);
     }
 }
 
-public plugin_natives()
-{
+public plugin_natives() {
     register_library("hwn");
     register_native("Hwn_Gifts_AddTarget", "Native_AddTarget");
     register_native("Hwn_Gifts_GetTargetCount", "Native_GetTargetCount");
@@ -69,139 +64,123 @@ public plugin_natives()
 
 /*--------------------------------[ Natives ]--------------------------------*/
 
-public Native_AddTarget(pluginID, argc)
-{
-    new Float:vOrigin[3];
-    get_array_f(1, vOrigin, sizeof(vOrigin));
+public Native_AddTarget(iPluginId, iArgc) {
+    new Float:vecOrigin[3];
+    get_array_f(1, vecOrigin, sizeof(vecOrigin));
 
-    AddGiftTarget(vOrigin);
+    AddGiftTarget(vecOrigin);
 }
 
-public Native_GetTargetCount(pluginID, argc)
-{
-    return g_giftTargets == Invalid_Array ? 0 : ArraySize(g_giftTargets);
+public Native_GetTargetCount(iPluginId, iArgc) {
+    return g_irgGiftTargets == Invalid_Array ? 0 : ArraySize(g_irgGiftTargets);
 }
 
-public Native_GetTarget(pluginID, argc)
-{
-    new targetIdx = get_param(1);
+public Native_GetTarget(iPluginId, iArgc) {
+    new iTarget = get_param(1);
 
-    new Float:vOrigin[3];
-    ArrayGetArray(g_giftTargets, targetIdx, vOrigin);
+    new Float:vecOrigin[3];
+    ArrayGetArray(g_irgGiftTargets, iTarget, vecOrigin);
 
-    set_array_f(2, vOrigin, sizeof(vOrigin));
+    set_array_f(2, vecOrigin, sizeof(vecOrigin));
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-public client_putinserver(id)
-{
-    SetupSpawnGiftTask(id);
+public client_putinserver(pPlayer) {
+    SetupSpawnGiftTask(pPlayer);
 }
 
-#if AMXX_VERSION_NUM < 183
-    public client_disconnect(id)
-#else
-    public client_disconnected(id)
-#endif
-{
-    remove_task(id + TASKID_SUM_SPAWN_GIFT);
+public client_disconnected(pPlayer) {
+    remove_task(pPlayer + TASKID_SUM_SPAWN_GIFT);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnGiftPicked(ent, id)
-{
-    new count = Hwn_Cosmetic_GetCount();
-    new cosmetic = Hwn_Cosmetic_GetCosmetic(random(count));
-    new time = random_num(
-        get_pcvar_num(g_cvarGiftCosmeticMinTime),
-        get_pcvar_num(g_cvarGiftCosmeticMaxTime)
+public OnGiftPicked(pEntity, pPlayer) {
+    new iNum = Hwn_Cosmetic_GetCount();
+    new iCosmetic = Hwn_Cosmetic_GetCosmetic(random(iNum));
+    new iTime = random_num(
+        get_pcvar_num(g_pCvarGiftCosmeticMinTime),
+        get_pcvar_num(g_pCvarGiftCosmeticMaxTime)
     );
 
-    new PCosmetic_Type:type = PCosmetic_Type_Normal;
+    new PCosmetic_Type:iType = PCosmetic_Type_Normal;
     if (random(100) >= 20 && random(100) <= 40) { //Find random number two times
-        type = PCosmetic_Type_Unusual;
+        iType = PCosmetic_Type_Unusual;
     }
 
-    PCosmetic_Give(id, cosmetic, type, time);
+    PCosmetic_Give(pPlayer, iCosmetic, iType, iTime);
 
-    client_cmd(id, "spk %s", g_szSndGiftPickup);
+    client_cmd(pPlayer, "spk %s", g_szSndGiftPickup);
 
-    ExecuteForward(g_fwGiftPicked, g_fwResult, id, ent);
+    ExecuteForward(g_fwGiftPicked, _, pPlayer, pEntity);
 }
 
-public OnGiftKilled(ent, bool:picked)
-{
-    new owner = pev(ent, pev_owner);
-    if (!owner) {
+public OnGiftKilled(pEntity, bool:picked) {
+    new pOwner = pev(pEntity, pev_owner);
+    if (!pOwner) {
         return;
     }
 
-    if (is_user_connected(owner)) {
-        SetupSpawnGiftTask(owner);
+    if (is_user_connected(pOwner)) {
+        SetupSpawnGiftTask(pOwner);
     }
 
-
     if (!picked) {
-        ExecuteForward(g_fwGiftDisappear, g_fwResult, owner, ent);
+        ExecuteForward(g_fwGiftDisappear, _, pOwner, pEntity);
     }
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-AddGiftTarget(const Float:vOrigin[3])
-{
-    if (g_giftTargets == Invalid_Array) {
-        g_giftTargets = ArrayCreate(3);
+AddGiftTarget(const Float:vecOrigin[3]) {
+    if (g_irgGiftTargets == Invalid_Array) {
+        g_irgGiftTargets = ArrayCreate(3);
     }
 
-    ArrayPushArray(g_giftTargets, vOrigin);
+    ArrayPushArray(g_irgGiftTargets, vecOrigin);
 }
 
-SpawnGift(id, const Float:vOrigin[3])
-{
-    new ent = CE_Create(GIFT_ENTITY_CLASSNAME, vOrigin);
+SpawnGift(pPlayer, const Float:vecOrigin[3]) {
+    new pEntity = CE_Create(GIFT_ENTITY_CLASSNAME, vecOrigin);
 
-    if (!ent) {
+    if (!pEntity) {
         return;
     }
 
-    set_pev(ent, pev_owner, id);
-    dllfunc(DLLFunc_Spawn, ent);
+    set_pev(pEntity, pev_owner, pPlayer);
+    dllfunc(DLLFunc_Spawn, pEntity);
 
-    client_cmd(id, "spk %s", g_szSndGiftSpawn);
+    client_cmd(pPlayer, "spk %s", g_szSndGiftSpawn);
 
-    ExecuteForward(g_fwGiftSpawn, g_fwResult, id, ent);
+    ExecuteForward(g_fwGiftSpawn, _, pPlayer, pEntity);
 }
 
-SetupSpawnGiftTask(id)
-{
-    set_task(get_pcvar_float(g_cvarGiftSpawnDelay), "TaskSpawnGift", id + TASKID_SUM_SPAWN_GIFT);
+SetupSpawnGiftTask(pPlayer) {
+    set_task(get_pcvar_float(g_pCvarGiftSpawnDelay), "Task_SpawnGift", pPlayer + TASKID_SUM_SPAWN_GIFT);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
-public TaskSpawnGift(taskID)
-{
-    new id = taskID - TASKID_SUM_SPAWN_GIFT;
+public Task_SpawnGift(iTaskId) {
+    new pPlayer = iTaskId - TASKID_SUM_SPAWN_GIFT;
 
-    new team = UTIL_GetPlayerTeam(id);
-    if (team != 1 && team != 2) {
-        SetupSpawnGiftTask(id);
+    new iTeam = get_member(pPlayer, m_iTeam);
+    if (iTeam != 1 && iTeam != 2) {
+        SetupSpawnGiftTask(pPlayer);
         return;
     }
 
-    new Float:vOrigin[3];
-    if (g_giftTargets != Invalid_Array && ArraySize(g_giftTargets) > 0) {
-        new targetCount = ArraySize(g_giftTargets);
-        ArrayGetArray(g_giftTargets, random(targetCount), vOrigin);
+    new Float:vecOrigin[3];
+    if (g_irgGiftTargets != Invalid_Array && ArraySize(g_irgGiftTargets) > 0) {
+        new iTargetsNum = ArraySize(g_irgGiftTargets);
+        ArrayGetArray(g_irgGiftTargets, random(iTargetsNum), vecOrigin);
     } else {
-        if (!Hwn_EventPoints_GetRandom(vOrigin)) {
-            SetupSpawnGiftTask(id);
+        if (!Hwn_EventPoints_GetRandom(vecOrigin)) {
+            SetupSpawnGiftTask(pPlayer);
             return;
         }
     }
 
-    SpawnGift(id, vOrigin);
+    SpawnGift(pPlayer, vecOrigin);
 }

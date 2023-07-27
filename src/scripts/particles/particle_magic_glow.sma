@@ -8,8 +8,7 @@
 #define VERSION "1.0.0"
 #define AUTHOR "Hedgehog Fog"
 
-public plugin_precache()
-{
+public plugin_precache() {
     new sprites[API_PARTICLES_MAX_SPRITES];
     sprites[0] = precache_model("sprites/muz2.spr");
     sprites[1] = precache_model("sprites/muz3.spr");
@@ -23,10 +22,10 @@ public plugin_precache()
         .szName = "magic_glow",
         .szTransformCallback = "Transform",
         .sprites = sprites,
-        .fLifeTime = 0.8,
-        .fScale = 0.05,
+        .flLifeTime = 0.8,
+        .flScale = 0.05,
         .renderMode = kRenderTransAdd,
-        .fRenderAmt = 255.0,
+        .flRenderAmt = 255.0,
         .spawnCount = 1
     );
 
@@ -38,36 +37,33 @@ public plugin_precache()
         .szName = "magic_glow_purple",
         .szTransformCallback = "Transform",
         .sprites = purpleSprites,
-        .fLifeTime = 0.8,
-        .fScale = 0.05,
+        .flLifeTime = 0.8,
+        .flScale = 0.05,
         .renderMode = kRenderTransAdd,
-        .fRenderAmt = 255.0,
+        .flRenderAmt = 255.0,
         .spawnCount = 1
     );
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 }
 
-public Transform(Float:vOrigin[3], Float:vVelocity[3])
-{
-    static Float:vRandom[3];
+public Transform(Float:vecOrigin[3], Float:vecVelocity[3]) {
+    static Float:vecRandom[3];
 
     {
-        UTIL_RandomVector(-16.0, 16.0, vRandom);
-        xs_vec_add(vOrigin, vRandom, vOrigin);
+        UTIL_RandomVector(-16.0, 16.0, vecRandom);
+        xs_vec_add(vecOrigin, vecRandom, vecOrigin);
     }
 
     {
-        UTIL_RandomVector(0.0, 32.0, vVelocity);
+        UTIL_RandomVector(0.0, 32.0, vecVelocity);
     }
 }
 
-stock UTIL_RandomVector(const Float:fMin, const Float:fMax, Float:vOut[3])
-{
+stock UTIL_RandomVector(const Float:flMin, const Float:flMax, Float:vecOut[3]) {
     for (new i = 0; i < 3; ++i) {
-        vOut[i] = random_float(fMin, fMax);
+        vecOut[i] = random_float(flMin, flMax);
     }
 }

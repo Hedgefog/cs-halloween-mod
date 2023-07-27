@@ -11,180 +11,160 @@
 #define PLUGIN "[Hwn] Menu Player Cosmetic"
 #define AUTHOR "Hedgehog Fog"
 
-#if !defined MAX_PLAYERS
-    #define MAX_PLAYERS 32
-#endif
+new g_pCvarPreview;
+new g_pCvarPreviewLight;
 
-new g_cvarPreview;
-new g_cvarPreviewLight;
+new PInv_ItemType:g_iCosmeticItemType;
+new Array:g_rgirgPlayerMenuSlotRefs[MAX_PLAYERS + 1] = { Invalid_Array, ... };
 
-new PInv_ItemType:g_hCosmeticItemType;
 
-new g_playerMenu[MAX_PLAYERS + 1] = { 0, ... };
-new Array:g_playerMenuSlotRefs[MAX_PLAYERS + 1] = { Invalid_Array, ... };
-
-new g_maxPlayers;
-
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    g_cvarPreview = register_cvar("hwn_pcosmetic_menu_preview", "1");
-    g_cvarPreviewLight = register_cvar("hwn_pcosmetic_menu_preview_light", "1");
+    g_pCvarPreview = register_cvar("hwn_pcosmetic_menu_preview", "1");
+    g_pCvarPreviewLight = register_cvar("hwn_pcosmetic_menu_preview_light", "1");
 
-    g_hCosmeticItemType = PInv_GetItemTypeHandler("cosmetic");
-
-    g_maxPlayers = get_maxplayers();
+    g_iCosmeticItemType = PInv_GetItemTypeHandler("cosmetic");
 }
 
-public plugin_natives()
-{
+public plugin_natives() {
     register_library("menu_player_cosmetic");
     register_native("PCosmetic_Menu_Open", "Native_Open");
 }
 
-public plugin_end()
-{
-    for (new i = 1; i <= g_maxPlayers; ++i) {
-        new Array:slotRefs = g_playerMenuSlotRefs[i];
-        if (slotRefs != Invalid_Array) {
-            ArrayDestroy(slotRefs);
+public plugin_end() {
+    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
+        if (g_rgirgPlayerMenuSlotRefs[pPlayer] != Invalid_Array) {
+            ArrayDestroy(g_rgirgPlayerMenuSlotRefs[pPlayer]);
         }
     }
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
 
-public Native_Open(pluginID, argc)
-{
-    new id = get_param(1);
-    Open(id);
+public Native_Open(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    @Player_OpenMenu(pPlayer, 0);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-Open(id, page = 0)
-{
-    new menu = g_playerMenu[id];
-    if (menu) {
-        menu_destroy(menu);
-    }
+@Player_OpenMenu(pPlayer, iPage) {
+    new iMenu = CreateMenu(pPlayer);
 
-    menu = Create(id);
-    g_playerMenu[id] = menu;
+    menu_display(pPlayer, iMenu, iPage);
 
-    menu_display(id, menu, page);
-
-    if (get_pcvar_num(g_cvarPreview) > 0 && Hwn_Gamemode_IsPlayerOnSpawn(id)) {
-        new bool:light = get_pcvar_num(g_cvarPreviewLight) > 0;
-        PlayerPreview_Activate(id, light);
+    if (get_pcvar_num(g_pCvarPreview) > 0 && Hwn_Gamemode_IsPlayerOnSpawn(pPlayer)) {
+        new bool:bLight = get_pcvar_num(g_pCvarPreviewLight) > 0;
+        PlayerPreview_Activate(pPlayer, bLight);
     }
 }
 
-Create(id)
-{
-    new callbackDisabled = menu_makecallback("MenuDisabledCallback");
+/*--------------------------------[ Functions ]--------------------------------*/
 
+CreateMenu(pPlayer) {
     static szMenuTitle[32];
-    format(szMenuTitle, charsmax(szMenuTitle), "%L", id, "HWN_COSMETIC_MENU_TITLE");
-    
-    new menu = menu_create(szMenuTitle, "MenuHandler");
+    format(szMenuTitle, charsmax(szMenuTitle), "%L", pPlayer, "HWN_COSMETIC_MENU_TITLE");
 
-    new Array:slotRefs = g_playerMenuSlotRefs[id];
-    if (slotRefs != Invalid_Array) {
-        ArrayClear(slotRefs);
+    if (g_rgirgPlayerMenuSlotRefs[pPlayer] == Invalid_Array) {
+        g_rgirgPlayerMenuSlotRefs[pPlayer] = ArrayCreate();
     } else {
-        slotRefs = ArrayCreate();
-        g_playerMenuSlotRefs[id] = slotRefs;
+        ArrayClear(g_rgirgPlayerMenuSlotRefs[pPlayer]);
     }
 
-    new size = PInv_Size(id);
+    new iMenu = menu_create(szMenuTitle, "MenuHandler_Main");
 
-    for (new i = 0; i < size; ++i)
-    {
-        if (g_hCosmeticItemType != PInv_GetItemType(id, i)) {
-            continue;
-        }
-
-        new itemTime = PCosmetic_GetItemTime(id, i);
-        if (!itemTime) {
-            continue;
-        }
-
-        ArrayPushCell(slotRefs, i);
-
-        new cosmetic = PCosmetic_GetItemCosmetic(id, i);
-        new PCosmetic_Type:cosmeticType = PCosmetic_GetItemCosmeticType(id, i);
-
-        static szCosmeticName[32];
-        PCosmetic_GetCosmeticName(cosmetic, szCosmeticName, charsmax(szCosmeticName));
-
-        static text[64];
-        format
-        (
-            text,
-            charsmax(text),
-            "%s%s%s (%i seconds left)",
-            (PCosmetic_IsItemEquiped(id, i) ? "\y" : ""),
-            (cosmeticType == PCosmetic_Type_Unusual ? "Unusual " : "^0"),
-            szCosmeticName,
-            itemTime
-        );
-
-        menu_additem(menu, text, .callback = PCosmetic_CanBeEquiped(id, cosmetic, i)
-            || PCosmetic_IsItemEquiped(id, i)  ? -1 : callbackDisabled);
-    }
-
-    if (!size) {
+    new iInvSize = PInv_Size(pPlayer);
+    if (!iInvSize) {
         static szEmptyCosmeticText[64];
-        format(szEmptyCosmeticText, charsmax(szEmptyCosmeticText), "%L", id, "HWN_COSMETIC_MENU_EMPTY");
-
-        menu_additem(menu, szEmptyCosmeticText, .callback = callbackDisabled);
+        format(szEmptyCosmeticText, charsmax(szEmptyCosmeticText), "\d%L", pPlayer, "HWN_COSMETIC_MENU_EMPTY");
+        menu_addtext2(iMenu, szEmptyCosmeticText);
     }
 
-    menu_setprop(menu, MPROP_EXIT, MEXIT_ALL);
+    for (new iSlot = 0; iSlot < iInvSize; ++iSlot) {
+        if (PInv_GetItemType(pPlayer, iSlot) != g_iCosmeticItemType) {
+            continue;
+        }
 
-    return menu;
+        if (!PCosmetic_GetItemTime(pPlayer, iSlot)) {
+            continue;
+        }
+
+        new iItemCallback = menu_makecallback("MenuCallback_Main_Item");
+        menu_additem(iMenu, "", .callback = iItemCallback);
+        ArrayPushCell(g_rgirgPlayerMenuSlotRefs[pPlayer], iSlot);
+    }
+
+    menu_setprop(iMenu, MPROP_EXIT, MEXIT_ALL);
+
+    return iMenu;
 }
 
 /*--------------------------------[ Menu ]--------------------------------*/
 
-public MenuHandler(id, menu, item)
-{
-    if (item != MENU_EXIT)
-    {
-        new Array:slotRefs = g_playerMenuSlotRefs[id];
-        new slotIdx = ArrayGetCell(slotRefs, item);
+public MenuHandler_Main(pPlayer, iMenu, iItem) {
+    menu_destroy(iMenu);
 
-        new PInv_ItemType:itemType = PInv_GetItemType(id, slotIdx);
-        if (itemType == g_hCosmeticItemType) {
-            if (PCosmetic_IsItemEquiped(id, slotIdx)) {
-                PCosmetic_Unequip(id, slotIdx);
-            } else {
-                PCosmetic_Equip(id, slotIdx);
+    if (iItem != MENU_EXIT) {
+        new iSlot = ArrayGetCell(g_rgirgPlayerMenuSlotRefs[pPlayer], iItem);
+        new PInv_ItemType:iItemType = PInv_GetItemType(pPlayer, iSlot);
+
+        if (iItemType == g_iCosmeticItemType) {
+            new PInv_ItemType:iItemType = PInv_GetItemType(pPlayer, iSlot);
+            if (iItemType == g_iCosmeticItemType) {
+                if (PCosmetic_IsItemEquiped(pPlayer, iSlot)) {
+                    PCosmetic_Unequip(pPlayer, iSlot);
+                } else {
+                    PCosmetic_Equip(pPlayer, iSlot);
+                }
             }
         }
     }
 
-    if (is_user_connected(id)) {
-        menu_cancel(id);
-        PlayerPreview_Deactivate(id);
+    if (is_user_connected(pPlayer)) {
+        if (iItem != MENU_EXIT) {
+            new iPage = 0;
+            new _iUnusedRef;
+            player_menu_info(pPlayer, _iUnusedRef, _iUnusedRef, iPage);
 
-        new page = 0;
-        {
-            new _unusedRef;
-            player_menu_info(id, _unusedRef, _unusedRef, page);
-        }
-
-        if (item != MENU_EXIT) {
-            Open(id, page);
+            @Player_OpenMenu(pPlayer, iPage);
+        } else {
+            PlayerPreview_Deactivate(pPlayer);
         }
     }
 
     return PLUGIN_HANDLED;
 }
 
-public MenuDisabledCallback()
-{
-    return ITEM_DISABLED;
+public MenuCallback_Main_Item(pPlayer, iMenu, iItem) {
+    new iSlot = ArrayGetCell(g_rgirgPlayerMenuSlotRefs[pPlayer], iItem);
+    new iCosmetic = PCosmetic_GetItemCosmetic(pPlayer, iSlot);
+    new iItemTime = PCosmetic_GetItemTime(pPlayer, iSlot);
+    new PCosmetic_Type:iCosmeticType = PCosmetic_GetItemCosmeticType(pPlayer, iSlot);
+
+    static szCosmeticName[32];
+    PCosmetic_GetCosmeticName(iCosmetic, szCosmeticName, charsmax(szCosmeticName));
+
+    static szText[128];
+    format(
+        szText,
+        charsmax(szText),
+        "%s%s%s (%i seconds left)",
+        (PCosmetic_IsItemEquiped(pPlayer, iSlot) ? "\y" : ""),
+        (iCosmeticType == PCosmetic_Type_Unusual ? "Unusual " : "^0"),
+        szCosmeticName,
+        iItemTime
+    );
+
+    menu_item_setname(iMenu, iItem, szText);
+
+    if (!PCosmetic_CanBeEquiped(pPlayer, iCosmetic, iSlot) && !PCosmetic_IsItemEquiped(pPlayer, iSlot)) {
+        return ITEM_DISABLED;
+    }
+
+    if (!iItemTime) {
+        return ITEM_DISABLED;
+    }
+
+    return ITEM_ENABLED;
 }

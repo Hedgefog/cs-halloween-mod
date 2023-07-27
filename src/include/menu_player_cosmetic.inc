@@ -5,4 +5,4 @@
 
 #pragma reqlib menu_player_cosmetic
 
-native PCosmetic_Menu_Open(id);
+native PCosmetic_Menu_Open(pPlayer);

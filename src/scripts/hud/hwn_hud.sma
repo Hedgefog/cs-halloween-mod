@@ -4,10 +4,6 @@
 #include <fakemeta>
 #include <hamsandwich>
 
-#if AMXX_VERSION_NUM < 183
-    #include <dhudmessage>
-#endif
-
 #include <api_custom_entities>
 
 #include <hwn>
@@ -36,208 +32,188 @@
 #define HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED HUD_POS_NOTIFICATION_INFO
 #define HUD_POS_OBJECTIVE_INFO -1.0, 0.35
 
-new Float:g_flPlayerNextObjectiveBlockMsg[MAX_PLAYERS + 1];
+new Float:g_rgflPlayerNextObjectiveBlockMsg[MAX_PLAYERS + 1];
 
 new g_hGamemodeCollector;
 
-new g_hudMsgTeamPoints;
-new g_hudMsgPlayerPoints;
-new g_hudMsgPlayerSpell;
+new g_iHudMsgTeamPoints;
+new g_iHudMsgPlayerPoints;
+new g_iHudMsgPlayerSpell;
 
-new g_cvarCollectorTeamPointsLimit;
-new g_cvarCollectorRoundTime;
+new g_pCvarCollectoriTeamPointsLimit;
+new g_pCvarCollectorRoundTime;
 
-new g_maxPlayers;
-
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     register_dictionary("hwn.txt");
     register_dictionary("miscstats.txt");
 
-    g_hudMsgTeamPoints = CreateHudSyncObj();
-    g_hudMsgPlayerPoints = CreateHudSyncObj();
-    g_hudMsgPlayerSpell = CreateHudSyncObj();
+    g_iHudMsgTeamPoints = CreateHudSyncObj();
+    g_iHudMsgPlayerPoints = CreateHudSyncObj();
+    g_iHudMsgPlayerSpell = CreateHudSyncObj();
 
-    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
+    RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
 
     register_event("ResetHUD", "OnResetHUD", "b");
-    register_message(get_user_msgid("HideWeapon"), "OnMessageHideWeapon");
+    register_message(get_user_msgid("HideWeapon"), "Message_HideWeapon");
 
     CE_RegisterHook(CEFunction_Picked, "hwn_item_spellbook", "OnSpellbookPicked");
     CE_RegisterHook(CEFunction_Picked, "hwn_item_pumpkin", "OnPumpkinPicked");
     CE_RegisterHook(CEFunction_Picked, "hwn_item_pumpkin_big", "OnPumpkinPicked");
 
-    g_maxPlayers = get_maxplayers();
     g_hGamemodeCollector = Hwn_Gamemode_GetHandler("Collector");
 
-    g_cvarCollectorTeamPointsLimit = get_cvar_pointer("hwn_collector_teampoints_limit");
-    g_cvarCollectorRoundTime = get_cvar_pointer("hwn_collector_roundtime");
+    g_pCvarCollectoriTeamPointsLimit = get_cvar_pointer("hwn_collector_teampoints_limit");
+    g_pCvarCollectorRoundTime = get_cvar_pointer("hwn_collector_roundtime");
 
-    set_task(1.0, "TaskUpdate", _, _, _, "b");
+    set_task(1.0, "Task_Update", _, _, _, "b");
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-public Hwn_Collector_Fw_TeamPoints(team)
-{
+public Hwn_Collector_Fw_TeamPoints(iTeam) {
     UpdateTeamPoints();
 }
 
-public Hwn_Collector_Fw_PlayerPoints(id)
-{
-    UpdatePlayerPoints(id);
+public Hwn_Collector_Fw_PlayerPoints(pPlayer) {
+    UpdatePlayerPoints(pPlayer);
 }
 
-public Hwn_Bosses_Fw_Winner(id, damage)
-{
+public Hwn_Bosses_Fw_Winner(pPlayer, damage) {
     new szName[128];
-    get_user_name(id, szName, charsmax(szName));
+    get_user_name(pPlayer, szName, charsmax(szName));
     client_print(0, print_chat, "%L", LANG_PLAYER, "HWN_DEFEAT_BOSS", szName);
 
-    SetupNotificationMessage(HUD_POS_NOTIFICATION_BOSS_REWARD);
-    show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_BOSS_REWARD");
+    SetupNotificatiMessage(HUD_POS_NOTIFICATION_BOSS_REWARD);
+    show_dhudmessage(pPlayer, "%L", LANG_PLAYER, "HWN_BOSS_REWARD");
 }
 
-public Hwn_Bosses_Fw_BossSpawn()
-{
-    new bossIdx = Hwn_Bosses_GetCurrent();
+public Hwn_Bosses_Fw_BossSpawn() {
+    new iBoss = Hwn_Bosses_GetCurrent();
 
-    SetupNotificationMessage(HUD_POS_NOTIFICATION_BOSS_SPAWN);
+    SetupNotificatiMessage(HUD_POS_NOTIFICATION_BOSS_SPAWN);
 
     static szName[128];
-    Hwn_Bosses_GetDictionaryKey(bossIdx, szName, charsmax(szName));
+    Hwn_Bosses_GetDictionaryKey(iBoss, szName, charsmax(szName));
 
-    if (szName[0] == '^0') {
-        Hwn_Bosses_GetName(bossIdx, szName, charsmax(szName));
+    if (equal(szName, NULL_STRING)) {
+        Hwn_Bosses_GetName(iBoss, szName, charsmax(szName));
         show_dhudmessage(0, "%s %L!", szName, LANG_PLAYER, "HWN_BOSS_SPAWN");
     } else {
         show_dhudmessage(0, "%L %L!", LANG_PLAYER, szName, LANG_PLAYER, "HWN_BOSS_SPAWN");
     }
 }
 
-public Hwn_Bosses_Fw_BossEscape()
-{
-    new bossIdx = Hwn_Bosses_GetCurrent();
+public Hwn_Bosses_Fw_BossEscape() {
+    new iBoss = Hwn_Bosses_GetCurrent();
 
-    SetupNotificationMessage(HUD_POS_NOTIFICATION_BOSS_ESCAPE);
+    SetupNotificatiMessage(HUD_POS_NOTIFICATION_BOSS_ESCAPE);
 
     static szName[128];
-    Hwn_Bosses_GetDictionaryKey(bossIdx, szName, charsmax(szName));
+    Hwn_Bosses_GetDictionaryKey(iBoss, szName, charsmax(szName));
 
-    if (szName[0] == '^0') {
-        Hwn_Bosses_GetName(bossIdx, szName, charsmax(szName));
+    if (equal(szName, NULL_STRING)) {
+        Hwn_Bosses_GetName(iBoss, szName, charsmax(szName));
         show_dhudmessage(0, "%s %L!", szName, LANG_PLAYER, "HWN_BOSS_ESCAPE");
     } else {
         show_dhudmessage(0, "%L %L!", LANG_PLAYER, szName, LANG_PLAYER, "HWN_BOSS_ESCAPE");
     }
 }
 
-public Hwn_Wof_Fw_Roll_Start()
-{
-    SetupNotificationMessage(HUD_POS_NOTIFICATION_WOF);
+public Hwn_Wof_Fw_Roll_Start() {
+    SetupNotificatiMessage(HUD_POS_NOTIFICATION_WOF);
     show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_WOF_ROLL_STARTED");
 }
 
-public Hwn_Wof_Fw_Effect_Start(spellIdx)
-{
-    SetupNotificationMessage(HUD_POS_NOTIFICATION_WOF);
+public Hwn_Wof_Fw_Effect_Start(iSpell) {
+    SetupNotificatiMessage(HUD_POS_NOTIFICATION_WOF);
 
     static szSpellName[160];
-    Hwn_Wof_Spell_GetDictionaryKey(spellIdx, szSpellName, charsmax(szSpellName));
+    Hwn_Wof_Spell_GetDictionaryKey(iSpell, szSpellName, charsmax(szSpellName));
 
-    if (szSpellName[0] == '^0') {
-        Hwn_Wof_Spell_GetName(spellIdx, szSpellName, charsmax(szSpellName));
+    if (equal(szSpellName, NULL_STRING)) {
+        Hwn_Wof_Spell_GetName(iSpell, szSpellName, charsmax(szSpellName));
         show_dhudmessage(0, "%L %s!", LANG_PLAYER, "HWN_WOF_EFFECT_STARTED", szSpellName);
     } else {
         show_dhudmessage(0, "%L %L!", LANG_PLAYER, "HWN_WOF_EFFECT_STARTED", LANG_PLAYER, szSpellName);
     }
 }
 
-public Hwn_Collector_Fw_Overtime(overtime)
-{
-    SetupNotificationMessage(HUD_POS_NOTIFICATION_OVERTIME, .holdTime = float(overtime));
+public Hwn_Collector_Fw_Overtime(iOvertime) {
+    SetupNotificatiMessage(HUD_POS_NOTIFICATION_OVERTIME, .holdTime = float(iOvertime));
     show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_OVERTIME");
 }
 
-public Hwn_Collector_Fw_ObjectiveBlocked(id) {
-    if (g_flPlayerNextObjectiveBlockMsg[id] < get_gametime()) {
-        SetupNotificationMessage(HUD_POS_OBJECTIVE_INFO, .holdTime = 3.0);
-        show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_OBJECTIVE_BLOCKED");
-        g_flPlayerNextObjectiveBlockMsg[id] = get_gametime() + 10.0;
+public Hwn_Collector_Fw_ObjectiveBlocked(pPlayer) {
+    if (g_rgflPlayerNextObjectiveBlockMsg[pPlayer] < get_gametime()) {
+        SetupNotificatiMessage(HUD_POS_OBJECTIVE_INFO, .holdTime = 3.0);
+        show_dhudmessage(pPlayer, "%L", LANG_PLAYER, "HWN_OBJECTIVE_BLOCKED");
+        g_rgflPlayerNextObjectiveBlockMsg[pPlayer] = get_gametime() + 10.0;
     }
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnPlayerSpawn(id)
-{
-    if (!is_user_alive(id)) {
+public HamHook_Player_Spawn_Post(pPlayer) {
+    if (!is_user_alive(pPlayer)) {
         return;
     }
 
-    SetupNotificationMessage(HUD_POS_NOTIFICATION_MOD_MENU);
-    show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_MENU_HELP");
+    SetupNotificatiMessage(HUD_POS_NOTIFICATION_MOD_MENU);
+    show_dhudmessage(pPlayer, "%L", LANG_PLAYER, "HWN_MENU_HELP");
 
-    g_flPlayerNextObjectiveBlockMsg[id] = 0.0;
+    g_rgflPlayerNextObjectiveBlockMsg[pPlayer] = 0.0;
 }
 
-public Hwn_Gifts_Fw_GiftSpawn(id)
-{
-    SetupNotificationMessage(HUD_POS_NOTIFICATION_GIFT_SPAWN);
-    show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_GIFT_SPAWN");
+public Hwn_Gifts_Fw_GiftSpawn(pPlayer) {
+    SetupNotificatiMessage(HUD_POS_NOTIFICATION_GIFT_SPAWN);
+    show_dhudmessage(pPlayer, "%L", LANG_PLAYER, "HWN_GIFT_SPAWN");
 }
 
-public Hwn_Gifts_Fw_GiftDisappear(id)
-{
-    SetupNotificationMessage(HUD_POS_NOTIFICATION_GIFT_DISAPPEARED);
-    show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_GIFT_DISAPPEARED");
+public Hwn_Gifts_Fw_GiftDisappear(pPlayer) {
+    SetupNotificatiMessage(HUD_POS_NOTIFICATION_GIFT_DISAPPEARED);
+    show_dhudmessage(pPlayer, "%L", LANG_PLAYER, "HWN_GIFT_DISAPPEARED");
 }
 
-public Hwn_Gifts_Fw_GiftPicked(id)
-{
+public Hwn_Gifts_Fw_GiftPicked(pPlayer) {
     static szName[128];
-    get_user_name(id, szName, charsmax(szName));
+    get_user_name(pPlayer, szName, charsmax(szName));
 
-    SetupNotificationMessage(HUD_POS_NOTIFICATION_GIFT_PICKED);
+    SetupNotificatiMessage(HUD_POS_NOTIFICATION_GIFT_PICKED);
     show_dhudmessage(0, "%L", LANG_PLAYER, "HWN_GIFT_FOUND", szName);
 }
 
-public OnSpellbookPicked(ent, id)
-{
-    UpdatePlayerSpell(id);
+public OnSpellbookPicked(pEntity, pPlayer) {
+    UpdatePlayerSpell(pPlayer);
 
-    SetupNotificationMessage(HUD_POS_NOTIFICATION_SPELL_PICKED);
-    show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_SPELLBOOK_PICKUP");
+    SetupNotificatiMessage(HUD_POS_NOTIFICATION_SPELL_PICKED);
+    show_dhudmessage(pPlayer, "%L", LANG_PLAYER, "HWN_SPELLBOOK_PICKUP");
 }
 
-public OnPumpkinPicked(ent, id)
-{
+public OnPumpkinPicked(pEntity, pPlayer) {
     if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
         return;
     }
 
-    new playerPoints = Hwn_Collector_GetPlayerPoints(id);
-    new pumpkinPoints = pev(ent, pev_iuser1) == -1 ?  pev(ent, pev_iuser2) : 1;
+    new iPoints = Hwn_Collector_GetPlayerPoints(pPlayer);
+    new iBucketPoints = pev(pEntity, pev_iuser1) == -1 ? pev(pEntity, pev_iuser2) : 1;
 
-    if (playerPoints == pumpkinPoints) {
-        SetupNotificationMessage(HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED);
-        show_dhudmessage(id, "%L", LANG_PLAYER, "HWN_FIRST_PUMPKIN_PICKED");
+    if (iPoints == iBucketPoints) {
+        SetupNotificatiMessage(HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED);
+        show_dhudmessage(pPlayer, "%L", LANG_PLAYER, "HWN_FIRST_PUMPKIN_PICKED");
     }
 }
 
-public OnResetHUD(id)
-{
+public OnResetHUD(pPlayer) {
     if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
         return;
     }
 
-    UTIL_Message_HideWeapon(id, GetHideWeaponFlags());
+    UTIL_Message_HideWeapon(pPlayer, GetHideWeaponFlags());
 }
 
-public OnMessageHideWeapon()
-{
+public Message_HideWeapon() {
     if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
         return;
     }
@@ -247,133 +223,92 @@ public OnMessageHideWeapon()
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-UpdateTeamPoints()
-{
+UpdateTeamPoints() {
     if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
         return;
     }
 
-    new tPoints = Hwn_Collector_GetTeamPoints(1);
-    new ctPoints = Hwn_Collector_GetTeamPoints(2);
+    new iTPoints = Hwn_Collector_GetTeamPoints(1);
+    new iCtPoints = Hwn_Collector_GetTeamPoints(2);
 
-    new teamPointsLimit = 0;
-    if (g_cvarCollectorTeamPointsLimit) {
-        teamPointsLimit = get_pcvar_num(g_cvarCollectorTeamPointsLimit);
+    new iTeamPointsLimit = 0;
+    if (g_pCvarCollectoriTeamPointsLimit) {
+        iTeamPointsLimit = get_pcvar_num(g_pCvarCollectoriTeamPointsLimit);
     }
 
-    set_hudmessage
-    (
-        HUD_COLOR_STATIC,
-        HUD_POS_STATIC_TEAM_POINTS,
-        .fxtime = 0.0,
-        .holdtime = 1.0,
-        .channel = -1
-    );
+    set_hudmessage(HUD_COLOR_STATIC, HUD_POS_STATIC_TEAM_POINTS, .fxtime = 0.0, .holdtime = 1.0, .channel = -1);
 
     ShowSyncHudMsg(
-        0, g_hudMsgTeamPoints,
+        0, g_iHudMsgTeamPoints,
         "%L^n%L: %i / %i^t^t|^t^t%L %i / %i",
         LANG_PLAYER, "HWN_TEAM_PUMPKIN_COLLECTED",
-        LANG_PLAYER, "TERRORISTS", tPoints, teamPointsLimit,
-        LANG_PLAYER, "CTS", ctPoints, teamPointsLimit
+        LANG_PLAYER, "TERRORISTS", iTPoints, iTeamPointsLimit,
+        LANG_PLAYER, "CTS", iCtPoints, iTeamPointsLimit
     );
 }
 
-UpdatePlayerPoints(id)
-{
+UpdatePlayerPoints(pPlayer) {
     if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
         return;
     }
 
-    new playerPoints = Hwn_Collector_GetPlayerPoints(id);
+    new iPoints = Hwn_Collector_GetPlayerPoints(pPlayer);
 
-    set_hudmessage
-    (
-        HUD_COLOR_STATIC,
-        HUD_POS_STATIC_PLAYER_POINTS,
-        .fxtime = 0.0,
-        .holdtime = 1.0,
-        .channel = -1
-    );
+    set_hudmessage(HUD_COLOR_STATIC, HUD_POS_STATIC_PLAYER_POINTS, .fxtime = 0.0, .holdtime = 1.0, .channel = -1);
 
-    ShowSyncHudMsg(id, g_hudMsgPlayerPoints, "%L", LANG_PLAYER, "HWN_PLAYER_POINTS", playerPoints);
+    ShowSyncHudMsg(pPlayer, g_iHudMsgPlayerPoints, "%L", LANG_PLAYER, "HWN_PLAYER_POINTS", iPoints);
 }
 
-UpdatePlayerSpell(id)
-{
-    new amount;
-    new playerSpell = Hwn_Spell_GetPlayerSpell(id, amount);
-
-    if (playerSpell < 0) {
+UpdatePlayerSpell(pPlayer) {
+    new iAmount = 0;
+    new iSpell = Hwn_Spell_GetPlayerSpell(pPlayer, iAmount);
+    if (iSpell < 0) {
         return;
     }
 
-    
-    set_hudmessage
-    (
-        HUD_COLOR_NOTIFICATION,
-        HUD_POS_STATIC_PLAYER_SPELL,
-        .fxtime = 0.0,
-        .holdtime = 1.0,
-        .channel = -1
-    );
+    set_hudmessage(HUD_COLOR_NOTIFICATION, HUD_POS_STATIC_PLAYER_SPELL, .fxtime = 0.0, .holdtime = 1.0, .channel = -1);
 
     static szSpellName[128];
-    Hwn_Spell_GetDictionaryKey(playerSpell, szSpellName, charsmax(szSpellName));
+    Hwn_Spell_GetDictionaryKey(iSpell, szSpellName, charsmax(szSpellName));
 
-    if (szSpellName[0] == '^0') {
-        Hwn_Spell_GetName(playerSpell, szSpellName, charsmax(szSpellName));
-        ShowSyncHudMsg(id, g_hudMsgPlayerSpell, "%L: %s x%i", id, "HWN_SPELL", szSpellName, amount);
+    if (equal(szSpellName, NULL_STRING)) {
+        Hwn_Spell_GetName(iSpell, szSpellName, charsmax(szSpellName));
+        ShowSyncHudMsg(pPlayer, g_iHudMsgPlayerSpell, "%L: %s x%i", pPlayer, "HWN_SPELL", szSpellName, iAmount);
     } else {
-        ShowSyncHudMsg(id, g_hudMsgPlayerSpell, "%L: %L x%i", id, "HWN_SPELL", id, szSpellName, amount);
+        ShowSyncHudMsg(pPlayer, g_iHudMsgPlayerSpell, "%L: %L x%i", pPlayer, "HWN_SPELL", pPlayer, szSpellName, iAmount);
     }
 }
 
-SetupNotificationMessage(Float:x = -1.0, Float:y = -1.0, const color[3] = {HUD_COLOR_NOTIFICATION}, Float:holdTime = 3.0)
-{
-    set_dhudmessage
-    (
-        .red = color[0],
-        .green = color[1],
-        .blue = color[2],
-        .x = x,
-        .y = y,
-        .effects = 0,
-        .fxtime = 0.0,
-        .holdtime = holdTime,
-        .fadeintime = 0.1,
-        .fadeouttime = 1.5
-    );
+SetupNotificatiMessage(Float:iPosX = -1.0, Float:iPosY = -1.0, const rgiColor[3] = {HUD_COLOR_NOTIFICATION}, Float:holdTime = 3.0) {
+    set_dhudmessage(rgiColor[0], rgiColor[1], rgiColor[2], iPosX, iPosY, .fxtime = 0.0, .holdtime = holdTime, .fadeintime = 0.1, .fadeouttime = 1.5);
 }
 
-GetHideWeaponFlags()
-{
-    new flags = 0;
+GetHideWeaponFlags() {
+    new iFlags = 0;
 
     if (Hwn_Gamemode_GetCurrent() == g_hGamemodeCollector) {
-        if (get_pcvar_float(g_cvarCollectorRoundTime) <= 0.0) {
-            flags |= HUD_HIDE_TIMER;
+        if (get_pcvar_float(g_pCvarCollectorRoundTime) <= 0.0) {
+            iFlags |= HUD_HIDE_TIMER;
         }
     }
 
-    return flags;
+    return iFlags;
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
-public TaskUpdate()
-{
-    for (new id = 1; id <= g_maxPlayers; ++id) {
-        if (!is_user_connected(id))    {
+public Task_Update() {
+    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
+        if (!is_user_connected(pPlayer)) {
             continue;
         }
 
-        if (!is_user_alive(id)) {
+        if (!is_user_alive(pPlayer)) {
             continue;
         }
 
-        UpdatePlayerPoints(id);
-        UpdatePlayerSpell(id);
+        UpdatePlayerPoints(pPlayer);
+        UpdatePlayerSpell(pPlayer);
     }
 
     UpdateTeamPoints();

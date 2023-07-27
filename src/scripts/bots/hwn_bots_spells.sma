@@ -8,37 +8,28 @@
 #define PLUGIN "[Hwn] Bots Spells"
 #define AUTHOR "Hedgehog Fog"
 
-#if !defined MAX_PLAYERS
-    #define MAX_PLAYERS 32
-#endif
-
 #define SPELL_CHECK_DELAY 0.5
 #define SPELL_CAST_CHANCE 50.0
 #define SPELL_CHECK_RADIUS 1024.0
 #define SPELL_CHECK_DISTANCE 2048.0
 #define SPELL_CAST_DELAY 10.0
 
-enum SpellType
-{
+enum SpellType {
     SpellType_ThrowableEnemy = 0,
     SpellType_RadiusEnemy,
     SpellType_Applicable,
     SpellType_Heal
 };
 
-new g_cvarEnabled;
+new g_pCvarEnabled;
 new Trie:g_spellTypes;
-new Float:g_lastSpellCast[MAX_PLAYERS + 1] = { 0.0, ... };
+new Float:g_lastSpellCast[MAX_PLAYERS + 1];
 
-new g_maxPlayers;
-
-public plugin_precache()
-{
-    g_cvarEnabled = register_cvar("hwn_bots_spells", "1");
+public plugin_precache() {
+    g_pCvarEnabled = register_cvar("hwn_bots_spells", "1");
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
     
     g_spellTypes = TrieCreate();
@@ -52,53 +43,44 @@ public plugin_init()
     TrieSetCell(g_spellTypes, "Power Up", SpellType_Applicable);
     TrieSetCell(g_spellTypes, "Overheal", SpellType_Heal);
 
-    g_maxPlayers = get_maxplayers();
 }
 
-public plugin_end()
-{
+public plugin_end() {
     TrieDestroy(g_spellTypes);
 }
 
-public client_connect(id)
-{
-    if (get_pcvar_num(g_cvarEnabled) <= 0) {
+public client_connect(pPlayer) {
+    if (get_pcvar_num(g_pCvarEnabled) <= 0) {
         return;
     }
 
-    if (!is_user_bot(id)) {
+    if (!is_user_bot(pPlayer)) {
         return;
     }
 
-    set_task(SPELL_CHECK_DELAY, "TaskThink", id, _, _, "b");
+    set_task(SPELL_CHECK_DELAY, "Task_Think", pPlayer, _, _, "b");
 }
 
-#if AMXX_VERSION_NUM < 183
-    public client_disconnect(id)
-#else
-    public client_disconnected(id)
-#endif
-{
-    remove_task(id);
+public client_disconnected(pPlayer) {
+    remove_task(pPlayer);
 }
 
-public TaskThink(id)
-{
-    if (get_pcvar_num(g_cvarEnabled) <= 0) {
+public Task_Think(pPlayer) {
+    if (get_pcvar_num(g_pCvarEnabled) <= 0) {
         return;
     }
 
-    if (!is_user_alive(id)) {
+    if (!is_user_alive(pPlayer)) {
         return;
     }
 
-    new spellIdx = Hwn_Spell_GetPlayerSpell(id);
-    if (spellIdx == -1) {
+    new iSpell = Hwn_Spell_GetPlayerSpell(pPlayer);
+    if (iSpell == -1) {
         return;
     }
 
-    new Float:fLastCast = g_lastSpellCast[id];
-    if (get_gametime() - fLastCast < SPELL_CAST_DELAY) {
+    new Float:flLastCast = g_lastSpellCast[pPlayer];
+    if (get_gametime() - flLastCast < SPELL_CAST_DELAY) {
         return;
     }
 
@@ -106,20 +88,19 @@ public TaskThink(id)
         return;
     }
 
-    if (!CheckSpellCast(id)) {
+    if (!CheckSpellCast(pPlayer)) {
         return;
     }
 
-    Hwn_Spell_CastPlayerSpell(id);
-    g_lastSpellCast[id] = get_gametime();
+    Hwn_Spell_CastPlayerSpell(pPlayer);
+    g_lastSpellCast[pPlayer] = get_gametime();
 }
 
-bool:CheckSpellCast(id)
-{
-    new spellIdx = Hwn_Spell_GetPlayerSpell(id);
+bool:CheckSpellCast(pPlayer) {
+    new iSpell = Hwn_Spell_GetPlayerSpell(pPlayer);
     
     static szSpellName[32];
-    Hwn_Spell_GetName(spellIdx, szSpellName, charsmax(szSpellName));
+    Hwn_Spell_GetName(iSpell, szSpellName, charsmax(szSpellName));
     
     static SpellType:spellType;
     TrieGetCell(g_spellTypes, szSpellName, spellType);
@@ -127,90 +108,86 @@ bool:CheckSpellCast(id)
     switch (spellType)
     {
         case SpellType_ThrowableEnemy:
-            return IsLookingAroundEnemy(id);
+            return IsLookingAroundEnemy(pPlayer);
         case SpellType_RadiusEnemy:
-            return CheckEnemiesNearby(id, SPELL_CHECK_RADIUS);
+            return CheckEnemiesNearby(pPlayer, SPELL_CHECK_RADIUS);
         case SpellType_Heal: {
-            static Float:fHealth;
-            pev(id, pev_health, fHealth);
-            return RandomCheck(100.0 - fHealth);
+            static Float:flHealth;
+            pev(pPlayer, pev_health, flHealth);
+            return RandomCheck(100.0 - flHealth);
         }
         case SpellType_Applicable:
             return true;
         default:
-            return IsLookingAroundEnemy(id);
+            return IsLookingAroundEnemy(pPlayer);
     }
 
     return false;
 }
 
-bool:IsLookingAroundEnemy(id)
-{
-    static Float:vOrigin[3];
-    UTIL_GetViewOrigin(id, vOrigin);
+bool:IsLookingAroundEnemy(pPlayer) {
+    static Float:vecOrigin[3];
+    UTIL_GetViewOrigin(pPlayer, vecOrigin);
 
-    static Float:vTarget[3];
-    velocity_by_aim(id, floatround(SPELL_CHECK_DISTANCE), vTarget);
-    xs_vec_add(vOrigin, vTarget, vTarget);
+    static Float:vecTarget[3];
+    velocity_by_aim(pPlayer, floatround(SPELL_CHECK_DISTANCE), vecTarget);
+    xs_vec_add(vecOrigin, vecTarget, vecTarget);
 
-    new trace = create_tr2();
-    engfunc(EngFunc_TraceLine, vOrigin, vTarget, DONT_IGNORE_MONSTERS, id, trace);
+    new pTrace = create_tr2();
+    engfunc(EngFunc_TraceLine, vecOrigin, vecTarget, DONT_IGNORE_MONSTERS, pPlayer, pTrace);
 
-    static Float:vEndPos[3];
-    get_tr2(trace, TR_vecEndPos, vEndPos);
+    static Float:vecEndPos[3];
+    get_tr2(pTrace, TR_vecEndPos, vecEndPos);
 
-    free_tr2(trace);
+    free_tr2(pTrace);
 
-    return CountEnemiesNearbyOrigin(id, vEndPos, 64.0) > 0;
+    return CountEnemiesNearbyOrigin(pPlayer, vecEndPos, 64.0) > 0;
 }
 
-bool:CheckEnemiesNearby(id, Float:fRadius)
-{
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
+bool:CheckEnemiesNearby(pPlayer, Float:flRadius) {
+    static Float:vecOrigin[3];
+    pev(pPlayer, pev_origin, vecOrigin);
 
-    new enemyCount = CountEnemiesNearbyOrigin(id, vOrigin, fRadius);
-    new Float:fChance = enemyCount * (100.0 / g_maxPlayers);
+    new iEnemiesNum = CountEnemiesNearbyOrigin(pPlayer, vecOrigin, flRadius);
+    new Float:flChance = (float(iEnemiesNum) / MaxClients) * 100.0;
 
-    return RandomCheck(fChance);
+    return RandomCheck(flChance);
 }
 
-CountEnemiesNearbyOrigin(id, const Float:vOrigin[3], Float:fRadius)
-{
-    new team = UTIL_GetPlayerTeam(id);
+CountEnemiesNearbyOrigin(pPlayer, const Float:vecOrigin[3], Float:flRadius) {
+    new iTeam = get_member(pPlayer, m_iTeam);
 
-    new count = 0;
-    for (new target = 1; target <= g_maxPlayers; ++target) {
-        if (!is_user_connected(target)) {
+    new iNum = 0;
+    for (new pTarget = 1; pTarget <= MaxClients; ++pTarget) {
+        if (!is_user_connected(pTarget)) {
             continue;
         }
 
-        if (!is_user_alive(target)) {
+        if (!is_user_alive(pTarget)) {
             continue;
         }
 
-        if (team == UTIL_GetPlayerTeam(target)) {
+        if (iTeam == get_member(pTarget, m_iTeam)) {
             continue;
         }
 
-        static Float:vTargetOrigin[3];
-        pev(target, pev_origin, vTargetOrigin);
+        static Float:vecTargetOrigin[3];
+        pev(pTarget, pev_origin, vecTargetOrigin);
 
-        if (get_distance_f(vOrigin, vTargetOrigin) > fRadius) {
+        if (get_distance_f(vecOrigin, vecTargetOrigin) > flRadius) {
             continue;
         }
 
-        if (!UTIL_IsPointVisible(vOrigin, vTargetOrigin)) {
+        if (!UTIL_IsPointVisible(vecOrigin, vecTargetOrigin)) {
             continue;
         }
 
-        count++;
+        iNum++;
     }
 
-    return count;
+    return iNum;
 }
 
-bool:RandomCheck(Float:fChance)
-{
-    return fChance > 0 && fChance >= random_float(0.0, 100.0);
+bool:RandomCheck(Float:flChance) {
+    return flChance > 0 && flChance >= random_float(0.0, 100.0);
 }

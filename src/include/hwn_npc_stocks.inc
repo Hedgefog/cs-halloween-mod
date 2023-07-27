@@ -1,4 +1,4 @@
-#tryinclude <reapi>
+#include <reapi>
 
 #include <hwn_utils>
 
@@ -25,8 +25,7 @@ enum NPC_Action
     Float:NPC_Action_Time
 };
 
-stock NPC_Create(ent, Float:fViewZOffset = -1.0)
-{
+stock NPC_Create(pEntity, Float:flViewZOffset = -1.0) {
     new Array:npcData = ArrayCreate(1, _:NPC);
     for (new i = 0; i < _:NPC; ++i) {
         ArrayPushCell(npcData, 0);
@@ -34,206 +33,195 @@ stock NPC_Create(ent, Float:fViewZOffset = -1.0)
 
     ArraySetArray(npcData, NPC_LastReachablePoint, Float:{0.0, 0.0, 0.0});
 
-    if (fViewZOffset == -1.0) {
-        new Float:vMaxs[3];
-        pev(ent, pev_maxs, vMaxs);
+    if (flViewZOffset == -1.0) {
+        new Float:vecMaxs[3];
+        pev(pEntity, pev_maxs, vecMaxs);
 
-        ArraySetCell(npcData, NPC_ViewZOffset, vMaxs[2] * (1.0 - HEAD_TO_MAXS_RATIO));
+        ArraySetCell(npcData, NPC_ViewZOffset, vecMaxs[2] * (1.0 - HEAD_TO_MAXS_RATIO));
     } 
 
-    set_pev(ent, pev_iuser1, npcData);
+    set_pev(pEntity, pev_iuser1, npcData);
 }
 
-stock NPC_Destroy(ent)
-{
-    new Array:npcData = NPC_GetData(ent);
+stock NPC_Destroy(pEntity) {
+    new Array:npcData = NPC_GetData(pEntity);
     ArrayDestroy(npcData);
 }
 
-stock Array:NPC_GetData(ent)
-{
-    return any:pev(ent, pev_iuser1);
+stock Array:NPC_GetData(pEntity) {
+    return any:pev(pEntity, pev_iuser1);
 }
 
-stock NPC_PlayAction(ent, action[NPC_Action], bool:supercede = false)
-{
-    new Array:npcData = NPC_GetData(ent);
+stock NPC_PlayAction(pEntity, action[NPC_Action], bool:supercede = false) {
+    new Array:npcData = NPC_GetData(pEntity);
 
-    new Float:fGametime = get_gametime();
-    if (!supercede && fGametime < ArrayGetCell(npcData, NPC_NextAction)) {
+    new Float:flGametime = get_gametime();
+    if (!supercede && flGametime < ArrayGetCell(npcData, NPC_NextAction)) {
         return;
     }
 
-    new sequence = random_num(action[NPC_Action_StartSequence], action[NPC_Action_EndSequence]);
-    UTIL_SetSequence(ent, sequence);
+    new iSequence = random_num(action[NPC_Action_StartSequence], action[NPC_Action_EndSequence]);
+    UTIL_SetSequence(pEntity, iSequence);
 
-    ArraySetCell(npcData, NPC_NextAction, fGametime + action[NPC_Action_Time]);
+    ArraySetCell(npcData, NPC_NextAction, flGametime + action[NPC_Action_Time]);
 }
 
-stock NPC_EmitVoice(ent, const szSound[], Float:fPlayTime = 1.0, bool:supercede = false, Float:fVolume = VOL_NORM)
-{
-    new Array:npcData = NPC_GetData(ent);
+stock NPC_EmitVoice(pEntity, const szSound[], Float:flPlayTime = 1.0, bool:supercede = false, Float:flVolume = VOL_NORM) {
+    new Array:npcData = NPC_GetData(pEntity);
 
-    new Float:fGametime = get_gametime();
-    if (!supercede && fGametime < ArrayGetCell(npcData, NPC_NextVoice)) {
+    new Float:flGametime = get_gametime();
+    if (!supercede && flGametime < ArrayGetCell(npcData, NPC_NextVoice)) {
         return;
     }
 
-    emit_sound(ent, CHAN_VOICE, szSound, fVolume, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(pEntity, CHAN_VOICE, szSound, flVolume, ATTN_NORM, 0, PITCH_NORM);
 
-    ArraySetCell(npcData, NPC_NextVoice, fGametime + fPlayTime);
+    ArraySetCell(npcData, NPC_NextVoice, flGametime + flPlayTime);
 }
 
-stock NPC_EmitFootStep(ent, const szSound[])
-{
-    new Array:npcData = NPC_GetData(ent);
+stock NPC_EmitFootStep(pEntity, const szSound[]) {
+    new Array:npcData = NPC_GetData(pEntity);
 
-    new Float:fGametime = get_gametime();
-    if (fGametime < ArrayGetCell(npcData, NPC_NextFootStep)) {
+    new Float:flGametime = get_gametime();
+    if (flGametime < ArrayGetCell(npcData, NPC_NextFootStep)) {
         return;
     }
 
-    emit_sound(ent, CHAN_BODY, szSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(pEntity, CHAN_BODY, szSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
-    ArraySetCell(npcData, NPC_NextFootStep, fGametime + 0.25);
+    ArraySetCell(npcData, NPC_NextFootStep, flGametime + 0.25);
 }
 
 stock bool:NPC_Hit(
-    ent,
-    Float:fDamage,
-    Float:fRange,
-    Float:fAttackDelay,
-    const Float:vOffset[3] = {0.0, 0.0, 0.0}
-)
-{
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+    pEntity,
+    Float:flDamage,
+    Float:flRange,
+    Float:flAttackDelay,
+    const Float:vecOffset[3] = {0.0, 0.0, 0.0}
+) {
+    static Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    static Float:vDirection[3];
-    UTIL_GetDirectionVector(ent, vDirection);
+    static Float:vecDirection[3];
+    UTIL_GetDirectionVector(pEntity, vecDirection);
 
-    static Float:vTarget[3];
-    xs_vec_mul_scalar(vDirection, fRange, vTarget);
-    xs_vec_add(vTarget, vOrigin, vTarget);
-    xs_vec_add(vTarget, vOffset, vTarget);
+    static Float:vecTarget[3];
+    xs_vec_mul_scalar(vecDirection, flRange, vecTarget);
+    xs_vec_add(vecTarget, vecOrigin, vecTarget);
+    xs_vec_add(vecTarget, vecOffset, vecTarget);
 
-    new trace = create_tr2();
+    new pTrace = create_tr2();
 
-    engfunc(EngFunc_TraceLine, vOrigin, vTarget, DONT_IGNORE_MONSTERS, ent, trace);
+    engfunc(EngFunc_TraceLine, vecOrigin, vecTarget, DONT_IGNORE_MONSTERS, pEntity, pTrace);
 
-    new target = get_tr2(trace, TR_pHit);
-    if (target == -1) {
-        engfunc(EngFunc_TraceHull, vOrigin, vTarget, DONT_IGNORE_MONSTERS, HULL_HEAD, ent, trace);
-        target = get_tr2(trace, TR_pHit);
+    new pTarget = get_tr2(pTrace, TR_pHit);
+    if (pTarget == -1) {
+        engfunc(EngFunc_TraceHull, vecOrigin, vecTarget, DONT_IGNORE_MONSTERS, HULL_HEAD, pEntity, pTrace);
+        pTarget = get_tr2(pTrace, TR_pHit);
     }
 
-    new bool:hit = target != -1;
+    new bool:hit = pTarget != -1;
 
     if (hit) {
-        #if defined _reapi_included
-            get_tr2(trace, TR_vecEndPos, vTarget);
-            xs_vec_sub(vOrigin, vTarget, vDirection);
-            xs_vec_normalize(vDirection, vDirection);
+        get_tr2(pTrace, TR_vecEndPos, vecTarget);
+        xs_vec_sub(vecOrigin, vecTarget, vecDirection);
+        xs_vec_normalize(vecDirection, vecDirection);
 
-            rg_multidmg_clear();
-            ExecuteHamB(Ham_TraceAttack, target, ent, fDamage, vDirection, trace, DMG_GENERIC);
-            rg_multidmg_apply(ent, ent);
-        #else
-            ExecuteHamB(Ham_TakeDamage, target, ent, ent, fDamage, DMG_GENERIC);
-        #endif
+        rg_multidmg_clear();
+        ExecuteHamB(Ham_TraceAttack, pTarget, pEntity, flDamage, vecDirection, pTrace, DMG_GENERIC);
+        rg_multidmg_apply(pEntity, pEntity);
 
-        hit = UTIL_IsPlayer(target);
+        hit = IS_PLAYER(pTarget);
     }
 
-    free_tr2(trace);
+    free_tr2(pTrace);
 
-    new Array:npcData = NPC_GetData(ent);
-    ArraySetCell(npcData, NPC_NextAttack, get_gametime() + fAttackDelay);
+    new Array:npcData = NPC_GetData(pEntity);
+    ArraySetCell(npcData, NPC_NextAttack, get_gametime() + flAttackDelay);
 
     return hit;
 }
 
-stock bool:NPC_IsReachable(ent, const Float:vTarget[3], ignoreEnt = 0)
-{
-    if ((~pev(ent, pev_flags) & FL_ONGROUND) && pev(ent, pev_movetype) != MOVETYPE_FLY) {
+stock bool:NPC_IsReachable(pEntity, const Float:vecTarget[3], pIgnoreEnt = 0) {
+    if ((~pev(pEntity, pev_flags) & FL_ONGROUND) && pev(pEntity, pev_movetype) != MOVETYPE_FLY) {
         return false;
     }
 
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+    static Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
     static Float:_vTarget[3];
-    xs_vec_copy(vTarget, _vTarget);
-    if (_vTarget[2] < vOrigin[2]) {
-        _vTarget[2] = vOrigin[2];
+    xs_vec_copy(vecTarget, _vTarget);
+    if (_vTarget[2] < vecOrigin[2]) {
+        _vTarget[2] = vecOrigin[2];
     }
 
     new ignoreEntSolidType = SOLID_NOT;
-    if (ignoreEnt) {
-        ignoreEntSolidType = pev(ignoreEnt, pev_solid);
-        set_pev(ignoreEnt, pev_solid, SOLID_NOT);
+    if (pIgnoreEnt) {
+        ignoreEntSolidType = pev(pIgnoreEnt, pev_solid);
+        set_pev(pIgnoreEnt, pev_solid, SOLID_NOT);
     }
 
     new bool:isReachable = true;
 
     if (isReachable) {
-        isReachable = UTIL_IsOpen(vOrigin, _vTarget, ent);
+        isReachable = UTIL_IsOpen(vecOrigin, _vTarget, pEntity);
     }
 
     if (isReachable) {
-        static Float:vMins[3];
-        pev(ent, pev_mins, vMins);
+        static Float:vecMins[3];
+        pev(pEntity, pev_mins, vecMins);
 
-        static Float:vLeftSide[3];
-        vLeftSide[0] = vOrigin[0] + vMins[0];
-        vLeftSide[1] = vOrigin[1] + vMins[1];
-        vLeftSide[2] = vOrigin[2];
+        static Float:vecLeftSide[3];
+        vecLeftSide[0] = vecOrigin[0] + vecMins[0];
+        vecLeftSide[1] = vecOrigin[1] + vecMins[1];
+        vecLeftSide[2] = vecOrigin[2];
 
-        static Float:vTargetLeftSide[3];
-        vTargetLeftSide[0] = _vTarget[0] + vMins[0];
-        vTargetLeftSide[1] = _vTarget[1] + vMins[1];
-        vTargetLeftSide[2] = _vTarget[2];
+        static Float:vecTargetLeftSide[3];
+        vecTargetLeftSide[0] = _vTarget[0] + vecMins[0];
+        vecTargetLeftSide[1] = _vTarget[1] + vecMins[1];
+        vecTargetLeftSide[2] = _vTarget[2];
 
-        isReachable = UTIL_IsOpen(vLeftSide, vTargetLeftSide, ent);
+        isReachable = UTIL_IsOpen(vecLeftSide, vecTargetLeftSide, pEntity);
     }
 
     if (isReachable) {
-        static Float:vMaxs[3];
-        pev(ent, pev_maxs, vMaxs);
+        static Float:vecMaxs[3];
+        pev(pEntity, pev_maxs, vecMaxs);
 
-        static Float:vRightSide[3];
-        vRightSide[0] = vOrigin[0] + vMaxs[0];
-        vRightSide[1] = vOrigin[1] + vMaxs[1];
-        vRightSide[2] = vOrigin[2];
+        static Float:vecRightSide[3];
+        vecRightSide[0] = vecOrigin[0] + vecMaxs[0];
+        vecRightSide[1] = vecOrigin[1] + vecMaxs[1];
+        vecRightSide[2] = vecOrigin[2];
 
-        static Float:vTargetRightSide[3];
-        vTargetRightSide[0] = _vTarget[0] + vMaxs[0];
-        vTargetRightSide[1] = _vTarget[1] + vMaxs[1];
-        vTargetRightSide[2] = _vTarget[2];
+        static Float:vecTargetRightSide[3];
+        vecTargetRightSide[0] = _vTarget[0] + vecMaxs[0];
+        vecTargetRightSide[1] = _vTarget[1] + vecMaxs[1];
+        vecTargetRightSide[2] = _vTarget[2];
 
-        isReachable = UTIL_IsOpen(vRightSide, vTargetRightSide, ent);
+        isReachable = UTIL_IsOpen(vecRightSide, vecTargetRightSide, pEntity);
     }
 
-    if (isReachable && pev(ent, pev_movetype) != MOVETYPE_FLY) {
-        new Float:fDistance = get_distance_f(vOrigin, _vTarget);
-        new steps = floatround(fDistance / 32.0);
+    if (isReachable && pev(pEntity, pev_movetype) != MOVETYPE_FLY) {
+        new Float:flDistance = get_distance_f(vecOrigin, _vTarget);
+        new steps = floatround(flDistance / 32.0);
 
         if (steps) {
-            //Get direction vetor
-            static Float:vStep[3];
-            xs_vec_sub(_vTarget, vOrigin, vStep);
+            //Get iDirection vetor
+            static Float:vecStep[3];
+            xs_vec_sub(_vTarget, vecOrigin, vecStep);
             
-            static Float:vStepOrigin[3];
-            isReachable = NPC_TestStep(ent, vOrigin, vStep, vStepOrigin);
+            static Float:vecStepOrigin[3];
+            isReachable = NPC_TestStep(pEntity, vecOrigin, vecStep, vecStepOrigin);
 
             if (isReachable) {
-                xs_vec_normalize(vStep, vStep);
-                xs_vec_mul_scalar(vStep, 32.0, vStep);
+                xs_vec_normalize(vecStep, vecStep);
+                xs_vec_mul_scalar(vecStep, 32.0, vecStep);
 
-                xs_vec_copy(vOrigin, vStepOrigin);
+                xs_vec_copy(vecOrigin, vecStepOrigin);
 
                 for (new i = 0; i < steps; ++i) {
-                    if (!NPC_TestStep(ent, vStepOrigin, vStep, vStepOrigin)) {
+                    if (!NPC_TestStep(pEntity, vecStepOrigin, vecStep, vecStepOrigin)) {
                         isReachable = false;
                         break;
                     }
@@ -242,90 +230,88 @@ stock bool:NPC_IsReachable(ent, const Float:vTarget[3], ignoreEnt = 0)
         }
     }
 
-    if (ignoreEnt) {
-        set_pev(ignoreEnt, pev_solid, ignoreEntSolidType);
+    if (pIgnoreEnt) {
+        set_pev(pIgnoreEnt, pev_solid, ignoreEntSolidType);
     }
 
     return isReachable;
 }
 
-stock bool:NPC_TestStep(ent, const Float:vOrigin[3], const Float:vStep[3], Float:vStepOrigin[3])
-{
-    static Float:vMins[3];
-    pev(ent, pev_mins, vMins);
+stock bool:NPC_TestStep(pEntity, const Float:vecOrigin[3], const Float:vecStep[3], Float:vecStepOrigin[3]) {
+    static Float:vecMins[3];
+    pev(pEntity, pev_mins, vecMins);
     
     static Float:_vStepOrigin[3];
-    xs_vec_copy(vStepOrigin, _vStepOrigin);
-    xs_vec_add(vOrigin, vStep, _vStepOrigin);
+    xs_vec_copy(vecStepOrigin, _vStepOrigin);
+    xs_vec_add(vecOrigin, vecStep, _vStepOrigin);
 
     // check wall
-    static Float:vStepStart[3];
-    xs_vec_copy(vOrigin, vStepStart);
-    vStepStart[2] += vMins[2] + STEP_HEIGHT;
+    static Float:vecStepStart[3];
+    xs_vec_copy(vecOrigin, vecStepStart);
+    vecStepStart[2] += vecMins[2] + STEP_HEIGHT;
 
-    static Float:vStepEnd[3];
-    xs_vec_copy(_vStepOrigin, vStepEnd);
-    vStepEnd[2] += vMins[2] + STEP_HEIGHT;
+    static Float:vecStepEnd[3];
+    xs_vec_copy(_vStepOrigin, vecStepEnd);
+    vecStepEnd[2] += vecMins[2] + STEP_HEIGHT;
 
-    if (!UTIL_IsOpen(vStepStart, vStepEnd, ent)) {
+    if (!UTIL_IsOpen(vecStepStart, vecStepEnd, pEntity)) {
         return false;
     }
 
     _vStepOrigin[2] += STEP_HEIGHT; // add height to the step
 
-    new Float:fDistanceToFloor = UTIL_GetDistanceToFloor(ent, _vStepOrigin);
-    if (fDistanceToFloor < 0.0) { // check if falling or solid
-        static Float:vEnd[3];
-        xs_vec_copy(_vStepOrigin, vEnd);
-        vEnd[2] -= -vMins[2] + STEP_HEIGHT;
+    new Float:flDistanceToFloor = UTIL_GetDistanceToFloor(pEntity, _vStepOrigin);
+    if (flDistanceToFloor < 0.0) { // check if falling or solid
+        static Float:vecEnd[3];
+        xs_vec_copy(_vStepOrigin, vecEnd);
+        vecEnd[2] -= -vecMins[2] + STEP_HEIGHT;
         return false;
     }
 
-    if (fDistanceToFloor >= STEP_HEIGHT) { // subtract step height if not needed
-        fDistanceToFloor -= STEP_HEIGHT;
+    if (flDistanceToFloor >= STEP_HEIGHT) { // subtract step height if not needed
+        flDistanceToFloor -= STEP_HEIGHT;
         _vStepOrigin[2] -= STEP_HEIGHT;
     }
 
-    _vStepOrigin[2] -= fDistanceToFloor; // apply possible height change
+    _vStepOrigin[2] -= flDistanceToFloor; // apply possible height change
 
-    xs_vec_copy(_vStepOrigin, vStepOrigin); // copy result
+    xs_vec_copy(_vStepOrigin, vecStepOrigin); // copy result
 
     return true;
 }
 
-stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly = true, bool:visibleOnly = true)
-{
-    new enemy = NPC_GetEnemy(ent);
+stock bool:NPC_GetTarget(pEntity, Float:flSpeed, Float:vecTarget[3], bool:reachableOnly = true, bool:visibleOnly = true) {
+    new enemy = NPC_GetEnemy(pEntity);
     if (!enemy) {
         return false;
     }
 
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+    static Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    static Float:vMins[3];
-    pev(ent, pev_mins, vMins);
+    static Float:vecMins[3];
+    pev(pEntity, pev_mins, vecMins);
 
-    static Float:vEnemyMins[3];
-    pev(enemy, pev_mins, vEnemyMins);
+    static Float:vecEnemyMins[3];
+    pev(enemy, pev_mins, vecEnemyMins);
 
-    pev(enemy, pev_origin, vTarget);
+    pev(enemy, pev_origin, vecTarget);
 
-    vTarget[2] = vTarget[2] + vEnemyMins[2] - vMins[2];
+    vecTarget[2] = vecTarget[2] + vecEnemyMins[2] - vecMins[2];
 
-    new Array:npcData = NPC_GetData(ent);
+    new Array:npcData = NPC_GetData(pEntity);
 
-    new Float:fGameTime = get_gametime();
-    if ((!visibleOnly || NPC_IsVisible(ent, vTarget, enemy)) && (!reachableOnly || NPC_IsReachable(ent, vTarget, enemy))) {
-        new Float:fDistance = get_distance_f(vOrigin, vTarget);
-        new Float:fReachTime = fGameTime + fDistance/fSpeed;
+    new Float:flGameTime = get_gametime();
+    if ((!visibleOnly || NPC_IsVisible(pEntity, vecTarget, enemy)) && (!reachableOnly || NPC_IsReachable(pEntity, vecTarget, enemy))) {
+        new Float:flDistance = get_distance_f(vecOrigin, vecTarget);
+        new Float:flReachTime = flGameTime + flDistance/flSpeed;
 
-        ArraySetCell(npcData, NPC_ReachTime, fReachTime);
-        ArraySetArray(npcData, NPC_LastReachablePoint, vTarget);
+        ArraySetCell(npcData, NPC_ReachTime, flReachTime);
+        ArraySetArray(npcData, NPC_LastReachablePoint, vecTarget);
     } else {
-        new Float:fReachTime = ArrayGetCell(npcData, NPC_ReachTime);
-        if (fGameTime < fReachTime) {
-            ArrayGetArray(npcData, NPC_LastReachablePoint, vTarget);
+        new Float:flReachTime = ArrayGetCell(npcData, NPC_ReachTime);
+        if (flGameTime < flReachTime) {
+            ArrayGetArray(npcData, NPC_LastReachablePoint, vecTarget);
         } else {
             return false;
         }
@@ -334,173 +320,167 @@ stock bool:NPC_GetTarget(ent, Float:fSpeed, Float:vTarget[3], bool:reachableOnly
     return true;
 }
 
-stock bool:NPC_FindEnemy(ent, Float:fMaxDistance = 3072.0, bool:reachableOnly = true, bool:visibleOnly = true,  bool:allowMonsters = true)
-{
+stock bool:NPC_FindEnemy(pEntity, Float:flMaxDistance = 3072.0, bool:reachableOnly = true, bool:visibleOnly = true,  bool:allowMonsters = true) {
     new nearestEnemy = 0;
-    new Float:fNearestEnemyDistance = -1.0;
+    new Float:flNearestEnemyDistance = -1.0;
 
-    new team = pev(ent, pev_team);
+    new iTeam = pev(pEntity, pev_team);
 
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+    static Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    static Float:vMins[3];
-    pev(ent, pev_mins, vMins);
+    static Float:vecMins[3];
+    pev(pEntity, pev_mins, vecMins);
 
-    new target = 0;
-    while ((target = UTIL_FindEntityNearby(target, vOrigin, fMaxDistance)) > 0) {
-        if (ent == target) {
+    new pTarget = 0;
+    while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, flMaxDistance)) > 0) {
+        if (pEntity == pTarget) {
             continue;
         }
 
-        if (!NPC_IsValidEnemy(target, team, allowMonsters)) {
+        if (!NPC_IsValidEnemy(pTarget, iTeam, allowMonsters)) {
             continue;
         }
 
-        static Float:vTarget[3];
-        pev(target, pev_origin, vTarget);
+        static Float:vecTarget[3];
+        pev(pTarget, pev_origin, vecTarget);
 
-        if (visibleOnly && !NPC_IsVisible(ent, vTarget, target)) {
+        if (visibleOnly && !NPC_IsVisible(pEntity, vecTarget, pTarget)) {
             continue;
         }
 
-        static Float:vEnemyMins[3];
-        pev(target, pev_mins, vEnemyMins);
-        vTarget[2] = vTarget[2] + vEnemyMins[2] - vMins[2];
+        static Float:vecEnemyMins[3];
+        pev(pTarget, pev_mins, vecEnemyMins);
+        vecTarget[2] = vecTarget[2] + vecEnemyMins[2] - vecMins[2];
 
-        if (reachableOnly && !NPC_IsReachable(ent, vTarget, target)) {
+        if (reachableOnly && !NPC_IsReachable(pEntity, vecTarget, pTarget)) {
             continue;
         }
 
-        new Float:fDistance = get_distance_f(vOrigin, vTarget);
-        if (fNearestEnemyDistance < 0 || fDistance < fNearestEnemyDistance) {
-            nearestEnemy = target;
-            fNearestEnemyDistance = fDistance;
+        new Float:flDistance = get_distance_f(vecOrigin, vecTarget);
+        if (flNearestEnemyDistance < 0 || flDistance < flNearestEnemyDistance) {
+            nearestEnemy = pTarget;
+            flNearestEnemyDistance = flDistance;
         }
     }
 
     if (nearestEnemy) {
-        NPC_SetEnemy(ent, nearestEnemy);
+        NPC_SetEnemy(pEntity, nearestEnemy);
     }
 
     return !!nearestEnemy;
 }
 
-stock bool:NPC_MoveToTarget(ent, const Float:vTarget[3], Float:fSpeed, Float:fMaxAnglePerSecond = 180.0)
-{
-    new bool:lockAxis[3] = {true, false, true};
-    lockAxis[0] = pev(ent, pev_movetype) != MOVETYPE_FLY;
+stock bool:NPC_MoveToTarget(pEntity, const Float:vecTarget[3], Float:flSpeed, Float:flMaxAnglePerSecond = 180.0) {
+    new bool:rgbLockAxis[3] = {true, false, true};
+    rgbLockAxis[0] = pev(pEntity, pev_movetype) != MOVETYPE_FLY;
 
-    new Array:npcData = NPC_GetData(ent);
-    new Float:fLastRotation = ArrayGetCell(npcData, NPC_LastRotation);
-    new Float:fGameTime = get_gametime();
+    new Array:npcData = NPC_GetData(pEntity);
+    new Float:flLastRotation = ArrayGetCell(npcData, NPC_LastRotation);
+    new Float:flGameTime = get_gametime();
 
-    new Float:fTimePassed = fGameTime - fLastRotation;
-    new Float:fMaxAngle = (fTimePassed > 1.0)
+    new Float:flTimePassed = flGameTime - flLastRotation;
+    new Float:flMaxAngle = (flTimePassed > 1.0)
             ? 0.0 // skip first rotation
-            : fMaxAnglePerSecond * fTimePassed;
+            : flMaxAnglePerSecond * flTimePassed;
 
-    new bool:turnResult = UTIL_TurnTo(ent, vTarget, lockAxis, fMaxAngle);
+    new bool:bTurnResult = UTIL_TurnTo(pEntity, vecTarget, rgbLockAxis, flMaxAngle);
 
-    if (turnResult) {
-        static Float:vOrigin[3];
-        pev(ent, pev_origin, vOrigin);
+    if (bTurnResult) {
+        static Float:vecOrigin[3];
+        pev(pEntity, pev_origin, vecOrigin);
 
-        if (fSpeed > 0.0 && get_distance_f(vOrigin, vTarget) > 1.0) {
-            set_pev(ent, pev_speed, fSpeed);
-            NPC_MoveForward(ent, fSpeed);
+        if (flSpeed > 0.0 && get_distance_f(vecOrigin, vecTarget) > 1.0) {
+            set_pev(pEntity, pev_speed, flSpeed);
+            NPC_MoveForward(pEntity, flSpeed);
         }
     }
 
-    ArraySetCell(npcData, NPC_LastRotation, fGameTime);
+    ArraySetCell(npcData, NPC_LastRotation, flGameTime);
 
-    return turnResult;
+    return bTurnResult;
 }
 
-stock NPC_StopMovement(ent)
-{
-    static Float:vVelocity[3];
-    pev(ent, pev_velocity, vVelocity);
+stock NPC_StopMovement(pEntity) {
+    static Float:vecVelocity[3];
+    pev(pEntity, pev_velocity, vecVelocity);
 
-    vVelocity[0] = 0.0;
-    vVelocity[1] = 0.0;
+    vecVelocity[0] = 0.0;
+    vecVelocity[1] = 0.0;
 
-    set_pev(ent, pev_velocity, vVelocity);
+    set_pev(pEntity, pev_velocity, vecVelocity);
 }
 
-stock NPC_MoveForward(ent, Float:fSpeed)
-{
-    static Float:vDirection[3];
-    UTIL_GetDirectionVector(ent, vDirection, fSpeed);
+stock NPC_MoveForward(pEntity, Float:flSpeed) {
+    static Float:vecDirection[3];
+    UTIL_GetDirectionVector(pEntity, vecDirection, flSpeed);
 
-    static Float:vVelocity[3];
-    pev(ent, pev_velocity, vVelocity);
-    vDirection[2] = vVelocity[2];
+    static Float:vecVelocity[3];
+    pev(pEntity, pev_velocity, vecVelocity);
+    vecDirection[2] = vecVelocity[2];
 
-    static Float:vAngles[3];
-    pev(ent, pev_angles, vAngles);
+    static Float:vecAngles[3];
+    pev(pEntity, pev_angles, vecAngles);
 
-    if (pev(ent, pev_movetype) != MOVETYPE_FLY) {
-        engfunc(EngFunc_WalkMove, ent, vAngles[1], 0.5, WALKMOVE_NORMAL);
+    if (pev(pEntity, pev_movetype) != MOVETYPE_FLY) {
+        engfunc(EngFunc_WalkMove, pEntity, vecAngles[1], 0.5, WALKMOVE_NORMAL);
     }
 
-    set_pev(ent, pev_velocity, vDirection);
+    set_pev(pEntity, pev_velocity, vecDirection);
 }
 
-stock bool:NPC_CanHit(ent, enemy, Float:fHitRange)
-{
-    new Array:npcData = NPC_GetData(ent);
+stock bool:NPC_CanHit(pEntity, enemy, Float:flHitRange) {
+    new Array:npcData = NPC_GetData(pEntity);
     if (get_gametime() < ArrayGetCell(npcData, NPC_NextAttack)) {
         return false;
     }
 
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+    static Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    static Float:vTarget[3];
-    pev(enemy, pev_origin, vTarget);
+    static Float:vecTarget[3];
+    pev(enemy, pev_origin, vecTarget);
 
-    new trace = create_tr2();
-    engfunc(EngFunc_TraceLine, vOrigin, vTarget, DONT_IGNORE_MONSTERS, ent, trace);
+    new pTrace = create_tr2();
+    engfunc(EngFunc_TraceLine, vecOrigin, vecTarget, DONT_IGNORE_MONSTERS, pEntity, pTrace);
 
-    static Float:fFraction;
-    get_tr2(trace, TR_flFraction, fFraction);
+    static Float:flFraction;
+    get_tr2(pTrace, TR_flFraction, flFraction);
 
-    if (fFraction == 1.0 && get_distance_f(vOrigin, vTarget) <= fHitRange) {
+    if (flFraction == 1.0 && get_distance_f(vecOrigin, vecTarget) <= flHitRange) {
         return true;
     }
 
     new bool:result = false;
-    if (get_tr2(trace, TR_pHit) == enemy) {
-        get_tr2(trace, TR_vecEndPos, vTarget);
-        result = (get_distance_f(vOrigin, vTarget) <= fHitRange);
+    if (get_tr2(pTrace, TR_pHit) == enemy) {
+        get_tr2(pTrace, TR_vecEndPos, vecTarget);
+        result = (get_distance_f(vecOrigin, vecTarget) <= flHitRange);
     }
 
-    free_tr2(trace);
+    free_tr2(pTrace);
 
     return result;
 }
 
-stock bool:NPC_IsValidEnemy(enemy, team = 0, bool:allowMonsters = true)
-{
+stock bool:NPC_IsValidEnemy(enemy, iTeam = 0, bool:allowMonsters = true) {
     if (!enemy || !pev_valid(enemy)) {
         return false;
     }
 
     new enemyTeam = 0;
-    if (UTIL_IsPlayer(enemy)) {
+    if (IS_PLAYER(enemy)) {
         if (!is_user_alive(enemy)) {
             return false;
         }
 
-        enemyTeam = UTIL_GetPlayerTeam(enemy);
+        enemyTeam = get_member(enemy, m_iTeam);
     } else if (allowMonsters && pev(enemy, pev_flags) & FL_MONSTER) {
         enemyTeam = pev(enemy, pev_team);
     } else {
         return false;
     }
 
-    if (team == enemyTeam) {
+    if (iTeam == enemyTeam) {
         return false;
     }
 
@@ -519,51 +499,48 @@ stock bool:NPC_IsValidEnemy(enemy, team = 0, bool:allowMonsters = true)
     return true;
 }
 
-stock NPC_IsVisible(ent, const Float:vTarget[3], ignoreEnt = 0)
-{
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+stock NPC_IsVisible(pEntity, const Float:vecTarget[3], pIgnoreEnt = 0) {
+    static Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
     new ignoreEntSolidType = SOLID_NOT;
-    if (ignoreEnt) {
-        ignoreEntSolidType = pev(ignoreEnt, pev_solid);
-        set_pev(ignoreEnt, pev_solid, SOLID_NOT);
+    if (pIgnoreEnt) {
+        ignoreEntSolidType = pev(pIgnoreEnt, pev_solid);
+        set_pev(pIgnoreEnt, pev_solid, SOLID_NOT);
     }
 
-    new Array:npcData = NPC_GetData(ent);
-    vOrigin[2] += Float:ArrayGetCell(npcData, NPC_ViewZOffset);
+    new Array:npcData = NPC_GetData(pEntity);
+    vecOrigin[2] += Float:ArrayGetCell(npcData, NPC_ViewZOffset);
 
-    new bool:isOpen = UTIL_IsOpen(vOrigin, vTarget, ent);
+    new bool:isOpen = UTIL_IsOpen(vecOrigin, vecTarget, pEntity);
 
-    if (ignoreEnt) {
-        set_pev(ignoreEnt, pev_solid, ignoreEntSolidType);
+    if (pIgnoreEnt) {
+        set_pev(pIgnoreEnt, pev_solid, ignoreEntSolidType);
     }
 
     return isOpen;
 }
 
-stock NPC_GetEnemy(ent) {
-    new enemy = pev(ent, pev_enemy);
+stock NPC_GetEnemy(pEntity) {
+    new enemy = pev(pEntity, pev_enemy);
 
-    if (!NPC_IsValidEnemy(enemy, pev(ent, pev_team))) {
+    if (!NPC_IsValidEnemy(enemy, pev(pEntity, pev_team))) {
         enemy = 0;
     }
 
     return enemy;
 }
 
-stock NPC_SetEnemy(ent, enemy)
-{
-    set_pev(ent, pev_enemy, enemy);
+stock NPC_SetEnemy(pEntity, enemy) {
+    set_pev(pEntity, pev_enemy, enemy);
 
     if (enemy) {
-        new Array:npcData = NPC_GetData(ent);
+        new Array:npcData = NPC_GetData(pEntity);
         ArraySetCell(npcData, NPC_EnemyTime, get_gametime());
     }
 }
 
-stock Float:NPC_GetEnemyTime(ent)
-{
-    new Array:npcData = NPC_GetData(ent);
+stock Float:NPC_GetEnemyTime(pEntity) {
+    new Array:npcData = NPC_GetData(pEntity);
     return ArrayGetCell(npcData, NPC_EnemyTime);
 }

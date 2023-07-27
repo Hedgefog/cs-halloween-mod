@@ -31,8 +31,7 @@ new g_hSpell;
 new g_hWofSpell;
 new g_hCeSpellball;
 
-public plugin_precache()
-{
+public plugin_precache() {
     g_mdlGibs = precache_model("models/bonegibs.mdl");
     precache_model(g_szSprSpellBall);
 
@@ -48,11 +47,10 @@ public plugin_precache()
     g_hWofSpell = Hwn_Wof_Spell_Register("Skeletons Horde", "Invoke");
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
+    RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "HamHook_Base_Touch_Post", .Post = 1);
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 
@@ -61,131 +59,125 @@ public plugin_init()
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnTouch(ent, target)
-{
-    if (!pev_valid(ent)) {
+public HamHook_Base_Touch_Post(pEntity, pTarget) {
+    if (!pev_valid(pEntity)) {
         return;
     }
 
-    if (g_hCeSpellball != CE_GetHandlerByEntity(ent)) {
+    if (g_hCeSpellball != CE_GetHandlerByEntity(pEntity)) {
         return;
     }
 
-    if (pev(ent, pev_iuser1) != g_hSpell) {
+    if (pev(pEntity, pev_iuser1) != g_hSpell) {
         return;
     }
 
-    if (target == pev(ent, pev_owner)) {
+    if (pTarget == pev(pEntity, pev_owner)) {
         return;
     }
 
-    CE_Kill(ent);
+    CE_Kill(pEntity);
 }
 
-public OnSpellballKilled(ent)
-{
-    new spellIdx = pev(ent, pev_iuser1);
+public OnSpellballKilled(pEntity) {
+    new iSpell = pev(pEntity, pev_iuser1);
 
-    if (spellIdx != g_hSpell) {
+    if (iSpell != g_hSpell) {
         return;
     }
 
-    Detonate(ent);
+    Detonate(pEntity);
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-public Hwn_Wof_Fw_Effect_Start(spellIdx)
-{
-    if (g_hWofSpell != spellIdx) {
+public Hwn_Wof_Fw_Effect_Start(iSpell) {
+    if (g_hWofSpell != iSpell) {
         return;
     }
 
     Hwn_Wof_Abort();
 
-    new target = -1;
-    while ((target = engfunc(EngFunc_FindEntityByString, target, "classname", "hwn_pumpkin_dispenser")) != 0) {
-        static Float:vOrigin[3];
-        pev(target, pev_origin, vOrigin);
+    new pTarget = -1;
+    while ((pTarget = engfunc(EngFunc_FindEntityByString, pTarget, "classname", "hwn_pumpkin_dispenser")) != 0) {
+        static Float:vecOrigin[3];
+        pev(pTarget, pev_origin, vecOrigin);
 
         static Float:vecDir[3];
-        pev(target, pev_angles, vecDir);
+        pev(pTarget, pev_angles, vecDir);
         angle_vector(vecDir, ANGLEVECTOR_UP, vecDir);
         xs_vec_mul_scalar(vecDir, -64.0, vecDir);
 
-        xs_vec_add(vOrigin, vecDir, vOrigin);
+        xs_vec_add(vecOrigin, vecDir, vecOrigin);
 
-        SpawnEggs(vOrigin);
-        DetonateEffect(target);
+        SpawnEggs(vecOrigin);
+        DetonateEffect(pTarget);
     }
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-public Cast(id)
-{
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.5, 10.0);
-    if (!ent) {
+public Cast(pPlayer) {
+    new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.5, 10.0);
+    if (!pEntity) {
         return PLUGIN_HANDLED;
     }
 
-    set_pev(ent, pev_iuser1, g_hSpell);
+    set_pev(pEntity, pev_iuser1, g_hSpell);
 
-    emit_sound(id, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(pPlayer, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     return PLUGIN_CONTINUE;
 }
 
-public Invoke(id) {}
+public Invoke(pPlayer) {}
 
-Detonate(ent)
-{
-    new owner = pev(ent, pev_owner);
-    new team = UTIL_GetPlayerTeam(owner);
+Detonate(pEntity) {
+    new pOwner = pev(pEntity, pev_owner);
+    new iTeam = get_member(pOwner, m_iTeam);
 
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-    vOrigin[2] += 32.0;
+    new Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
+    vecOrigin[2] += 32.0;
 
-    UTIL_FindPlaceToTeleport(ent, vOrigin, vOrigin, HULL_HUMAN);
+    UTIL_FindPlaceToTeleport(pEntity, vecOrigin, vecOrigin, HULL_HUMAN);
 
-    SpawnEggs(vOrigin, team, owner);
+    SpawnEggs(vecOrigin, iTeam, pOwner);
 
-    DetonateEffect(ent);
+    DetonateEffect(pEntity);
 }
 
-SpawnEggs(const Float:vOrigin[3], team = 0, owner = 0) {
+SpawnEggs(const Float:vecOrigin[3], iTeam = 0, pOwner = 0) {
     for (new i = 0; i < SKELETON_EGG_COUNT; ++i) {
-        new eggEnt = CE_Create(SKELETON_EGG_ENTITY_NAME, vOrigin);
+        new pEgg = CE_Create(SKELETON_EGG_ENTITY_NAME, vecOrigin);
 
-        if (!eggEnt) {
+        if (!pEgg) {
             continue;
         }
 
-        set_pev(eggEnt, pev_team, team);
-        set_pev(eggEnt, pev_owner, owner);
-        dllfunc(DLLFunc_Spawn, eggEnt);
+        set_pev(pEgg, pev_team, iTeam);
+        set_pev(pEgg, pev_owner, pOwner);
+        dllfunc(DLLFunc_Spawn, pEgg);
 
-        static Float:vNewOrigin[3];
-        UTIL_FindPlaceToTeleport(eggEnt, vOrigin, vNewOrigin, HULL_HUMAN);
-        set_pev(eggEnt, pev_origin, vNewOrigin);
+        static Float:vecNewOrigin[3];
+        UTIL_FindPlaceToTeleport(pEgg, vecOrigin, vecNewOrigin, HULL_HUMAN);
+        set_pev(pEgg, pev_origin, vecNewOrigin);
 
-        new Float:vVelocity[3];
-        xs_vec_set(vVelocity, random_float(-96.0, 96.0), random_float(-96.0, 96.0), 128.0);
-        set_pev(eggEnt, pev_velocity, vVelocity);
+        new Float:vecVelocity[3];
+        xs_vec_set(vecVelocity, random_float(-96.0, 96.0), random_float(-96.0, 96.0), 128.0);
+        set_pev(pEgg, pev_velocity, vecVelocity);
     }
 }
 
-DetonateEffect(ent)
-{
-    new Float:vVelocity[3];
-    UTIL_RandomVector(-128.0, 128.0, vVelocity);
+DetonateEffect(pEntity) {
+    new Float:vecVelocity[3];
+    UTIL_RandomVector(-128.0, 128.0, vecVelocity);
 
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-    UTIL_Message_Dlight(vOrigin, 36, {HWN_COLOR_SECONDARY}, 30, 12);
+    new Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
+    UTIL_Message_Dlight(vecOrigin, 36, {HWN_COLOR_SECONDARY}, 30, 12);
 
-    UTIL_Message_BreakModel(vOrigin, Float:{16.0, 16.0, 16.0}, vVelocity, 30, g_mdlGibs, 20, 25, 0);
+    UTIL_Message_BreakModel(vecOrigin, Float:{16.0, 16.0, 16.0}, vecVelocity, 30, g_mdlGibs, 20, 25, 0);
 
-    emit_sound(ent, CHAN_BODY , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(pEntity, CHAN_BODY , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

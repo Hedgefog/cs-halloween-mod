@@ -22,269 +22,248 @@
 
 const Float:EffectPushForce = 100.0;
 
-new g_sprTeamSmoke[3];
-new g_sprNull;
+new g_iTeamSmokeModelIndex[3];
+new g_iNullModelIndex;
 
-new g_ceHandler;
+new Float:g_flThinkDelay;
 
-new Float:g_fThinkDelay;
-
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
-public plugin_precache()
-{
-    g_ceHandler = CE_Register(
-        .szName = ENTITY_NAME,
+public plugin_precache() {
+    CE_Register(
+        ENTITY_NAME,
         .vMins = Float:{-64.0, -64.0, 0.0},
         .vMaxs = Float:{64.0, 64.0, 64.0}
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-    CE_RegisterHook(CEFunction_KVD, ENTITY_NAME, "OnKeyValue");
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_KVD, ENTITY_NAME, "@Entity_KeyValue");
+    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
+    CE_RegisterHook(CEFunction_Touch, ENTITY_NAME, "@Entity_Touch");
 
-    RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
-    RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);
-
-    g_sprNull = precache_model("sprites/white.spr");
-    g_sprTeamSmoke[0] = precache_model("sprites/hwn/magic_smoke.spr");
-    g_sprTeamSmoke[1] = precache_model("sprites/hwn/magic_smoke_red.spr");
-    g_sprTeamSmoke[2] = precache_model("sprites/hwn/magic_smoke_blue.spr");
+    g_iNullModelIndex = precache_model("sprites/white.spr");
+    g_iTeamSmokeModelIndex[0] = precache_model("sprites/hwn/magic_smoke.spr");
+    g_iTeamSmokeModelIndex[1] = precache_model("sprites/hwn/magic_smoke_red.spr");
+    g_iTeamSmokeModelIndex[2] = precache_model("sprites/hwn/magic_smoke_blue.spr");
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-public Hwn_Fw_ConfigLoaded()
-{
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
+public Hwn_Fw_ConfigLoaded() {
+    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnSpawn(ent)
-{
-    set_pev(ent, pev_solid, SOLID_TRIGGER);
-    set_pev(ent, pev_movetype, MOVETYPE_FLY);
-    set_pev(ent, pev_effects, EF_NODRAW);
-    set_pev(ent, pev_modelindex, g_sprNull);
-    set_pev(ent, pev_fuser1, 0.0);
+@Entity_Spawn(this) {
+    set_pev(this, pev_solid, SOLID_TRIGGER);
+    set_pev(this, pev_movetype, MOVETYPE_FLY);
+    set_pev(this, pev_effects, EF_NODRAW);
+    set_pev(this, pev_modelindex, g_iNullModelIndex);
+    set_pev(this, pev_fuser1, 0.0);
+    set_pev(this, pev_team, CE_GetMember(this, "team"));
 
-    set_pev(ent, pev_nextthink, get_gametime());
+    set_pev(this, pev_nextthink, get_gametime());
 }
 
-public OnKeyValue(ent, const szKey[], const szValue[])
-{
+@Entity_KeyValue(this, const szKey[], const szValue[]) {
     if (equal(szKey, "team")) {
-        set_pev(ent, pev_message, str_to_num(szValue));
+        CE_SetMember(this, "team", str_to_num(szValue));
     }
 }
 
-public OnThink(ent)
-{
-    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
-        return;
+@Entity_Think(this) {
+    static Float:flNextSmokeEmit;
+    pev(this, pev_fuser1, flNextSmokeEmit);
+
+    if (get_gametime() >= flNextSmokeEmit) {
+        new Float:flLocalDensity = @Entity_EmitSmoke(this);
+        new Float:flDelayRatio = 1.0 / floatclamp(flLocalDensity, SMOKE_EMIT_FREQUENCY, 1.0);
+        new Float:flDelay = SMOKE_EMIT_FREQUENCY * flDelayRatio;
+        set_pev(this, pev_fuser1, get_gametime() + flDelay);
     }
 
-    static Float:fNextSmokeEmit;
-    pev(ent, pev_fuser1, fNextSmokeEmit);
-
-    if (get_gametime() >= fNextSmokeEmit) {
-        new Float:fLocalDensity = EmitSmoke(ent);
-        new Float:fDelayRatio = 1.0 / floatclamp(fLocalDensity, SMOKE_EMIT_FREQUENCY, 1.0);
-        new Float:fDelay = SMOKE_EMIT_FREQUENCY * fDelayRatio;
-        set_pev(ent, pev_fuser1, get_gametime() + fDelay);
-    }
-
-    set_pev(ent, pev_nextthink, get_gametime() + g_fThinkDelay);
+    set_pev(this, pev_nextthink, get_gametime() + g_flThinkDelay);
 }
 
-public OnTouch(ent, toucher)
-{
-    if (g_ceHandler == CE_GetHandlerByEntity(ent)) {
-        PushToucher(ent, toucher);
-    }
-}
-
-PushToucher(ent, toucher)
-{
-    if (!UTIL_IsPlayer(toucher) && !UTIL_IsMonster(toucher)) {
+@Entity_Touch(this, pToucher) {
+    if (!IS_PLAYER(pToucher) && !UTIL_IsMonster(pToucher)) {
         return;
     }
 
-    new team = pev(ent, pev_team);
-    if (UTIL_IsTeammate(toucher, team)) {
+    new iTeam = pev(this, pev_team);
+    if (UTIL_IsTeammate(pToucher, iTeam)) {
         return;
     }
 
-    static Float:vToucherOrigin[3];
-    pev(toucher, pev_origin, vToucherOrigin);
+    static Float:vecToucherOrigin[3];
+    pev(pToucher, pev_origin, vecToucherOrigin);
 
-    static Float:vAbsMin[3];
-    pev(ent, pev_absmin, vAbsMin);
+    static Float:vecAbsMin[3];
+    pev(this, pev_absmin, vecAbsMin);
 
-    static Float:vAbsMax[3];
-    pev(ent, pev_absmax, vAbsMax);
+    static Float:vecAbsMax[3];
+    pev(this, pev_absmax, vecAbsMax);
 
-    static Float:vToucherAbsMin[3];
-    pev(toucher, pev_absmin, vToucherAbsMin);
+    static Float:vecToucherAbsMin[3];
+    pev(pToucher, pev_absmin, vecToucherAbsMin);
 
-    static Float:vToucherAbsMax[3];
-    pev(toucher, pev_absmax, vToucherAbsMax);
+    static Float:vecToucherAbsMax[3];
+    pev(pToucher, pev_absmax, vecToucherAbsMax);
 
     // find and check intersection point
-    for (new axis = 0; axis < 3; ++axis) {
-        if (vToucherOrigin[axis] < vAbsMin[axis]) {
-            vToucherOrigin[axis] = vToucherAbsMax[axis];
-        } else if (vToucherOrigin[axis] > vAbsMax[axis]) {
-            vToucherOrigin[axis] = vToucherAbsMin[axis];
+    for (new iAxis = 0; iAxis < 3; ++iAxis) {
+        if (vecToucherOrigin[iAxis] < vecAbsMin[iAxis]) {
+            vecToucherOrigin[iAxis] = vecToucherAbsMax[iAxis];
+        } else if (vecToucherOrigin[iAxis] > vecAbsMax[iAxis]) {
+            vecToucherOrigin[iAxis] = vecToucherAbsMin[iAxis];
         }
 
-        if (vAbsMin[axis] >= vToucherOrigin[axis]) {
+        if (vecAbsMin[iAxis] >= vecToucherOrigin[iAxis]) {
             return;
         }
 
-        if (vAbsMax[axis] <= vToucherOrigin[axis]) {
+        if (vecAbsMax[iAxis] <= vecToucherOrigin[iAxis]) {
             return;
         }
     }
 
-    new trace = create_tr2();
+    new pTrace = create_tr2();
 
-    static Float:vOffset[3];
-    xs_vec_copy(Float:{0.0, 0.0, 0.0}, vOffset);
+    static Float:vecOffset[3];
+    xs_vec_copy(Float:{0.0, 0.0, 0.0}, vecOffset);
 
-    new closestAxis = -1;
+    new iClosestAxis = -1;
 
-    for (new axis = 0; axis < 3; ++axis) {
-        // calculates the toucher's offset relative to the current axis
-        static Float:fSideOffsets[2];
-        fSideOffsets[0] = vAbsMin[axis] - vToucherOrigin[axis];
-        fSideOffsets[1] = vAbsMax[axis] - vToucherOrigin[axis];
+    for (new iAxis = 0; iAxis < 3; ++iAxis) {
+        // calculates the pToucher's offset relative to the current iAxis
+        static Float:flSideOffsets[2];
+        flSideOffsets[0] = vecAbsMin[iAxis] - vecToucherOrigin[iAxis];
+        flSideOffsets[1] = vecAbsMax[iAxis] - vecToucherOrigin[iAxis];
 
-        if (axis == 2 && closestAxis != -1) {
+        if (iAxis == 2 && iClosestAxis != -1) {
             break;
         }
 
         for (new side = 0; side < 2; ++side) {
             // check exit from current side
-            static Float:vTarget[3];
-            xs_vec_copy(vToucherOrigin, vTarget);
-            vTarget[axis] += fSideOffsets[side];
-            engfunc(EngFunc_TraceMonsterHull, toucher, vToucherOrigin, vTarget, IGNORE_MONSTERS | IGNORE_GLASS, toucher, trace);
+            static Float:vecTarget[3];
+            xs_vec_copy(vecToucherOrigin, vecTarget);
+            vecTarget[iAxis] += flSideOffsets[side];
+            engfunc(EngFunc_TraceMonsterHull, pToucher, vecToucherOrigin, vecTarget, IGNORE_MONSTERS | IGNORE_GLASS, pToucher, pTrace);
 
-            static Float:fFraction;
-            get_tr2(trace, TR_flFraction, fFraction);
+            static Float:flFraction;
+            get_tr2(pTrace, TR_flFraction, flFraction);
 
             // no exit, cannot push this way
-            if (fFraction != 1.0) {
-                fSideOffsets[side] = 0.0;
+            if (flFraction != 1.0) {
+                flSideOffsets[side] = 0.0;
             }
 
-            if (axis != 2) {
+            if (iAxis != 2) {
                 // save minimum offset, but ignore zero offsets
-                if (!vOffset[axis] || (fSideOffsets[side] && floatabs(fSideOffsets[side]) < floatabs(vOffset[axis]))) {
-                    vOffset[axis] = fSideOffsets[side];
+                if (!vecOffset[iAxis] || (flSideOffsets[side] && floatabs(flSideOffsets[side]) < floatabs(vecOffset[iAxis]))) {
+                    vecOffset[iAxis] = flSideOffsets[side];
                 }
             } else {
                 // priority on bottom side
-                if (fSideOffsets[0]) {
-                    vOffset[axis] = fSideOffsets[0];
+                if (flSideOffsets[0]) {
+                    vecOffset[iAxis] = flSideOffsets[0];
                 }
             }
 
-            // find closest axis to push
-            if (vOffset[axis]) {
-                if (closestAxis == -1 || floatabs(vOffset[axis]) < floatabs(vOffset[closestAxis])) {
-                    closestAxis = axis;
+            // find closest iAxis to push
+            if (vecOffset[iAxis]) {
+                if (iClosestAxis == -1 || floatabs(vecOffset[iAxis]) < floatabs(vecOffset[iClosestAxis])) {
+                    iClosestAxis = iAxis;
                 }
             }
         }
     }
 
-    free_tr2(trace);
+    free_tr2(pTrace);
 
-    // push player by closest axis
-    if (closestAxis != -1) {
-        static Float:vSize[3];
-        xs_vec_sub(vAbsMax, vAbsMin, vSize);
+    // push player by closest iAxis
+    if (iClosestAxis != -1) {
+        static Float:vecSize[3];
+        xs_vec_sub(vecAbsMax, vecAbsMin, vecSize);
 
-        new pushDir = vOffset[closestAxis] > 0.0 ? 1 : -1;
-        new Float:fDepthRatio = floatabs(vOffset[closestAxis]) / (vSize[closestAxis] / 2);
+        new iPushDir = vecOffset[iClosestAxis] > 0.0 ? 1 : -1;
+        new Float:flDepthRatio = floatabs(vecOffset[iClosestAxis]) / (vecSize[iClosestAxis] / 2);
 
-        static Float:vVelocity[3];
-        pev(toucher, pev_velocity, vVelocity);
+        static Float:vecVelocity[3];
+        pev(pToucher, pev_velocity, vecVelocity);
 
-        if (fDepthRatio > 0.8) {
-            vVelocity[closestAxis] = EffectPushForce * pushDir;
+        if (flDepthRatio > 0.8) {
+            vecVelocity[iClosestAxis] = EffectPushForce * iPushDir;
         } else {
-            vVelocity[closestAxis] += EffectPushForce * fDepthRatio * pushDir;
+            vecVelocity[iClosestAxis] += EffectPushForce * flDepthRatio * iPushDir;
         }
 
-        set_pev(toucher, pev_velocity, vVelocity);
+        set_pev(pToucher, pev_velocity, vecVelocity);
 
-        if (UTIL_IsPlayer(toucher)) {
+        if (IS_PLAYER(pToucher)) {
             // fix for player on ladder
-            if (pev(toucher, pev_movetype) == MOVETYPE_FLY) {
-                set_pev(toucher, pev_movetype, MOVETYPE_WALK);
+            if (pev(pToucher, pev_movetype) == MOVETYPE_FLY) {
+                set_pev(pToucher, pev_movetype, MOVETYPE_WALK);
             }
 
-            set_pev(toucher, pev_flags, pev(toucher, pev_flags) | FL_ONTRAIN);
+            set_pev(pToucher, pev_flags, pev(pToucher, pev_flags) | FL_ONTRAIN);
         }
     }
 }
 
-Float:EmitSmoke(ent)
-{
-    static Float:vAbsMin[3];
-    pev(ent, pev_absmin, vAbsMin);
+Float:@Entity_EmitSmoke(this) {
+    static Float:vecAbsMin[3];
+    pev(this, pev_absmin, vecAbsMin);
 
-    static Float:vAbsMax[3];
-    pev(ent, pev_absmax, vAbsMax);
+    static Float:vecAbsMax[3];
+    pev(this, pev_absmax, vecAbsMax);
 
-    static Float:vSize[3];
-    xs_vec_sub(vAbsMax, vAbsMin, vSize);
+    static Float:vecSize[3];
+    xs_vec_sub(vecAbsMax, vecAbsMin, vecSize);
 
-    static Float:vOrigin[3];
-    for (new axis = 0; axis < 2; ++axis) {
-        vOrigin[axis] = vAbsMin[axis] + (vSize[axis] / 2);
+    static Float:vecOrigin[3];
+    for (new iAxis = 0; iAxis < 2; ++iAxis) {
+        vecOrigin[iAxis] = vecAbsMin[iAxis] + (vecSize[iAxis] / 2);
     }
 
-    new Float:fSpreadRadius = vSize[0] < vSize[1] ? (vSize[0] / 2) : (vSize[1] / 2);
-    new Float:fDiff = floatabs(vSize[0] - vSize[1]);
+    new Float:flSpreadRadius = vecSize[0] < vecSize[1] ? (vecSize[0] / 2) : (vecSize[1] / 2);
+    new Float:flDiff = floatabs(vecSize[0] - vecSize[1]);
 
-    if (vSize[0] > vSize[1]) {
-        vOrigin[0] += random_float(-fDiff / 2, fDiff / 2);
-    } else if (vSize[1] > vSize[0]) {
-        vOrigin[1] += random_float(-fDiff / 2, fDiff / 2);
+    if (vecSize[0] > vecSize[1]) {
+        vecOrigin[0] += random_float(-flDiff / 2, flDiff / 2);
+    } else if (vecSize[1] > vecSize[0]) {
+        vecOrigin[1] += random_float(-flDiff / 2, flDiff / 2);
     }
 
-    vOrigin[2] = vAbsMin[2] + 4.0;
+    vecOrigin[2] = vecAbsMin[2] + 4.0;
 
-    fSpreadRadius = floatmax(fSpreadRadius - (SMOKE_PARTICLE_WIDTH / 4), 0.0);
+    flSpreadRadius = floatmax(flSpreadRadius - (SMOKE_PARTICLE_WIDTH / 4), 0.0);
 
-    new team = pev(ent, pev_team);
-    new teamSmokeIndex = max(0, team < sizeof(g_sprTeamSmoke) ? team : 0);
-    new modelIndex = g_sprTeamSmoke[teamSmokeIndex];
+    new iTeam = pev(this, pev_team);
+    new iSmokeTeam = max(iTeam < sizeof(g_iTeamSmokeModelIndex) ? iTeam : 0, 0);
+    new iModelIndex = g_iTeamSmokeModelIndex[iSmokeTeam];
     
     // calculate density based on box perimeter
     // using square area creates extreme thick smoke for large areas
     // the main goal is to make smoke looks thick enough for players outside the smoke
-    new Float:fLocalDensity = ((2 * vSize[0]) + (2 * vSize[1])) * SMOKE_DENSITY * SMOKE_EMIT_FREQUENCY;
-    new particlesNum = max(floatround(fLocalDensity), 1);
+    new Float:flLocalDensity = ((2 * vecSize[0]) + (2 * vecSize[1])) * SMOKE_DENSITY * SMOKE_EMIT_FREQUENCY;
+    new particlesNum = max(floatround(flLocalDensity), 1);
 
-    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vecOrigin, 0);
     write_byte(TE_FIREFIELD);
-    engfunc(EngFunc_WriteCoord, vOrigin[0]);
-    engfunc(EngFunc_WriteCoord, vOrigin[1]);
-    engfunc(EngFunc_WriteCoord, vOrigin[2]);
-    write_short(floatround(fSpreadRadius));
-    write_short(modelIndex);
+    engfunc(EngFunc_WriteCoord, vecOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vecOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vecOrigin[2]);
+    write_short(floatround(flSpreadRadius));
+    write_short(iModelIndex);
     write_byte(particlesNum);
     write_byte(TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA | TEFIRE_FLAG_PLANAR);
     write_byte(SMOKE_PARTICLES_LIFETIME);
     message_end();
 
-    return fLocalDensity;
+    return flLocalDensity;
 }

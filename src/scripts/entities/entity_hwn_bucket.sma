@@ -17,7 +17,7 @@
 #define TASKID_SUM_BOIL_SOUND 1000
 #define TASKID_SUM_REMOVE_LID 2000
 
-#define RANGE 256.0
+#define TAKE_RANGE 256.0
 
 #define ACTION_POP_DURATION 0.33
 #define ACTION_BIG_POP_DURATION 0.365
@@ -30,7 +30,7 @@
 #define EFFECT_MAGIC_SPLASH_PARTICLE_NOISE 32
 #define EFFECT_SPELL_DROPS_SCALE 15
 #define EFFECT_SPELL_DROPS_COLOR 242
-#define EFFECT_WAVE_RADIUS RANGE - 1.0
+#define EFFECT_WAVE_RADIUS TAKE_RANGE - 1.0
 #define EFFECT_WAVE_LIFETIME 5
 #define EFFECT_WAVE_WIDTH 32
 #define EFFECT_WAVE_BRIGHTNESS 100
@@ -46,64 +46,62 @@
 #define FLASH_DECAY_RATE 28
 #define BOIL_SOUND_DURATION 2.2
 
-enum _:Sequence
-{
+enum _:Sequence {
     Sequence_Idle = 0,
     Sequence_Bubbling,
     Sequence_Pop,
     Sequence_BigPop
 };
 
-enum Team
-{
+enum Team {
     Team_Undefined = 0,
     Team_Red,
     Team_Blue,
     Team_Spectators
 };
 
-new Float:g_vTeamColor[Team][3] = {
+new Float:g_rgvecTeamColor[Team][3] = {
     {HWN_COLOR_GREEN_DARK_F},
     {HWN_COLOR_RED_F},
     {HWN_COLOR_BLUE_F},
     {255.0, 255.0, 255.0}
 };
 
-new Float:g_fNextCollectTime[33];
+new Float:g_rgflPlayerNextCollectTime[33];
 
-new g_sprBlood;
+new g_iBloodModelIndex;
 
 new const g_szSndBoil[] = "hwn/misc/cauldron_boil.wav";
 
-new const g_szSndHit[][] =
-{
+new const g_szSndHit[][] = {
     "debris/metal4.wav",
     "debris/metal6.wav"
 };
 
-new g_sprSparkle;
-new g_sprPotionSplash;
-new g_sprPotionBeam;
+new g_iSparkleModelIndex;
+new g_iPotionSplashModelIndex;
+new g_iPotionBeamModelIndex;
 
-new g_cvarBucketHealth;
-new g_cvarBucketCollectFlash;
-new g_cvarBucketBonusHealth;
-new g_cvarBucketBonusArmor;
-new g_cvarBucketBonusAmmo;
-new g_cvarBucketBonusChance;
+new g_pCvarBucketHealth;
+new g_pCvarBucketCollectFlash;
+new g_pCvarBucketBonusHealth;
+new g_pCvarBucketBonusArmor;
+new g_pCvarBucketBonusAmmo;
+new g_pCvarBucketBonusChance;
 
-new g_ceHandler;
-new Float:g_fThinkDelay;
-new Array:g_buckets;
-new bool:g_roundStarted = false;
-new g_maxPlayers;
+new g_iCeHandler;
+new Array:g_irgBuckets;
+new bool:g_bRoundStarted = false;
 
-public plugin_precache()
-{
-    g_sprBlood = precache_model("sprites/blood.spr");
-    g_sprSparkle = precache_model("sprites/exit1.spr");
-    g_sprPotionSplash = precache_model("sprites/bm1.spr");
-    g_sprPotionBeam = precache_model("sprites/streak.spr");
+new g_pCvarFps;
+
+public plugin_precache() {
+    g_iBloodModelIndex = precache_model("sprites/blood.spr");
+    g_iSparkleModelIndex = precache_model("sprites/exit1.spr");
+    g_iPotionSplashModelIndex = precache_model("sprites/bm1.spr");
+    g_iPotionBeamModelIndex = precache_model("sprites/streak.spr");
+
+    g_pCvarFps = get_cvar_pointer("hwn_npc_fps");
 
     precache_sound(g_szSndBoil);
 
@@ -111,8 +109,8 @@ public plugin_precache()
         precache_sound(g_szSndHit[i]);
     }
 
-    g_ceHandler = CE_Register(
-        .szName = ENTITY_NAME,
+    g_iCeHandler = CE_Register(
+        ENTITY_NAME,
         .modelIndex = precache_model("models/hwn/props/cauldron.mdl"),
         .vMins = Float:{-28.0, -28.0, 0.0},
         .vMaxs = Float:{28.0, 28.0, 56.0},
@@ -120,513 +118,384 @@ public plugin_precache()
     );
 
     CE_Register(
-        .szName = LIQUID_ENTITY_NAME,
+        LIQUID_ENTITY_NAME,
         .modelIndex = precache_model("models/hwn/props/cauldron_liquid.mdl"),
         .vMins = Float:{-28.0, -28.0, 0.0},
         .vMaxs = Float:{28.0, 28.0, 56.0},
         .preset = CEPreset_Prop
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-    CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "OnKill");
-    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
-    CE_RegisterHook(CEFunction_Spawn, LIQUID_ENTITY_NAME, "OnLiquidSpawn");
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
+    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
+    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 
-    g_cvarBucketHealth = register_cvar("hwn_bucket_health", "300");
-    g_cvarBucketCollectFlash = register_cvar("hwn_bucket_collect_flash", "1");
-    g_cvarBucketBonusHealth = register_cvar("hwn_bucket_bonus_health", "10");
-    g_cvarBucketBonusArmor = register_cvar("hwn_bucket_bonus_armor", "10");
-    g_cvarBucketBonusAmmo = register_cvar("hwn_bucket_bonus_ammo", "1");
-    g_cvarBucketBonusChance = register_cvar("hwn_bucket_bonus_chance", "5");
+    CE_RegisterHook(CEFunction_Spawn, LIQUID_ENTITY_NAME, "@Liquid_Spawn");
 
-    g_buckets = ArrayCreate(1, 2);
+    g_pCvarBucketHealth = register_cvar("hwn_bucket_health", "300");
+    g_pCvarBucketCollectFlash = register_cvar("hwn_bucket_collect_flash", "1");
+    g_pCvarBucketBonusHealth = register_cvar("hwn_bucket_bonus_health", "10");
+    g_pCvarBucketBonusArmor = register_cvar("hwn_bucket_bonus_armor", "10");
+    g_pCvarBucketBonusAmmo = register_cvar("hwn_bucket_bonus_ammo", "1");
+    g_pCvarBucketBonusChance = register_cvar("hwn_bucket_bonus_chance", "5");
+
+    g_irgBuckets = ArrayCreate(1, 2);
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTakeDamagePre", .Post = 0);
-    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttackPre", .Post = 0);
-    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTakeDamage", .Post = 1);
-    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
-
-    g_maxPlayers = get_maxplayers();
+    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "HamHook_Base_TakeDamage", .Post = 0);
+    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "HamHook_Base_TraceAttack", .Post = 0);
+    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "HamHook_Base_TakeDamage_Post", .Post = 1);
+    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "HamHook_Base_TraceAttack_Post", .Post = 1);
 }
 
-public plugin_end()
-{
-    ArrayDestroy(g_buckets);
+public plugin_end() {
+    ArrayDestroy(g_irgBuckets);
 }
 
 /*------------[ Forward ]------------*/
 
-public Hwn_Fw_ConfigLoaded()
-{
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
+public Round_Fw_RoundStart() {
+    g_bRoundStarted = true;
 }
 
-public Round_Fw_RoundStart()
-{
-    g_roundStarted = true;
+public Round_Fw_RoundEnd() {
+    g_bRoundStarted = false;
 }
 
-public Round_Fw_RoundEnd()
-{
-    g_roundStarted = false;
-}
+public Hwn_Collector_Fw_WinnerTeam(iTeam) {
+    new iBucketsNum = ArraySize(g_irgBuckets);
 
-public Hwn_Collector_Fw_WinnerTeam(team)
-{
-    new count = ArraySize(g_buckets);
-    for (new i = 0; i < count; ++i) {
-        new ent = ArrayGetCell(g_buckets, i);
-        new bucketTeam = pev(ent, pev_team);
+    for (new iBucket = 0; iBucket < iBucketsNum; ++iBucket) {
+        new pEntity = ArrayGetCell(g_irgBuckets, iBucket);
+        new iBucketTeam = pev(pEntity, pev_team);
 
-        if (bucketTeam && bucketTeam != team) {
+        if (iBucketTeam && iBucketTeam != iTeam) {
             continue;
         }
 
-        new Float:fDuration = ACTION_BIG_POP_DURATION * (1.0 / ACTION_BIG_POP_FRAMERATE);
-        PlayActionSequence(ent, Sequence_BigPop, fDuration);
-        set_pev(ent, pev_framerate, ACTION_BIG_POP_FRAMERATE);
+        new Float:flDuration = ACTION_BIG_POP_DURATION * (1.0 / ACTION_BIG_POP_FRAMERATE);
+        @Entity_PlayActionSequence(pEntity, Sequence_BigPop, flDuration);
+        set_pev(pEntity, pev_framerate, ACTION_BIG_POP_FRAMERATE);
 
-        PotionExplodeEffect(ent);
-        FlashEffect(ent);
-        WaveEffect(ent);
+        @Entity_PotionExplodeEffect(pEntity);
+        @Entity_FlashEffect(pEntity);
+        @Entity_WaveEffect(pEntity);
 
-        set_task(fDuration, "TaskRemoveLid", ent + TASKID_SUM_REMOVE_LID);
+        CE_SetMember(pEntity, "flNextRemoveLid", get_gametime() + flDuration);
     }
 }
 
-/*------------[ Hooks ]------------*/
+/*------------[ Methods ]------------*/
 
-public OnSpawn(ent)
-{
-    new team = pev(ent, pev_team);
+@Entity_Spawn(this) {
+    new iTeam = pev(this, pev_team);
 
-    set_pev(ent, pev_solid, SOLID_BBOX);
-    set_pev(ent, pev_movetype, MOVETYPE_PUSHSTEP);
-    set_pev(ent, pev_takedamage, DAMAGE_AIM);
-    set_pev(ent, pev_renderfx, kRenderFxGlowShell);
-    set_pev(ent, pev_renderamt, 0.0);
-    set_pev(ent, pev_rendercolor, g_vTeamColor[Team:team]);
-    set_pev(ent, pev_health, float(get_pcvar_num(g_cvarBucketHealth)));
-    set_pev(ent, pev_body, 0);
-    set_pev(ent, pev_iuser4, 0);
+    set_pev(this, pev_solid, SOLID_BBOX);
+    set_pev(this, pev_movetype, MOVETYPE_PUSHSTEP);
+    set_pev(this, pev_takedamage, DAMAGE_AIM);
+    set_pev(this, pev_renderfx, kRenderFxGlowShell);
+    set_pev(this, pev_renderamt, 0.0);
+    set_pev(this, pev_rendercolor, g_rgvecTeamColor[Team:iTeam]);
+    set_pev(this, pev_health, float(get_pcvar_num(g_pCvarBucketHealth)));
+    set_pev(this, pev_body, 0);
 
-    engfunc(EngFunc_DropToFloor, ent);
+    engfunc(EngFunc_DropToFloor, this);
 
-    if (!pev(ent, pev_iuser1)) {
-        new liquidEnt = CE_Create("hwn_bucket_liquid", Float:{0.0, 0.0, 0.0}, false);
-        set_pev(liquidEnt, pev_owner, ent);
-        dllfunc(DLLFunc_Spawn, liquidEnt);
+    CE_SetMember(this, "flNextBoil", 0.0);
+    CE_SetMember(this, "flNextAction", 0.0);
+    CE_SetMember(this, "flNextRemoveLid", 0.0);
+    CE_SetMember(this, "iBonusChance", 0);
 
-        set_pev(ent, pev_iuser1, liquidEnt);
+    if (!CE_GetMember(this, "pLiquid")) {
+        new pLiquid = CE_Create("hwn_bucket_liquid", Float:{0.0, 0.0, 0.0}, false);
+        set_pev(pLiquid, pev_owner, this);
+        dllfunc(DLLFunc_Spawn, pLiquid);
+        CE_SetMember(this, "pLiquid", pLiquid);
     }
 
-    ArrayPushCell(g_buckets, ent);
+    set_pev(this, pev_nextthink, get_gametime());
 
-    ClearTasks(ent);
-
-    set_task(g_fThinkDelay, "TaskThink", ent, _, _, "b");
-    set_task(BOIL_SOUND_DURATION, "TaskBoilSound", ent + TASKID_SUM_BOIL_SOUND, _, _, "b");
+    ArrayPushCell(g_irgBuckets, this);
 }
 
-public OnKill(ent)
-{
-    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
-        return HAM_IGNORED;
+@Entity_Kill(this) {
+    static Float:flHealth;
+    pev(this, pev_health, flHealth);
+
+    new iExtractsNum = 1;
+    if (flHealth < 0) {
+        iExtractsNum += -(floatround(flHealth) / get_pcvar_num(g_pCvarBucketHealth));
     }
 
-    static Float:fHealth;
-    pev(ent, pev_health, fHealth);
+    set_pev(this, pev_health, float(get_pcvar_num(g_pCvarBucketHealth)));
 
-    new extractCount = 1;
-    if (fHealth < 0) {
-        extractCount += -floatround(fHealth)/get_pcvar_num(g_cvarBucketHealth);
-    }
-
-    set_pev(ent, pev_health, float(get_pcvar_num(g_cvarBucketHealth)));
-    ExtractPoints(ent, extractCount);
+    @Entity_ExtractPoints(this, iExtractsNum);
 
     return HAM_HANDLED;
 }
 
-public OnRemove(ent)
-{
-    new liquidEnt = pev(ent, pev_iuser1);
-    CE_Remove(liquidEnt);
-
-    ClearTasks(ent);
+@Entity_Remove(this) {
+    new pLiquid = CE_GetMember(this, "pLiquid");
+    CE_Remove(pLiquid);
 }
 
-public OnLiquidSpawn(ent)
-{
-    new owner = pev(ent, pev_owner);
+@Entity_Think(this) {
+    new Float:flGameTime = get_gametime();
 
-    set_pev(ent, pev_solid, SOLID_NOT);
-    set_pev(ent, pev_rendermode, kRenderTransAdd);
-    set_pev(ent, pev_renderamt, 255.0);
-
-    new Float:vOrigin[3];
-    pev(owner, pev_origin, vOrigin);
-    engfunc(EngFunc_SetOrigin, ent, vOrigin);
-}
-
-public OnTraceAttackPre(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
-{
-    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
-        return HAM_IGNORED;
-    }
-
-    static Float:vStart[3];
-    UTIL_GetViewOrigin(attacker, vStart);
-
-    static Float:vEnd[3];
-    get_tr2(trace, TR_vecEndPos, vEnd);
-
-    if (!UTIL_IsPointVisible(vStart, vEnd, ent)) {
-        return HAM_SUPERCEDE; // ignore wallbang damage
-    }
-
-    return HAM_HANDLED;
-}
-
-public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
-{
-    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
-        return HAM_IGNORED;
-    }
-
-    static Float:vEnd[3];
-    get_tr2(trace, TR_vecEndPos, vEnd);
-
-    UTIL_Message_Sparks(vEnd);
-    emit_sound(ent, CHAN_BODY, g_szSndHit[random(sizeof(g_szSndHit))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-
-    return HAM_HANDLED;
-}
-
-public OnTakeDamagePre(ent, inflictor, attacker, Float:fDamage, dmgBits)
-{
-    if (!attacker) {
-        return HAM_IGNORED;
-    }
-
-    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
-        return HAM_IGNORED;
-    }
-
-    if (~dmgBits & DMG_BULLET) { // explosions, etc.
-        static Float:vStart[3];
-        pev(inflictor, pev_origin, vStart);
-
-        static Float:vEnd[3];
-        pev(ent, pev_origin, vEnd);
-
-        if (!UTIL_IsPointVisible(vStart, vEnd, ent)) {
-            return HAM_SUPERCEDE; // ignore wallbang damage
-        }
-    }
-
-    new team = pev(ent, pev_team);
-    if (team == UTIL_GetPlayerTeam(attacker)) {
-        return HAM_SUPERCEDE;
-    }
-
-    new teamPoints = Hwn_Collector_GetTeamPoints(team);
-    if (teamPoints <= 0) {
-        return HAM_SUPERCEDE;
-    }
-
-    return HAM_HANDLED;
-}
-
-public OnTakeDamage(ent, inflictor, attacker, Float:fDamage, dmgBits)
-{
-    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
-        return HAM_IGNORED;
-    }
-
-    new team = pev(ent, pev_team);
-    if (!Hwn_Collector_ObjectiveBlocked() && UTIL_IsPlayer(attacker) && team && UTIL_GetPlayerTeam(attacker) != team) {
-        DamageEffect(ent);
-    }
-
-    return HAM_HANDLED;
-}
-
-/*------------[ Tasks ]------------*/
-
-public TaskThink(ent)
-{
-    if (!pev_valid(ent)) {
-        return;
-    }
-
-    if (!g_roundStarted) {
-        return;
-    }
-
-    new Float:fGametime = get_gametime();
-
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-
-    new bool:isCollected = false;
-    for (new id = 1; id <= g_maxPlayers; ++id)
-    {
-        if (!is_user_alive(id)) {
-            continue;
-        }
-
-        if (fGametime < g_fNextCollectTime[id]) {
-            continue;
-        }
-
-        new team = pev(ent, pev_team);
-        if (team && UTIL_GetPlayerTeam(id) != team) {
-            continue;
-        }
-
-        static Float:vPlayerOrigin[3];
-        pev(id, pev_origin, vPlayerOrigin);
-
-        if (get_distance_f(vOrigin, vPlayerOrigin) > RANGE) {
-            continue;
-        }
-
-        if (!UTIL_IsPointVisible(vOrigin, vPlayerOrigin, ent)) {
-            continue;
-        }
-
-        if (!TakePlayerPoint(ent, id)) {
-            continue;
-        }
-
-        Hwn_PEquipment_GiveHealth(id, get_pcvar_num(g_cvarBucketBonusHealth));
-        Hwn_PEquipment_GiveArmor(id, get_pcvar_num(g_cvarBucketBonusArmor));
-        Hwn_PEquipment_GiveAmmo(id, get_pcvar_num(g_cvarBucketBonusAmmo));
-
-        LuckyDrop(ent);
-        isCollected = true;
-        g_fNextCollectTime[id] = fGametime + 1.0;
-    }
-
-    if (isCollected) {
-        CollectEffect(ent);
-        PlayActionSequence(ent, Sequence_Pop, ACTION_POP_DURATION);
+    if (@Entity_CollectPoints(this)) {
+        @Entity_CollectEffect(this);
+        @Entity_PlayActionSequence(this, Sequence_Pop, ACTION_POP_DURATION);
     } else {
-        new sequence = !g_roundStarted || Hwn_Collector_ObjectiveBlocked() ? Sequence_Idle : Sequence_Bubbling;
-        PlayActionSequence(ent, sequence, 0.0);
-    }
-}
-
-public TaskBoilSound(taskID)
-{
-    if (!g_roundStarted || Hwn_Collector_ObjectiveBlocked()) {
-        return;
+        new iSequence = !g_bRoundStarted || Hwn_Collector_ObjectiveBlocked() ? Sequence_Idle : Sequence_Bubbling;
+        @Entity_PlayActionSequence(this, iSequence, 0.0);
     }
 
-    new ent = taskID - TASKID_SUM_BOIL_SOUND;
+    new Float:flNextRemoveLid = CE_GetMember(this, "flNextRemoveLid");
+    if (flNextRemoveLid && flNextRemoveLid <= flGameTime) {
+        set_pev(this, pev_body, 1);
+    }
 
-    emit_sound(ent, CHAN_STATIC, g_szSndBoil, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    new Float:flNextBoil = CE_GetMember(this, "flNextBoil");
+    if (flNextBoil <= flGameTime) {
+        emit_sound(this, CHAN_STATIC, g_szSndBoil, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+        CE_SetMember(this, "flNextBoil", get_gametime() + BOIL_SOUND_DURATION);
+    }
+
+    new Float:flThinkDelay = UTIL_FpsToDelay(get_pcvar_num(g_pCvarFps));
+    set_pev(this, pev_nextthink, flGameTime + flThinkDelay);
 }
 
-public TaskRemoveLid(taskID)
-{
-    new ent = taskID - TASKID_SUM_REMOVE_LID;
-
-    set_pev(ent, pev_body, 1);
-}
-
-/*------------[ Private ]------------*/
-
-ClearTasks(ent)
-{
-    remove_task(ent);
-    remove_task(ent + TASKID_SUM_BOIL_SOUND);
-    remove_task(ent + TASKID_SUM_REMOVE_LID);
-}
-
-bool:TakePlayerPoint(ent, id)
-{
-    if (!Hwn_Collector_ScorePlayerPointsToTeam(id, 1)) {
+bool:@Entity_CollectPoints(this) {
+    if (!Round_IsRoundStarted()) {
         return false;
     }
 
-    PumpkinThrowEffect(ent, id);
+    if (Round_IsRoundEnd()) {
+        return false;
+    }
+    
+    new Float:flGameTime = get_gametime();
+    new bool:bIsCollected = false;
+
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+
+    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
+        if (!is_user_alive(pPlayer)) {
+            continue;
+        }
+
+        if (flGameTime < g_rgflPlayerNextCollectTime[pPlayer]) {
+            continue;
+        }
+
+        new iTeam = pev(this, pev_team);
+        if (iTeam && get_member(pPlayer, m_iTeam) != iTeam) {
+            continue;
+        }
+
+        static Float:vecPlayerOrigin[3];
+        pev(pPlayer, pev_origin, vecPlayerOrigin);
+
+        if (get_distance_f(vecOrigin, vecPlayerOrigin) > TAKE_RANGE) {
+            continue;
+        }
+
+        if (!UTIL_IsPointVisible(vecOrigin, vecPlayerOrigin, this)) {
+            continue;
+        }
+
+        if (!@Entity_TakePlayerPoint(this, pPlayer)) {
+            continue;
+        }
+
+        bIsCollected = true;
+
+        g_rgflPlayerNextCollectTime[pPlayer] = flGameTime + 1.0;
+    }
+
+    return bIsCollected;
+}
+
+bool:@Entity_TakePlayerPoint(this, pPlayer) {
+    if (!Hwn_Collector_ScorePlayerPointsToTeam(pPlayer, 1)) {
+        return false;
+    }
+
+    @Entity_PumpkinThrowEffect(this, pPlayer);
+
+    Hwn_PEquipment_GiveHealth(pPlayer, get_pcvar_num(g_pCvarBucketBonusHealth));
+    Hwn_PEquipment_GiveArmor(pPlayer, get_pcvar_num(g_pCvarBucketBonusArmor));
+    Hwn_PEquipment_GiveAmmo(pPlayer, get_pcvar_num(g_pCvarBucketBonusAmmo));
+
+    @Entity_LuckyDrop(this);
 
     return true;
 }
 
-bool:LuckyDrop(ent) {
-    new chance = pev(ent, pev_iuser4);
+bool:@Entity_LuckyDrop(this) {
+    new iBonusChance = CE_GetMember(this, "iBonusChance");
 
-    if (random(100) < chance) {
-        DropSpellbook(ent);
-        set_pev(ent, pev_iuser4, 0);
+    if (random(100) < iBonusChance) {
+        @Entity_DropSpellbook(this);
+        CE_SetMember(this, "iBonusChance", 0);
     } else {
-        set_pev(ent, pev_iuser4, chance + get_pcvar_num(g_cvarBucketBonusChance));
+        CE_SetMember(this, "iBonusChance", get_pcvar_num(g_pCvarBucketBonusChance));
     }
 }
 
-bool:ExtractPoints(ent, count = 1)
-{
+bool:@Entity_ExtractPoints(this, iNum) {
     if (Hwn_Collector_ObjectiveBlocked()) {
         return false;
     }
 
-    if (count <= 0) {
+    if (iNum <= 0) {
         return false;
     }
 
-    new team = pev(ent, pev_team);
+    new iTeam = pev(this, pev_team);
 
-    new teamPoints = Hwn_Collector_GetTeamPoints(team);
-    count = teamPoints > count ? count : teamPoints;
+    new iTeamPoints = Hwn_Collector_GetTeamPoints(iTeam);
+    new iNumFixed = min(iNum, iTeamPoints);
 
-    Hwn_Collector_SetTeamPoints(team, teamPoints - count);
+    Hwn_Collector_SetTeamPoints(iTeam, iTeamPoints - iNumFixed);
 
-    for (new i = 0; i < count; ++i) {
-        DropPumpkin(ent);
+    for (new i = 0; i < iNumFixed; ++i) {
+        @Entity_DropPumpkin(this);
     }
 
-    PlayActionSequence(ent, Sequence_Pop, ACTION_POP_DURATION);
+    @Entity_PlayActionSequence(this, Sequence_Pop, ACTION_POP_DURATION);
 
     return true;
 }
 
-bool:DropPumpkin(ent)
-{
-    new pumpkinEnt = CE_Create("hwn_item_pumpkin", Float:{0.0, 0.0, 0.0});
-    if (!pumpkinEnt) {
+bool:@Entity_DropPumpkin(this) {
+    new pPumpkin = CE_Create("hwn_item_pumpkin");
+    if (!pPumpkin) {
         return false;
     }
 
-    dllfunc(DLLFunc_Spawn, pumpkinEnt);
-    DropEntity(ent, pumpkinEnt);
+    dllfunc(DLLFunc_Spawn, pPumpkin);
+    @Entity_DropEntity(this, pPumpkin);
 
     return true;
 }
 
-bool:DropSpellbook(ent)
-{
-    new spellbookEnt = CE_Create("hwn_item_spellbook", Float:{0.0, 0.0, 0.0});
-    if (!spellbookEnt) {
+bool:@Entity_DropSpellbook(this) {
+    new pSpellbook = CE_Create("hwn_item_spellbook");
+    if (!pSpellbook) {
         return false;
     }
 
-    dllfunc(DLLFunc_Spawn, spellbookEnt);
-    DropEntity(ent, spellbookEnt);
+    dllfunc(DLLFunc_Spawn, pSpellbook);
+    @Entity_DropEntity(this, pSpellbook);
 
     return true;
 }
 
-bool:DropEntity(ent, other, Float:fSpeed = 320.0, Float:fNoise = 0.3725)
-{
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+bool:@Entity_DropEntity(this, pEntity) {
+    new Float:flSpeed = 320.0;
+    new Float:flNoise = 0.3725;
 
-    static Float:vMaxs[3];
-    pev(ent, pev_maxs, vMaxs);
-    vOrigin[2] += vMaxs[2];
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
 
-    static Float:vOtherMins[3];
-    pev(ent, pev_mins, vOtherMins);
-    vOrigin[2] -= vOtherMins[2];
+    static Float:vecMaxs[3];
+    pev(this, pev_maxs, vecMaxs);
+    vecOrigin[2] += vecMaxs[2];
 
-    static Float:vVelocity[3];
-    vVelocity[0] = random_float(-1.0, 1.0);
-    vVelocity[1] = random_float(-1.0, 1.0);
-    vVelocity[2] = 0.0;
+    static Float:vecOtherMins[3];
+    pev(this, pev_mins, vecOtherMins);
+    vecOrigin[2] -= vecOtherMins[2];
 
-    new Float:fSpeedMaxError = fSpeed * fNoise;
+    static Float:vecVelocity[3];
+    vecVelocity[0] = random_float(-1.0, 1.0);
+    vecVelocity[1] = random_float(-1.0, 1.0);
+    vecVelocity[2] = 0.0;
 
-    xs_vec_normalize(vVelocity, vVelocity);
-    xs_vec_mul_scalar(vVelocity, fSpeed + random_float(-fSpeedMaxError, fSpeedMaxError), vVelocity);
-    vVelocity[2] = 150.0;
+    new Float:flSpeedMaxError = flSpeed * flNoise;
 
-    engfunc(EngFunc_SetOrigin, other, vOrigin);
-    set_pev(other, pev_velocity, vVelocity);
+    xs_vec_normalize(vecVelocity, vecVelocity);
+    xs_vec_mul_scalar(vecVelocity, flSpeed + random_float(-flSpeedMaxError, flSpeedMaxError), vecVelocity);
+    vecVelocity[2] = 150.0;
+
+    engfunc(EngFunc_SetOrigin, pEntity, vecOrigin);
+    set_pev(pEntity, pev_velocity, vecVelocity);
 }
 
-PlayActionSequence(ent, sequence, Float:fDuration)
-{
-    static Float:fNextAction;
-    pev(ent, pev_fuser1, fNextAction);
+@Entity_PlayActionSequence(this, iSequence, Float:flDuration) {
+    new Float:flGameTime = get_gametime();
+    new Float:flNextAction = CE_GetMember(this, "flNextAction");
 
-    if (fNextAction > get_gametime()) {
+    if (flNextAction > flGameTime) {
         return false;
     }
 
-    UTIL_SetSequence(ent, sequence);
-    set_pev(ent, pev_fuser1, get_gametime() + fDuration);
+    UTIL_SetSequence(this, iSequence);
+
+    CE_SetMember(this, "flNextAction", flGameTime + flDuration);
 
     return true;
 }
 
-PumpkinThrowEffect(ent, id)
-{
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-    vOrigin[2] += 42.0;
+@Entity_PumpkinThrowEffect(this, pPlayer) {
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+    vecOrigin[2] += 42.0;
     
-    static Float:vUserOrigin[3];
-    pev(id, pev_origin, vUserOrigin);
+    static Float:vecUserOrigin[3];
+    pev(pPlayer, pev_origin, vecUserOrigin);
 
-    static Float:vVelocity[3];
-    xs_vec_sub(vOrigin, vUserOrigin, vVelocity);
-    xs_vec_normalize(vVelocity, vVelocity);
-    xs_vec_mul_scalar(vVelocity, 1024.0, vVelocity);
+    static Float:vecVelocity[3];
+    xs_vec_sub(vecOrigin, vecUserOrigin, vecVelocity);
+    xs_vec_normalize(vecVelocity, vecVelocity);
+    xs_vec_mul_scalar(vecVelocity, 1024.0, vecVelocity);
 
-    static modelIndex;
-    if (!modelIndex) {
-        modelIndex = CE_GetModelIndex("hwn_item_pumpkin");
+    static iModelIndex;
+    if (!iModelIndex) {
+        iModelIndex = CE_GetModelIndex("hwn_item_pumpkin");
     }
 
-    UTILS_Message_Projectile(vUserOrigin, vVelocity, modelIndex, 10, id);
+    UTILS_Message_Projectile(vecUserOrigin, vecVelocity, iModelIndex, 10, pPlayer);
 }
 
-CollectEffect(ent)
-{
-    PotionSplashEffect(ent);
-    WaveEffect(ent);
+@Entity_CollectEffect(this) {
+    @Entity_PotionSplashEffect(this);
+    @Entity_WaveEffect(this);
 
-    if (get_pcvar_num(g_cvarBucketCollectFlash) > 0) {
-        FlashEffect(ent);
+    if (get_pcvar_num(g_pCvarBucketCollectFlash) > 0) {
+        @Entity_FlashEffect(this);
     }
 }
 
-PotionSplashEffect(ent)
-{
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-    vOrigin[2] += 32.0;
+@Entity_PotionSplashEffect(this) {
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+    vecOrigin[2] += 32.0;
 
-    UTIL_Message_Sprite(vOrigin, g_sprPotionSplash, EFFECT_SPLASH_LIFETIME, EFFECT_SPLASH_ALPHA);
+    UTIL_Message_Sprite(vecOrigin, g_iPotionSplashModelIndex, EFFECT_SPLASH_LIFETIME, EFFECT_SPLASH_ALPHA);
 }
 
-FlashEffect(ent)
-{
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-    vOrigin[2] += 24.0;
+@Entity_FlashEffect(this) {
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+    vecOrigin[2] += 24.0;
 
-    UTIL_Message_Dlight(vOrigin, FLASH_RADIUS, {HWN_COLOR_SECONDARY}, FLASH_LIFETIME, FLASH_DECAY_RATE);
+    UTIL_Message_Dlight(vecOrigin, FLASH_RADIUS, {HWN_COLOR_SECONDARY}, FLASH_LIFETIME, FLASH_DECAY_RATE);
 }
 
-WaveEffect(ent)
-{
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-    vOrigin[2] += 1.0;
+@Entity_WaveEffect(this) {
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+    vecOrigin[2] += 1.0;
 
     UTIL_Message_BeamCylinder(
-        vOrigin,
+        vecOrigin,
         EFFECT_WAVE_RADIUS,
-        g_sprPotionBeam,
+        g_iPotionBeamModelIndex,
         0,
         EFFECT_WAVE_LIFETIME,
         EFFECT_WAVE_WIDTH,
@@ -637,9 +506,9 @@ WaveEffect(ent)
     );
 
     UTIL_Message_BeamDisk(
-        vOrigin,
+        vecOrigin,
         EFFECT_WAVE_RADIUS,
-        g_sprPotionBeam,
+        g_iPotionBeamModelIndex,
         0,
         EFFECT_WAVE_LIFETIME,
         EFFECT_WAVE_WIDTH,
@@ -650,33 +519,126 @@ WaveEffect(ent)
     );
 }
 
-DamageEffect(ent)
-{
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-    vOrigin[2] += 42.0;
+@Entity_DamageEffect(this) {
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+    vecOrigin[2] += 42.0;
 
-    UTIL_Message_BloodSprite(vOrigin, 0, g_sprBlood, EFFECT_SPELL_DROPS_COLOR, EFFECT_SPELL_DROPS_SCALE);
+    UTIL_Message_BloodSprite(vecOrigin, 0, g_iBloodModelIndex, EFFECT_SPELL_DROPS_COLOR, EFFECT_SPELL_DROPS_SCALE);
 }
 
-PotionExplodeEffect(ent)
-{
-    new Float:vStart[3];
-    pev(ent, pev_origin, vStart);
-    vStart[2] += 8.0;
+@Entity_PotionExplodeEffect(this) {
+    new Float:vecStart[3];
+    pev(this, pev_origin, vecStart);
+    vecStart[2] += 8.0;
 
-    new Float:vEnd[3];
-    xs_vec_copy(vStart, vEnd);
-    vEnd[2] += 16.0;
+    new Float:vecEnd[3];
+    xs_vec_copy(vecStart, vecEnd);
+    vecEnd[2] += 16.0;
 
     UTIL_Message_SpriteTrail(
-        vStart,
-        vEnd,
-        g_sprSparkle,
+        vecStart,
+        vecEnd,
+        g_iSparkleModelIndex,
         EFFECT_MAGIC_SPLASH_PARTICLE_COUNT,
         EFFECT_MAGIC_SPLASH_PARTICLE_LIFETIME,
         EFFECT_MAGIC_SPLASH_PARTICLE_SCALE,
         EFFECT_MAGIC_SPLASH_PARTICLE_SPEED,
         EFFECT_MAGIC_SPLASH_PARTICLE_NOISE
     );
+}
+
+@Liquid_Spawn(this) {
+    new pOwner = pev(this, pev_owner);
+
+    set_pev(this, pev_solid, SOLID_NOT);
+    set_pev(this, pev_rendermode, kRenderTransAdd);
+    set_pev(this, pev_renderamt, 255.0);
+
+    new Float:vecOrigin[3];
+    pev(pOwner, pev_origin, vecOrigin);
+    engfunc(EngFunc_SetOrigin, this, vecOrigin);
+
+    CE_SetMember(this, "flNextRemoveLid", 0.0);
+}
+
+/*------------[ Hook ]------------*/
+
+public HamHook_Base_TraceAttack(pEntity, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
+    if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) {
+        return HAM_IGNORED;
+    }
+
+    static Float:vecStart[3];
+    UTIL_GetViewOrigin(pAttacker, vecStart);
+
+    static Float:vecEnd[3];
+    get_tr2(pTrace, TR_vecEndPos, vecEnd);
+
+    if (!UTIL_IsPointVisible(vecStart, vecEnd, pEntity)) {
+        return HAM_SUPERCEDE; // ignore wallbang damage
+    }
+
+    return HAM_HANDLED;
+}
+
+public HamHook_Base_TraceAttack_Post(pEntity, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
+    if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) {
+        return HAM_IGNORED;
+    }
+
+    static Float:vecEnd[3];
+    get_tr2(pTrace, TR_vecEndPos, vecEnd);
+
+    UTIL_Message_Sparks(vecEnd);
+    emit_sound(pEntity, CHAN_BODY, g_szSndHit[random(sizeof(g_szSndHit))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
+    return HAM_HANDLED;
+}
+
+public HamHook_Base_TakeDamage(pEntity, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
+    if (!pAttacker) {
+        return HAM_IGNORED;
+    }
+
+    if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) {
+        return HAM_IGNORED;
+    }
+
+    if (~iDamageBits & DMG_BULLET) { // explosions, etc.
+        static Float:vecStart[3];
+        pev(pInflictor, pev_origin, vecStart);
+
+        static Float:vecEnd[3];
+        pev(pEntity, pev_origin, vecEnd);
+
+        if (!UTIL_IsPointVisible(vecStart, vecEnd, pEntity)) {
+            return HAM_SUPERCEDE; // ignore wallbang damage
+        }
+    }
+
+    new iTeam = pev(pEntity, pev_team);
+    if (iTeam == get_member(pAttacker, m_iTeam)) {
+        return HAM_SUPERCEDE;
+    }
+
+    new iiTeamPoints = Hwn_Collector_GetTeamPoints(iTeam);
+    if (iiTeamPoints <= 0) {
+        return HAM_SUPERCEDE;
+    }
+
+    return HAM_HANDLED;
+}
+
+public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
+    if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) {
+        return HAM_IGNORED;
+    }
+
+    new iTeam = pev(pEntity, pev_team);
+    if (!Hwn_Collector_ObjectiveBlocked() && IS_PLAYER(pAttacker) && iTeam && get_member(pAttacker, m_iTeam) != iTeam) {
+        @Entity_DamageEffect(pEntity);
+    }
+
+    return HAM_HANDLED;
 }

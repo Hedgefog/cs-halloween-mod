@@ -11,19 +11,18 @@
 #define AUTHOR "Hedgehog Fog"
 
 #define MIN_EVENT_POINTS 8
+
 #define MAX_EVENT_POINTS 32
 
-new Float:g_eventPoints[MAX_EVENT_POINTS][3];
+new Float:g_rgvecEventPoints[MAX_EVENT_POINTS][3];
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
     
-    RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
+    RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed_Post", .Post = 1);
 }
 
-public plugin_natives()
-{
+public plugin_natives() {
     register_library("hwn");
     register_native("Hwn_EventPoints_Add", "Native_Add");
     register_native("Hwn_EventPoints_GetCount", "Native_GetCount");
@@ -33,113 +32,103 @@ public plugin_natives()
 
 /*--------------------------------[ Natives ]--------------------------------*/
 
-public Native_Add(pluginID, argc)
-{
-    new Float:vOrigin[3];
-    get_array_f(1, vOrigin, sizeof(vOrigin));
+public Native_Add(iPluginId, iArgc) {
+    new Float:vecOrigin[3];
+    get_array_f(1, vecOrigin, sizeof(vecOrigin));
 
-    Add(vOrigin);
+    Add(vecOrigin);
 }
 
-public Native_GetCount(pluginID, argc)
-{
+public Native_GetCount(iPluginId, iArgc) {
     return GetCount();
 }
 
-public bool:Native_Get(pluginID, argc)
-{
-    new pointIdx = get_param(1);
+public bool:Native_Get(iPluginId, iArgc) {
+    new iPointIdx = get_param(1);
 
-    new Float:vOrigin[3];
-    new bool:result = Get(pointIdx, vOrigin);
-    set_array_f(2, vOrigin, sizeof(vOrigin));
+    new Float:vecOrigin[3];
+    new bool:bResult = Get(iPointIdx, vecOrigin);
+    set_array_f(2, vecOrigin, sizeof(vecOrigin));
 
-    return result;
+    return bResult;
 }
 
-public bool:Native_GetRandom(pluginID, argc)
-{
-    new Float:vOrigin[3];
-    new bool:result = GetRandom(vOrigin);
-    set_array_f(1, vOrigin, sizeof(vOrigin));
+public bool:Native_GetRandom(iPluginId, iArgc) {
+    new Float:vecOrigin[3];
+    new bool:bResult = GetRandom(vecOrigin);
+    set_array_f(1, vecOrigin, sizeof(vecOrigin));
 
-    return result;
+    return bResult;
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnPlayerKilled(id)
-{
-    if (Hwn_Gamemode_IsPlayerOnSpawn(id, true)) {
+public HamHook_Player_Killed_Post(pPlayer) {
+    if (Hwn_Gamemode_IsPlayerOnSpawn(pPlayer, true)) {
         return;
     }
 
-    new Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
+    new Float:vecOrigin[3];
+    pev(pPlayer, pev_origin, vecOrigin);
 
-    if (!pev(id, pev_bInDuck)) {
-        vOrigin[2] += 18.0;
+    if (!pev(pPlayer, pev_bInDuck)) {
+        vecOrigin[2] += 18.0;
     }
 
-    Add(vOrigin);
+    Add(vecOrigin);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-Add(const Float:vOrigin[3])
-{
-    new bool:isFull = xs_vec_len(g_eventPoints[MAX_EVENT_POINTS - 1]) > 0.0;
+Add(const Float:vecOrigin[3]) {
+    new bool:bIsFull = xs_vec_len(g_rgvecEventPoints[MAX_EVENT_POINTS - 1]) > 0.0;
 
-    for (new i = 0; i < MAX_EVENT_POINTS; ++i) {
-        if (isFull) {
-            if (!i) {
+    for (new iPoint = 0; iPoint < MAX_EVENT_POINTS; ++iPoint) {
+        if (bIsFull) {
+            if (!iPoint) {
                 continue;
             }
 
-            xs_vec_copy(g_eventPoints[i], g_eventPoints[i - 1]);
+            xs_vec_copy(g_rgvecEventPoints[iPoint], g_rgvecEventPoints[iPoint - 1]);
 
-            if (i < MAX_EVENT_POINTS - 1) {
+            if (iPoint < MAX_EVENT_POINTS - 1) {
                 continue;
             }
         } else {
-            if (xs_vec_len(g_eventPoints[i]) > 0.0) {
+            if (xs_vec_len(g_rgvecEventPoints[iPoint]) > 0.0) {
                 continue;
             }
         }
 
-        xs_vec_copy(vOrigin, g_eventPoints[i]);
+        xs_vec_copy(vecOrigin, g_rgvecEventPoints[iPoint]);
         break;
     }
 }
 
-bool:Get(pointIdx, Float:vOrigin[3])
-{
-  new count = GetCount();
-  if (pointIdx >= count) {
+bool:Get(iPoint, Float:vecOrigin[3]) {
+  if (iPoint >= GetCount()) {
     return false;
   }
 
-  xs_vec_copy(g_eventPoints[pointIdx], vOrigin);
+  xs_vec_copy(g_rgvecEventPoints[iPoint], vecOrigin);
 
   return true;
 }
 
-bool:GetRandom(Float:vOrigin[3])
-{
-    new count = GetCount();
-    return Get(random(count), vOrigin);
+bool:GetRandom(Float:vecOrigin[3]) {
+    new iNum = GetCount();
+    return Get(random(iNum), vecOrigin);
 }
 
-GetCount()
-{
-    new count = 0;
+GetCount() {
+    new iNum = 0;
     for (new i = 0; i < MAX_EVENT_POINTS; ++i) {
-        if (xs_vec_len(g_eventPoints[i]) == 0.0) {
+        if (xs_vec_len(g_rgvecEventPoints[i]) == 0.0) {
             break;
         }
 
-        count++;
+        iNum++;
     }
 
-    return count;
+    return iNum;
 }

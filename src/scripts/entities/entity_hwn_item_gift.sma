@@ -12,19 +12,17 @@
 
 #define ENTITY_NAME "hwn_item_gift"
 
-new g_ceHandler;
+new g_iCeHandler;
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    register_forward(FM_AddToFullPack, "onAddToFullPack", ._post = 1);
+    register_forward(FM_AddToFullPack, "FMHook_AddToFullPack", ._post = 1);
 }
 
-public plugin_precache()
-{
-    g_ceHandler = CE_Register(
-        .szName = ENTITY_NAME,
+public plugin_precache() {
+    g_iCeHandler = CE_Register(
+        ENTITY_NAME,
         .modelIndex = precache_model("models/hwn/items/gift_v2.mdl"),
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
@@ -33,37 +31,32 @@ public plugin_precache()
         .preset = CEPreset_Item
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-    CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "OnPickup");
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "@Entity_Pickup");
 }
 
-public OnSpawn(ent)
-{
-    set_pev(ent, pev_framerate, 1.0);
-
-    set_pev(ent, pev_renderfx, kRenderFxGlowShell);
-    set_pev(ent, pev_renderamt, 1.0);
-    set_pev(ent, pev_rendercolor, {32.0, 32.0, 32.0});
+@Entity_Spawn(this) {
+    set_pev(this, pev_framerate, 1.0);
+    set_pev(this, pev_renderfx, kRenderFxGlowShell);
+    set_pev(this, pev_renderamt, 1.0);
+    set_pev(this, pev_rendercolor, {32.0, 32.0, 32.0});
 }
 
-public OnPickup(ent, id)
-{
-    new owner = pev(ent, pev_owner);
-
-    if (owner && id != owner) {
+@Entity_Pickup(this, pPlayer) {
+    new pOwner = pev(this, pev_owner);
+    if (pOwner && pPlayer != pOwner) {
         return PLUGIN_CONTINUE;
     }
 
     return PLUGIN_HANDLED;
 }
 
-public onAddToFullPack(es, e, ent, host, hostflags, player, pSet)
-{
-    if (!pev_valid(ent)) {
+public FMHook_AddToFullPack(es, e, pEntity, host, hostflags, player, pSet) {
+    if (!pev_valid(pEntity)) {
         return;
     }
 
-    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
+    if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) {
         return;
     }
 
@@ -71,8 +64,8 @@ public onAddToFullPack(es, e, ent, host, hostflags, player, pSet)
         return;
     }
 
-    new owner = pev(ent, pev_owner);
-    if(!owner || owner == host) {
+    new pOwner = pev(pEntity, pev_owner);
+    if (!pOwner || pOwner == host) {
         return;
     }
 

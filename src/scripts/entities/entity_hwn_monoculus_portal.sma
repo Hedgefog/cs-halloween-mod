@@ -8,14 +8,10 @@
 #define PLUGIN "[Custom Entity] Hwn Monoculus Portal"
 #define AUTHOR "Hedgehog Fog"
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
-public plugin_precache()
-{
-    CE_Register(
-        .szName = "hwn_monoculus_portal"
-    );
+public plugin_precache() {
+    CE_Register("hwn_monoculus_portal");
 }

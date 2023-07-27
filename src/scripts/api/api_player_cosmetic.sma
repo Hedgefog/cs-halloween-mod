@@ -13,25 +13,19 @@
 #define VERSION "1.1.0"
 #define AUTHOR "Hedgehog Fog"
 
-#if !defined MAX_PLAYERS
-    #define MAX_PLAYERS 32
-#endif
-
 #define TASKID_SUM_PLAYER_TIMER 1000
 
 #define ITEM_TYPE "cosmetic"
 #define UNUSUAL_ENTITY_RENDER_AMT 1.0
 
-enum ItemState
-{
+enum ItemState {
     ItemState_None = 0,
     ItemState_Equiped,
     ItemState_Equip,
     ItemState_Unequip
 };
 
-enum ItemData
-{
+enum ItemData {
     ItemData_Cosmetic = 0,
     PCosmetic_Type:ItemData_CosmeticType,
     ItemData_Time,
@@ -39,44 +33,40 @@ enum ItemData
     ItemData_Entity
 };
 
-new Trie:g_cosmeticIndexes;
-new Array:g_cosmeticName;
-new Array:g_cosmeticGroups;
-new Array:g_cosmeticModelIndex;
-new Array:g_cosmeticUnusualColor;
-new g_cosmeticCount = 0;
+new Trie:g_itCosmetic;
+new Array:g_irgCosmeticName;
+new Array:g_irgCosmeticGroups;
+new Array:g_irgCosmeticModelIndex;
+new Array:g_irgCosmeticUnusualColor;
+new g_iCosmeticsNum = 0;
 
-new g_playerRenderMode[MAX_PLAYERS + 1] = { 0, ... };
-new Float:g_playerRenderAmt[MAX_PLAYERS + 1] = { 0.0, ... };
+new g_rgPlayerRenderMode[MAX_PLAYERS + 1];
+new Float:g_rgPlayerRenderAmt[MAX_PLAYERS + 1];
 
-new g_allocClassname;
+new g_irgCosmeticClassName;
 
-new PInv_ItemType:g_itemType;
+new PInv_ItemType:g_iItemType;
 new g_hVault;
 
-new g_fwResult;
 new g_fwEquipmentChanged;
 
-public plugin_precache()
-{
-    g_allocClassname = engfunc(EngFunc_AllocString, "info_target");
+public plugin_precache() {
+    g_irgCosmeticClassName = engfunc(EngFunc_AllocString, "info_target");
 
     g_hVault = nvault_open("api_player_cosmetic");
-    g_itemType = PInv_RegisterItemType(ITEM_TYPE);
+    g_iItemType = PInv_RegisterItemType(ITEM_TYPE);
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
-    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
-    RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
+    RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
+    RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed_Post", .Post = 1);
 
     g_fwEquipmentChanged = CreateMultiForward("PCosmetic_Fw_EquipmentChanged", ET_IGNORE, FP_CELL);
 }
 
-public plugin_natives()
-{
+public plugin_natives() {
     register_library("api_player_cosmetic");
     register_native("PCosmetic_Register", "Native_Register");
     register_native("PCosmetic_Give", "Native_Give");
@@ -95,252 +85,228 @@ public plugin_natives()
     register_native("PCosmetic_GetCosmeticGroups", "Native_GetCosmeticGroups");
 }
 
-#if AMXX_VERSION_NUM < 183
-    public client_disconnect(id)
-#else
-    public client_disconnected(id)
-#endif
-{
-    new size = PInv_Size(id);
-    for (new i = 0; i < size; ++i)
+public client_disconnected(pPlayer) {
+    new iSize = PInv_Size(pPlayer);
+    for (new i = 0; i < iSize; ++i)
     {
-        new PInv_ItemType:itemType = PInv_GetItemType(id, i);
-        if (itemType != g_itemType) {
+        new PInv_ItemType:iItemType = PInv_GetItemType(pPlayer, i);
+        if (iItemType != g_iItemType) {
             continue;
         }
 
-        Unequip(id, i, .changeState = false);
+        Unequip(pPlayer, i, .bChangeState = false);
     }
 
-    ClearPlayerTasks(id);
+    ClearPlayerTasks(pPlayer);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnPlayerSpawn(id)
-{
-    if (!is_user_alive(id)) {
+public HamHook_Player_Spawn_Post(pPlayer) {
+    if (!is_user_alive(pPlayer)) {
         return;
     }
 
-    UpdateEquipment(id);
+    UpdateEquipment(pPlayer);
 }
 
-public OnPlayerKilled(id)
-{
-    ClearPlayerTasks(id);
+public HamHook_Player_Killed_Post(pPlayer) {
+    ClearPlayerTasks(pPlayer);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
 
-public Native_Register(pluginID, argc)
-{
+public Native_Register(iPluginId, iArgc) {
     new szName[32];
     get_string(1, szName, charsmax(szName));
 
-    new PCosmetic_Groups:groups = PCosmetic_Groups:get_param(2);
-    new modelIndex = get_param(3);
+    new PCosmetic_Groups:iGroups = PCosmetic_Groups:get_param(2);
+    new iModelIndex = get_param(3);
 
-    new Float:color[3];
-    get_array_f(4, color, 3);
+    new Float:rgflColor[3];
+    get_array_f(4, rgflColor, 3);
 
-    return Register(szName, groups, modelIndex, color);
+    return Register(szName, iGroups, iModelIndex, rgflColor);
 }
 
-public Native_Give(pluginID, argc)
-{
-    new id = get_param(1);
-    new cosmetic = get_param(2);
-    new PCosmetic_Type:cosmeticType = PCosmetic_Type:get_param(3);
-    new time = get_param(4);
+public Native_Give(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    new iCosmetic = get_param(2);
+    new PCosmetic_Type:iCosmeticType = PCosmetic_Type:get_param(3);
+    new iTime = get_param(4);
 
-    return Give(id, cosmetic, cosmeticType, time);
+    return Give(pPlayer, iCosmetic, iCosmeticType, iTime);
 }
 
-public Native_GetCosmeticName(pluginID, argc)
-{
-    new cosmetic = get_param(1);
-    new maxlen = get_param(3);
+public Native_GetCosmeticName(iPluginId, iArgc) {
+    new iCosmetic = get_param(1);
+    new iLen = get_param(3);
 
     static szName[32];
-    ArrayGetString(g_cosmeticName, cosmetic, szName, charsmax(szName));
-    set_string(2, szName, maxlen);
+    ArrayGetString(g_irgCosmeticName, iCosmetic, szName, charsmax(szName));
+    set_string(2, szName, iLen);
 }
 
-public Native_GetCosmeticGroups(pluginID, argc)
-{
-    new cosmetic = get_param(1);
+public Native_GetCosmeticGroups(iPluginId, iArgc) {
+    new iCosmetic = get_param(1);
 
-    return ArrayGetCell(g_cosmeticGroups, cosmetic);
+    return ArrayGetCell(g_irgCosmeticGroups, iCosmetic);
 }
 
-public Native_Equip(pluginID, argc)
-{
-    new id = get_param(1);
-    new slotIdx = get_param(2);
+public Native_Equip(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    new iSlot = get_param(2);
 
-    new Array:item = Array:PInv_GetItem(id, slotIdx);
-    new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
+    new Array:irgItem = Array:PInv_GetItem(pPlayer, iSlot);
+    new ItemState:iItemState = ArrayGetCell(irgItem, _:ItemData_State);
 
-    if (itemState == ItemState_None) {
-        itemState = ItemState_Equip;
-    } else if (itemState == ItemState_Unequip) {
-        itemState = ItemState_Equiped;
+    if (iItemState == ItemState_None) {
+        iItemState = ItemState_Equip;
+    } else if (iItemState == ItemState_Unequip) {
+        iItemState = ItemState_Equiped;
     }
 
-    ArraySetCell(item, _:ItemData_State, itemState);
-    ExecuteForward(g_fwEquipmentChanged, g_fwResult, id);
+    ArraySetCell(irgItem, _:ItemData_State, iItemState);
+    ExecuteForward(g_fwEquipmentChanged, _, pPlayer);
 }
 
-public Native_Unequip(pluginID, argc)
-{
-    new id = get_param(1);
-    new slotIdx = get_param(2);
+public Native_Unequip(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    new iSlot = get_param(2);
 
-    new Array:item = Array:PInv_GetItem(id, slotIdx);
-    new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
+    new Array:irgItem = Array:PInv_GetItem(pPlayer, iSlot);
+    new ItemState:iItemState = ArrayGetCell(irgItem, _:ItemData_State);
 
-    if (itemState == ItemState_Equiped) {
-        itemState = ItemState_Unequip;
-    } else if (itemState == ItemState_Equip) {
-        itemState = ItemState_None;
+    if (iItemState == ItemState_Equiped) {
+        iItemState = ItemState_Unequip;
+    } else if (iItemState == ItemState_Equip) {
+        iItemState = ItemState_None;
     }
 
-    ArraySetCell(item, _:ItemData_State, itemState);
-    ExecuteForward(g_fwEquipmentChanged, g_fwResult, id);
+    ArraySetCell(irgItem, _:ItemData_State, iItemState);
+    ExecuteForward(g_fwEquipmentChanged, _, pPlayer);
 }
 
-public Native_IsItemEquiped(pluginID, argc)
-{
-    new id = get_param(1);
-    new slotIdx = get_param(2);
+public Native_IsItemEquiped(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    new iSlot = get_param(2);
 
-    new Array:item = Array:PInv_GetItem(id, slotIdx);
-    new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
+    new Array:irgItem = Array:PInv_GetItem(pPlayer, iSlot);
+    new ItemState:iItemState = ArrayGetCell(irgItem, _:ItemData_State);
 
-    return (itemState == ItemState_Equiped || itemState == ItemState_Equip);
+    return (iItemState == ItemState_Equiped || iItemState == ItemState_Equip);
 }
 
-public Native_UpdateEquipment(pluginID, argc)
-{
-    new id = get_param(1);
+public Native_UpdateEquipment(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
 
-    UpdateEquipment(id);
+    UpdateEquipment(pPlayer);
 }
 
-public Native_CanBeEquiped(pluginID, argc)
-{
-    new id = get_param(1);
-    new cosmetic = get_param(2);
-    new ignoreSlotIdx = get_param(3);
+public Native_CanBeEquiped(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    new iCosmetic = get_param(2);
+    new iIgnoreSlot = get_param(3);
 
-    return CanBeEquiped(id, cosmetic, ignoreSlotIdx);
+    return CanBeEquiped(pPlayer, iCosmetic, iIgnoreSlot);
 }
 
-public Native_GetItemCosmetic(pluginID, argc)
-{
-    new id = get_param(1);
-    new slotIdx = get_param(2);
+public Native_GetItemCosmetic(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    new iSlot = get_param(2);
 
-    new Array:item = Array:PInv_GetItem(id, slotIdx);
-    return ArrayGetCell(item, _:ItemData_Cosmetic);
+    new Array:irgItem = Array:PInv_GetItem(pPlayer, iSlot);
+    return ArrayGetCell(irgItem, _:ItemData_Cosmetic);
 }
 
-public Native_GetItemCosmeticType(pluginID, argc)
-{
-    new id = get_param(1);
-    new slotIdx = get_param(2);
+public Native_GetItemCosmeticType(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    new iSlot = get_param(2);
 
-    new Array:item = Array:PInv_GetItem(id, slotIdx);
-    return ArrayGetCell(item, _:ItemData_CosmeticType);
+    new Array:irgItem = Array:PInv_GetItem(pPlayer, iSlot);
+    return ArrayGetCell(irgItem, _:ItemData_CosmeticType);
 }
 
-public Native_GetItemTime(pluginID, argc)
-{
-    new id = get_param(1);
-    new slotIdx = get_param(2);
+public Native_GetItemTime(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    new iSlot = get_param(2);
 
-    new Array:item = Array:PInv_GetItem(id, slotIdx);
-    return ArrayGetCell(item, _:ItemData_Time);
+    new Array:irgItem = Array:PInv_GetItem(pPlayer, iSlot);
+    return ArrayGetCell(irgItem, _:ItemData_Time);
 }
 
 /*--------------------------------[ Events ]--------------------------------*/
 
-public PInv_Event_SlotLoaded(id, slotIdx)
-{
-    new PInv_ItemType:itemType = PInv_GetItemType(id, slotIdx);
-    if (PInv_ItemType:itemType != g_itemType) {
-        return; //Invalid item type
+public PInv_Event_SlotLoaded(pPlayer, iSlot) {
+    new PInv_ItemType:iItemType = PInv_GetItemType(pPlayer, iSlot);
+    if (PInv_ItemType:iItemType != g_iItemType) {
+        return; //Invalid irgItem iType
     }
 
-    new item = PInv_GetItem(id, slotIdx);
-
-    new cosmetic;
-    new PCosmetic_Type:cosmeticType;
-    new itemTime;
-    new ItemState:itemState;
-
-    if (item == _:Invalid_Array) {
+    new irgItem = PInv_GetItem(pPlayer, iSlot);
+    if (irgItem == _:Invalid_Array) {
         return; //Handler is invalid
     }
 
-    if (!LoadItem(item, cosmetic, cosmeticType, itemTime, itemState)) {
-        PInv_SetItem(id, slotIdx, Invalid_Array, PInv_Invalid_ItemType);
-        PInv_TakeItem(id, slotIdx);
-        return; //Invalid cosmetic
+    new iCosmetic;
+    new PCosmetic_Type:iCosmeticType;
+    new iItemTime;
+    new ItemState:iItemState;
+
+    if (!LoadItem(irgItem, iCosmetic, iCosmeticType, iItemTime, iItemState)) {
+        PInv_SetItem(pPlayer, iSlot, Invalid_Array, PInv_Invalid_ItemType);
+        PInv_TakeItem(pPlayer, iSlot);
+        return; //Invalid iCosmetic
     }
 
-    item = _:CreateCosmetic(cosmetic, cosmeticType, itemTime);
+    irgItem = _:CreateCosmetic(iCosmetic, iCosmeticType, iItemTime);
 
-    if (itemState == ItemState_Equiped) {
-        itemState = ItemState_Equip;
-    } else if (itemState == ItemState_Unequip) {
-        itemState = ItemState_None;
+    if (iItemState == ItemState_Equiped) {
+        iItemState = ItemState_Equip;
+    } else if (iItemState == ItemState_Unequip) {
+        iItemState = ItemState_None;
     }
 
-    PInv_SetItem(id, slotIdx, item, g_itemType);
-    ArraySetCell(Array:item, _:ItemData_State, itemState); //Change state of item
+    PInv_SetItem(pPlayer, iSlot, irgItem, g_iItemType);
+    ArraySetCell(Array:irgItem, _:ItemData_State, iItemState); //Change state of irgItem
 }
 
-public PInv_Event_SlotSaved(id, slotIdx)
-{
-    new PInv_ItemType:itemType = PInv_GetItemType(id, slotIdx);
-    if (itemType != g_itemType) {
-        return; //Invalid item type
+public PInv_Event_SlotSaved(pPlayer, iSlot) {
+    new PInv_ItemType:iItemType = PInv_GetItemType(pPlayer, iSlot);
+    if (iItemType != g_iItemType) {
+        return; //Invalid irgItem iType
     }
 
-    new item = PInv_GetItem(id, slotIdx);
-    if (item == _:Invalid_Array) {
+    new irgItem = PInv_GetItem(pPlayer, iSlot);
+    if (irgItem == _:Invalid_Array) {
         return; //Handler is invalid
     }
 
-    SaveItem(item); //Save data about handler
+    SaveItem(irgItem); //Save data about handler
 }
 
-public PInv_Event_TakeSlot(id, slotIdx)
-{
-    new PInv_ItemType:itemType = PInv_GetItemType(id, slotIdx);
-    if (itemType != g_itemType) {
-        return; //Invalid item type
+public PInv_Event_TakeSlot(pPlayer, iSlot) {
+    new PInv_ItemType:iItemType = PInv_GetItemType(pPlayer, iSlot);
+    if (iItemType != g_iItemType) {
+        return; //Invalid irgItem iType
     }
 
-    new Array:item = PInv_GetItem(id, slotIdx);
-    if (item == Invalid_Array) {
+    new Array:irgItem = PInv_GetItem(pPlayer, iSlot);
+    if (irgItem == Invalid_Array) {
         return; //Handler is invalid
     }
 
-    ArrayDestroy(item);
+    ArrayDestroy(irgItem);
 }
 
-public PInv_Event_Destroy()
-{
-    TrieDestroy(g_cosmeticIndexes);
+public PInv_Event_Destroy() {
+    TrieDestroy(g_itCosmetic);
 
-    if (g_cosmeticCount)  {
-        ArrayDestroy(g_cosmeticName);
-        ArrayDestroy(g_cosmeticGroups);
-        ArrayDestroy(g_cosmeticModelIndex);
-        ArrayDestroy(g_cosmeticUnusualColor);
+    if (g_iCosmeticsNum)  {
+        ArrayDestroy(g_irgCosmeticName);
+        ArrayDestroy(g_irgCosmeticGroups);
+        ArrayDestroy(g_irgCosmeticModelIndex);
+        ArrayDestroy(g_irgCosmeticUnusualColor);
     }
 
     nvault_close(g_hVault);
@@ -348,333 +314,321 @@ public PInv_Event_Destroy()
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-Array:CreateCosmetic(cosmetic, PCosmetic_Type:cosmeticType, time)
-{
-    new Array:item = ArrayCreate(1, _:ItemData);
+Array:CreateCosmetic(iCosmetic, PCosmetic_Type:iCosmeticType, iTime) {
+    new Array:irgItem = ArrayCreate(1, _:ItemData);
     for (new i = 0; i < _:ItemData; ++i) {
-        ArrayPushCell(item, 0);
+        ArrayPushCell(irgItem, 0);
     }
 
-    ArraySetCell(item, _:ItemData_Cosmetic, cosmetic);
-    ArraySetCell(item, _:ItemData_CosmeticType, cosmeticType);
-    ArraySetCell(item, _:ItemData_Time, time);
-    ArraySetCell(item, _:ItemData_State, ItemState_None);
+    ArraySetCell(irgItem, _:ItemData_Cosmetic, iCosmetic);
+    ArraySetCell(irgItem, _:ItemData_CosmeticType, iCosmeticType);
+    ArraySetCell(irgItem, _:ItemData_Time, iTime);
+    ArraySetCell(irgItem, _:ItemData_State, ItemState_None);
 
-    return item;
+    return irgItem;
 }
 
-Register(const szName[], PCosmetic_Groups:groups, modelIndex, const Float:unusualColor[3])
-{
-    if (!g_cosmeticCount) {
-        g_cosmeticName = ArrayCreate(32);
-        g_cosmeticGroups = ArrayCreate();
-        g_cosmeticModelIndex = ArrayCreate();
-        g_cosmeticUnusualColor = ArrayCreate(3);
-        g_cosmeticIndexes = TrieCreate();
+Register(const szName[], PCosmetic_Groups:iGroups, iModelIndex, const Float:unusualColor[3]) {
+    if (!g_iCosmeticsNum) {
+        g_irgCosmeticName = ArrayCreate(32);
+        g_irgCosmeticGroups = ArrayCreate();
+        g_irgCosmeticModelIndex = ArrayCreate();
+        g_irgCosmeticUnusualColor = ArrayCreate(3);
+        g_itCosmetic = TrieCreate();
     }
 
-    ArrayPushString(g_cosmeticName, szName);
-    ArrayPushCell(g_cosmeticGroups, groups);
-    ArrayPushCell(g_cosmeticModelIndex, modelIndex);
-    ArrayPushArray(g_cosmeticUnusualColor, unusualColor);
+    ArrayPushString(g_irgCosmeticName, szName);
+    ArrayPushCell(g_irgCosmeticGroups, iGroups);
+    ArrayPushCell(g_irgCosmeticModelIndex, iModelIndex);
+    ArrayPushArray(g_irgCosmeticUnusualColor, unusualColor);
 
-    new cosmetic = g_cosmeticCount;
-    TrieSetCell(g_cosmeticIndexes, szName, cosmetic);
+    new iCosmetic = g_iCosmeticsNum;
+    TrieSetCell(g_itCosmetic, szName, iCosmetic);
 
-    g_cosmeticCount++;
+    g_iCosmeticsNum++;
 
-    return cosmetic;
+    return iCosmetic;
 }
 
-Give(id, cosmetic, PCosmetic_Type:cosmeticType, time)
-{
-    new slotIdx = -1;
-    new Array:item = Invalid_Array;
+Give(pPlayer, iCosmetic, PCosmetic_Type:iCosmeticType, iTime) {
+    new iSlot = -1;
+    new Array:irgItem = Invalid_Array;
 
-    new size = PInv_Size(id);
-    for (new i = 0; i < size; ++i)
+    new iSize = PInv_Size(pPlayer);
+    for (new i = 0; i < iSize; ++i)
     {
-        if (g_itemType != PInv_GetItemType(id, i)) {
+        if (g_iItemType != PInv_GetItemType(pPlayer, i)) {
             continue;
         }
 
-        item = Array:PInv_GetItem(id, i);
-        new itemCosmetic = ArrayGetCell(item, _:ItemData_Cosmetic);
-        new PCosmetic_Type:itemCosmeticType = ArrayGetCell(item, _:ItemData_CosmeticType);
+        irgItem = Array:PInv_GetItem(pPlayer, i);
+        new itemCosmetic = ArrayGetCell(irgItem, _:ItemData_Cosmetic);
+        new PCosmetic_Type:itemCosmeticType = ArrayGetCell(irgItem, _:ItemData_CosmeticType);
 
-        if (cosmetic == itemCosmetic && cosmeticType == itemCosmeticType) {
-            slotIdx = i;
+        if (iCosmetic == itemCosmetic && iCosmeticType == itemCosmeticType) {
+            iSlot = i;
             break;
         }
     }
 
-    if (slotIdx == -1) {
-        item = CreateCosmetic(cosmetic, cosmeticType, time);
-        slotIdx = PInv_GiveItem(id, item, g_itemType);
+    if (iSlot == -1) {
+        irgItem = CreateCosmetic(iCosmetic, iCosmeticType, iTime);
+        iSlot = PInv_GiveItem(pPlayer, irgItem, g_iItemType);
     }
 
-    return slotIdx;
+    return iSlot;
 }
 
-Equip(id, slotIdx)
-{
-    new PInv_ItemType:itemType = PInv_GetItemType(id, slotIdx);
-    if (itemType != g_itemType) {
-        return; //Is not a cosmetic
+Equip(pPlayer, iSlot) {
+    new PInv_ItemType:iItemType = PInv_GetItemType(pPlayer, iSlot);
+    if (iItemType != g_iItemType) {
+        return; //Is not a iCosmetic
     }
 
-    new Array:item = Array:PInv_GetItem(id, slotIdx);
+    new Array:irgItem = Array:PInv_GetItem(pPlayer, iSlot);
 
-    new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
+    new ItemState:iItemState = ArrayGetCell(irgItem, _:ItemData_State);
 
-    if (itemState == ItemState_Equiped) {
+    if (iItemState == ItemState_Equiped) {
         return; //Already equiped
     }
 
-    new cosmetic = ArrayGetCell(item, _:ItemData_Cosmetic);
-    if (!CanBeEquiped(id, cosmetic, slotIdx)) {
+    new iCosmetic = ArrayGetCell(irgItem, _:ItemData_Cosmetic);
+    if (!CanBeEquiped(pPlayer, iCosmetic, iSlot)) {
         return; //Can't be equiped
     }
 
-    new PCosmetic_Type:cosmeticType = ArrayGetCell(item, _:ItemData_CosmeticType);
+    new PCosmetic_Type:iCosmeticType = ArrayGetCell(irgItem, _:ItemData_CosmeticType);
 
-    new ent = CreateCosmeticEntity(id, cosmetic, cosmeticType);
-    ArraySetCell(item, _:ItemData_Entity, ent);
-    ArraySetCell(item, _:ItemData_State, ItemState_Equiped);
+    new pEntity = CreateCosmeticEntity(pPlayer, iCosmetic, iCosmeticType);
+    ArraySetCell(irgItem, _:ItemData_Entity, pEntity);
+    ArraySetCell(irgItem, _:ItemData_State, ItemState_Equiped);
 
-    ExecuteForward(g_fwEquipmentChanged, g_fwResult, id);
+    ExecuteForward(g_fwEquipmentChanged, _, pPlayer);
 }
 
-Unequip(id, slotIdx, bool:changeState = true)
-{
-    new PInv_ItemType:itemType = PInv_GetItemType(id, slotIdx);
-    if (itemType != g_itemType) {
-        return; //Is not a cosmetic
+Unequip(pPlayer, iSlot, bool:bChangeState = true) {
+    new PInv_ItemType:iItemType = PInv_GetItemType(pPlayer, iSlot);
+    if (iItemType != g_iItemType) {
+        return; //Is not a iCosmetic
     }
 
-    new Array:item = Array:PInv_GetItem(id, slotIdx);
-    new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
+    new Array:irgItem = Array:PInv_GetItem(pPlayer, iSlot);
+    new ItemState:iItemState = ArrayGetCell(irgItem, _:ItemData_State);
 
-    if (itemState == ItemState_None) {
+    if (iItemState == ItemState_None) {
         return; //Not equiped
     }
 
-    new ent = ArrayGetCell(item, _:ItemData_Entity);
-    if (pev_valid(ent)) {
-        set_pev(ent, pev_movetype, MOVETYPE_NONE);
-        set_pev(ent, pev_aiment, 0);
-        engfunc(EngFunc_RemoveEntity, ent);
+    new pEntity = ArrayGetCell(irgItem, _:ItemData_Entity);
+    if (pev_valid(pEntity)) {
+        set_pev(pEntity, pev_movetype, MOVETYPE_NONE);
+        set_pev(pEntity, pev_aiment, 0);
+        engfunc(EngFunc_RemoveEntity, pEntity);
     }
 
-    ArraySetCell(item, _:ItemData_Entity, 0);
+    ArraySetCell(irgItem, _:ItemData_Entity, 0);
 
-    if (changeState) {
-        ArraySetCell(item, _:ItemData_State, ItemState_None);
+    if (bChangeState) {
+        ArraySetCell(irgItem, _:ItemData_State, ItemState_None);
     }
 
-    new itemTime = ArrayGetCell(item, _:ItemData_Time);
-    if (itemTime <= 0) {
-        PInv_TakeItem(id, slotIdx);
+    new iItemTime = ArrayGetCell(irgItem, _:ItemData_Time);
+    if (iItemTime <= 0) {
+        PInv_TakeItem(pPlayer, iSlot);
     }
     
-    ExecuteForward(g_fwEquipmentChanged, g_fwResult, id);
+    ExecuteForward(g_fwEquipmentChanged, _, pPlayer);
 }
 
-bool:CanBeEquiped(id, cosmetic, ignoreSlotIdx = -1)
-{
-    new cosmeticGroups = ArrayGetCell(g_cosmeticGroups, cosmetic);
+bool:CanBeEquiped(pPlayer, iCosmetic, iIgnoreSlot = -1) {
+    new iCosmeticGroups = ArrayGetCell(g_irgCosmeticGroups, iCosmetic);
 
-    new size = PInv_Size(id);
-    for (new i = 0; i < size; ++i)
+    new iSize = PInv_Size(pPlayer);
+    for (new i = 0; i < iSize; ++i)
     {
-        if (i == ignoreSlotIdx) {
+        if (i == iIgnoreSlot) {
             continue;
         }
 
-        new PInv_ItemType:itemType = PInv_GetItemType(id, i);
-        if (itemType != g_itemType) {
+        new PInv_ItemType:iItemType = PInv_GetItemType(pPlayer, i);
+        if (iItemType != g_iItemType) {
             continue;
         }
 
-        new Array:item = Array:PInv_GetItem(id, i);
+        new Array:irgItem = Array:PInv_GetItem(pPlayer, i);
 
-        new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
-        if (itemState != ItemState_Equiped && itemState != ItemState_Equip) {
-            continue; //This item not equiped.
+        new ItemState:iItemState = ArrayGetCell(irgItem, _:ItemData_State);
+        if (iItemState != ItemState_Equiped && iItemState != ItemState_Equip) {
+            continue; //This irgItem not equiped.
         }
 
-        new itemCosmetic = ArrayGetCell(item, _:ItemData_Cosmetic);
-        if (cosmetic == itemCosmetic) {
-            return false; //This item is already equiped
+        new itemCosmetic = ArrayGetCell(irgItem, _:ItemData_Cosmetic);
+        if (iCosmetic == itemCosmetic) {
+            return false; //This irgItem is already equiped
         }
 
-        new itemCosmeticGroups = ArrayGetCell(g_cosmeticGroups, itemCosmetic);
-        if (cosmeticGroups & itemCosmeticGroups) {
-            return false; //Item with some groups already equiped
+        new itemCosmeticGroups = ArrayGetCell(g_irgCosmeticGroups, itemCosmetic);
+        if (iCosmeticGroups & itemCosmeticGroups) {
+            return false; //Item with some iGroups already equiped
         }
     }
 
     return true;
 }
 
-CreateCosmeticEntity(owner, cosmetic, PCosmetic_Type:type = PCosmetic_Type_Normal)
-{
-    new ent = engfunc(EngFunc_CreateNamedEntity, g_allocClassname);
-    set_pev(ent, pev_movetype, MOVETYPE_FOLLOW);
-    set_pev(ent, pev_aiment, owner);
+CreateCosmeticEntity(pOwner, iCosmetic, PCosmetic_Type:iType = PCosmetic_Type_Normal) {
+    new pEntity = engfunc(EngFunc_CreateNamedEntity, g_irgCosmeticClassName);
+    set_pev(pEntity, pev_movetype, MOVETYPE_FOLLOW);
+    set_pev(pEntity, pev_aiment, pOwner);
 
-    if (type == PCosmetic_Type_Unusual) {
-        static Float:color[3];
-        ArrayGetArray(g_cosmeticUnusualColor, cosmetic, color);
+    if (iType == PCosmetic_Type_Unusual) {
+        static Float:rgflColor[3];
+        ArrayGetArray(g_irgCosmeticUnusualColor, iCosmetic, rgflColor);
 
-        set_pev(ent, pev_renderfx, kRenderFxGlowShell);
-        set_pev(ent, pev_rendercolor, color);
-        set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
+        set_pev(pEntity, pev_renderfx, kRenderFxGlowShell);
+        set_pev(pEntity, pev_rendercolor, rgflColor);
+        set_pev(pEntity, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
     }
 
-    new modelIndex = ArrayGetCell(g_cosmeticModelIndex, cosmetic);
-    set_pev(ent, pev_modelindex, modelIndex);
+    new iModelIndex = ArrayGetCell(g_irgCosmeticModelIndex, iCosmetic);
+    set_pev(pEntity, pev_modelindex, iModelIndex);
 
-    return ent;
+    return pEntity;
 }
 
-UpdateEquipment(id)
-{
-    if (!g_cosmeticCount) {
+UpdateEquipment(pPlayer) {
+    if (!g_iCosmeticsNum) {
         return;
     }
 
-    new size = PInv_Size(id);
-    for (new i = 0; i < size; ++i)
+    new iSize = PInv_Size(pPlayer);
+    for (new i = 0; i < iSize; ++i)
     {
-        new PInv_ItemType:itemType = PInv_GetItemType(id, i);
-        if (itemType != g_itemType) {
-            continue; //Invalid item type
+        new PInv_ItemType:iItemType = PInv_GetItemType(pPlayer, i);
+        if (iItemType != g_iItemType) {
+            continue; //Invalid irgItem iType
         }
 
-        new Array:item = Array:PInv_GetItem(id, i);
-        new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
+        new Array:irgItem = Array:PInv_GetItem(pPlayer, i);
+        new ItemState:iItemState = ArrayGetCell(irgItem, _:ItemData_State);
 
-        if (itemState == ItemState_Equip) {
-            Equip(id, i);
-        } else if (itemState == ItemState_Unequip) {
-            Unequip(id, i);
+        if (iItemState == ItemState_Equip) {
+            Equip(pPlayer, i);
+        } else if (iItemState == ItemState_Unequip) {
+            Unequip(pPlayer, i);
         }
     }
 
-    SetupPlayerTasks(id);
+    SetupPlayerTasks(pPlayer);
 }
 
-SetupPlayerTasks(id)
-{
-    if (!task_exists(id)) {
-        set_task(0.1, "TaskPlayerThink", id, _, _, "b");
+SetupPlayerTasks(pPlayer) {
+    if (!task_exists(pPlayer)) {
+        set_task(0.1, "Task_PlayerThink", pPlayer, _, _, "b");
     }
 
-    if (!task_exists(id+TASKID_SUM_PLAYER_TIMER)) {
-        set_task(1.0, "TaskPlayerTimer", id+TASKID_SUM_PLAYER_TIMER, _, _, "b");
+    if (!task_exists(pPlayer+TASKID_SUM_PLAYER_TIMER)) {
+        set_task(1.0, "Task_PlayerTimer", pPlayer+TASKID_SUM_PLAYER_TIMER, _, _, "b");
     }
 }
 
-ClearPlayerTasks(id)
-{
-    remove_task(id);
-    remove_task(id+TASKID_SUM_PLAYER_TIMER);
+ClearPlayerTasks(pPlayer) {
+    remove_task(pPlayer);
+    remove_task(pPlayer+TASKID_SUM_PLAYER_TIMER);
 }
 
 /*--------------------------------[ Vault ]--------------------------------*/
 
-bool:LoadItem(any:item, &cosmetic, &PCosmetic_Type:cosmeticType, &itemTime, &ItemState:itemState)
-{
-    if (!g_cosmeticCount) {
+bool:LoadItem(any:irgItem, &iCosmetic, &PCosmetic_Type:iCosmeticType, &iItemTime, &ItemState:iItemState) {
+    if (!g_iCosmeticsNum) {
         return false;
     }
 
     new szKey[32];
     new szValue[32];
 
-    //cosmetic;
+    //iCosmetic;
     {
-        format(szKey, charsmax(szKey), "%i_name", item);
+        format(szKey, charsmax(szKey), "%i_name", irgItem);
         nvault_get(g_hVault, szKey, szValue, charsmax(szValue));
         nvault_remove(g_hVault, szKey);
 
-        if (szValue[0] == '^0') {
+        if (equal(szValue, NULL_STRING)) {
             return false;
         }
 
-        if (!TrieKeyExists(g_cosmeticIndexes, szValue)) {
+        if (!TrieKeyExists(g_itCosmetic, szValue)) {
             return false;
         }
 
         //Get index by name
-        if (!TrieGetCell(g_cosmeticIndexes, szValue, cosmetic)) {
+        if (!TrieGetCell(g_itCosmetic, szValue, iCosmetic)) {
             return false;
         }
     }
 
-    //cosmeticType;
+    //iCosmeticType;
     {
-        format(szKey, charsmax(szKey), "%i_cosmeticType", item);
-        cosmeticType = PCosmetic_Type:nvault_get(g_hVault, szKey);
+        format(szKey, charsmax(szKey), "%i_cosmeticType", irgItem);
+        iCosmeticType = PCosmetic_Type:nvault_get(g_hVault, szKey);
         nvault_remove(g_hVault, szKey);
     }
 
-    //itemTime;
+    //iItemTime;
     {
-        format(szKey, charsmax(szKey), "%i_time", item);
-        itemTime = nvault_get(g_hVault, szKey);
+        format(szKey, charsmax(szKey), "%i_time", irgItem);
+        iItemTime = nvault_get(g_hVault, szKey);
         nvault_remove(g_hVault, szKey);
     }
 
-    //ItemState:itemState;
+    //ItemState:iItemState;
     {
-        format(szKey, charsmax(szKey), "%i_state", item);
-        itemState = ItemState:nvault_get(g_hVault, szKey);
+        format(szKey, charsmax(szKey), "%i_state", irgItem);
+        iItemState = ItemState:nvault_get(g_hVault, szKey);
         nvault_remove(g_hVault, szKey);
     }
 
     return true;
 }
 
-SaveItem(any:item)
-{
-    new itemTime = ArrayGetCell(item, _:ItemData_Time);
-    if (itemTime <= 0) {
+SaveItem(any:irgItem) {
+    new iItemTime = ArrayGetCell(irgItem, _:ItemData_Time);
+    if (iItemTime <= 0) {
         return;
     }
 
     new szKey[32];
     new szValue[32];
 
-    new cosmetic = ArrayGetCell(item, _:ItemData_Cosmetic);
+    new iCosmetic = ArrayGetCell(irgItem, _:ItemData_Cosmetic);
     {
-        format(szKey, charsmax(szKey), "%i_name", item);
-        ArrayGetString(g_cosmeticName, cosmetic, szValue, charsmax(szValue));
+        format(szKey, charsmax(szKey), "%i_name", irgItem);
+        ArrayGetString(g_irgCosmeticName, iCosmetic, szValue, charsmax(szValue));
 
         nvault_set(g_hVault, szKey, szValue);
     }
 
-    new cosmeticType = ArrayGetCell(item, _:ItemData_CosmeticType);
+    new iCosmeticType = ArrayGetCell(irgItem, _:ItemData_CosmeticType);
     {
-        format(szKey, charsmax(szKey), "%i_cosmeticType", item);
-        format(szValue, charsmax(szValue), "%i", cosmeticType);
+        format(szKey, charsmax(szKey), "%i_cosmeticType", irgItem);
+        format(szValue, charsmax(szValue), "%i", iCosmeticType);
 
         nvault_set(g_hVault, szKey, szValue);
     }
 
-    //itemTime
+    //iItemTime
     {
-        format(szKey, charsmax(szKey), "%i_time", item);
-        format(szValue, charsmax(szValue), "%i", itemTime);
+        format(szKey, charsmax(szKey), "%i_time", irgItem);
+        format(szValue, charsmax(szValue), "%i", iItemTime);
 
         nvault_set(g_hVault, szKey, szValue);
     }
 
-    new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
+    new ItemState:iItemState = ArrayGetCell(irgItem, _:ItemData_State);
     {
-        format(szKey, charsmax(szKey), "%i_state", item);
-        format(szValue, charsmax(szValue), "%i", itemState);
+        format(szKey, charsmax(szKey), "%i_state", irgItem);
+        format(szValue, charsmax(szValue), "%i", iItemState);
 
         nvault_set(g_hVault, szKey, szValue);
     }
@@ -682,79 +636,77 @@ SaveItem(any:item)
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
-public TaskPlayerTimer(taskID)
-{
-    new id = taskID - TASKID_SUM_PLAYER_TIMER;
+public Task_PlayerTimer(iTaskId) {
+    new pPlayer = iTaskId - TASKID_SUM_PLAYER_TIMER;
 
-    if (!is_user_alive(id)) {
+    if (!is_user_alive(pPlayer)) {
         return;
     }
 
-    new size = PInv_Size(id);
-    for (new i = 0; i < size; ++i)
+    new iSize = PInv_Size(pPlayer);
+    for (new i = 0; i < iSize; ++i)
     {
-        if (g_itemType != PInv_GetItemType(id, i)) {
-            continue; //Invalid item type
+        if (g_iItemType != PInv_GetItemType(pPlayer, i)) {
+            continue; //Invalid irgItem iType
         }
 
-        new Array:item = Array:PInv_GetItem(id, i);
-        new ItemState:itemState = ArrayGetCell(item, _:ItemData_State);
+        new Array:irgItem = Array:PInv_GetItem(pPlayer, i);
+        new ItemState:iItemState = ArrayGetCell(irgItem, _:ItemData_State);
 
-        if (itemState == ItemState_None) {
-            continue; //This item not equiped.
+        if (iItemState == ItemState_None) {
+            continue; //This irgItem not equiped.
         }
 
-        if (itemState == ItemState_Equip) {
-            continue; //This item not equiped.
+        if (iItemState == ItemState_Equip) {
+            continue; //This irgItem not equiped.
         }
 
-        new time = ArrayGetCell(item, _:ItemData_Time) - 1;
-        if (time >= 0) {
-            ArraySetCell(item, _:ItemData_Time, time);
+        new iTime = ArrayGetCell(irgItem, _:ItemData_Time) - 1;
+        if (iTime >= 0) {
+            ArraySetCell(irgItem, _:ItemData_Time, iTime);
         } else {
-            ArraySetCell(item, _:ItemData_State, ItemState_Unequip);
+            ArraySetCell(irgItem, _:ItemData_State, ItemState_Unequip);
         }
     }
 }
 
-public TaskPlayerThink(id)
-{
-    new renderMode = pev(id, pev_rendermode);
+public Task_PlayerThink(pPlayer) {
+    new iRenderMode = pev(pPlayer, pev_rendermode);
 
-    static Float:renderAmt;
-    pev(id, pev_renderamt, renderAmt);
+    static Float:flRenderAmt;
+    pev(pPlayer, pev_renderamt, flRenderAmt);
 
-    if (renderMode != g_playerRenderMode[id]
-        || renderAmt != g_playerRenderAmt[id])
+    if (iRenderMode != g_rgPlayerRenderMode[pPlayer]
+        || flRenderAmt != g_rgPlayerRenderAmt[pPlayer])
     {
-        g_playerRenderMode[id] = renderMode;
-        g_playerRenderAmt[id] = renderAmt;
+        g_rgPlayerRenderMode[pPlayer] = iRenderMode;
+        g_rgPlayerRenderAmt[pPlayer] = flRenderAmt;
 
-        new size = PInv_Size(id);
-        for (new i = 0; i < size; ++i)
+        new iSize = PInv_Size(pPlayer);
+        for (new i = 0; i < iSize; ++i)
         {
-            if (g_itemType != PInv_GetItemType(id, i)) {
+            if (g_iItemType != PInv_GetItemType(pPlayer, i)) {
                 continue;
             }
 
-            new Array:item = Array:PInv_GetItem(id, i);
+            new Array:irgItem = Array:PInv_GetItem(pPlayer, i);
 
-            if (ArrayGetCell(item, _:ItemData_State) != ItemState_Equiped
-                && ArrayGetCell(item, _:ItemData_State) != ItemState_Unequip) {
+            if (ArrayGetCell(irgItem, _:ItemData_State) != ItemState_Equiped
+                && ArrayGetCell(irgItem, _:ItemData_State) != ItemState_Unequip) {
                 continue;
             }
 
-            new ent = ArrayGetCell(item, _:ItemData_Entity);
-            if (!ent) {
+            new pEntity = ArrayGetCell(irgItem, _:ItemData_Entity);
+            if (!pEntity) {
                 continue;
             }
 
-            set_pev(ent, pev_rendermode, renderMode);
+            set_pev(pEntity, pev_rendermode, iRenderMode);
 
-            if (ArrayGetCell(item, _:ItemData_CosmeticType) == PCosmetic_Type_Normal) {
-                set_pev(ent, pev_renderamt, renderAmt);
+            if (ArrayGetCell(irgItem, _:ItemData_CosmeticType) == PCosmetic_Type_Normal) {
+                set_pev(pEntity, pev_renderamt, flRenderAmt);
             } else {
-                set_pev(ent, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
+                set_pev(pEntity, pev_renderamt, UNUSUAL_ENTITY_RENDER_AMT);
             }
         }
     }

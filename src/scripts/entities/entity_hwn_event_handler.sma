@@ -14,161 +14,140 @@
 
 #define ENTITY_NAME "hwn_event_handler"
 
-new Array:g_eventHandlers;
+new Array:g_irgEventHandlers = Invalid_Array;
 
-public plugin_precache()
-{
+public plugin_precache() {
     CE_Register(ENTITY_NAME);
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
-public plugin_end()
-{
-    if (g_eventHandlers != Invalid_Array) {
-        ArrayDestroy(g_eventHandlers);
+public plugin_end() {
+    if (g_irgEventHandlers != Invalid_Array) {
+        ArrayDestroy(g_irgEventHandlers);
     }
 }
 
 /*------------[ Hooks ]------------*/
 
-public OnSpawn(ent)
-{
-    if (g_eventHandlers == Invalid_Array) {
-        g_eventHandlers = ArrayCreate();
+@Entity_Spawn(this) {
+    if (g_irgEventHandlers == Invalid_Array) {
+        g_irgEventHandlers = ArrayCreate();
     }
 
-    ArrayPushCell(g_eventHandlers, ent);
+    ArrayPushCell(g_irgEventHandlers, this);
 }
 
 /*------------[ Methods ]------------*/
 
-Dispatch(const eventName[], caller = 0)
-{
-    if (g_eventHandlers == Invalid_Array) {
+Dispatch(const eventName[], caller = 0) {
+    if (g_irgEventHandlers == Invalid_Array) {
         return;
     }
 
-    new size = ArraySize(g_eventHandlers);
+    new iSize = ArraySize(g_irgEventHandlers);
 
-    for (new i = 0; i < size; ++i) {
-        new ent = ArrayGetCell(g_eventHandlers, i);
+    for (new i = 0; i < iSize; ++i) {
+        new pEntity = ArrayGetCell(g_irgEventHandlers, i);
 
         static szTargetname[32];
-        pev(ent, pev_targetname, szTargetname, charsmax(szTargetname));
+        pev(pEntity, pev_targetname, szTargetname, charsmax(szTargetname));
 
         if (!equal(szTargetname, eventName)) {
             continue;
         }
 
         static szTarget[32];
-        pev(ent, pev_target, szTarget, charsmax(szTarget));
+        pev(pEntity, pev_target, szTarget, charsmax(szTarget));
 
-        new target;
-        while ((target = engfunc(EngFunc_FindEntityByString, target, "targetname", szTarget)) != 0) {
-            ExecuteHamB(Ham_Use, target, caller, ent, 2, 1.0);
+        new pTarget = 0;
+        while ((pTarget = engfunc(EngFunc_FindEntityByString, pTarget, "targetname", szTarget)) != 0) {
+            ExecuteHamB(Ham_Use, pTarget, caller, pEntity, 2, 1.0);
         }
     }
 }
 
 /*------------[ Events ]------------*/
 
-public Round_Fw_NewRound()
-{
+public Round_Fw_NewRound() {
     Dispatch("new_round");
 }
 
-public Round_Fw_RoundStart()
-{
+public Round_Fw_RoundStart() {
     Dispatch("round_start");
 }
 
-public Round_Fw_RoundEnd()
-{
+public Round_Fw_RoundEnd() {
     Dispatch("round_end");
 }
 
-public Hwn_Bosses_Fw_BossSpawn(ent)
-{
-    Dispatch("boss_spawn", ent);
-    Dispatch("boss_remove", ent);
+public Hwn_Bosses_Fw_BossSpawn(pEntity) {
+    Dispatch("boss_spawn", pEntity);
 }
 
-public Hwn_Bosses_Fw_BossKill(ent)
-{
-    Dispatch("boss_kill", ent);
-    Dispatch("boss_remove", ent);
+public Hwn_Bosses_Fw_BossKill(pEntity) {
+    Dispatch("boss_kill", pEntity);
 }
 
-public Hwn_Bosses_Fw_BossEscape(ent)
-{
-    Dispatch("boss_escape", ent);
+public Hwn_Bosses_Fw_BossRemove(pEntity) {
+    Dispatch("boss_remove", pEntity);
 }
 
-public Hwn_Bosses_Fw_BossTeleport(ent)
-{
-    Dispatch("boss_teleport", ent);
+public Hwn_Bosses_Fw_BossEscape(pEntity) {
+    Dispatch("boss_escape", pEntity);
 }
 
-public Hwn_Bosses_Fw_Winner(id, damage)
-{
-    Dispatch("boss_winner", id);
+public Hwn_Bosses_Fw_BossTeleport(pEntity) {
+    Dispatch("boss_teleport", pEntity);
 }
 
-public Hwn_Collector_Fw_TeamPoints(team)
-{
-    if (team == 1) {
+public Hwn_Bosses_Fw_Winner(pPlayer, damage) {
+    Dispatch("boss_winner", pPlayer);
+}
+
+public Hwn_Collector_Fw_TeamPoints(iTeam) {
+    if (iTeam == 1) {
         Dispatch("teampoints_team1");
-    } else if (team == 2) {
+    } else if (iTeam == 2) {
         Dispatch("teampoints_team2");
     }
 }
 
-public Hwn_Collector_Fw_PlayerPoints(id)
-{
-    Dispatch("playerpoints", id);
+public Hwn_Collector_Fw_PlayerPoints(pPlayer) {
+    Dispatch("playerpoints", pPlayer);
 }
 
-public Hwn_Spell_Fw_Cast(id)
-{
-    Dispatch("spell_cast", id);
+public Hwn_Spell_Fw_Cast(pPlayer) {
+    Dispatch("spell_cast", pPlayer);
 }
 
-public Hwn_Wof_Fw_Roll_Start()
-{
+public Hwn_Wof_Fw_Roll_Start() {
     Dispatch("wof_roll_start");
 }
 
-public Hwn_Wof_Fw_Roll_End()
-{
+public Hwn_Wof_Fw_Roll_End() {
     Dispatch("wof_roll_end");
 }
 
-public Hwn_Wof_Fw_Effect_Start()
-{
+public Hwn_Wof_Fw_Effect_Start() {
     Dispatch("wof_effect_start");
 }
 
-public Hwn_Wof_Fw_Effect_End()
-{
+public Hwn_Wof_Fw_Effect_End() {
     Dispatch("wof_effect_end");
 }
 
-public Hwn_Wof_Fw_Effect_Invoke(id)
-{
-    Dispatch("wof_effect_invoke", id);
+public Hwn_Wof_Fw_Effect_Invoke(pPlayer) {
+    Dispatch("wof_effect_invoke", pPlayer);
 }
 
-public Hwn_Wof_Fw_Effect_Revoke(id)
-{
-    Dispatch("wof_effect_revoke", id);
+public Hwn_Wof_Fw_Effect_Revoke(pPlayer) {
+    Dispatch("wof_effect_revoke", pPlayer);
 }
 
-public Hwn_Wof_Fw_Abort()
-{
+public Hwn_Wof_Fw_Abort() {
     Dispatch("wof_abort");
 }

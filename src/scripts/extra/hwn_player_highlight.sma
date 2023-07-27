@@ -7,62 +7,69 @@
 #define PLUGIN "[Hwn] Player Highlight"
 #define AUTHOR "Hedgehog Fog"
 
-new g_cvarEnabled;
-new g_cvarPrimaryBrightness;
-new g_cvarSecondaryBrightness;
+new g_pCvarEnabled;
+new g_pCvarPrimaryBrightness;
+new g_pCvarSecondaryBrightness;
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
     
     register_forward(FM_AddToFullPack, "OnAddToFullPack", 1);
 
-    g_cvarEnabled = register_cvar("hwn_player_highlight", "1");
-    g_cvarPrimaryBrightness = register_cvar("hwn_player_highlight_primary_brightness", "100");
-    g_cvarSecondaryBrightness = register_cvar("hwn_player_highlight_secondary_brightness", "20");
+    g_pCvarEnabled = register_cvar("hwn_player_highlight", "1");
+    g_pCvarPrimaryBrightness = register_cvar("hwn_player_highlight_primary_brightness", "80");
+    g_pCvarSecondaryBrightness = register_cvar("hwn_player_highlight_secondary_brightness", "15");
 }
 
-
-public OnAddToFullPack(es, e, ent, host, hostflags, player, pSet)
-{
-    if (!get_pcvar_num(g_cvarEnabled)) {
+public OnAddToFullPack(es, e, pEntity, pHost, hostflags, player, pSet) {
+    if (!get_pcvar_num(g_pCvarEnabled)) {
         return FMRES_IGNORED;
     }
 
-    if (!UTIL_IsPlayer(ent)) {
+    if (!pev_valid(pEntity)) {
         return FMRES_IGNORED;
     }
 
-    if (!is_user_connected(ent)) {
+    new pTargetPlayer = 0;
+    if (IS_PLAYER(pEntity)) {
+        pTargetPlayer = pEntity;
+    } else {
+        new pAimEnt = pev(pEntity, pev_aiment);
+        if (IS_PLAYER(pAimEnt)) {
+            pTargetPlayer = pAimEnt;
+        }
+    }
+
+    if (pTargetPlayer == pHost) {
         return FMRES_IGNORED;
     }
 
-    if (!is_user_alive(ent)) {
+    if (!is_user_alive(pTargetPlayer)) {
         return FMRES_IGNORED;
     }
 
-    if (pev(ent, pev_rendermode) == kRenderNormal && pev(ent, pev_renderfx) == kRenderFxNone) {
+    if (pev(pTargetPlayer, pev_rendermode) == kRenderNormal && pev(pTargetPlayer, pev_renderfx) == kRenderFxNone) {
       set_es(es, ES_RenderMode, kRenderNormal);
       set_es(es, ES_RenderFx, kRenderFxGlowShell);
       set_es(es, ES_RenderAmt, 1);
 
-      new primaryBrightness = get_pcvar_num(g_cvarPrimaryBrightness);
-      new secondaryBrightness = get_pcvar_num(g_cvarSecondaryBrightness);
+      new iPrimaryBrightness = get_pcvar_num(g_pCvarPrimaryBrightness);
+      new iSecondaryBrightness = get_pcvar_num(g_pCvarSecondaryBrightness);
 
-      static color[3];
+      static rgiColor[3];
       for (new i = 0; i < 3; ++i) {
-        color[i] = secondaryBrightness;
+        rgiColor[i] = iSecondaryBrightness;
       }
 
-      if (UTIL_GetPlayerTeam(ent) == 1) {
-        color[0] = primaryBrightness;
-      } else {
-        color[2] = primaryBrightness;
+      new iTeam = get_member(pTargetPlayer, m_iTeam);
+      switch (iTeam) {
+        case 1: rgiColor[0] = iPrimaryBrightness;
+        case 2: rgiColor[2] = iPrimaryBrightness;
       }
 
-      set_es(es, ES_RenderColor, color);
+
+      set_es(es, ES_RenderColor, rgiColor);
     }
-
 
     return FMRES_IGNORED;
 }

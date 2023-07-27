@@ -16,121 +16,104 @@
 
 #define ENTITY_NAME "hwn_item_spellball"
 
-new g_sprSmoke;
-new g_sprNull;
+new g_iSmokeModelIndex;
+new g_iNullModelIndex;
 
-new g_ceHandler;
+new Float:g_flThinkDelay;
 
-new Float:g_fThinkDelay;
+public plugin_precache() {
+    g_iSmokeModelIndex = precache_model("sprites/black_smoke1.spr");
+    g_iNullModelIndex = precache_model("sprites/white.spr");
 
-public plugin_init()
-{
-    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-}
-
-public plugin_precache()
-{
-    g_ceHandler = CE_Register(
-        .szName = ENTITY_NAME,
+    CE_Register(
+        ENTITY_NAME,
         .vMins = Float:{-8.0, -8.0, -8.0},
         .vMaxs = Float:{8.0, 8.0, 8.0},
         .fLifeTime = 30.0,
         .preset = CEPreset_None
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
-    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
-    RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
+    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
+    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
+}
 
-    g_sprSmoke = precache_model("sprites/black_smoke1.spr");
-    g_sprNull = precache_model("sprites/white.spr");
+public plugin_init() {
+    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-public Hwn_Fw_ConfigLoaded()
-{
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
+public Hwn_Fw_ConfigLoaded() {
+    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnSpawn(ent)
-{        
-    set_pev(ent, pev_gravity, 0.20);
-    set_pev(ent, pev_health, 1.0);
-
-    set_pev(ent, pev_solid, SOLID_TRIGGER);
-    set_pev(ent, pev_movetype, MOVETYPE_TOSS);
-
-    set_pev(ent, pev_rendermode, kRenderTransTexture);
-    set_pev(ent, pev_renderamt, 0.0);
-    set_pev(ent, pev_modelindex, g_sprNull);
-
-    set_pev(ent, pev_nextthink, get_gametime());
+@Entity_Spawn(this) {        
+    set_pev(this, pev_gravity, 0.20);
+    set_pev(this, pev_health, 1.0);
+    set_pev(this, pev_solid, SOLID_TRIGGER);
+    set_pev(this, pev_movetype, MOVETYPE_TOSS);
+    set_pev(this, pev_rendermode, kRenderTransTexture);
+    set_pev(this, pev_renderamt, 0.0);
+    set_pev(this, pev_modelindex, g_iNullModelIndex);
+    set_pev(this, pev_nextthink, get_gametime());
 }
 
-public OnKilled(ent) {
-    set_pev(ent, pev_deadflag, DEAD_DEAD);
+@Entity_Killed(this) {
+    set_pev(this, pev_deadflag, DEAD_DEAD);
 }
 
-public OnRemove(ent)
-{
+@Entity_Remove(this) {
     for (new euser = pev_euser1; euser <= pev_euser4; ++euser) {
-        if (pev(ent, euser)) {
-            engfunc(EngFunc_RemoveEntity, pev(ent, euser));
+        if (pev(this, euser)) {
+            engfunc(EngFunc_RemoveEntity, pev(this, euser));
         }
     }
 }
 
-public OnThink(ent)
-{
-    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
-        return HAM_IGNORED;
-    }
+@Entity_Think(this) {
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
 
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-
-    static color[3];
+    static rgiColor[3];
     {
-        pev(ent, pev_rendercolor, color);
+        pev(this, pev_rendercolor, rgiColor);
         for (new i = 0; i < 3; ++i) {
-            color[i] = floatround(Float:color[i]);
+            rgiColor[i] = floatround(Float:rgiColor[i]);
         }
     }
 
-    UTIL_Message_Dlight(vOrigin, 16, color, UTIL_DelayToLifeTime(g_fThinkDelay), 0);
+    UTIL_Message_Dlight(vecOrigin, 16, rgiColor, UTIL_DelayToLifeTime(g_flThinkDelay), 0);
 
-    //Fix for smoke origin
+    // Fix for smoke origin
     {
-        static Float:vVelocity[3];
-        pev(ent, pev_velocity, vVelocity);
+        static Float:vecVelocity[3];
+        pev(this, pev_velocity, vecVelocity);
 
-        new Float:fSpeed = xs_vec_len(vVelocity);
+        new Float:flSpeed = xs_vec_len(vecVelocity);
 
-        static Float:vSub[3];
-        xs_vec_normalize(vVelocity, vSub);
-        xs_vec_mul_scalar(vSub, fSpeed / 16.0, vSub); // origin prediction
-        vSub[2] += 20.0;
+        static Float:vecSub[3];
+        xs_vec_normalize(vecVelocity, vecSub);
+        xs_vec_mul_scalar(vecSub, flSpeed / 16.0, vecSub); // origin prediction
+        vecSub[2] += 20.0;
 
-        xs_vec_sub(vOrigin, vSub, vOrigin);
+        xs_vec_sub(vecOrigin, vecSub, vecOrigin);
     }
 
-    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vecOrigin, 0);
     write_byte(TE_SMOKE);
-    engfunc(EngFunc_WriteCoord, vOrigin[0]);
-    engfunc(EngFunc_WriteCoord, vOrigin[1]);
-    engfunc(EngFunc_WriteCoord, vOrigin[2]);
-    write_short(g_sprSmoke);
+    engfunc(EngFunc_WriteCoord, vecOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vecOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vecOrigin[2]);
+    write_short(g_iSmokeModelIndex);
     write_byte(10);
     write_byte(90);
     message_end();
 
-    UTIL_Message_Dlight(vOrigin, 16, color, UTIL_DelayToLifeTime(g_fThinkDelay), 0);
+    UTIL_Message_Dlight(vecOrigin, 16, rgiColor, UTIL_DelayToLifeTime(g_flThinkDelay), 0);
 
-    set_pev(ent, pev_nextthink, get_gametime() + g_fThinkDelay);
-
-    return HAM_HANDLED;
+    set_pev(this, pev_nextthink, get_gametime() + g_flThinkDelay);
 }

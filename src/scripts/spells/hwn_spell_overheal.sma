@@ -19,15 +19,12 @@ new const EffectColor[3] = {255, 0, 0};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_overheal.wav";
 
-new g_sprEffect;
+new g_iEffectModelIndex;
 
 new g_hWofSpell;
 
-new g_maxPlayers;
-
-public plugin_precache()
-{
-    g_sprEffect = precache_model("sprites/smoke.spr");
+public plugin_precache() {
+    g_iEffectModelIndex = precache_model("sprites/smoke.spr");
     precache_sound(g_szSndDetonate);
 
     Hwn_Spell_Register(
@@ -39,60 +36,54 @@ public plugin_precache()
     g_hWofSpell = Hwn_Wof_Spell_Register("Overheal", "Invoke");
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-
-    g_maxPlayers = get_maxplayers();
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-public Hwn_Wof_Fw_Effect_Start(spellIdx)
-{
-    if (g_hWofSpell == spellIdx) {
+public Hwn_Wof_Fw_Effect_Start(iSpell) {
+    if (g_hWofSpell == iSpell) {
         Hwn_Wof_Abort();
     }
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-public Invoke(id)
-{
-    if (!is_user_alive(id)) {
+public Invoke(pPlayer) {
+    if (!is_user_alive(pPlayer)) {
         return;
     }
 
-    new team = UTIL_GetPlayerTeam(id);
+    new iTeam = get_member(pPlayer, m_iTeam);
 
-    new Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
+    new Float:vecOrigin[3];
+    pev(pPlayer, pev_origin, vecOrigin);
 
-    new target;
-    while ((target = UTIL_FindUsersNearby(target, vOrigin, EffectRadius, .team = team, .maxPlayers = g_maxPlayers)) != 0) {
-        if (team != UTIL_GetPlayerTeam(target)) {
+    new pTarget = 0;
+    while ((pTarget = UTIL_FindUsersNearby(pTarget, vecOrigin, EffectRadius, .iTeam = iTeam)) != 0) {
+        if (iTeam != get_member(pTarget, m_iTeam)) {
             continue;
         }
 
-        set_pev(target, pev_health, 150.0);
-        UTIL_ScreenFade(target, {255, 0, 0}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
-        UTIL_Message_BeamEnts(id, target, g_sprEffect, .lifeTime = 10, .color = EffectColor, .width = 8, .noise = 120);
+        set_pev(pTarget, pev_health, 150.0);
+        UTIL_ScreenFade(pTarget, {255, 0, 0}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
+        UTIL_Message_BeamEnts(pPlayer, pTarget, g_iEffectModelIndex, .iLifeTime = 10, .iColor = EffectColor, .iWidth = 8, .iNoise = 120);
     }
 
-    DetonateEffect(id);
+    DetonateEffect(pPlayer);
 }
 
-DetonateEffect(ent)
-{
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+DetonateEffect(pEntity) {
+    new Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    new Float:vMins[3];
-    pev(ent, pev_mins, vMins);
+    new Float:vecMins[3];
+    pev(pEntity, pev_mins, vecMins);
 
-    vOrigin[2] += vMins[2] + 1.0;
+    vecOrigin[2] += vecMins[2] + 1.0;
 
-    UTIL_Message_BeamDisk(vOrigin, EffectRadius * 2, g_sprEffect, 0, 5, 0, 0, EffectColor, 100, 0);
+    UTIL_Message_BeamDisk(vecOrigin, EffectRadius * 2, g_iEffectModelIndex, 0, 5, 0, 0, EffectColor, 100, 0);
 
-    emit_sound(ent, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(pEntity, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

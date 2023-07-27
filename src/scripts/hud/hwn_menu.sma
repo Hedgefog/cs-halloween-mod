@@ -5,140 +5,106 @@
 #define PLUGIN "[Hwn] Menu"
 #define AUTHOR "Hedgehog Fog"
 
-new Array:g_itemTitle;
-new Array:g_itemPluginID;
-new Array:g_itemFuncID;
-new g_itemCount = 0;
+new Array:g_irgItemTitle;
+new Array:g_irgItemiPluginId;
+new Array:g_irgItemFuncId;
+new g_iItemsNum = 0;
 
-new bool:g_update = false;
-
-new g_menu;
-
-static g_szMenuTitle[32];
-
-public plugin_init()
-{
+public plugin_init() {
     register_dictionary("hwn.txt");
     register_dictionary("plmenu.txt");
 
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
     
-    register_clcmd("hwn_menu", "OnClCmd_Menu");
-
-    format(g_szMenuTitle, charsmax(g_szMenuTitle), "%L", LANG_SERVER, "HWN_MENU_TITLE");
+    register_clcmd("hwn_menu", "Command_Menu");
 }
 
-public plugin_natives()
-{
+public plugin_natives() {
     register_library("hwn");
     register_native("Hwn_Menu_Open", "Native_Open");
     register_native("Hwn_Menu_AddItem", "Native_AddItem");
 }
 
-public plugin_end()
-{
-    if (g_itemCount) {
-        ArrayDestroy(g_itemTitle);
-        ArrayDestroy(g_itemPluginID);
-        ArrayDestroy(g_itemFuncID);
+public plugin_end() {
+    if (g_iItemsNum) {
+        ArrayDestroy(g_irgItemTitle);
+        ArrayDestroy(g_irgItemiPluginId);
+        ArrayDestroy(g_irgItemFuncId);
     }
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
 
-public Native_Open(pluginID, argc)
-{
-    new id = get_param(1);
-    
-    ShowMenu(id);
+public Native_Open(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    @Player_OpenMenu(pPlayer);
 }
 
-public Native_AddItem(pluginID, argc)
-{
+public Native_AddItem(iPluginId, iArgc) {
     new szTitle[32];
     get_string(1, szTitle, charsmax(szTitle));
 
     new szCallback[32];
     get_string(2, szCallback, charsmax(szCallback));
 
-    return AddItem(szTitle, pluginID, get_func_id(szCallback, pluginID));
+    return AddItem(szTitle, iPluginId, get_func_id(szCallback, iPluginId));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnClCmd_Menu(id)
-{
-    ShowMenu(id);
+public Command_Menu(pPlayer) {
+    @Player_OpenMenu(pPlayer);
     return PLUGIN_HANDLED;
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-CreateMenu()
-{
-    g_menu = menu_create(g_szMenuTitle, "MenuHandler");
+@Player_OpenMenu(pPlayer) {    
+    static szMenuTitle[32];
+    format(szMenuTitle, charsmax(szMenuTitle), "%L", pPlayer, "HWN_MENU_TITLE");
 
-    for (new i = 0; i < g_itemCount; ++i) {
+    new iMenu = menu_create(szMenuTitle, "MenuHandler");
+
+    for (new i = 0; i < g_iItemsNum; ++i) {
         static szTitle[32];
-        ArrayGetString(g_itemTitle, i, szTitle, charsmax(szTitle));
-
-        menu_additem(g_menu, szTitle);
+        ArrayGetString(g_irgItemTitle, i, szTitle, charsmax(szTitle));
+        menu_additem(iMenu, szTitle);
     }
 
-    menu_setprop(g_menu, MPROP_EXIT, MEXIT_ALL);
-
-    g_update = false;
+    menu_setprop(iMenu, MPROP_EXIT, MEXIT_ALL);
+    menu_display(pPlayer, iMenu);
 }
 
-AddItem(const szTitle[], pluginID, funcID)
-{
-    if (!g_itemCount) {
-        g_itemTitle = ArrayCreate(32);
-        g_itemPluginID = ArrayCreate();
-        g_itemFuncID = ArrayCreate();
+/*--------------------------------[ Function ]--------------------------------*/
+
+AddItem(const szTitle[], iPluginId, iFunctionId) {
+    if (!g_iItemsNum) {
+        g_irgItemTitle = ArrayCreate(32);
+        g_irgItemiPluginId = ArrayCreate();
+        g_irgItemFuncId = ArrayCreate();
     }
 
-    new index = g_itemCount;
-    ArrayPushString(g_itemTitle, szTitle);
-    ArrayPushCell(g_itemPluginID, pluginID);
-    ArrayPushCell(g_itemFuncID, funcID);
+    new iId = g_iItemsNum;
+    ArrayPushString(g_irgItemTitle, szTitle);
+    ArrayPushCell(g_irgItemiPluginId, iPluginId);
+    ArrayPushCell(g_irgItemFuncId, iFunctionId);
 
-    g_itemCount++;
+    g_iItemsNum++;
 
-    g_update = true;
-
-    return index;
-}
-
-ShowMenu(id)
-{
-    if (g_update)
-    {
-        if (g_menu) {
-            menu_destroy(g_menu);
-        }
-
-        CreateMenu();
-    }
-
-    menu_display(id, g_menu);
+    return iId;
 }
 
 /*--------------------------------[ Menu ]--------------------------------*/
 
-public MenuHandler(id, menu, item)
-{
-    if (is_user_connected(id)) {
-        menu_cancel(id);
-    }
+public MenuHandler(pPlayer, iMenu, item) {
+    menu_destroy(iMenu);
 
-    if (item != MENU_EXIT)
-    {
-        new pluginID = ArrayGetCell(g_itemPluginID, item);
-        new funcID = ArrayGetCell(g_itemFuncID, item);
+    if (item != MENU_EXIT) {
+        new iPluginId = ArrayGetCell(g_irgItemiPluginId, item);
+        new iFunctionId = ArrayGetCell(g_irgItemFuncId, item);
 
-        if (callfunc_begin_i(funcID, pluginID) == 1) {
-            callfunc_push_int(id);
+        if (callfunc_begin_i(iFunctionId, iPluginId) == 1) {
+            callfunc_push_int(pPlayer);
             callfunc_end();
         }
     }

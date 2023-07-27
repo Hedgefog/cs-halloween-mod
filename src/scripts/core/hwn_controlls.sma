@@ -3,6 +3,7 @@
 #include <amxmodx>
 #include <engine>
 #include <fakemeta>
+#include <reapi>
 
 #include <api_rounds>
 #include <menu_player_cosmetic>
@@ -12,18 +13,17 @@
 #define PLUGIN "[Hwn] Controlls"
 #define AUTHOR "Hedgehog Fog"
 
-new g_chooseTeamOverride;
+new g_iPlayerTeamMenuOverrideFlags;
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     register_dictionary("hwn.txt");
 
-    register_clcmd("chooseteam", "OnClCmd_ChooseTeam");
-    register_clcmd("drop", "OnClCmd_Drop");
-    register_clcmd("buyequip", "OnClCmd_SpellsShop");
-    register_clcmd("hwn_spells_shop_menu", "OnClCmd_SpellsShop");
+    register_clcmd("chooseteam", "Command_ChooseTeam");
+    register_clcmd("drop", "Command_Drop");
+    register_clcmd("buyequip", "Command_SpellsShop");
+    register_clcmd("hwn_spells_shop_menu", "Command_SpellsShop");
 
     register_impulse(100, "OnImpulse_100");
 
@@ -36,64 +36,57 @@ public plugin_init()
     Hwn_Menu_AddItem(szChooseTeamText, "ChooseTeam");
 }
 
-public client_putinserver(id)
-{
-    g_chooseTeamOverride |= (1<<(id&31));
+public client_putinserver(pPlayer) {
+    g_iPlayerTeamMenuOverrideFlags |= BIT(pPlayer & 31);
 }
 
-public OnClCmd_ChooseTeam(id)
-{
-    if (g_chooseTeamOverride & (1<<(id&31))) {
-        Hwn_Menu_Open(id);
+public Command_ChooseTeam(pPlayer) {
+    if (g_iPlayerTeamMenuOverrideFlags & BIT(pPlayer & 31)) {
+        Hwn_Menu_Open(pPlayer);
         return PLUGIN_HANDLED;
     }
 
-    g_chooseTeamOverride |= (1<<(id&31));
+    g_iPlayerTeamMenuOverrideFlags |= BIT(pPlayer & 31);
     return PLUGIN_CONTINUE;
 }
 
-public OnClCmd_Drop(id)
-{
-    new Hwn_GamemodeFlags:flags = Hwn_Gamemode_GetFlags();
-    if (!(flags & Hwn_GamemodeFlag_SpecialEquip)) {
+public Command_Drop(pPlayer) {
+    new Hwn_GamemodeFlags:iFlags = Hwn_Gamemode_GetFlags();
+    if (!(iFlags & Hwn_GamemodeFlag_SpecialEquip)) {
         return PLUGIN_CONTINUE;
     }
 
-    Hwn_PEquipment_ShowMenu(id);
+    Hwn_PEquipment_ShowMenu(pPlayer);
 
     return PLUGIN_HANDLED;
 }
 
-public OnClCmd_SpellsShop(id)
-{
-    new Hwn_GamemodeFlags:flags = Hwn_Gamemode_GetFlags();
-    if (!(flags & Hwn_GamemodeFlag_SpellShop)) {
+public Command_SpellsShop(pPlayer) {
+    new Hwn_GamemodeFlags:iFlags = Hwn_Gamemode_GetFlags();
+    if (!(iFlags & Hwn_GamemodeFlag_SpellShop)) {
         return PLUGIN_CONTINUE;
     }
 
-    Hwn_SpellShop_Open(id);
+    Hwn_SpellShop_Open(pPlayer);
 
     return PLUGIN_HANDLED;
 }
 
-public OnImpulse_100(id)
-{
+public OnImpulse_100(pPlayer) {
     if (!Round_IsRoundStarted()) {
         return PLUGIN_HANDLED;
     }
 
-    Hwn_Spell_CastPlayerSpell(id);
+    Hwn_Spell_CastPlayerSpell(pPlayer);
 
     return PLUGIN_HANDLED;
 }
 
-public ChooseTeam(id)
-{
-    g_chooseTeamOverride &= ~(1<<(id&31));
-    client_cmd(id, "chooseteam");
+public ChooseTeam(pPlayer) {
+    g_iPlayerTeamMenuOverrideFlags &= ~BIT(pPlayer & 31);
+    client_cmd(pPlayer, "chooseteam");
 }
 
-public MenuItemCosmeticCallback(id)
-{
-    PCosmetic_Menu_Open(id);
+public MenuItemCosmeticCallback(pPlayer) {
+    PCosmetic_Menu_Open(pPlayer);
 }

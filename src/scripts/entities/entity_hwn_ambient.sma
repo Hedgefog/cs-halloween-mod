@@ -1,14 +1,14 @@
 #pragma semicolon 1
 
 #include <amxmodx>
+#include <fakemeta>
+
 #include <api_custom_entities>
 
 #include <hwn>
 
 #define PLUGIN "[Custom Entity] Hwn Ambient"
 #define AUTHOR "Hedgehog Fog"
-
-#define TASKID_SUM_PLAY_AMBIENT 1000
 
 #define ENTITY_NAME "hwn_ambient"
 
@@ -27,39 +27,25 @@ new const g_szSndAimbent[][48] = {
     "hwn/ambient/mysterious_perc_04.wav"
 };
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
-public plugin_precache()
-{
-    CE_Register(
-        .szName = ENTITY_NAME
-    );
-
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
+public plugin_precache() {
+    CE_Register(ENTITY_NAME);
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 
     for (new i = 0; i < sizeof(g_szSndAimbent); ++i) {
         precache_sound(g_szSndAimbent[i]);
     }
 }
 
-public OnSpawn(ent)
-{
-    SetupTask(ent);
+@Entity_Spawn(this) {
+    set_pev(this, pev_nextthink, get_gametime());
 }
 
-public TaskPlayAmbient(taskID)
-{
-    new ent = taskID - TASKID_SUM_PLAY_AMBIENT;
-
-    emit_sound(ent, CHAN_VOICE, g_szSndAimbent[random(sizeof(g_szSndAimbent))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-
-    SetupTask(ent);
-}
-
-SetupTask(ent)
-{
-    set_task(random_float(10.0, 100.0), "TaskPlayAmbient", ent+TASKID_SUM_PLAY_AMBIENT);
+@Entity_Think(this) {
+    emit_sound(this, CHAN_VOICE, g_szSndAimbent[random(sizeof(g_szSndAimbent))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    set_pev(this, pev_nextthink, get_gametime() + random_float(10.0, 100.0));
 }

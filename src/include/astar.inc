@@ -23,13 +23,13 @@
  *		Flags for the traceline check.
  *
  *	(Optional) IgnoreID = 0
- *		id of the calling player if IGNORE_MONSTERS is not set. Again, this is for the traceline.
+ *		pPlayer of the calling player if IGNORE_MONSTERS is not set. Again, this is for the traceline.
  *
  *	(Optional) GroundDistance = 35
  *		Set the maximum distance from the ground for the point to be accepted as valid. If set to 0 this check is disabled, meaning pathfinding for flying entities.
  *
  *	(Optional) Heuristic = 50
- *		Optimization parameter. Decides how much importance the distance from the target has.
+ *		Optimization parameter. Decides how much importance the distance from the pTarget has.
  *		Higher values might result in a faster execution but may also result in a suboptimal path.
  *
  * Returns a handle to a dynamic array that will contain each step between start and goal.
@@ -62,13 +62,13 @@ native Array:AStar(Float:Start[3], Float:Goal[3], StepSize = 30, Ignore = IGNORE
  *		Flags for the traceline check.
  *
  *	(Optional) IgnoreID = 0
- *		id of the calling player if IGNORE_MONSTERS is not set. Again, this is for the traceline.
+ *		pPlayer of the calling player if IGNORE_MONSTERS is not set. Again, this is for the traceline.
  *
  *	(Optional) GroundDistance = 35
  *		Set the maximum distance from the ground for the point to be accepted as valid. If set to 0 this check is disabled, meaning pathfinding for flying entities.
  *
  *	(Optional) Heuristic = 50
- *		Optimization parameter. Decides how much importance the distance from the target has.
+ *		Optimization parameter. Decides how much importance the distance from the pTarget has.
  *		Higher values might result in a faster execution but may also result in a suboptimal path.
  *
  * Returns a que index that can be used in the handler to identify which path is complete.

@@ -3,74 +3,74 @@
 #define SPELLBALL_ENTITY_CLASSNAME "hwn_item_spellball"
 
 stock UTIL_HwnSpawnPlayerSpellball(
-    owner,
-    const color[3],
-    speed = 512,
+    pOwner,
+    const iColor[3],
+    iSpeed = 512,
     const szEffectSprite[] = "",
-    Float:fEffectAmt = 255.0,
-    Float:fEffectScale = 1.0,
-    Float:fEffectFrameRate = 0.0
+    Float:flEffectAmt = 255.0,
+    Float:flEffectScale = 1.0,
+    Float:flEffectFrameRate = 0.0
 )
 {
-    static Float:vOrigin[3];
-    UTIL_GetViewOrigin(owner, vOrigin);
+    static Float:vecOrigin[3];
+    UTIL_GetViewOrigin(pOwner, vecOrigin);
 
-    static Float:vOffset[3];
-    velocity_by_aim(owner, 16, vOffset);
-    xs_vec_add(vOrigin, vOffset, vOrigin);
+    static Float:vecOffset[3];
+    velocity_by_aim(pOwner, 16, vecOffset);
+    xs_vec_add(vecOrigin, vecOffset, vecOrigin);
 
-    new ent = CE_Create(SPELLBALL_ENTITY_CLASSNAME, vOrigin);
+    new pEntity = CE_Create(SPELLBALL_ENTITY_CLASSNAME, vecOrigin);
 
-    if (!ent) {
+    if (!pEntity) {
         return 0;
     }
 
-    static Float:vVelocity[3];
-    velocity_by_aim(owner, speed, vVelocity);
+    static Float:vecVelocity[3];
+    velocity_by_aim(pOwner, iSpeed, vecVelocity);
 
-    set_pev(ent, pev_owner, owner);
-    set_pev(ent, pev_velocity, vVelocity);
+    set_pev(pEntity, pev_owner, pOwner);
+    set_pev(pEntity, pev_velocity, vecVelocity);
 
-    static Float:fColor[3];
+    static Float:flColor[3];
     for (new i = 0; i < 3; ++i) {
-        fColor[i] = float(color[i]);
+        flColor[i] = float(iColor[i]);
     }
 
-    set_pev(ent, pev_rendercolor, fColor);
+    set_pev(pEntity, pev_rendercolor, flColor);
 
-    dllfunc(DLLFunc_Spawn, ent);
+    dllfunc(DLLFunc_Spawn, pEntity);
 
     if (szEffectSprite[0] != '^0') {
-        UTIL_HwnSpawnSpellballEffect(ent, szEffectSprite, fColor, fEffectAmt, fEffectScale, fEffectFrameRate);
+        UTIL_HwnSpawnSpellballEffect(pEntity, szEffectSprite, flColor, flEffectAmt, flEffectScale, flEffectFrameRate);
     }
 
-    return ent;
+    return pEntity;
 }
 
-stock UTIL_HwnSpawnSpellballEffect(spellballEnt, const szSprite[], const Float:fColor[3], Float:fAmt, Float:fScale, Float:fFramerate)
+stock UTIL_HwnSpawnSpellballEffect(spellballEnt, const szSprite[], const Float:flColor[3], Float:flAmt, Float:flScale, Float:flFramerate)
 {
     static allocClassname;
     if (!allocClassname) {
         allocClassname = engfunc(EngFunc_AllocString, "env_sprite");
     }
 
-    new ent = engfunc(EngFunc_CreateNamedEntity, allocClassname);
-    set_pev(ent, pev_solid, SOLID_NOT);
-    set_pev(ent, pev_movetype, MOVETYPE_NONE);
-    set_pev(ent, pev_rendermode, kRenderTransAdd);
-    engfunc(EngFunc_SetModel, ent, szSprite);
-    set_pev(ent, pev_renderamt, fAmt);
-    set_pev(ent, pev_rendercolor, fColor);
-    set_pev(ent, pev_scale, fScale);
-    set_pev(ent, pev_animtime, get_gametime());
-    set_pev(ent, pev_framerate, fFramerate);
-    set_pev(ent, pev_spawnflags, SF_SPRITE_STARTON);
+    new pEntity = engfunc(EngFunc_CreateNamedEntity, allocClassname);
+    set_pev(pEntity, pev_solid, SOLID_NOT);
+    set_pev(pEntity, pev_movetype, MOVETYPE_NONE);
+    set_pev(pEntity, pev_rendermode, kRenderTransAdd);
+    engfunc(EngFunc_SetModel, pEntity, szSprite);
+    set_pev(pEntity, pev_renderamt, flAmt);
+    set_pev(pEntity, pev_rendercolor, flColor);
+    set_pev(pEntity, pev_scale, flScale);
+    set_pev(pEntity, pev_animtime, get_gametime());
+    set_pev(pEntity, pev_framerate, flFramerate);
+    set_pev(pEntity, pev_spawnflags, SF_SPRITE_STARTON);
 
-    dllfunc(DLLFunc_Spawn, ent);
+    dllfunc(DLLFunc_Spawn, pEntity);
 
-    set_pev(ent, pev_aiment, spellballEnt);
-    set_pev(ent, pev_movetype, MOVETYPE_FOLLOW);
-    set_pev(spellballEnt, pev_euser1, ent);
+    set_pev(pEntity, pev_aiment, spellballEnt);
+    set_pev(pEntity, pev_movetype, MOVETYPE_FOLLOW);
+    set_pev(spellballEnt, pev_euser1, pEntity);
 
-    return ent;
+    return pEntity;
 }

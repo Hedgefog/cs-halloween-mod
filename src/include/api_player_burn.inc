@@ -5,6 +5,6 @@
 
 #pragma reqlib api_player_burn
 
-native extinguish_player(id);
-native burn_player(id, inflictor = 0, burnTime = 0);
-native is_player_burn(id);
+native extinguish_player(pPlayer);
+native burn_player(pPlayer, inflictor = 0, burnTime = 0);
+native is_player_burn(pPlayer);

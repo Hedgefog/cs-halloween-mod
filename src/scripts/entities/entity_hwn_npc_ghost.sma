@@ -14,10 +14,6 @@
 #define PLUGIN    "[Custom Entity] Hwn NPC Ghost"
 #define AUTHOR    "Hedgehog Fog"
 
-#if !defined MAX_PLAYERS
-    #define MAX_PLAYERS 32
-#endif
-
 #define ENTITY_NAME "hwn_npc_ghost"
 
 const Float:NPC_Speed = 100.0;
@@ -40,16 +36,15 @@ new const g_szSndIdle[][128] = {
     "hwn/npc/ghost/ghost_moan04.wav"
 };
 
-new Float:g_fThinkDelay;
+new Float:g_flThinkDelay;
 new g_particlesEnabled;
 
-new g_playerKiller[MAX_PLAYERS + 1] = { 0, ... };
+new g_rgPlayerKiller[MAX_PLAYERS + 1];
 
-new bool:g_isPrecaching;
+new bool:g_bIsPrecaching;
 
-public plugin_precache()
-{
-    g_isPrecaching = true;
+public plugin_precache() {
+    g_bIsPrecaching = true;
 
     precache_sound(g_szSndDisappeared);
 
@@ -62,7 +57,7 @@ public plugin_precache()
     }
 
     CE_Register(
-        .szName = ENTITY_NAME,
+        ENTITY_NAME,
         .modelIndex = precache_model("models/hwn/npc/ghost_v3.mdl"),
         .vMins = Float:{-12.0, -12.0, -32.0},
         .vMaxs = Float:{12.0, 12.0, 32.0},
@@ -76,176 +71,165 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
 }
 
-public plugin_init()
-{
-    g_isPrecaching = false;
+public plugin_init() {
+    g_bIsPrecaching = false;
 
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
+    RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed_Post", .Post = 1);
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-public Hwn_Fw_ConfigLoaded()
-{
+public Hwn_Fw_ConfigLoaded() {
     g_particlesEnabled = get_cvar_num("hwn_enable_particles");
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
+    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnSpawn(ent)
-{
-    NPC_Create(ent);
+public OnSpawn(pEntity) {
+    NPC_Create(pEntity);
 
-    set_pev(ent, pev_solid, SOLID_TRIGGER);
-    set_pev(ent, pev_movetype, MOVETYPE_NOCLIP);
+    set_pev(pEntity, pev_solid, SOLID_TRIGGER);
+    set_pev(pEntity, pev_movetype, MOVETYPE_NOCLIP);
 
-    set_pev(ent, pev_framerate, 1.0);
+    set_pev(pEntity, pev_framerate, 1.0);
 
-    set_pev(ent, pev_rendermode, kRenderNormal);
-    set_pev(ent, pev_renderfx, kRenderFxGlowShell);
-    set_pev(ent, pev_renderamt, 1.0);
-    set_pev(ent, pev_rendercolor, {HWN_COLOR_PRIMARY_F});
+    set_pev(pEntity, pev_rendermode, kRenderNormal);
+    set_pev(pEntity, pev_renderfx, kRenderFxGlowShell);
+    set_pev(pEntity, pev_renderamt, 1.0);
+    set_pev(pEntity, pev_rendercolor, {HWN_COLOR_PRIMARY_F});
 
-    set_pev(ent, pev_health, 1);
+    set_pev(pEntity, pev_health, 1);
 
-    new enemy = NPC_GetEnemy(ent);
-    if (!enemy) {
-        NPC_FindEnemy(ent, _, .reachableOnly = false, .visibleOnly = false, .allowMonsters = false);
+    new pEnemy = NPC_GetEnemy(pEntity);
+    if (!pEnemy) {
+        NPC_FindEnemy(pEntity, _, .reachableOnly = false, .visibleOnly = false, .allowMonsters = false);
     }
 
-    TaskThink(ent);
+    Task_Think(pEntity);
 }
 
-public OnRemove(ent)
-{
-    remove_task(ent);
-    RemoveParticles(ent);
-    NPC_Destroy(ent);
+public OnRemove(pEntity) {
+    remove_task(pEntity);
+    RemoveParticles(pEntity);
+    NPC_Destroy(pEntity);
 }
 
-public OnKilled(ent)
-{
-    RemoveParticles(ent);
-    emit_sound(ent, CHAN_BODY, g_szSndDisappeared, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+public OnKilled(pEntity) {
+    RemoveParticles(pEntity);
+    emit_sound(pEntity, CHAN_BODY, g_szSndDisappeared, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
-public OnPlayerKilled(id, killer)
-{
-    g_playerKiller[id] = killer;
+public HamHook_Player_Killed_Post(pPlayer, pKiller) {
+    g_rgPlayerKiller[pPlayer] = pKiller;
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
-public TaskThink(ent)
-{
-    if (!pev_valid(ent)) {
+public Task_Think(pEntity) {
+    if (!pev_valid(pEntity)) {
         return;
     }
 
-    if (pev(ent, pev_deadflag) == DEAD_NO)
+    if (pev(pEntity, pev_deadflag) == DEAD_NO)
     {
-        UpdateParticles(ent);
+        UpdateParticles(pEntity);
 
-        new enemy = pev(ent, pev_enemy);
+        new pEnemy = pev(pEntity, pev_enemy);
 
-        if (NPC_IsValidEnemy(enemy)) {
-            Attack(ent, enemy);
-        } else if (UTIL_IsPlayer(enemy) && !is_user_alive(enemy)) {
-            Revenge(ent, enemy);
+        if (NPC_IsValidEnemy(pEnemy)) {
+            Attack(pEntity, pEnemy);
+        } else if (IS_PLAYER(pEnemy) && !is_user_alive(pEnemy)) {
+            Revenge(pEntity, pEnemy);
         } else {
-            CE_Kill(ent);
+            CE_Kill(pEntity);
         }
     }
 
-    set_task(g_fThinkDelay, "TaskThink", ent);
+    set_task(g_flThinkDelay, "Task_Think", pEntity);
 }
 
-Attack(ent, target)
-{
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+Attack(pEntity, pTarget) {
+    static Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    static Float:vTarget[3];
-    pev(target, pev_origin, vTarget);
+    static Float:vecTarget[3];
+    pev(pTarget, pev_origin, vecTarget);
 
-    if (get_distance_f(vOrigin, vTarget) <= NPC_HitRange)
+    if (get_distance_f(vecOrigin, vecTarget) <= NPC_HitRange)
     {
-        if (NPC_CanHit(ent, target, NPC_HitRange)) {
-            NPC_EmitVoice(ent, g_szSndAttack[random(sizeof(g_szSndAttack))], .supercede = true);
-            NPC_Hit(ent, NPC_Damage, NPC_HitRange, NPC_HitDelay);
+        if (NPC_CanHit(pEntity, pTarget, NPC_HitRange)) {
+            NPC_EmitVoice(pEntity, g_szSndAttack[random(sizeof(g_szSndAttack))], .supercede = true);
+            NPC_Hit(pEntity, NPC_Damage, NPC_HitRange, NPC_HitDelay);
         }
 
-        set_pev(ent, pev_velocity, Float:{0.0, 0.0, 0.0});
+        set_pev(pEntity, pev_velocity, Float:{0.0, 0.0, 0.0});
     }
     else
     {
         if (random(100) < 10) {
-            NPC_EmitVoice(ent, g_szSndIdle[random(sizeof(g_szSndIdle))], 4.0, _, 0.5);
+            NPC_EmitVoice(pEntity, g_szSndIdle[random(sizeof(g_szSndIdle))], 4.0, _, 0.5);
         }
 
-        static Float:vDirection[3];
-        xs_vec_sub(vTarget, vOrigin, vDirection);
-        xs_vec_normalize(vDirection, vDirection);
+        static Float:vecDirection[3];
+        xs_vec_sub(vecTarget, vecOrigin, vecDirection);
+        xs_vec_normalize(vecDirection, vecDirection);
 
-        static Float:vVelocity[3];
-        xs_vec_mul_scalar(vDirection, NPC_Speed, vVelocity);
-        set_pev(ent, pev_velocity, vVelocity);
+        static Float:vecVelocity[3];
+        xs_vec_mul_scalar(vecDirection, NPC_Speed, vecVelocity);
+        set_pev(pEntity, pev_velocity, vecVelocity);
 
-        xs_vec_mul_scalar(vDirection, NPC_HitRange, vDirection);
-        xs_vec_sub(vTarget, vDirection, vTarget);
-        UTIL_TurnTo(ent, vTarget);
+        xs_vec_mul_scalar(vecDirection, NPC_HitRange, vecDirection);
+        xs_vec_sub(vecTarget, vecDirection, vecTarget);
+        UTIL_TurnTo(pEntity, vecTarget);
     }
 }
 
-Revenge(ent, target)
-{
-    new killer = g_playerKiller[target];
-    if (killer == target) {
-        killer = 0;
+Revenge(pEntity, pTarget) {
+    new pKiller = g_rgPlayerKiller[pTarget];
+    if (pKiller == pTarget) {
+        pKiller = 0;
     }
 
-    new bossEnt;
-    Hwn_Bosses_GetCurrent(bossEnt);
-    if (killer == bossEnt) {
-        killer = 0;
+    new pBoss = 0;
+    Hwn_Bosses_GetCurrent(pBoss);
+    if (pKiller == pBoss) {
+        pKiller = 0;
     }
 
-    NPC_SetEnemy(ent, killer);
+    NPC_SetEnemy(pEntity, pKiller);
 }
 
-UpdateParticles(ent)
-{
+UpdateParticles(pEntity) {
     if (!g_particlesEnabled) {
         return;
     }
 
-    if (g_isPrecaching) {
+    if (g_bIsPrecaching) {
         return;
     }
 
-    if (pev(ent, pev_iuser4)) {
+    if (pev(pEntity, pev_iuser4)) {
         return;
     }
 
-    new particleEnt = Particles_Spawn("magic_glow", Float:{0.0, 0.0, 0.0}, 0.0);
-    if (!particleEnt) {
+    new pParticle = Particles_Spawn("magic_glow", Float:{0.0, 0.0, 0.0}, 0.0);
+    if (!pParticle) {
         return;
     }
 
-    set_pev(particleEnt, pev_movetype, MOVETYPE_FOLLOW);
-    set_pev(particleEnt, pev_aiment, ent);
-    set_pev(ent, pev_iuser4, particleEnt);
+    set_pev(pParticle, pev_movetype, MOVETYPE_FOLLOW);
+    set_pev(pParticle, pev_aiment, pEntity);
+    set_pev(pEntity, pev_iuser4, pParticle);
 }
 
-RemoveParticles(ent)
-{
-    if (!pev(ent, pev_iuser4)) {
+RemoveParticles(pEntity) {
+    if (!pev(pEntity, pev_iuser4)) {
         return;
     }
 
-    Particles_Remove(pev(ent, pev_iuser4));
-    set_pev(ent, pev_iuser4, 0);
+    Particles_Remove(pev(pEntity, pev_iuser4));
+    set_pev(pEntity, pev_iuser4, 0);
 }

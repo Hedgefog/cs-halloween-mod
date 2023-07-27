@@ -8,14 +8,12 @@
 #define PLUGIN "[Hwn] Game Name"
 #define AUTHOR "Hedgehog Fog"
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    register_forward(FM_GetGameDescription, "OnGetGameDescription");
+    register_forward(FM_GetGameDescription, "FMHook_GetGameDescription");
 }
 
-public OnGetGameDescription()
-{
+public FMHook_GetGameDescription() {
     static szGameName[32];
     format(szGameName, charsmax(szGameName), "%s %s", HWN_TITLE, HWN_VERSION);
     forward_return(FMV_STRING, szGameName);

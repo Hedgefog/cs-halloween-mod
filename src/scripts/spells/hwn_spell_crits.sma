@@ -3,6 +3,7 @@
 #include <amxmodx>
 #include <fakemeta>
 #include <hamsandwich>
+#include <reapi>
 
 #include <api_rounds>
 
@@ -18,14 +19,11 @@ new const EffectColor[3] = {HWN_COLOR_PRIMARY};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_crit.wav";
 
-new g_playerSpellEffectFlag = 0;
+new g_iPlayerSpellEffectFlag = 0;
 
 new g_hWofSpell;
 
-new g_maxPlayers;
-
-public plugin_precache()
-{
+public plugin_precache() {
     precache_sound(g_szSndDetonate);
 
     Hwn_Spell_Register(
@@ -41,86 +39,72 @@ public plugin_precache()
     g_hWofSpell = Hwn_Wof_Spell_Register("Crits", "Invoke", "Revoke");
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Killed, "player", "Revoke", .Post = 1);
+    RegisterHamPlayer(Ham_Killed, "Revoke", .Post = 1);
 
-    g_maxPlayers = get_maxplayers();
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-#if AMXX_VERSION_NUM < 183
-    public client_disconnect(id)
-#else
-    public client_disconnected(id)
-#endif
-{
-    Revoke(id);
+public client_disconnected(pPlayer) {
+    Revoke(pPlayer);
 }
 
-public Round_Fw_NewRound()
-{
-    for (new i = 1; i <= g_maxPlayers; ++i) {
-        Revoke(i);
+public Round_Fw_NewRound() {
+    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
+        Revoke(pPlayer);
     }
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-public Cast(id)
-{
-    Invoke(id);
+public Cast(pPlayer) {
+    Invoke(pPlayer);
 
     if (Hwn_Wof_Effect_GetCurrentSpell() != g_hWofSpell) {
-        set_task(EffectTime, "Revoke", id);
+        set_task(EffectTime, "Revoke", pPlayer);
     }
 }
 
-public Invoke(id)
-{
-    if (!is_user_alive(id)) {
+public Invoke(pPlayer) {
+    if (!is_user_alive(pPlayer)) {
         return;
     }
 
-    Revoke(id);
-    SetSpellEffect(id, true);
-    DetonateEffect(id);
+    Revoke(pPlayer);
+    SetSpellEffect(pPlayer, true);
+    DetonateEffect(pPlayer);
 }
 
-public Revoke(id)
-{
-    if (!GetSpellEffect(id)) {
+public Revoke(pPlayer) {
+    if (!GetSpellEffect(pPlayer)) {
         return;
     }
 
-    SetSpellEffect(id, false);
-    remove_task(id);
+    SetSpellEffect(pPlayer, false);
+    remove_task(pPlayer);
 }
 
-bool:GetSpellEffect(id)
-{
-    return !!(g_playerSpellEffectFlag & (1 << (id & 31)));
+bool:GetSpellEffect(pPlayer) {
+    return !!(g_iPlayerSpellEffectFlag & BIT(pPlayer & 31));
 }
 
-SetSpellEffect(id, bool:value)
-{
-    if (value) {
-        g_playerSpellEffectFlag |= (1 << (id & 31));
+SetSpellEffect(pPlayer, bool:bValue) {
+    if (bValue) {
+        g_iPlayerSpellEffectFlag |= BIT(pPlayer & 31);
     } else {
-        g_playerSpellEffectFlag &= ~(1 << (id & 31));
+        g_iPlayerSpellEffectFlag &= ~BIT(pPlayer & 31);
     }
 
-    Hwn_Crits_Set(id, value);
+    Hwn_Crits_Set(pPlayer, bValue);
 }
 
-DetonateEffect(ent)
-{
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+DetonateEffect(pEntity) {
+    new Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    UTIL_Message_Dlight(vOrigin, EffectRadius, EffectColor, 5, 80);
-    emit_sound(ent, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    UTIL_Message_Dlight(vecOrigin, EffectRadius, EffectColor, 5, 80);
+    emit_sound(pEntity, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

@@ -1,13 +1,13 @@
 /*
-    6.5.0
+    7.0.0
         Additions and improvements:
-            Added Mystery Smoke spell
-            Added spell shop
-            Removed transparency for intangibility spell effect
-            Added status icon for Intangibility spell
+            Added Mystery Smoke iSpell
+            Added iSpell shop
+            Removed transparency for intangibility iSpell effect
+            Added status icon for Intangibility iSpell
             Increased Small Skeleton NPC hit range
-            Reworked Blink spell
-            Fireball spell can now push the owner and deals low damage
+            Reworked Blink iSpell
+            Fireball iSpell can now push the owner and deals low damage
             Monsters can now attack each other
             Added reward for collecting pumpkins
             Optimized client messages
@@ -32,6 +32,10 @@
             Fixed NPC movement
             Fixed intangibility damage resistance rules
 
+    6.4.2
+        Fixes:
+            Fixed objective marks spawn
+
     6.4.1
         Fixes:
             Fixed HHH NPC pathfinding
@@ -39,14 +43,14 @@
 
     6.4.0
         Additions and improvements:
-            Added Skeletons Horde spell
-            Added Intangibility spell
+            Added Skeletons Horde iSpell
+            Added Intangibility iSpell
             Added objective marks
             Added player highlight
-            Added Magic Wheel of Fate spell
+            Added Magic Wheel of Fate iSpell
             Added a random bonus drop from the bucket when scoring points
-            Players now always drop pumpkin in collector gamemode
-            Removed Fortune Wheel of Fate spell
+            Players now always drop pumpkin in collector iGamemode
+            Removed Fortune Wheel of Fate iSpell
             Reduced Monoculus rocket damage
             Increased Monoculus NPC hit range
             Increased crit pumpkin effect duration
@@ -58,9 +62,9 @@
             Improved HHH NPC AI
             Improved Monoculus NPC AI
             Improved Skeleton NPC AI
-            Improved collector gamemode win conditions
+            Improved collector iGamemode win conditions
             Added glow for Monoculus NPC
-            Increased light level for default gamemode
+            Increased light level for default iGamemode
             Added Ukrainian translation
 
         Cvars:
@@ -81,19 +85,19 @@
             Players can no longer cast spells during freezetime and with the FL_FROZEN flag
             Reduced Monoculus HP
             Added Monoculus levels
-            Power Up spell now heals
-            Reworked lightning spell
+            Power Up iSpell now heals
+            Reworked lightning iSpell
             Increased fireball speed
             Increased blinkball speed
             Event points are no longer created at enemy spawn
-            Added spell groups (common, rare)
-            Spellbook now indicates a spell group with different particles
+            Added iSpell groups (common, rare)
+            Spellbook now indicates a iSpell group with different particles
             Improved NPC targeting and navigation
-            Added spell flags to the spells api
+            Added iSpell iFlags to the spells api
             Added event points API
             Added Gifts API
             Improved magic glow particle
-            Power Up spell optimization
+            Power Up iSpell optimization
             Player burn api optimization
             Many performance optimizations
             Round logic moved to the separate API
@@ -104,25 +108,25 @@
             Added hwn_spellbook_max_rare_spell_count cvar
 
         Fixes:
-            Fixed Power Up spell jump behavior
-            Fixed jump animation for Power Up spell
+            Fixed Power Up iSpell jump behavior
+            Fixed jump animation for Power Up iSpell
             Fixed bug when monoculus can shoot while in stun
             Fixed crit sound volume
-            Fixed invisibility spell fade effect
+            Fixed invisibility iSpell fade effect
             Fixed gift spawn task
             Fixed temp entities with ignoreRounds flag behavior
             Fixed bots cosmetics
 
         Credits:
-            iwillnotleave (player burn api and Power Up spell optimization)
+            iwillnotleave (player burn api and Power Up iSpell optimization)
 
     6.2.0
         Additions and improvements:
-            New team bucket
-            Added round time for collector gamemode
+            New iTeam bucket
+            Added round iTime for collector iGamemode
             Added objectives blocking while the boss is alive
-            Added boss spawning on team points collect
-            Added bonuses for team bucket filling
+            Added boss spawning on iTeam points collect
+            Added bonuses for iTeam bucket filling
             Reduced Monoculus damage
             Added spells localization
             Added bosses localization
@@ -135,11 +139,11 @@
             Buckets now ignore wallbang damage
             Added random equipment for bots
             Added drop forward flag to hwn_pumpkin_dispenser entity
-            Removed drop direction flag from hwn_pumpkin_dispenser entity
+            Removed drop iDirection flag from hwn_pumpkin_dispenser entity
             Added onhit mode for crit effects
             Improved explosion effect
-            Improved custom lighting for default gamemode
-            Improved overheal spell effect
+            Improved custom lighting for default iGamemode
+            Improved overheal iSpell effect
             Increased spawn range
             Added flash and wave bucket effect on win
 
@@ -155,17 +159,17 @@
             Added hwn_bots_cosmetics cvar
 
         Fixes:
-            Fixed team score calculation for reapi version
-            Fixed crit trace origin
+            Fixed iTeam score calculation for reapi version
+            Fixed crit pTrace origin
             Fixed explosive pumpkin damage
             Fixed first pumpkin picked message condition
 
     6.1.0
         Additions and improvements:
-            Reduced the fire rate boost for the powerup spell
+            Reduced the fire rate boost for the powerup iSpell
             Added cvar to specify the number of spells on spawn
             New config loader implementation
-            Increased flying range of blink spell ball 
+            Increased flying range of blink iSpell ball 
             Added Portuguese translation (by artYY)
             Updated Hungarian translation (by regener)
 
@@ -174,19 +178,19 @@
             Added hwn_gamemode_spells_on_spawn cvar
 
         Fixes:
-            Fixed powerup spell effect duration
+            Fixed powerup iSpell effect duration
             Fixed spellball light
 
     6.0.0
         Additions and improvements:
-            Added Wheel of Fate (random spell effects)
+            Added Wheel of Fate (random iSpell effects)
             Added crits
-            Added crits spell
+            Added crits iSpell
             Added a flash effect when picking up a pumpkin
             Added a flash effect while putting pumpkin into bucket
-            Added Power Up spell
+            Added Power Up iSpell
             Added Boss PVE
-            Added showing of equipment menu when player respawning the first time
+            Added showing of equipment menu when player respawning the first iTime
             Invisibility no longer invokes for nearby teammates
             Bosses will now kill the player when intersect while respawning
             Spellballs are now cast from view position
@@ -195,7 +199,7 @@
             NPCs can now walk up stairs
             Improved spells effects
             Improved HUD
-            Money and Timer HUD in collector gamemode now hidden by default
+            Money and Timer HUD in collector iGamemode now hidden by default
             Added Hungarian translation (by regener)
             Renamed hwn_spawn_boss command to hwn_boss_spawn
 
@@ -231,7 +235,7 @@
 
         Fixes:
             Fixed boss healthbar display
-            Fixed blink spell teleportation
+            Fixed blink iSpell teleportation
             Fixed ru lang
             Fixed small skeletons getting stuck
             Fixed small skeleton hitbox
@@ -240,7 +244,7 @@
     4.0.0
 
         Additions and improvements:
-            Added Moon Jump spell
+            Added Moon Jump iSpell
             Added healthbar for bosses
             Added Spooky Pumpkin NPC
             Added smooth rotation for NPC
@@ -287,24 +291,24 @@
         Fixed equipment menu title.
 
     2.3.1
-        Corpse no longer spawn in gamemode with player respawn
+        Corpse no longer spawn in iGamemode with player respawn
         Spell balls no longer pass through clip brashes
         Minimizes mod influence on shooting
         High performance improvement
         New Spell API
-        Added event handler entity
-        Added Lightning spell
+        Added event iBoss entity
+        Added Lightning iSpell
         Added hwn_boss_min_damage_to_win cvar
         Improved NPC hit logic
         Added hwn_spawn_boss command
-        Fixed npc kill reward in collector gamemode
-        Fade effect of invisibility spell now saving after external fade effects
+        Fixed npc kill reward in collector iGamemode
+        Fade effect of invisibility iSpell now saving after external fade effects
         Improved HHH NPC
 
     2.2.1
         Orpheu no longer required
         Orpheu replaced to RoundControl
-        Changed color for 'hwn4' sky
+        Changed iColor for 'hwn4' sky
         Fixed lighting
         Fixed crashes
 
@@ -313,7 +317,7 @@
         Improved performance
         Added cvar to disable particles
         Ghost can no longer disable Jack'O'Lantern around
-        Added fps settings
+        Added iFps settings
         Fixed NPC reachable check
         Fixed crashes
         Fixed fireballs
@@ -374,7 +378,7 @@
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
 #define HWN_TITLE "Halloween Mod"
-#define HWN_VERSION "6.5.0"
+#define HWN_VERSION "7.0.0"
 
 enum _:Hwn_PumpkinType
 {
@@ -414,70 +418,70 @@ forward Hwn_Fw_ConfigLoaded();
 
 /*--------------------------------[ Event Points ]--------------------------------*/
 
-native Hwn_EventPoints_Add(const Float:vOrigin[3]);
+native Hwn_EventPoints_Add(const Float:vecOrigin[3]);
 native Hwn_EventPoints_GetCount();
-native Hwn_EventPoints_Get(pointIdx, Float:vOrigin[3]);
-native Hwn_EventPoints_GetRandom(Float:vOrigin[3]);
+native Hwn_EventPoints_Get(iPoint, Float:vecOrigin[3]);
+native Hwn_EventPoints_GetRandom(Float:vecOrigin[3]);
 
 /*--------------------------------[ Gamemode ]--------------------------------*/
 
-native Hwn_Gamemode_Register(const szName[], Hwn_GamemodeFlags:flags = Hwn_GamemodeFlag_None);
+native Hwn_Gamemode_Register(const szName[], Hwn_GamemodeFlags:iFlags = Hwn_GamemodeFlag_None);
 native Hwn_Gamemode_Activate();
-native Hwn_Gamemode_DispatchWin(team);
+native Hwn_Gamemode_DispatchWin(iTeam);
 native Hwn_Gamemode_GetCurrent();
-native bool:Hwn_Gamemode_IsPlayerOnSpawn(id, bool:ignoreTeam = false);
+native bool:Hwn_Gamemode_IsPlayerOnSpawn(pPlayer, bool:bIgnoreTeam = false);
 native Hwn_Gamemode_GetHandler(const szName[]);
 native Hwn_GamemodeFlags:Hwn_Gamemode_GetFlags();
 
-forward Hwn_Gamemode_Fw_Activated(gamemode);
+forward Hwn_Gamemode_Fw_Activated(iGamemode);
 
 /*--------------------------------[ Collector Gamemode ]--------------------------------*/
 
-native Hwn_Collector_GetPlayerPoints(id);
-native Hwn_Collector_SetPlayerPoints(id, count);
-native Hwn_Collector_GetTeamPoints(team);
-native Hwn_Collector_SetTeamPoints(team, count);
+native Hwn_Collector_GetPlayerPoints(pPlayer);
+native Hwn_Collector_SetPlayerPoints(pPlayer, iCount);
+native Hwn_Collector_GetTeamPoints(iTeam);
+native Hwn_Collector_SetTeamPoints(iTeam, iCount);
 native bool:Hwn_Collector_IsOvertime();
 native bool:Hwn_Collector_ObjectiveBlocked();
-native bool:Hwn_Collector_ScorePlayerPointsToTeam(id, count);
+native bool:Hwn_Collector_ScorePlayerPointsToTeam(pPlayer, iCount);
 
-forward Hwn_Collector_Fw_TeamPoints(team);
-forward Hwn_Collector_Fw_PlayerPoints(id);
-forward Hwn_Collector_Fw_Overtime(time);
-forward Hwn_Collector_Fw_WinnerTeam(team);
-forward Hwn_Collector_Fw_TeamPointsScored(team, count, id);
-forward Hwn_Collector_Fw_ObjectiveBlocked(id);
+forward Hwn_Collector_Fw_TeamPoints(iTeam);
+forward Hwn_Collector_Fw_PlayerPoints(pPlayer);
+forward Hwn_Collector_Fw_Overtime(iTime);
+forward Hwn_Collector_Fw_WinnerTeam(iTeam);
+forward Hwn_Collector_Fw_TeamPointsScored(iTeam, iCount, pPlayer);
+forward Hwn_Collector_Fw_ObjectiveBlocked(pPlayer);
 
 /*--------------------------------[ Gifts ]--------------------------------*/
-native Hwn_Gifts_AddTarget(const Float:vOrigin[3]);
+native Hwn_Gifts_AddTarget(const Float:vecOrigin[3]);
 native Hwn_Gifts_GetTargetCount();
-native Hwn_Gifts_GetTarget(targetIdx, Float:vOrigin[3]);
+native Hwn_Gifts_GetTarget(iTarget, Float:vecOrigin[3]);
 
-forward Hwn_Gifts_Fw_GiftSpawn(id, ent);
-forward Hwn_Gifts_Fw_GiftPicked(id, ent);
-forward Hwn_Gifts_Fw_GiftDisappear(id, ent);
+forward Hwn_Gifts_Fw_GiftSpawn(pPlayer, pEntity);
+forward Hwn_Gifts_Fw_GiftPicked(pPlayer, pEntity);
+forward Hwn_Gifts_Fw_GiftDisappear(pPlayer, pEntity);
 
 /*--------------------------------[ Spells ]--------------------------------*/
 
-native Hwn_Spell_Register(const szName[], Hwn_SpellFlags:flags = Hwn_SpellFlag_None, const szCastCallback[]);
+native Hwn_Spell_Register(const szName[], Hwn_SpellFlags:iFlags = Hwn_SpellFlag_None, const szCastCallback[]);
 native Hwn_Spell_GetCount();
-native Hwn_Spell_GetName(spell, szOutput[], maxlen);
+native Hwn_Spell_GetName(iSpell, szOutput[], iLen);
 native Hwn_Spell_GetHandler(const szName[]);
-native Hwn_Spell_GetDictionaryKey(spell, szOutput[], maxlen);
-native Hwn_SpellFlags:Hwn_Spell_GetFlags(spell);
+native Hwn_Spell_GetDictionaryKey(iSpell, szOutput[], iLen);
+native Hwn_SpellFlags:Hwn_Spell_GetFlags(iSpell);
 
-native Hwn_Spell_GetPlayerSpell(id, &amount = 0);
-native Hwn_Spell_SetPlayerSpell(id, spell, amount = 0);
-native Hwn_Spell_CastPlayerSpell(id);
+native Hwn_Spell_GetPlayerSpell(pPlayer, &iAmount = 0);
+native Hwn_Spell_SetPlayerSpell(pPlayer, iSpell, iAmount = 0);
+native Hwn_Spell_CastPlayerSpell(pPlayer);
 
-forward Hwn_Spell_Fw_Cast(id, spellIdx);
+forward Hwn_Spell_Fw_Cast(pPlayer, iSpell);
 
 /*--------------------------------[ Wheel of Fate ]--------------------------------*/
 native Hwn_Wof_Spell_Register(const szName[], const szInvokeCallback[] = "", const szRevokeCallback[] = "");
 native Hwn_Wof_Spell_GetCount();
-native Hwn_Wof_Spell_GetName(spell, szOutput[], maxlen);
+native Hwn_Wof_Spell_GetName(iSpell, szOutput[], iLen);
 native Hwn_Wof_Spell_GetHandler(const szName[]);
-native Hwn_Wof_Spell_GetDictionaryKey(spell, szOutput[], maxlen);
+native Hwn_Wof_Spell_GetDictionaryKey(iSpell, szOutput[], iLen);
 native Hwn_Wof_Roll();
 native Hwn_Wof_Abort();
 native Hwn_Wof_Effect_GetCurrentSpell();
@@ -486,10 +490,10 @@ native Float:Hwn_Wof_Effect_GetDuration();
 
 forward Hwn_Wof_Fw_Roll_Start();
 forward Hwn_Wof_Fw_Roll_End();
-forward Hwn_Wof_Fw_Effect_Start(spellIdx);
-forward Hwn_Wof_Fw_Effect_End(spellIdx);
-forward Hwn_Wof_Fw_Effect_Invoke(id, spellIdx, Float:fEffectTime);
-forward Hwn_Wof_Fw_Effect_Revoke(id, spellIdx);
+forward Hwn_Wof_Fw_Effect_Start(iSpell);
+forward Hwn_Wof_Fw_Effect_End(iSpell);
+forward Hwn_Wof_Fw_Effect_Invoke(pPlayer, iSpell, Float:flEffectTime);
+forward Hwn_Wof_Fw_Effect_Revoke(pPlayer, iSpell);
 forward Hwn_Wof_Fw_Abort();
 
 /*--------------------------------[ Cosmetic ]--------------------------------*/
@@ -502,42 +506,43 @@ native Hwn_Cosmetic_Register(PCosmetic:hPCosmetic);
 
 native Hwn_Bosses_Register(const szCEClassName[], const szName[] = "Boss");
 native Hwn_Bosses_Spawn();
-native Hwn_Bosses_GetCurrent(&ent = 0);
-native Hwn_Bosses_GetName(bossIdx, szOutput[], maxlen);
-native Hwn_Bosses_GetDictionaryKey(bossIdx, szOutput[], maxlen);
+native Hwn_Bosses_GetCurrent(&pEntity = 0);
+native Hwn_Bosses_GetName(iBoss, szOutput[], iLen);
+native Hwn_Bosses_GetDictionaryKey(iBoss, szOutput[], iLen);
 
-forward Hwn_Bosses_Fw_BossSpawn(ent, Float:fLifeTime);
-forward Hwn_Bosses_Fw_BossKill(ent);
-forward Hwn_Bosses_Fw_BossEscape(ent);
-forward Hwn_Bosses_Fw_BossTeleport(ent, handler);
-forward Hwn_Bosses_Fw_Winner(id, damage);
+forward Hwn_Bosses_Fw_BossSpawn(pEntity, Float:flLifeTime);
+forward Hwn_Bosses_Fw_BossKill(pEntity);
+forward Hwn_Bosses_Fw_BossEscape(pEntity);
+forward Hwn_Bosses_Fw_BossRemove(pEntity);
+forward Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss);
+forward Hwn_Bosses_Fw_Winner(pPlayer, damage);
 
 /*--------------------------------[ Player Equipment ]--------------------------------*/
 
-native Hwn_PEquipment_ShowMenu(id);
-native Hwn_PEquipment_Equip(id);
-native Hwn_PEquipment_GiveHealth(id, amount);
-native Hwn_PEquipment_GiveArmor(id, amount);
-native Hwn_PEquipment_GiveAmmo(id, amount = 1);
+native Hwn_PEquipment_ShowMenu(pPlayer);
+native Hwn_PEquipment_Equip(pPlayer);
+native Hwn_PEquipment_GiveHealth(pPlayer, iAmount);
+native Hwn_PEquipment_GiveArmor(pPlayer, iAmount);
+native Hwn_PEquipment_GiveAmmo(pPlayer, iAmount = 1);
 
-forward Hwn_PEquipment_Fw_Changed(id);
+forward Hwn_PEquipment_Fw_Changed(pPlayer);
 
 /*--------------------------------[ Menu ]--------------------------------*/
 
-native Hwn_Menu_Open(id);
+native Hwn_Menu_Open(pPlayer);
 native Hwn_Menu_AddItem(const szTitle[], const szCallback[]);
 
 /*--------------------------------[ Spell Shop ]--------------------------------*/
 
-native bool:Hwn_SpellShop_Open(id);
-native bool:Hwn_SpellShop_BuySpell(id, spell);
-native bool:Hwn_SpellShop_CanBuySpell(id, spell);
-native Hwn_SpellShop_GetSpellPrice(spell);
+native bool:Hwn_SpellShop_Open(pPlayer);
+native bool:Hwn_SpellShop_BuySpell(pPlayer, iSpell);
+native bool:Hwn_SpellShop_CanBuySpell(pPlayer, iSpell);
+native Hwn_SpellShop_GetSpellPrice(iSpell);
 
-forward Hwn_SpellShop_Fw_Open(id);
-forward Hwn_SpellShop_Fw_BuySpell(id, spell);
+forward Hwn_SpellShop_Fw_Open(pPlayer);
+forward Hwn_SpellShop_Fw_BuySpell(pPlayer, iSpell);
 
 /*--------------------------------[ Crits ]--------------------------------*/
 
-native Hwn_Crits_Get(id);
-native Hwn_Crits_Set(id, bool:value);
+native Hwn_Crits_Get(pPlayer);
+native Hwn_Crits_Set(pPlayer, bool:value);

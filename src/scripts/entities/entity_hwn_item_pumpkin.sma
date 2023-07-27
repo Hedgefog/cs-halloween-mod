@@ -26,8 +26,7 @@
 #define FLASH_RADIUS_BIG 24
 #define FLASH_DECAY_RATE_BIG 24
 
-new const Float:g_fLootTypeColor[Hwn_PumpkinType][3] =
-{
+new const Float:g_rgflLootTypeColor[Hwn_PumpkinType][3] = {
     {0.0, 0.0, 0.0},
     {HWN_COLOR_SECONDARY_F},
     {HWN_COLOR_PRIMARY_F},
@@ -39,22 +38,14 @@ new const Float:g_fLootTypeColor[Hwn_PumpkinType][3] =
 new const g_szSndItemSpawn[] = "hwn/items/pumpkin/pumpkin_drop.wav";
 new const g_szSndItemPickup[] = "hwn/items/pumpkin/pumpkin_pickup.wav";
 
-new g_cvarPumpkinFlash;
+new g_pCvarPumpkinFlash;
 
-new g_ceHandlerBig;
-
-public plugin_init()
-{
-    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-}
-
-public plugin_precache()
-{
+public plugin_precache() {
     precache_sound(g_szSndItemSpawn);
     precache_sound(g_szSndItemPickup);
 
     CE_Register(
-        .szName = ENTITY_NAME,
+        ENTITY_NAME,
         .modelIndex = precache_model("models/hwn/items/pumpkin_loot_v3.mdl"),
         .vMins = Float:{-12.0, -12.0, 0.0},
         .vMaxs = Float:{12.0, 12.0, 24.0},
@@ -63,8 +54,11 @@ public plugin_precache()
         .preset = CEPreset_Item
     );
 
-    g_ceHandlerBig = CE_Register(
-        .szName = ENTITY_NAME_BIG,
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "@Entity_Pickup");
+
+    CE_Register(
+        ENTITY_NAME_BIG,
         .modelIndex = precache_model("models/hwn/items/pumpkin_loot_big_v2.mdl"),
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
@@ -73,129 +67,115 @@ public plugin_precache()
         .preset = CEPreset_Item
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-    CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "OnPickup");
-
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_BIG, "OnSpawn");
-    CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME_BIG, "OnPickup");
-
-    g_cvarPumpkinFlash = register_cvar("hwn_pumpkin_pickup_flash", "1");
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_BIG, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME_BIG, "@Entity_Pickup");
 }
 
-/*------------[ Hooks ]------------*/
+public plugin_init() {
+    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-public OnSpawn(ent)
-{
-    set_pev(ent, pev_rendermode, kRenderNormal);
-    set_pev(ent, pev_renderfx, kRenderFxGlowShell);
-    set_pev(ent, pev_renderamt, 4.0);
+    g_pCvarPumpkinFlash = register_cvar("hwn_pumpkin_pickup_flash", "1");
+}
 
-    new type = pev(ent, pev_iuser1);
-    if (type == Hwn_PumpkinType_Uninitialized) {
-        static minType = Hwn_PumpkinType_Default + 1;
-        type = minType + random(Hwn_PumpkinType - minType);
+/*------------[ Methods ]------------*/
+
+@Entity_Spawn(pEntity) {
+    set_pev(pEntity, pev_rendermode, kRenderNormal);
+    set_pev(pEntity, pev_renderfx, kRenderFxGlowShell);
+    set_pev(pEntity, pev_renderamt, 4.0);
+
+    new iType = pev(pEntity, pev_iuser1);
+    if (iType == Hwn_PumpkinType_Uninitialized) {
+        new iMinType = Hwn_PumpkinType_Default + 1;
+        iType = iMinType + random(Hwn_PumpkinType - iMinType);
     }
 
-    set_pev(ent, pev_iuser1, type);
-    set_pev(ent, pev_rendercolor, g_fLootTypeColor[type]);
+    set_pev(pEntity, pev_iuser1, iType);
+    set_pev(pEntity, pev_rendercolor, g_rgflLootTypeColor[iType]);
+    set_pev(pEntity, pev_framerate, 1.0);
 
-    set_pev(ent, pev_framerate, 1.0);
+    CE_SetMember(pEntity, "bBig", CE_GetHandlerByEntity(pEntity) == CE_GetHandler(ENTITY_NAME_BIG));
 
-    emit_sound(ent, CHAN_BODY, g_szSndItemSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(pEntity, CHAN_BODY, g_szSndItemSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
-public OnPickup(ent, id)
-{
-    new type = pev(ent, pev_iuser1);
+@Entity_Pickup(pEntity, pPlayer) {
+    new iType = pev(pEntity, pev_iuser1);
 
-    switch (type)
-    {
-        case Hwn_PumpkinType_Crits:
-        {
-            GiveCrits(id, 2.0);
+    switch (iType) {
+        case Hwn_PumpkinType_Crits: {
+            GiveCrits(pPlayer, 2.0);
         }
-        case Hwn_PumpkinType_Equipment:
-        {
-            Hwn_PEquipment_GiveAmmo(id);
-            Hwn_PEquipment_GiveArmor(id, 30);
+        case Hwn_PumpkinType_Equipment: {
+            Hwn_PEquipment_GiveAmmo(pPlayer);
+            Hwn_PEquipment_GiveArmor(pPlayer, 30);
         }
-        case Hwn_PumpkinType_Health:
-        {
-            Hwn_PEquipment_GiveHealth(id, 30);
+        case Hwn_PumpkinType_Health: {
+            Hwn_PEquipment_GiveHealth(pPlayer, 30);
         }
-        case Hwn_PumpkinType_Gravity:
-        {
-            GiveGravity(id, 2.0);
+        case Hwn_PumpkinType_Gravity: {
+            GiveGravity(pPlayer, 2.0);
         }
     }
 
-    static Float:vPlayerOrigin[3];
-    pev(id, pev_origin, vPlayerOrigin);
+    static Float:vecPlayerOrigin[3];
+    pev(pPlayer, pev_origin, vecPlayerOrigin);
 
-    emit_sound(ent, CHAN_BODY, g_szSndItemPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(pEntity, CHAN_BODY, g_szSndItemPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
-    if (get_pcvar_num(g_cvarPumpkinFlash) > 0) {
-        FlashEffect(ent, vPlayerOrigin, type);
+    if (get_pcvar_num(g_pCvarPumpkinFlash) > 0) {
+        @Entity_FlashEffect(pEntity, vecPlayerOrigin, iType);
     }
 
     return PLUGIN_HANDLED;
 }
 
-/*------------[ Methods ]------------*/
-
-GiveCrits(id, Float:fTime)
-{
-    if (Hwn_Crits_Get(id) && !task_exists(id + TASKID_SUM_DISABLE_CRITS)) {
-        return;
-    }
-
-    Hwn_Crits_Set(id, true);
-    remove_task(id + TASKID_SUM_DISABLE_CRITS);
-    set_task(fTime, "TaskDisableCrits", id + TASKID_SUM_DISABLE_CRITS);
-}
-
-GiveGravity(id, Float:fTime)
-{
-    static Float:fGravity;
-    pev(id, pev_gravity, fGravity);
-    
-    if (fGravity != 1.0 && !task_exists(id + TASKID_SUM_DISABLE_GRAVITY)) {
-        return;
-    }
-
-    set_pev(id, pev_gravity, MOON_GRAVIY);
-    remove_task(id + TASKID_SUM_DISABLE_GRAVITY);
-    set_task(fTime, "TaskDisableGravity", id + TASKID_SUM_DISABLE_GRAVITY);
-}
-
-FlashEffect(ent, const Float:vOrigin[3], type)
-{
-    if (isBig(ent)) {
-        UTIL_Message_Dlight(vOrigin, FLASH_RADIUS_BIG, {HWN_COLOR_SECONDARY}, FLASH_LIFETIME, FLASH_DECAY_RATE_BIG);
+@Entity_FlashEffect(pEntity, const Float:vecOrigin[3], type) {
+    if (CE_GetMember(pEntity, "bBig")) {
+        UTIL_Message_Dlight(vecOrigin, FLASH_RADIUS_BIG, {HWN_COLOR_SECONDARY}, FLASH_LIFETIME, FLASH_DECAY_RATE_BIG);
     } else {
-        new color[3];
+        new rgiColor[3];
         for (new i = 0; i < 3; ++i) {
-            color[i] = floatround(g_fLootTypeColor[type][i]);
+            rgiColor[i] = floatround(g_rgflLootTypeColor[type][i]);
         }
 
-        UTIL_Message_Dlight(vOrigin, FLASH_RADIUS, color, FLASH_LIFETIME, FLASH_DECAY_RATE);
+        UTIL_Message_Dlight(vecOrigin, FLASH_RADIUS, rgiColor, FLASH_LIFETIME, FLASH_DECAY_RATE);
     }
 }
 
-bool:isBig(ent) {
-    return CE_GetHandlerByEntity(ent) == g_ceHandlerBig;
+/*------------[ Functions ]------------*/
+
+GiveCrits(pPlayer, Float:flTime) {
+    if (Hwn_Crits_Get(pPlayer) && !task_exists(pPlayer + TASKID_SUM_DISABLE_CRITS)) {
+        return;
+    }
+
+    Hwn_Crits_Set(pPlayer, true);
+    remove_task(pPlayer + TASKID_SUM_DISABLE_CRITS);
+    set_task(flTime, "Task_DisableCrits", pPlayer + TASKID_SUM_DISABLE_CRITS);
+}
+
+GiveGravity(pPlayer, Float:flTime) {
+    static Float:flGravity;
+    pev(pPlayer, pev_gravity, flGravity);
+    
+    if (flGravity != 1.0 && !task_exists(pPlayer + TASKID_SUM_DISABLE_GRAVITY)) {
+        return;
+    }
+
+    set_pev(pPlayer, pev_gravity, MOON_GRAVIY);
+    remove_task(pPlayer + TASKID_SUM_DISABLE_GRAVITY);
+    set_task(flTime, "Task_DisableGravity", pPlayer + TASKID_SUM_DISABLE_GRAVITY);
 }
 
 /*------------[ Tasks ]------------*/
 
-public TaskDisableCrits(taskID)
-{
-    new id = taskID - TASKID_SUM_DISABLE_CRITS;
-    Hwn_Crits_Set(id, false);
+public Task_DisableCrits(iTaskId) {
+    new pPlayer = iTaskId - TASKID_SUM_DISABLE_CRITS;
+    Hwn_Crits_Set(pPlayer, false);
 }
 
-public TaskDisableGravity(taskID)
-{
-    new id = taskID - TASKID_SUM_DISABLE_GRAVITY;
-    set_pev(id, pev_gravity, 1.0);
+public Task_DisableGravity(iTaskId) {
+    new pPlayer = iTaskId - TASKID_SUM_DISABLE_GRAVITY;
+    set_pev(pPlayer, pev_gravity, 1.0);
 }

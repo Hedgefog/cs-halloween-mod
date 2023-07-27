@@ -19,21 +19,19 @@
 #define EXPLOSION_DAMAGE 250.0
 #define EXPLOSION_SPRITE_SIZE 80.0
 
-new g_mdlGibs;
-new g_sprExlplosion;
-new g_sprExplodeSmoke;
+new g_iGibsModelIndex;
+new g_iExlplosionModelIndex;
+new g_iExplodeSmokeModelIndex;
 
 new const g_szSndExplode[] = "hwn/misc/pumpkin_explode.wav";
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
-public plugin_precache()
-{
+public plugin_precache() {
     CE_Register(
-        .szName = ENTITY_NAME,
+        ENTITY_NAME,
         .modelIndex = precache_model("models/hwn/props/pumpkin_explode_v2.mdl"),
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
@@ -46,77 +44,73 @@ public plugin_precache()
 
     precache_sound(g_szSndExplode);
 
-    g_sprExlplosion = precache_model("sprites/eexplo.spr");
-    g_sprExplodeSmoke = precache_model("sprites/hwn/pumpkin_smoke.spr");
-    g_mdlGibs = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
+    g_iExlplosionModelIndex = precache_model("sprites/eexplo.spr");
+    g_iExplodeSmokeModelIndex = precache_model("sprites/hwn/pumpkin_smoke.spr");
+    g_iGibsModelIndex = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
 }
 
-public OnSpawn(ent)
-{
-    set_pev(ent, pev_takedamage, DAMAGE_AIM);
-    set_pev(ent, pev_health, 1.0);
+public OnSpawn(pEntity) {
+    set_pev(pEntity, pev_takedamage, DAMAGE_AIM);
+    set_pev(pEntity, pev_health, 1.0);
 
-    engfunc(EngFunc_DropToFloor, ent);
+    engfunc(EngFunc_DropToFloor, pEntity);
 }
 
-public OnKilled(ent, attacker)
-{
-    ExplosionEffect(ent);
-    PumpkinRadiusDamage(ent, attacker);
+public OnKilled(pEntity, pAttacker) {
+    ExplosionEffect(pEntity);
+    PumpkinRadiusDamage(pEntity, pAttacker);
 }
 
-PumpkinRadiusDamage(ent, owner)
-{
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+PumpkinRadiusDamage(pEntity, pOwner) {
+    new Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    new target;
-    while ((target = UTIL_FindEntityNearby(target, vOrigin, EXPLOSION_RADIUS * 2)) > 0)
+    new pTarget = 0;
+    while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EXPLOSION_RADIUS * 2)) > 0)
     {
-        if (ent == target) {
+        if (pEntity == pTarget) {
             continue;
         }
 
-        if (pev(target, pev_deadflag) != DEAD_NO) {
+        if (pev(pTarget, pev_deadflag) != DEAD_NO) {
             continue;
         }
 
-        if (pev(target, pev_takedamage) == DAMAGE_NO) {
+        if (pev(pTarget, pev_takedamage) == DAMAGE_NO) {
             continue;
         }
 
-        static Float:vTargetOrigin[3];
-        pev(target, pev_origin, vTargetOrigin);
+        static Float:vecTargetOrigin[3];
+        pev(pTarget, pev_origin, vecTargetOrigin);
 
-        new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE);
+        new Float:flDamage = UTIL_CalculateRadiusDamage(vecOrigin, vecTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE);
 
-        ExecuteHamB(Ham_TakeDamage, target, ent, target == owner ? 0 : owner, fDamage, DMG_ALWAYSGIB);
+        ExecuteHamB(Ham_TakeDamage, pTarget, pEntity, pTarget == pOwner ? 0 : pOwner, flDamage, DMG_ALWAYSGIB);
     }
 }
 
-ExplosionEffect(ent)
-{
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-    vOrigin[2] += 16.0;
+ExplosionEffect(pEntity) {
+    new Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
+    vecOrigin[2] += 16.0;
 
-    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vecOrigin, 0);
     write_byte(TE_EXPLOSION);
-    engfunc(EngFunc_WriteCoord, vOrigin[0]);
-    engfunc(EngFunc_WriteCoord, vOrigin[1]);
-    engfunc(EngFunc_WriteCoord, vOrigin[2]);
-    write_short(g_sprExlplosion);
+    engfunc(EngFunc_WriteCoord, vecOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vecOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vecOrigin[2]);
+    write_short(g_iExlplosionModelIndex);
     write_byte(floatround(((EXPLOSION_RADIUS * 2) / EXPLOSION_SPRITE_SIZE) * 10));
     write_byte(24);
     write_byte(0);
     message_end();
 
-    UTIL_Message_FireField(vOrigin, 32, g_sprExplodeSmoke, 4, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
+    UTIL_Message_FireField(vecOrigin, 32, g_iExplodeSmokeModelIndex, 4, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
 
-    new Float:vVelocity[3];
-    UTIL_RandomVector(-128.0, 128.0, vVelocity);
+    new Float:vecVelocity[3];
+    UTIL_RandomVector(-128.0, 128.0, vecVelocity);
 
-    UTIL_Message_BreakModel(vOrigin, Float:{16.0, 16.0, 16.0}, vVelocity, 32, g_mdlGibs, 4, 25, 0);
+    UTIL_Message_BreakModel(vecOrigin, Float:{16.0, 16.0, 16.0}, vecVelocity, 32, g_iGibsModelIndex, 4, 25, 0);
 
-    emit_sound(ent, CHAN_BODY, g_szSndExplode, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(pEntity, CHAN_BODY, g_szSndExplode, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

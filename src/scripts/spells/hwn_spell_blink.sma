@@ -30,8 +30,7 @@ new g_szSprSpellBall[] = "sprites/enter1.spr";
 new g_hSpell;
 new g_hCeSpellball;
 
-public plugin_precache()
-{
+public plugin_precache() {
     precache_model(g_szSprSpellBall);
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
@@ -39,13 +38,13 @@ public plugin_precache()
     g_hSpell = Hwn_Spell_Register("Blink", Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage, "OnCast");
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch", .Post = 1);
-    RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "OnThink", .Post = 1);
-    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
+    RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "HamHook_Base_Touch_Post", .Post = 1);
+    RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "HamHook_Base_Think_Post", .Post = 1);
+
+    RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 
@@ -54,155 +53,149 @@ public plugin_init()
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnCast(id)
-{
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
+public OnCast(pPlayer) {
+    new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
 
-    if (!ent) {
+    if (!pEntity) {
         return PLUGIN_HANDLED;
     }
 
-    set_pev(ent, pev_iuser1, g_hSpell);
+    set_pev(pEntity, pev_iuser1, g_hSpell);
 
-    emit_sound(id, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(pPlayer, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     return PLUGIN_CONTINUE;
 }
 
-public OnTouch(ent, target)
-{
-    if (!pev_valid(ent)) {
+public HamHook_Base_Touch_Post(pEntity, pTarget) {
+    if (!pev_valid(pEntity)) {
         return;
     }
 
-    if (g_hCeSpellball != CE_GetHandlerByEntity(ent)) {
+    if (g_hCeSpellball != CE_GetHandlerByEntity(pEntity)) {
         return;
     }
 
-    if (pev(ent, pev_iuser1) != g_hSpell) {
+    if (pev(pEntity, pev_iuser1) != g_hSpell) {
         return;
     }
 
-    if (target == pev(ent, pev_owner)) {
+    if (pTarget == pev(pEntity, pev_owner)) {
         return;
     }
 
-    if (pev(ent, pev_deadflag) == DEAD_DEAD) {
+    if (pev(pEntity, pev_deadflag) == DEAD_DEAD) {
         return;
     }
 
-    CE_Kill(ent);
+    CE_Kill(pEntity);
 }
 
-public OnThink(ent) {
-    if (!pev_valid(ent)) {
+public HamHook_Base_Think_Post(pEntity) {
+    if (!pev_valid(pEntity)) {
         return;
     }
 
-    if (g_hCeSpellball != CE_GetHandlerByEntity(ent)) {
+    if (g_hCeSpellball != CE_GetHandlerByEntity(pEntity)) {
         return;
     }
 
-    if (pev(ent, pev_iuser1) != g_hSpell) {
+    if (pev(pEntity, pev_iuser1) != g_hSpell) {
         return;
     }
 
-    if (pev(ent, pev_deadflag) == DEAD_DEAD) {
+    if (pev(pEntity, pev_deadflag) == DEAD_DEAD) {
         return;
     }
 
     static Float:vecVelocity[3];
-    pev(ent, pev_velocity, vecVelocity);
+    pev(pEntity, pev_velocity, vecVelocity);
 
     if (!xs_vec_len(vecVelocity)) {
-        CE_Kill(ent);
+        CE_Kill(pEntity);
     }
 }
 
-public OnPlayerSpawn(id)
-{
-    if (!is_user_alive(id)) {
+public HamHook_Player_Spawn_Post(pPlayer) {
+    if (!is_user_alive(pPlayer)) {
         return;
     }
 
-    new target = -1;
-    while ((target = engfunc(EngFunc_FindEntityByString, target, "classname", SPELLBALL_ENTITY_CLASSNAME)) != 0) {
-        if (pev(target, pev_iuser1) != g_hSpell) {
+    new pTarget = -1;
+    while ((pTarget = engfunc(EngFunc_FindEntityByString, pTarget, "classname", SPELLBALL_ENTITY_CLASSNAME)) != 0) {
+        if (pev(pTarget, pev_iuser1) != g_hSpell) {
             continue;
         }
 
-        set_pev(target, pev_owner, 0);
+        set_pev(pTarget, pev_owner, 0);
     }
 }
 
-public OnSpellballKilled(ent)
-{
-    new spellIdx = pev(ent, pev_iuser1);
+public OnSpellballKilled(pEntity) {
+    new iSpell = pev(pEntity, pev_iuser1);
 
-    if (spellIdx != g_hSpell) {
+    if (iSpell != g_hSpell) {
         return;
     }
 
-    Detonate(ent);
+    Detonate(pEntity);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-Detonate(ent)
-{
-    new owner = pev(ent, pev_owner);
+Detonate(pEntity) {
+    new pOwner = pev(pEntity, pev_owner);
 
-    if (!owner) {
+    if (!pOwner) {
         return;
     }
 
-    if (!is_user_alive(owner)) {
+    if (!is_user_alive(pOwner)) {
         return;
     }
 
-    static Float:vOwnerOrigin[3];
-    pev(owner, pev_origin, vOwnerOrigin);
+    static Float:vecOwnerOrigin[3];
+    pev(pOwner, pev_origin, vecOwnerOrigin);
 
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+    static Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    if (get_distance_f(vOwnerOrigin, vOrigin) > EffectRadius) {
-        new hull = (pev(ent, pev_flags) & FL_DUCKING) ? HULL_HEAD : HULL_HUMAN;
-        UTIL_FindPlaceToTeleport(owner, vOrigin, vOrigin, hull, IGNORE_MONSTERS);
-        engfunc(EngFunc_SetOrigin, owner, vOrigin);
+    if (get_distance_f(vecOwnerOrigin, vecOrigin) > EffectRadius) {
+        new iHull = (pev(pEntity, pev_flags) & FL_DUCKING) ? HULL_HEAD : HULL_HUMAN;
+        UTIL_FindPlaceToTeleport(pOwner, vecOrigin, vecOrigin, iHull, IGNORE_MONSTERS);
+        engfunc(EngFunc_SetOrigin, pOwner, vecOrigin);
     }
 
-    UTIL_ScreenFade(owner, {0, 0, 255}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
-    BlinkEffect(owner);
+    UTIL_ScreenFade(pOwner, {0, 0, 255}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
+    BlinkEffect(pOwner);
 
-    new target;
-    while ((target = UTIL_FindEntityNearby(target, vOrigin, EffectRadius)) > 0) {
-        if (owner == target) {
+    new pTarget = 0;
+    while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EffectRadius)) > 0) {
+        if (pOwner == pTarget) {
             continue;
         }
 
-        if (pev(target, pev_deadflag) != DEAD_NO) {
+        if (pev(pTarget, pev_deadflag) != DEAD_NO) {
             continue;
         }
 
-        if (pev(target, pev_takedamage) == DAMAGE_NO) {
+        if (pev(pTarget, pev_takedamage) == DAMAGE_NO) {
             continue;
         }
 
-        ExecuteHamB(Ham_TakeDamage, target, ent, owner, SpellballDamage, DMG_ALWAYSGIB);
+        ExecuteHamB(Ham_TakeDamage, pTarget, pEntity, pOwner, SpellballDamage, DMG_ALWAYSGIB);
     }
 
-    if (UTIL_IsStuck(owner)) {
-        ExecuteHamB(Ham_TakeDamage, owner, 0, 0, SpellballDamage, DMG_ALWAYSGIB);
+    if (UTIL_IsStuck(pOwner)) {
+        ExecuteHamB(Ham_TakeDamage, pOwner, 0, 0, SpellballDamage, DMG_ALWAYSGIB);
     }
 }
 
-BlinkEffect(ent)
-{
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+BlinkEffect(pEntity) {
+    new Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    emit_sound(ent, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-    UTIL_Message_Dlight(vOrigin, 32, EffectColor, 5, 64);
-    UTIL_Message_ParticleBurst(vOrigin, 32, 210, 1);
+    emit_sound(pEntity, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    UTIL_Message_Dlight(vecOrigin, 32, EffectColor, 5, 64);
+    UTIL_Message_ParticleBurst(vecOrigin, 32, 210, 1);
 }

@@ -5,6 +5,6 @@
 
 #pragma reqlib api_player_preview
 
-native bool:PlayerPreview_Activate(id, light);
-native PlayerPreview_Deactivate(id);
-native bool:PlayerPreview_IsActive(id);
+native bool:PlayerPreview_Activate(pPlayer, light);
+native PlayerPreview_Deactivate(pPlayer);
+native bool:PlayerPreview_IsActive(pPlayer);

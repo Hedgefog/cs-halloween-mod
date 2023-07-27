@@ -11,25 +11,19 @@
 
 #define ENTITY_NAME "hwn_gift_target"
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
-public plugin_precache()
-{
-    CE_Register(
-        .szName = ENTITY_NAME
-    );
-
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
+public plugin_precache() {
+    CE_Register(ENTITY_NAME);
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
 }
 
-public OnSpawn(ent)
-{
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+@Entity_Spawn(this) {
+    new Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
 
-    Hwn_Gifts_AddTarget(vOrigin);
-    CE_Remove(ent);
+    Hwn_Gifts_AddTarget(vecOrigin);
+    CE_Remove(this);
 }

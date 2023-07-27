@@ -3,6 +3,7 @@
 #include <amxmodx>
 #include <fakemeta>
 #include <hamsandwich>
+#include <reapi>
 
 #include <api_rounds>
 #include <screenfade_util>
@@ -14,24 +15,17 @@
 #define PLUGIN "[Hwn] Intangibility Spell"
 #define AUTHOR "Hedgehog Fog"
 
-#if !defined MAX_PLAYERS
-    #define MAX_PLAYERS 32
-#endif
-
 #define STATUS_ICON "suit_empty"
 
 const Float:EffectTime = 5.0;
 
 new const g_szSndDetonate[] = "hwn/spells/spell_intangibility.wav";
 
-new g_playerSpellEffectFlag = 0;
+new g_iPlayerSpellEffectFlag = 0;
 
 new g_hWofSpell;
 
-new g_maxPlayers;
-
-public plugin_precache()
-{
+public plugin_precache() {
     precache_sound(g_szSndDetonate);
 
     Hwn_Spell_Register(
@@ -43,70 +37,60 @@ public plugin_precache()
     g_hWofSpell = Hwn_Wof_Spell_Register("Intangibility", "Invoke", "Revoke");
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
-    RegisterHam(Ham_TraceAttack, "player", "OnPlayerTraceAttackPre", .Post = 0);
-    RegisterHam(Ham_TraceAttack, "player", "OnPlayerTraceAttack", .Post = 1);
-    RegisterHam(Ham_TakeDamage, "player", "OnPlayerTakeDamagePre", .Post = 0);
+    RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed_Post", .Post = 1);
+    RegisterHamPlayer(Ham_TraceAttack, "HamHook_Player_TraceAttack", .Post = 0);
+    RegisterHamPlayer(Ham_TraceAttack, "HamHook_Player_TraceAttack_Post", .Post = 1);
+    RegisterHamPlayer(Ham_TakeDamage, "HamHook_Player_TakeDamage", .Post = 0);
 
-    g_maxPlayers = get_maxplayers();
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-#if AMXX_VERSION_NUM < 183
-    public client_disconnect(id)
-#else
-    public client_disconnected(id)
-#endif
-{
-    Revoke(id);
+public client_disconnected(pPlayer) {
+    Revoke(pPlayer);
 }
 
-public Round_Fw_NewRound()
-{
-    for (new i = 1; i <= g_maxPlayers; ++i) {
-        Revoke(i);
+public Round_Fw_NewRound() {
+    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
+        Revoke(pPlayer);
     }
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnPlayerKilled(id) {
-    Revoke(id);
+public HamHook_Player_Killed_Post(pPlayer) {
+    Revoke(pPlayer);
 }
 
-public OnPlayerTraceAttackPre(id, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
-{
-    if (~g_playerSpellEffectFlag & (1 << (id & 31))) {
+public HamHook_Player_TraceAttack(pPlayer, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
+    if (~g_iPlayerSpellEffectFlag & BIT(pPlayer & 31)) {
         return HAM_IGNORED;
     }
 
-    set_pev(id, pev_solid, SOLID_NOT);
+    set_pev(pPlayer, pev_solid, SOLID_NOT);
 
     return HAM_SUPERCEDE;
 }
 
-public OnPlayerTraceAttack(id, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits) {
-    set_pev(id, pev_solid, SOLID_SLIDEBOX);
+public HamHook_Player_TraceAttack_Post(pPlayer, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
+    set_pev(pPlayer, pev_solid, SOLID_SLIDEBOX);
 
     return HAM_HANDLED;
 }
 
-public OnPlayerTakeDamagePre(id, inflictor, attacker, Float:fDamage, damageBits)
-{
-    if (~g_playerSpellEffectFlag & (1 << (id & 31))) {
+public HamHook_Player_TakeDamage(pPlayer, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
+    if (~g_iPlayerSpellEffectFlag & BIT(pPlayer & 31)) {
         return HAM_IGNORED;
     }
 
-    if (damageBits & DMG_BULLET) {
+    if (iDamageBits & DMG_BULLET) {
         return HAM_SUPERCEDE;
     }
 
-    if (inflictor && pev(inflictor, pev_flags) & FL_MONSTER) {
+    if (pInflictor && pev(pInflictor, pev_flags) & FL_MONSTER) {
         return HAM_SUPERCEDE;
     }
 
@@ -115,63 +99,53 @@ public OnPlayerTakeDamagePre(id, inflictor, attacker, Float:fDamage, damageBits)
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-public Cast(id)
-{
-    Invoke(id, EffectTime);
+public Cast(pPlayer) {
+    Invoke(pPlayer, EffectTime);
 
     if (Hwn_Wof_Effect_GetCurrentSpell() != g_hWofSpell) {
-        set_task(EffectTime, "Revoke", id);
+        set_task(EffectTime, "Revoke", pPlayer);
     }
 }
 
-public Invoke(id, Float:fTime)
-{
-    if (!is_user_alive(id)) {
+public Invoke(pPlayer, Float:flTime) {
+    if (!is_user_alive(pPlayer)) {
         return;
     }
 
-    UTIL_ScreenFade(id, {50, 50, 50}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
+    UTIL_ScreenFade(pPlayer, {50, 50, 50}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
 
-    Revoke(id);
-    SetSpellEffect(id, true);
-    DetonateEffect(id);
+    Revoke(pPlayer);
+    SetSpellEffect(pPlayer, true);
+    DetonateEffect(pPlayer);
 }
 
-public Revoke(id)
-{
-    if (!GetSpellEffect(id)) {
+public Revoke(pPlayer) {
+    if (!GetSpellEffect(pPlayer)) {
         return;
     }
 
-    remove_task(id);
-    SetSpellEffect(id, false);
+    remove_task(pPlayer);
+    SetSpellEffect(pPlayer, false);
 }
 
-bool:GetSpellEffect(id)
-{
-    return !!(g_playerSpellEffectFlag & (1 << (id & 31)));
+bool:GetSpellEffect(pPlayer) {
+    return !!(g_iPlayerSpellEffectFlag & BIT(pPlayer & 31));
 }
 
-SetSpellEffect(id, bool:value)
-{
-    if (value) {
-        g_playerSpellEffectFlag |= (1 << (id & 31));
+SetSpellEffect(pPlayer, bool:bValue) {
+    if (bValue) {
+        g_iPlayerSpellEffectFlag |= BIT(pPlayer & 31);
     } else {
-        g_playerSpellEffectFlag &= ~(1 << (id & 31));
+        g_iPlayerSpellEffectFlag &= ~BIT(pPlayer & 31);
     }
 
-    if (is_user_connected(id)) {
-        if (value) {
-            set_pev(id, pev_renderfx, kRenderFxHologram);
-        } else {
-            set_pev(id, pev_renderfx, kRenderFxNone);
-        }
+    if (is_user_connected(pPlayer)) {
+        set_pev(pPlayer, pev_renderfx, bValue ? kRenderFxHologram : kRenderFxNone);
     }
 
-    UTIL_Message_StatusIcon(id, value, STATUS_ICON, {HWN_COLOR_PRIMARY});
+    UTIL_Message_StatusIcon(pPlayer, bValue, STATUS_ICON, {HWN_COLOR_PRIMARY});
 }
 
-DetonateEffect(ent)
-{
-    emit_sound(ent, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+DetonateEffect(pEntity) {
+    emit_sound(pEntity, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

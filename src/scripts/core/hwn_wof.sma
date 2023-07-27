@@ -19,23 +19,22 @@
 
 #define ROLL_TIME 6.8
 
-new g_maxPlayers;
 new g_szSndWofRun[] = "hwn/wof/wof_roll.wav";
 
-new Trie:g_spells;
-new Array:g_spellName;
-new Array:g_spellDictKey;
-new Array:g_spellPluginID;
-new Array:g_spellInvokeFuncID;
-new Array:g_spellRevokeFuncID;
-new g_spellCount = 0;
+new Trie:g_itSpells;
+new Array:g_irgSpellName;
+new Array:g_irgSpellDictKey;
+new Array:g_irgSpelliPluginId;
+new Array:g_irgSpellInvokeFuncId;
+new Array:g_irgSpellRevokeFuncId;
+new g_iSpellsNum = 0;
 
-new g_spellIdx = -1;
-new bool:g_effectStarted = false;
-new Float:g_fEffectTime;
-new Float:g_fEffectStartTime;
+new g_iSpell = -1;
+new bool:g_bEffectStarted = false;
+new Float:g_flEffectTime;
+new Float:g_flEffectStartTime;
 
-new g_cvarEffectTime;
+new g_pCvarEffectTime;
 
 new g_fwRollStart;
 new g_fwRollEnd;
@@ -45,25 +44,20 @@ new g_fwEffectInvoke;
 new g_fwEffectRevoke;
 new g_fwEffectAbort;
 
-new g_fwResult;
-
-public plugin_precache()
-{
+public plugin_precache() {
     precache_sound(g_szSndWofRun);
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    g_maxPlayers = get_maxplayers();
 
-    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
-    RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
+    RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
+    RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed_Post", .Post = 1);
 
-    g_cvarEffectTime = register_cvar("hwn_wof_effect_time", "20.0");
+    g_pCvarEffectTime = register_cvar("hwn_wof_effect_time", "20.0");
 
-    register_concmd("hwn_wof_roll", "OnClCmd_WofRoll", ADMIN_CVAR);
-    register_concmd("hwn_wof_abort", "OnClCmd_WofAbort", ADMIN_CVAR);
+    register_concmd("hwn_wof_roll", "Command_WofRoll", ADMIN_CVAR);
+    register_concmd("hwn_wof_abort", "Command_WofAbort", ADMIN_CVAR);
 
     g_fwRollStart = CreateMultiForward("Hwn_Wof_Fw_Roll_Start", ET_IGNORE);
     g_fwRollEnd = CreateMultiForward("Hwn_Wof_Fw_Roll_End", ET_IGNORE);
@@ -74,20 +68,18 @@ public plugin_init()
     g_fwEffectAbort = CreateMultiForward("Hwn_Wof_Fw_Abort", ET_IGNORE);
 }
 
-public plugin_end()
-{
-    if (g_spellCount) {
-        TrieDestroy(g_spells);
-        ArrayDestroy(g_spellName);
-        ArrayDestroy(g_spellDictKey);
-        ArrayDestroy(g_spellInvokeFuncID);
-        ArrayDestroy(g_spellRevokeFuncID);
-        ArrayDestroy(g_spellPluginID);
+public plugin_end() {
+    if (g_iSpellsNum) {
+        TrieDestroy(g_itSpells);
+        ArrayDestroy(g_irgSpellName);
+        ArrayDestroy(g_irgSpellDictKey);
+        ArrayDestroy(g_irgSpellInvokeFuncId);
+        ArrayDestroy(g_irgSpellRevokeFuncId);
+        ArrayDestroy(g_irgSpelliPluginId);
     }
 }
 
-public plugin_natives()
-{
+public plugin_natives() {
     register_library("hwn");
     register_native("Hwn_Wof_Spell_Register", "Native_Spell_Register");
     register_native("Hwn_Wof_Spell_GetName", "Native_Spell_GetName");
@@ -103,111 +95,97 @@ public plugin_natives()
 
 /*--------------------------------[ Natives ]--------------------------------*/
 
-public Native_Spell_Register(pluginID, argc)
-{
+public Native_Spell_Register(iPluginId, iArgc) {
     new szName[32];
     get_string(1, szName, charsmax(szName));
 
     new szCastCallback[32];
     get_string(2, szCastCallback, charsmax(szCastCallback));
-    new invokeFuncID = get_func_id(szCastCallback, pluginID);
+    new iInvokeFunctionId = get_func_id(szCastCallback, iPluginId);
 
     new szStopCallback[32];
     get_string(3, szStopCallback, charsmax(szStopCallback));
-    new revokeFuncID = szStopCallback[0] == '^0' ? -1 : get_func_id(szStopCallback, pluginID);
+    new iRevokeFunctionId = equal(szStopCallback, NULL_STRING) ? -1 : get_func_id(szStopCallback, iPluginId);
 
-    return Register(szName, pluginID, invokeFuncID, revokeFuncID);
+    return Register(szName, iPluginId, iInvokeFunctionId, iRevokeFunctionId);
 }
 
-public Native_Spell_GetName(pluginID, argc)
-{
-    new spellIdx = get_param(1);
-    new maxlen = get_param(3);
+public Native_Spell_GetName(iPluginId, iArgc) {
+    new iSpell = get_param(1);
+    new iLen = get_param(3);
 
     static szSpellName[32];
-    ArrayGetString(g_spellName, spellIdx, szSpellName, charsmax(szSpellName));
+    ArrayGetString(g_irgSpellName, iSpell, szSpellName, charsmax(szSpellName));
 
-    set_string(2, szSpellName, maxlen);
+    set_string(2, szSpellName, iLen);
 }
 
-public Native_Spell_GetHandler(pluginID, argc)
-{
+public Native_Spell_GetHandler(iPluginId, iArgc) {
     new szName[32];
     get_string(1, szName, charsmax(szName));
 
-    new spellIdx;
-    if (!TrieGetCell(g_spells, szName, spellIdx)) {
+    new iSpell = 0;
+    if (!TrieGetCell(g_itSpells, szName, iSpell)) {
         return -1;
     }
 
-    return spellIdx;
+    return iSpell;
 }
 
-public Native_Spell_GetDictionaryKey(pluginID, argc)
-{
-    new spellIdx = get_param(1);
-    new maxlen = get_param(3);
+public Native_Spell_GetDictionaryKey(iPluginId, iArgc) {
+    new iSpell = get_param(1);
+    new iLen = get_param(3);
 
     static szDictKey[48];
-    ArrayGetString(g_spellDictKey, spellIdx, szDictKey, charsmax(szDictKey));
+    ArrayGetString(g_irgSpellDictKey, iSpell, szDictKey, charsmax(szDictKey));
 
-    set_string(2, szDictKey, maxlen);
+    set_string(2, szDictKey, iLen);
 }
 
-public Native_Spell_GetCount(pluginID, argc)
-{
-    return g_spellCount;
+public Native_Spell_GetCount(iPluginId, iArgc) {
+    return g_iSpellsNum;
 }
 
-public Native_Roll(pluginID, argc)
-{
+public Native_Roll(iPluginId, iArgc) {
     StartRoll();
 }
 
-public Native_Abort(pluginID, argc)
-{
+public Native_Abort(iPluginId, iArgc) {
     Abort();
 }
 
-public Native_Effect_GetCurrentSpell(pluginID, argc)
-{
-    if (!g_effectStarted) {
+public Native_Effect_GetCurrentSpell(iPluginId, iArgc) {
+    if (!g_bEffectStarted) {
         return -1;
     }
 
-    return g_spellIdx;
+    return g_iSpell;
 }
 
-public Float:Native_Effect_GetStartTime(pluginID, argc) {
-    return g_fEffectStartTime;
+public Float:Native_Effect_GetStartTime(iPluginId, iArgc) {
+    return g_flEffectStartTime;
 }
 
-public Float:Native_Effect_GetDuration(pluginID, argc) {
-    return g_fEffectTime;
+public Float:Native_Effect_GetDuration(iPluginId, iArgc) {
+    return g_flEffectTime;
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-#if AMXX_VERSION_NUM < 183
-    public client_disconnect(id)
-#else
-    public client_disconnected(id)
-#endif
-{
-    if (g_spellIdx < 0) {
+public client_disconnected(pPlayer) {
+    if (g_iSpell < 0) {
         return;
     }
 
-    if (!g_effectStarted) {
+    if (!g_bEffectStarted) {
         return;
     }
 
-    CallRevoke(id);
+    CallRevoke(pPlayer);
 }
 
-public OnClCmd_WofRoll(id, level, cid)
-{
-    if(!cmd_access(id, level, cid, 1)) {
+public Command_WofRoll(pPlayer, iLevel, iCId) {
+    if (!cmd_access(pPlayer, iLevel, iCId, 1)) {
         return PLUGIN_HANDLED;
     }
 
@@ -216,9 +194,8 @@ public OnClCmd_WofRoll(id, level, cid)
     return PLUGIN_HANDLED;
 }
 
-public OnClCmd_WofAbort(id, level, cid)
-{
-    if(!cmd_access(id, level, cid, 1)) {
+public Command_WofAbort(pPlayer, iLevel, iCId) {
+    if (!cmd_access(pPlayer, iLevel, iCId, 1)) {
         return PLUGIN_HANDLED;
     }
 
@@ -227,199 +204,185 @@ public OnClCmd_WofAbort(id, level, cid)
     return PLUGIN_HANDLED;
 }
 
-public OnPlayerSpawn(id)
-{
-    if (!is_user_alive(id)) {
+public HamHook_Player_Spawn_Post(pPlayer) {
+    if (!is_user_alive(pPlayer)) {
         return;
     }
 
-    if (g_spellIdx < 0) {
+    if (g_iSpell < 0) {
         return;
     }
 
-    if (!g_effectStarted) {
+    if (!g_bEffectStarted) {
         return;
     }
 
-    CallInvoke(id);
+    CallInvoke(pPlayer);
 }
 
-public OnPlayerKilled(id)
-{
-    if (g_spellIdx < 0) {
+public HamHook_Player_Killed_Post(pPlayer) {
+    if (g_iSpell < 0) {
         return;
     }
 
-    if (!g_effectStarted) {
+    if (!g_bEffectStarted) {
         return;
     }
 
-    CallRevoke(id);
+    CallRevoke(pPlayer);
 }
 
-public Round_Fw_NewRound()
-{
+public Round_Fw_NewRound() {
     Abort();
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-StartRoll()
-{
-    if (g_spellIdx >= 0) {
+StartRoll() {
+    if (g_iSpell >= 0) {
         return;
     }
 
-    if (!g_spellCount) {
+    if (!g_iSpellsNum) {
         return;
     }
 
-    g_spellIdx = random(g_spellCount);
+    g_iSpell = random(g_iSpellsNum);
 
     client_cmd(0, "spk %s", g_szSndWofRun);
-    set_task(ROLL_TIME, "TaskEndRoll", TASKID_ROLL_END);
-    ExecuteForward(g_fwRollStart, g_fwResult);
+    set_task(ROLL_TIME, "Task_EndRoll", TASKID_ROLL_END);
+    ExecuteForward(g_fwRollStart, _);
 }
 
-EndRoll()
-{
-    ExecuteForward(g_fwRollEnd, g_fwResult);
+EndRoll() {
+    ExecuteForward(g_fwRollEnd, _);
     StartEffect();
 }
 
-StartEffect()
-{
-    g_fEffectStartTime = get_gametime();
-    g_fEffectTime = get_pcvar_float(g_cvarEffectTime);
-    g_effectStarted = true;
+StartEffect() {
+    g_flEffectStartTime = get_gametime();
+    g_flEffectTime = get_pcvar_float(g_pCvarEffectTime);
+    g_bEffectStarted = true;
 
-    for (new id = 1; id <= g_maxPlayers; ++id) {
-        if (!is_user_connected(id)) {
+    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
+        if (!is_user_connected(pPlayer)) {
             continue;
         }
 
-        new team = UTIL_GetPlayerTeam(id);
-        if (team != 1 && team != 2) {
+        new iTeam = get_member(pPlayer, m_iTeam);
+        if (iTeam != 1 && iTeam != 2) {
             continue;
         }
 
-        CallInvoke(id);
+        CallInvoke(pPlayer);
     }
 
-    set_task(g_fEffectTime, "TaskEndEffect", TASKID_EFFECT_END);
-    ExecuteForward(g_fwEffectStart, g_fwResult, g_spellIdx);
+    set_task(g_flEffectTime, "Task_EndEffect", TASKID_EFFECT_END);
+    ExecuteForward(g_fwEffectStart, _, g_iSpell);
 }
 
-EndEffect()
-{
-    if (g_spellIdx >= 0) {
-        for (new id = 1; id <= g_maxPlayers; ++id) {
-            if (!is_user_connected(id)) {
+EndEffect() {
+    if (g_iSpell >= 0) {
+        for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
+            if (!is_user_connected(pPlayer)) {
                 continue;
             }
 
-            CallRevoke(id);
+            CallRevoke(pPlayer);
         }
 
-        ExecuteForward(g_fwEffectEnd, g_fwResult, g_spellIdx);
+        ExecuteForward(g_fwEffectEnd, _, g_iSpell);
     }
 
     Reset();
 }
 
-Abort()
-{
+Abort() {
     EndEffect();
-    ExecuteForward(g_fwEffectAbort, g_fwResult);
+    ExecuteForward(g_fwEffectAbort);
 }
 
-Register(const szName[], pluginID, invokeFuncID, revokeFuncID)
-{
-    if (!g_spellCount) {
-        g_spells = TrieCreate();
-        g_spellName = ArrayCreate(32);
-        g_spellDictKey = ArrayCreate(48);
-        g_spellInvokeFuncID = ArrayCreate();
-        g_spellRevokeFuncID = ArrayCreate();
-        g_spellPluginID = ArrayCreate();
+Register(const szName[], iPluginId, iInvokeFunctionId, iRevokeFunctionId) {
+    if (!g_iSpellsNum) {
+        g_itSpells = TrieCreate();
+        g_irgSpellName = ArrayCreate(32);
+        g_irgSpellDictKey = ArrayCreate(48);
+        g_irgSpellInvokeFuncId = ArrayCreate();
+        g_irgSpellRevokeFuncId = ArrayCreate();
+        g_irgSpelliPluginId = ArrayCreate();
     }
 
-    new spellIdx = g_spellCount;
+    new iSpell = g_iSpellsNum;
 
-    TrieSetCell(g_spells, szName, spellIdx);
-    ArrayPushString(g_spellName, szName);
-    ArrayPushCell(g_spellPluginID, pluginID);
-    ArrayPushCell(g_spellInvokeFuncID, invokeFuncID);
-    ArrayPushCell(g_spellRevokeFuncID, revokeFuncID);
+    TrieSetCell(g_itSpells, szName, iSpell);
+    ArrayPushString(g_irgSpellName, szName);
+    ArrayPushCell(g_irgSpelliPluginId, iPluginId);
+    ArrayPushCell(g_irgSpellInvokeFuncId, iInvokeFunctionId);
+    ArrayPushCell(g_irgSpellRevokeFuncId, iRevokeFunctionId);
 
     new szDictKey[48];
     UTIL_CreateDictKey(szName, "HWN_WOF_SPELL_", szDictKey, charsmax(szDictKey));
 
     if (UTIL_IsLocalizationExists(szDictKey)) {
-        ArrayPushString(g_spellDictKey, szDictKey);
+        ArrayPushString(g_irgSpellDictKey, szDictKey);
     } else {
-        ArrayPushString(g_spellDictKey, "");
+        ArrayPushString(g_irgSpellDictKey, "");
     }
 
-    g_spellCount++;
+    g_iSpellsNum++;
 
-    return spellIdx;
+    return iSpell;
 }
 
-CallInvoke(id)
-{
-    new pluginID = ArrayGetCell(g_spellPluginID, g_spellIdx);
-    new funcID = ArrayGetCell(g_spellInvokeFuncID, g_spellIdx);
+CallInvoke(pPlayer) {
+    new iPluginId = ArrayGetCell(g_irgSpelliPluginId, g_iSpell);
+    new iFunctionId = ArrayGetCell(g_irgSpellInvokeFuncId, g_iSpell);
 
-    if (funcID < 0) {
+    if (iFunctionId < 0) {
         return;
     }
 
-    if (callfunc_begin_i(funcID, pluginID) == 1) {
-        callfunc_push_int(id);
-        callfunc_push_float(g_fEffectTime);
+    if (callfunc_begin_i(iFunctionId, iPluginId) == 1) {
+        callfunc_push_int(pPlayer);
+        callfunc_push_float(g_flEffectTime);
 
         if (callfunc_end() == PLUGIN_CONTINUE) {
-            ExecuteForward(g_fwEffectInvoke, g_fwResult, id, g_spellIdx, g_fEffectTime);
+            ExecuteForward(g_fwEffectInvoke, _, pPlayer, g_iSpell, g_flEffectTime);
         }
     }
 }
 
-CallRevoke(id)
-{
-    new pluginID = ArrayGetCell(g_spellPluginID, g_spellIdx);
-    new funcID = ArrayGetCell(g_spellRevokeFuncID, g_spellIdx);
+CallRevoke(pPlayer) {
+    new iPluginId = ArrayGetCell(g_irgSpelliPluginId, g_iSpell);
+    new iFunctionId = ArrayGetCell(g_irgSpellRevokeFuncId, g_iSpell);
 
-    if (funcID < 0) {
+    if (iFunctionId < 0) {
         return;
     }
 
-    if (callfunc_begin_i(funcID, pluginID) == 1) {
-        callfunc_push_int(id);
+    if (callfunc_begin_i(iFunctionId, iPluginId) == 1) {
+        callfunc_push_int(pPlayer);
 
         if (callfunc_end() == PLUGIN_CONTINUE) {
-            ExecuteForward(g_fwEffectRevoke, g_fwResult, id, g_spellIdx);
+            ExecuteForward(g_fwEffectRevoke, _, pPlayer, g_iSpell);
         }
     }
 }
 
-Reset()
-{
-    g_spellIdx = -1;
-    g_effectStarted = false;
-    g_fEffectStartTime = 0.0;
+Reset() {
+    g_iSpell = -1;
+    g_bEffectStarted = false;
+    g_flEffectStartTime = 0.0;
     remove_task(TASKID_ROLL_END);
     remove_task(TASKID_EFFECT_END);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
-public TaskEndRoll()
-{
+public Task_EndRoll() {
     EndRoll();
 }
 
-public TaskEndEffect()
-{
+public Task_EndEffect() {
     EndEffect();
 }

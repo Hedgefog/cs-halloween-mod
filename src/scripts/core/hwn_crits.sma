@@ -3,6 +3,7 @@
 #include <fakemeta>
 #include <hamsandwich>
 #include <xs>
+#include <reapi>
 
 #include <hwn>
 #include <hwn_utils>
@@ -13,10 +14,6 @@
 
 #define PLUGIN "[Hwn] Crits"
 #define AUTHOR "Hedgehog Fog"
-
-#if !defined MAX_PLAYERS
-    #define MAX_PLAYERS 32
-#endif
 
 #define CRIT_EFFECT_SPLASH_LENGTH 128.0
 #define CRIT_EFFECT_SPLASH_SPEEDNOISE 255
@@ -34,25 +31,25 @@
 #define TASKID_SUM_PENALTY 1000
 #define TASKID_SUM_HIT_BONUS 2000
 
-new g_playerCritsFlag;
-new Float:g_playerCritChance[MAX_PLAYERS + 1] = { 0.0, ... };
-new Float:g_playerLastShot[MAX_PLAYERS + 1] = { 0.0, ... };
-new Float:g_playerLastHit[MAX_PLAYERS + 1] = { 0.0, ... };
-new Float:g_playerLastCrit[MAX_PLAYERS + 1] = { 0.0, ... };
+new g_rgiPlayerCritsFlag;
+new Float:g_rgflPlayerCritChance[MAX_PLAYERS + 1];
+new Float:g_rgflPlayerLastShot[MAX_PLAYERS + 1];
+new Float:g_rgflPlayerLastHit[MAX_PLAYERS + 1];
+new Float:g_rgflPlayerLastCrit[MAX_PLAYERS + 1];
 
-new g_cvarCritsDmgMultiplier;
-new g_cvarCritsEffectTrace;
-new g_cvarCritsEffectSplash;
-new g_cvarCritsEffectFlash;
-new g_cvarCritsEffectStatucIcon;
-new g_cvarCritsRandom;
-new g_cvarCritsRandomChanceInitial;
-new g_cvarCritsRandomChanceMax;
-new g_cvarCritsRandomChanceBonus;
-new g_cvarCritsRandomChancePenalty;
-new g_cvarCritsSoundUse;
-new g_cvarCritsSoundHit;
-new g_cvarCritsSoundShoot;
+new g_pCvarCritsDmgMultiplier;
+new g_pCvarCritsEffectTrace;
+new g_pCvarCritsEffectSplash;
+new g_pCvarCritsEffectFlash;
+new g_pCvarCritsEffectStatucIcon;
+new g_pCvarCritsRandom;
+new g_pCvarCritsRandomChanceInitial;
+new g_pCvarCritsRandomChanceMax;
+new g_pCvarCritsRandomChanceBonus;
+new g_pCvarCritsRandomChancePenalty;
+new g_pCvarCritsSoundUse;
+new g_pCvarCritsSoundHit;
+new g_pCvarCritsSoundShoot;
 
 new g_szSndCritHit[][32] = {
     "hwn/crits/crit_hit1.wav",
@@ -64,8 +61,7 @@ new g_szSndCritShot[] = "hwn/crits/crit_shoot.wav";
 new g_szSndCritOn[] = "hwn/crits/crit_on.wav";
 new g_szSndCritOff[] = "hwn/crits/crit_off.wav";
 
-public plugin_precache()
-{
+public plugin_precache() {
     for (new i = 0; i < sizeof(g_szSndCritHit); ++i) {
         precache_sound(g_szSndCritHit[i]);
     }
@@ -74,38 +70,36 @@ public plugin_precache()
     precache_sound(g_szSndCritOn);
     precache_sound(g_szSndCritOff);
 
-    g_cvarCritsDmgMultiplier = register_cvar("hwn_crits_damage_multiplier", "2.2");
-    g_cvarCritsEffectTrace = register_cvar("hwn_crits_effect_trace", "1");
-    g_cvarCritsEffectSplash = register_cvar("hwn_crits_effect_splash", "1");
-    g_cvarCritsEffectFlash = register_cvar("hwn_crits_effect_flash", "1");
-    g_cvarCritsEffectStatucIcon = register_cvar("hwn_crits_effect_status_icon", "1");
-    g_cvarCritsSoundUse = register_cvar("hwn_crits_sound_use", "1");
-    g_cvarCritsSoundHit = register_cvar("hwn_crits_sound_hit", "1");
-    g_cvarCritsSoundShoot = register_cvar("hwn_crits_sound_shoot", "1");
-    g_cvarCritsRandom = register_cvar("hwn_crits_random", "1");
-    g_cvarCritsRandomChanceInitial = register_cvar("hwn_crits_random_chance_initial", "0.0");
-    g_cvarCritsRandomChanceMax = register_cvar("hwn_crits_random_chance_max", "12.0");
-    g_cvarCritsRandomChanceBonus = register_cvar("hwn_crits_random_chance_bonus", "1.0");
-    g_cvarCritsRandomChancePenalty = register_cvar("hwn_crits_random_chance_penalty", "2.0");
+    g_pCvarCritsDmgMultiplier = register_cvar("hwn_crits_damage_multiplier", "2.2");
+    g_pCvarCritsEffectTrace = register_cvar("hwn_crits_effect_trace", "1");
+    g_pCvarCritsEffectSplash = register_cvar("hwn_crits_effect_splash", "1");
+    g_pCvarCritsEffectFlash = register_cvar("hwn_crits_effect_flash", "1");
+    g_pCvarCritsEffectStatucIcon = register_cvar("hwn_crits_effect_status_icon", "1");
+    g_pCvarCritsSoundUse = register_cvar("hwn_crits_sound_use", "1");
+    g_pCvarCritsSoundHit = register_cvar("hwn_crits_sound_hit", "1");
+    g_pCvarCritsSoundShoot = register_cvar("hwn_crits_sound_shoot", "1");
+    g_pCvarCritsRandom = register_cvar("hwn_crits_random", "1");
+    g_pCvarCritsRandomChanceInitial = register_cvar("hwn_crits_random_chance_initial", "0.0");
+    g_pCvarCritsRandomChanceMax = register_cvar("hwn_crits_random_chance_max", "12.0");
+    g_pCvarCritsRandomChanceBonus = register_cvar("hwn_crits_random_chance_bonus", "1.0");
+    g_pCvarCritsRandomChancePenalty = register_cvar("hwn_crits_random_chance_penalty", "2.0");
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_TraceAttack, "worldspawn", "OnTraceAttack", .Post = 0);
-    RegisterHam(Ham_TraceAttack, "func_wall", "OnTraceAttack", .Post = 0);
-    RegisterHam(Ham_TraceAttack, "func_breakable", "OnTraceAttack", .Post = 0);
-    RegisterHam(Ham_TraceAttack, "player", "OnTraceAttack", .Post = 0);
-    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 0);
+    RegisterHam(Ham_TraceAttack, "worldspawn", "HamHook_TraceAttack", .Post = 0);
+    RegisterHam(Ham_TraceAttack, "func_wall", "HamHook_TraceAttack", .Post = 0);
+    RegisterHam(Ham_TraceAttack, "func_breakable", "HamHook_TraceAttack", .Post = 0);
+    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "HamHook_TraceAttack", .Post = 0);
+    RegisterHamPlayer(Ham_TraceAttack, "HamHook_TraceAttack", .Post = 0);
 
-    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
+    RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
 
-    register_concmd("hwn_crits_toggle", "OnClCmd_CritsToggle", ADMIN_CVAR);
+    register_concmd("hwn_crits_toggle", "Command_CritsToggle", ADMIN_CVAR);
 }
 
-public plugin_natives()
-{
+public plugin_natives() {
     register_library("hwn");
     register_native("Hwn_Crits_Get", "Native_GetPlayerCrits");
     register_native("Hwn_Crits_Set", "Native_SetPlayerCrits");
@@ -113,276 +107,245 @@ public plugin_natives()
 
 /*--------------------------------[ Natives ]--------------------------------*/
 
-#if AMXX_VERSION_NUM < 183
-        public client_disconnect(id)
-#else
-        public client_disconnected(id)
-#endif
-{
-     ResetCrits(id);
+public client_disconnected(pPlayer) {
+     ResetCrits(pPlayer);
 }
 
-public bool:Native_GetPlayerCrits(plugin_id, argc)
-{
-    new id = get_param(1);
+public bool:Native_GetPlayerCrits(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
 
-    return GetPlayerCrits(id);
+    return GetPlayerCrits(pPlayer);
 }
 
-public Native_SetPlayerCrits(plugin_id, argc)
-{
-    new id = get_param(1);
-    new bool:value = bool:get_param(2);
+public Native_SetPlayerCrits(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    new bool:bValue = bool:get_param(2);
 
-    SetPlayerCrits(id, value);
+    SetPlayerCrits(pPlayer, bValue);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnClCmd_CritsToggle(id, level, cid)
-{
-    if(!cmd_access(id, level, cid, 1)) {
+public Command_CritsToggle(pPlayer, iLevel, iCId) {
+    if (!cmd_access(pPlayer, iLevel, iCId, 1)) {
         return PLUGIN_HANDLED;
     }
 
     new szArgs[4];
     read_args(szArgs, charsmax(szArgs));
 
-    new targetId = szArgs[0] == '^0' ? id : str_to_num(szArgs);
-    if (!targetId) {
+    new pTarget = equal(szArgs, NULL_STRING) ? pPlayer : str_to_num(szArgs);
+    if (!pTarget) {
         return PLUGIN_HANDLED;
     }
 
-    new bool:value = !GetPlayerCrits(targetId);
-    SetPlayerCrits(targetId, value);
+    new bool:bValue = !GetPlayerCrits(pTarget);
+    SetPlayerCrits(pTarget, bValue);
 
-    log_amx("Set crits for %d to %s", targetId, value ? "true" : "false");
+    log_amx("Set crits for %d to %s", pTarget, bValue ? "true" : "false");
 
     return PLUGIN_HANDLED;
 }
 
-public OnPlayerSpawn(id)
-{
-    if (!is_user_alive(id)) {
+public HamHook_Player_Spawn_Post(pPlayer) {
+    if (!is_user_alive(pPlayer)) {
         return;
     }
 
-    ResetCritChance(id);
-    UpdateStatusIcon(id);
+    ResetCritChance(pPlayer);
+    UpdateStatusIcon(pPlayer);
 }
 
-public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
-{
-    if (!UTIL_IsPlayer(attacker)) {
+public HamHook_TraceAttack(pEntity, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
+    if (!IS_PLAYER(pAttacker)) {
         return HAM_IGNORED;
     }
 
-    new Float:fGameTime = get_gametime();
-    new bool:isHit = (UTIL_IsPlayer(ent) && !IsTeammate(attacker, ent)) || pev(ent, pev_flags) & FL_MONSTER;
+    new Float:flGameTime = get_gametime();
+    new bool:bIsHit = (IS_PLAYER(pEntity) && rg_is_player_can_takedamage(pEntity, pAttacker)) || pev(pEntity, pev_flags) & FL_MONSTER;
 
-    if (ProcessCrit(attacker, isHit)) {
-        new bool:isNewShot = g_playerLastShot[attacker] != get_gametime();
-        new Float:fVolume = isNewShot ? VOL_NORM : VOL_NORM * 0.3525;
+    if (ProcessCrit(pAttacker, bIsHit)) {
+        new bool:bIsNewShot = g_rgflPlayerLastShot[pAttacker] != get_gametime();
+        new Float:flVolume = bIsNewShot ? VOL_NORM : VOL_NORM * 0.3525;
 
-        if (isNewShot && get_pcvar_num(g_cvarCritsSoundShoot)) {
-            emit_sound(attacker, CHAN_STATIC, g_szSndCritShot, fVolume, ATTN_NORM, 0, PITCH_NORM);
+        if (bIsNewShot && get_pcvar_num(g_pCvarCritsSoundShoot)) {
+            emit_sound(pAttacker, CHAN_STATIC, g_szSndCritShot, flVolume, ATTN_NORM, 0, PITCH_NORM);
         }
 
-        static Float:vViewOrigin[3];
-        UTIL_GetViewOrigin(attacker, vViewOrigin);
+        static Float:vecViewOrigin[3];
+        UTIL_GetViewOrigin(pAttacker, vecViewOrigin);
 
-        static Float:vHitOrigin[3];
-        get_tr2(trace, TR_vecEndPos, vHitOrigin);
+        static Float:vecHitOrigin[3];
+        get_tr2(pTrace, TR_vecEndPos, vecHitOrigin);
 
-        CritEffect(vHitOrigin, vViewOrigin, vDirection, isHit);
+        CritEffect(vecHitOrigin, vecViewOrigin, vecDirection, bIsHit);
 
-        if (get_pcvar_num(g_cvarCritsSoundHit)) {
-            UTIL_Message_Sound(vHitOrigin, g_szSndCritHit[random(sizeof(g_szSndCritHit))], fVolume, ATTN_NORM, 0, PITCH_NORM);
+        if (get_pcvar_num(g_pCvarCritsSoundHit)) {
+            UTIL_Message_Sound(vecHitOrigin, g_szSndCritHit[random(sizeof(g_szSndCritHit))], flVolume, ATTN_NORM, 0, PITCH_NORM);
         }
 
-        g_playerLastCrit[attacker] = fGameTime;
+        g_rgflPlayerLastCrit[pAttacker] = flGameTime;
 
         // apply crit only on hit
-        if (isHit) {
-            SetHamParamFloat(3, fDamage * get_pcvar_float(g_cvarCritsDmgMultiplier));
-            SetHamParamInteger(6, damageBits | DMG_ALWAYSGIB);
+        if (bIsHit) {
+            SetHamParamFloat(3, flDamage * get_pcvar_float(g_pCvarCritsDmgMultiplier));
+            SetHamParamInteger(6, iDamageBits | DMG_ALWAYSGIB);
         }
     }
 
-    if (isHit) {
-        g_playerLastHit[attacker] = fGameTime;
+    if (bIsHit) {
+        g_rgflPlayerLastHit[pAttacker] = flGameTime;
     }
 
-    g_playerLastShot[attacker] = fGameTime;
+    g_rgflPlayerLastShot[pAttacker] = flGameTime;
 
     return HAM_OVERRIDE;
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-bool:GetPlayerCrits(id)
-{
-    return !!(g_playerCritsFlag & (1 << (id & 31)));
+bool:GetPlayerCrits(pPlayer) {
+    return !!(g_rgiPlayerCritsFlag & BIT(pPlayer & 31));
 }
 
-SetPlayerCrits(id, bool:value)
-{
-    if (is_user_connected(id)) {
-        if (GetPlayerCrits(id) != value && get_pcvar_num(g_cvarCritsSoundUse)) {
-            client_cmd(id, "spk %s", value ? g_szSndCritOn : g_szSndCritOff);
+SetPlayerCrits(pPlayer, bool:bValue) {
+    if (is_user_connected(pPlayer)) {
+        if (GetPlayerCrits(pPlayer) != bValue && get_pcvar_num(g_pCvarCritsSoundUse)) {
+            client_cmd(pPlayer, "spk %s", bValue ? g_szSndCritOn : g_szSndCritOff);
         }
     }
 
-    if (value) {
-        g_playerCritsFlag |= (1 << (id & 31));
+    if (bValue) {
+        g_rgiPlayerCritsFlag |= BIT(pPlayer & 31);
     } else {
-        g_playerCritsFlag &= ~(1 << (id & 31));
+        g_rgiPlayerCritsFlag &= ~BIT(pPlayer & 31);
     }
 
-    if (is_user_connected(id)) {
-        UpdateStatusIcon(id);
+    if (is_user_connected(pPlayer)) {
+        UpdateStatusIcon(pPlayer);
     }
 }
 
-ProcessCrit(id, bool:isHit)
-{
-    if (GetPlayerCrits(id)) {
+ProcessCrit(pPlayer, bool:bIsHit) {
+    if (GetPlayerCrits(pPlayer)) {
         return true;
     }
 
-    if (get_pcvar_float(g_cvarCritsRandom) <= 0) {
+    if (get_pcvar_float(g_pCvarCritsRandom) <= 0) {
         return false;
     }
 
-    new Float:fLastShot = g_playerLastShot[id];
-    new bool:isNewShot = fLastShot != get_gametime();
-    new bool:isCrit = g_playerLastCrit[id] == get_gametime();
+    new Float:flLastShot = g_rgflPlayerLastShot[pPlayer];
+    new bool:bIsNewShot = flLastShot != get_gametime();
+    new bool:bIsCrit = g_rgflPlayerLastCrit[pPlayer] == get_gametime();
 
-    if (isNewShot) { // exclude multiple bullets and wallbangs
-        new Float:fCritChance = GetCritChance(id);
-        if (fCritChance && fCritChance >= random_float(0.0, 100.0)) {
-            ResetCritChance(id);
-            isCrit = true;
+    if (bIsNewShot) { // exclude multiple bullets and wallbangs
+        new Float:flCritChance = GetCritChance(pPlayer);
+        if (flCritChance && flCritChance >= random_float(0.0, 100.0)) {
+            ResetCritChance(pPlayer);
+            bIsCrit = true;
         }
     }
 
-    if (isHit) {
-        if (g_playerLastHit[id] != get_gametime()) { // only new hit
-            set_task(0.0, "TaskHitBonus", id + TASKID_SUM_HIT_BONUS);
+    if (bIsHit) {
+        if (g_rgflPlayerLastHit[pPlayer] != get_gametime()) { // only new hit
+            set_task(0.0, "Task_HitBonus", pPlayer + TASKID_SUM_HIT_BONUS);
         }
 
-        remove_task(id + TASKID_SUM_PENALTY); // remove penalty task on hit
+        remove_task(pPlayer + TASKID_SUM_PENALTY); // remove penalty task on hit
     } else {
-        if (isNewShot) { // only new shot
-            set_task(0.0, "TaskPenalty", id + TASKID_SUM_PENALTY);
+        if (bIsNewShot) { // only new shot
+            set_task(0.0, "Task_Penalty", pPlayer + TASKID_SUM_PENALTY);
         }
     }
 
-    return isCrit;
+    return bIsCrit;
 }
 
-Float:GetCritChance(id)
-{
-    return g_playerCritChance[id];
+Float:GetCritChance(pPlayer) {
+    return g_rgflPlayerCritChance[pPlayer];
 }
 
-ResetCritChance(id)
-{
-    SetCritChance(id, get_pcvar_float(g_cvarCritsRandomChanceInitial));
+ResetCritChance(pPlayer) {
+    SetCritChance(pPlayer, get_pcvar_float(g_pCvarCritsRandomChanceInitial));
 }
 
-SetCritChance(id, Float:fValue)
-{
-    new Float:fMaxChance = get_pcvar_float(g_cvarCritsRandomChanceMax);
+SetCritChance(pPlayer, Float:flValue) {
+    new Float:flMaxChance = get_pcvar_float(g_pCvarCritsRandomChanceMax);
 
-    if (fValue > fMaxChance) {
-        fValue = fMaxChance;
-    } else if (fValue < 0.0) {
-        fValue = 0.0;
+    if (flValue > flMaxChance) {
+        flValue = flMaxChance;
+    } else if (flValue < 0.0) {
+        flValue = 0.0;
     }
 
-    g_playerCritChance[id] = fValue;
+    g_rgflPlayerCritChance[pPlayer] = flValue;
 }
 
-ResetCrits(id)
-{
-    SetPlayerCrits(id, false);
-    g_playerCritChance[id] = 0.0;
+ResetCrits(pPlayer) {
+    SetPlayerCrits(pPlayer, false);
+    g_rgflPlayerCritChance[pPlayer] = 0.0;
 }
 
-UpdateStatusIcon(id)
-{
-        new value = any:(get_pcvar_float(g_cvarCritsEffectStatucIcon) > 0) && GetPlayerCrits(id);
-        UTIL_Message_StatusIcon(id, value, CRIT_STATUS_ICON, {HWN_COLOR_PRIMARY});
+UpdateStatusIcon(pPlayer) {
+        new bool:bValue = get_pcvar_bool(g_pCvarCritsEffectStatucIcon) && GetPlayerCrits(pPlayer);
+        UTIL_Message_StatusIcon(pPlayer, bValue, CRIT_STATUS_ICON, {HWN_COLOR_PRIMARY});
 }
 
-CritEffect(const Float:vOrigin[3], const Float:vAttackerOrigin[3], const Float:vDirection[3], bool:isHit)
-{
-    new color = EFFECT_COLOR_BYTE;
+CritEffect(const Float:vecOrigin[3], const Float:vecAttackerOrigin[3], const Float:vecDirection[3], bool:bIsHit) {
+    new iColor = EFFECT_COLOR_BYTE;
 
-    if (get_pcvar_num(g_cvarCritsEffectTrace) > 0
-        && (get_pcvar_num(g_cvarCritsEffectTrace) != 2 || isHit)) {
-        TraceEffect(vAttackerOrigin, vOrigin, color);
+    if (get_pcvar_num(g_pCvarCritsEffectTrace) > 0
+        && (get_pcvar_num(g_pCvarCritsEffectTrace) != 2 || bIsHit)) {
+        TraceEffect(vecAttackerOrigin, vecOrigin, iColor);
     }
 
-    if (get_pcvar_num(g_cvarCritsEffectSplash) > 0
-        && (get_pcvar_num(g_cvarCritsEffectSplash) != 2 || isHit)) {
-        SplashEffect(vOrigin, vDirection, color);
+    if (get_pcvar_num(g_pCvarCritsEffectSplash) > 0
+        && (get_pcvar_num(g_pCvarCritsEffectSplash) != 2 || bIsHit)) {
+        SplashEffect(vecOrigin, vecDirection, iColor);
     }
 
-    if (get_pcvar_num(g_cvarCritsEffectFlash) > 0
-        && (get_pcvar_num(g_cvarCritsEffectFlash) != 2 || isHit)) {
-        FlashEffect(vOrigin);
+    if (get_pcvar_num(g_pCvarCritsEffectFlash) > 0
+        && (get_pcvar_num(g_pCvarCritsEffectFlash) != 2 || bIsHit)) {
+        FlashEffect(vecOrigin);
     }
 }
 
-TraceEffect(const Float:vStart[3], const Float:vEnd[3], color)
-{
-    static Float:vDirection[3];
-    xs_vec_sub(vEnd, vStart, vDirection);
+TraceEffect(const Float:vecStart[3], const Float:vecEnd[3], iColor) {
+    static Float:vecDirection[3];
+    xs_vec_sub(vecEnd, vecStart, vecDirection);
 
-    UTIL_Message_UserTracer(vStart, vDirection, CRIT_EFFECT_TRACE_LIFETIME, color, CRIT_EFFECT_TRACE_LENGTH);
+    UTIL_Message_UserTracer(vecStart, vecDirection, CRIT_EFFECT_TRACE_LIFETIME, iColor, CRIT_EFFECT_TRACE_LENGTH);
 }
 
-SplashEffect(const Float:vStart[3], const Float:vDirection[3], color)
-{
-    static Float:vSplashDirection[3];
-    xs_vec_normalize(vDirection, vSplashDirection);
-    xs_vec_mul_scalar(vDirection, -CRIT_EFFECT_SPLASH_LENGTH, vSplashDirection);
+SplashEffect(const Float:vecStart[3], const Float:vecDirection[3], iColor) {
+    static Float:vecSplashDirection[3];
+    xs_vec_normalize(vecDirection, vecSplashDirection);
+    xs_vec_mul_scalar(vecDirection, -CRIT_EFFECT_SPLASH_LENGTH, vecSplashDirection);
 
-    UTIL_Message_StreakSplash(vStart, vSplashDirection, color, CRIT_EFFECT_SPLASH_COUNT, CRIT_EFFECT_SPLASH_SPEED, CRIT_EFFECT_SPLASH_SPEEDNOISE);
+    UTIL_Message_StreakSplash(vecStart, vecSplashDirection, iColor, CRIT_EFFECT_SPLASH_COUNT, CRIT_EFFECT_SPLASH_SPEED, CRIT_EFFECT_SPLASH_SPEEDNOISE);
 }
 
-FlashEffect(const Float:vOrigin[3])
-{
-    UTIL_Message_Dlight(vOrigin, CRIT_EFFECT_FLASH_RADIUS, {HWN_COLOR_PRIMARY}, CRIT_EFFECT_FLASH_LIFETIME, CRIT_EFFECT_FLASH_DECAYRATE);
-}
-
-bool:IsTeammate(id, ent)
-{
-    return UTIL_IsPlayer(id)
-        && UTIL_IsPlayer(ent)
-        && UTIL_GetPlayerTeam(id) == UTIL_GetPlayerTeam(ent);
+FlashEffect(const Float:vecOrigin[3]) {
+    UTIL_Message_Dlight(vecOrigin, CRIT_EFFECT_FLASH_RADIUS, {HWN_COLOR_PRIMARY}, CRIT_EFFECT_FLASH_LIFETIME, CRIT_EFFECT_FLASH_DECAYRATE);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
-public TaskHitBonus(taskID)
-{
-    new id = taskID - TASKID_SUM_HIT_BONUS;
+public Task_HitBonus(iTaskId) {
+    new pPlayer = iTaskId - TASKID_SUM_HIT_BONUS;
 
-    new Float:fCitChance = GetCritChance(id);
-    new Float:fHitBonus = get_pcvar_float(g_cvarCritsRandomChanceBonus);
+    new Float:flCitChance = GetCritChance(pPlayer);
+    new Float:flHitBonus = get_pcvar_float(g_pCvarCritsRandomChanceBonus);
 
-    SetCritChance(id, fCitChance + fHitBonus);
+    SetCritChance(pPlayer, flCitChance + flHitBonus);
 }
 
-public TaskPenalty(taskID)
-{
-    new id = taskID - TASKID_SUM_PENALTY;
+public Task_Penalty(iTaskId) {
+    new pPlayer = iTaskId - TASKID_SUM_PENALTY;
 
-    new Float:fCitChance = GetCritChance(id);
-    new Float:fMissPenalty = get_pcvar_float(g_cvarCritsRandomChancePenalty);
+    new Float:flCitChance = GetCritChance(pPlayer);
+    new Float:flMissPenalty = get_pcvar_float(g_pCvarCritsRandomChancePenalty);
 
-    SetCritChance(id, fCitChance - fMissPenalty);
+    SetCritChance(pPlayer, flCitChance - flMissPenalty);
 }

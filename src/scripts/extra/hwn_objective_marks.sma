@@ -12,19 +12,6 @@
 #define PLUGIN "[Hwn] Objective Marks"
 #define AUTHOR "Hedgehog Fog"
 
-#if !defined MAX_PLAYERS
-    #define MAX_PLAYERS 32
-#endif
-
-#if AMXX_VERSION_NUM < 183
-    stock Float:xs_vec_distance(const Float:vec1[], const Float:vec2[])
-    {
-        return xs_sqrt((vec1[0]-vec2[0]) * (vec1[0]-vec2[0]) +
-            (vec1[1]-vec2[1]) * (vec1[1]-vec2[1]) +
-            (vec1[2]-vec2[2]) * (vec1[2]-vec2[2]));
-    }
-#endif
-
 #define MARK_CLASSNAME "_mark"
 #define SPRITE_WIDTH 128.0
 #define SPRITE_HEIGHT 128.0
@@ -66,7 +53,7 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn_Post", .Post = 1);
+    RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
 
     register_forward(FM_AddToFullPack, "OnAddToFullPack", 0);
     register_forward(FM_AddToFullPack, "OnAddToFullPack_Post", 1);
@@ -85,12 +72,15 @@ public OnBucketSpawn_Post(pEntity) {
         return;
     }
 
-    new pMark = CreateMark(pEntity);
-    set_pev(pMark, pev_iuser1, ArraySize(g_irgMarks));
-    ArrayPushCell(g_irgMarks, pMark);
+    if (!CE_HasMember(pEntity, "mark")) {
+        new pMark = CreateMark(pEntity);
+        set_pev(pMark, pev_iuser1, ArraySize(g_irgMarks));
+        ArrayPushCell(g_irgMarks, pMark);
+        CE_SetMember(pEntity, "mark", pMark);
+    }
 }
 
-public OnPlayerSpawn_Post(pPlayer) {
+public HamHook_Player_Spawn_Post(pPlayer) {
     new iMarkCount = ArraySize(g_irgMarks);
     for (new iMarkIndex = 0; iMarkIndex < iMarkCount; ++iMarkIndex) {
         g_rgPlayerData[pPlayer][iMarkIndex][Player_MarkUpdateTime] = 0.0;
@@ -98,7 +88,7 @@ public OnPlayerSpawn_Post(pPlayer) {
 }
 
 public OnAddToFullPack(es, e, pEntity, pHost, pHostFlags, pPlayer, pSet) {
-    if (!UTIL_IsPlayer(pHost)) {
+    if (!IS_PLAYER(pHost)) {
         return FMRES_IGNORED;
     }
 
@@ -110,10 +100,10 @@ public OnAddToFullPack(es, e, pEntity, pHost, pHostFlags, pPlayer, pSet) {
         return FMRES_IGNORED;
     }
 
-    static szClassname[32];
-    pev(pEntity, pev_classname, szClassname, charsmax(szClassname));
+    static szClassName[32];
+    pev(pEntity, pev_classname, szClassName, charsmax(szClassName));
 
-    if (!equal(szClassname, MARK_CLASSNAME)) {
+    if (!equal(szClassName, MARK_CLASSNAME)) {
         return FMRES_IGNORED;
     }
 
@@ -127,7 +117,7 @@ public OnAddToFullPack(es, e, pEntity, pHost, pHostFlags, pPlayer, pSet) {
 
     new pBucket = pev(pEntity, pev_owner);
     new iBucketTeam = pev(pBucket, pev_team);
-    if (iBucketTeam && iBucketTeam != UTIL_GetPlayerTeam(pHost)) {
+    if (iBucketTeam && iBucketTeam != get_member(pHost, m_iTeam)) {
         return FMRES_SUPERCEDE;
     }
 
@@ -142,7 +132,7 @@ public OnAddToFullPack(es, e, pEntity, pHost, pHostFlags, pPlayer, pSet) {
 }
 
 public OnAddToFullPack_Post(es, e, pEntity, pHost, pHostFlags, pPlayer, pSet) {
-    if (!UTIL_IsPlayer(pHost)) {
+    if (!IS_PLAYER(pHost)) {
         return FMRES_IGNORED;
     }
 
@@ -154,10 +144,10 @@ public OnAddToFullPack_Post(es, e, pEntity, pHost, pHostFlags, pPlayer, pSet) {
         return FMRES_IGNORED;
     }
 
-    static szClassname[32];
-    pev(pEntity, pev_classname, szClassname, charsmax(szClassname));
+    static szClassName[32];
+    pev(pEntity, pev_classname, szClassName, charsmax(szClassName));
 
-    if (!equal(szClassname, MARK_CLASSNAME)) {
+    if (!equal(szClassName, MARK_CLASSNAME)) {
         return FMRES_IGNORED;
     }
 
@@ -188,10 +178,10 @@ public OnCheckVisibility(pEntity) {
         return FMRES_IGNORED;
     }
 
-    static szClassname[32];
-    pev(pEntity, pev_classname, szClassname, charsmax(szClassname));
+    static szClassName[32];
+    pev(pEntity, pev_classname, szClassName, charsmax(szClassName));
 
-    if (!equal(szClassname, MARK_CLASSNAME)) {
+    if (!equal(szClassName, MARK_CLASSNAME)) {
         return FMRES_IGNORED;
     }
 
@@ -252,7 +242,7 @@ CalculateMark(pMark, pPlayer) {
     vector_to_angle(vecAngles, vecAngles);
     vecAngles[0] = -vecAngles[0];
 
-    // ANCHOR: Calculate new target
+    // ANCHOR: Calculate new pTarget
     static Float:vecForward[3];
     angle_vector(vecAngles, ANGLEVECTOR_FORWARD, vecForward);
 
@@ -300,7 +290,7 @@ CalculateMark(pMark, pPlayer) {
         }
     }
 
-    // ANCHOR: Get target point
+    // ANCHOR: Get pTarget point
     for (new i = 0; i < 3; ++i) {
         vecTarget[i] = (rgvecFrameEnd[TopLeft][i] + rgvecFrameEnd[BottomRight][i]) * 0.5;
     }

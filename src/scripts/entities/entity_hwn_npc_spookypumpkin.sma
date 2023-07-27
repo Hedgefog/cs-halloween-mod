@@ -20,8 +20,7 @@
 #define ENTITY_NAME_SP "hwn_npc_spookypumpkin"
 #define ENTITY_NAME_SP_BIG "hwn_npc_spookypumpkin_big"
 
-enum _:Sequence
-{
+enum _:Sequence {
     Sequence_Idle = 0,
     Sequence_JumpStart,
     Sequence_JumpFloat,
@@ -29,8 +28,7 @@ enum _:Sequence
     Sequence_Attack,
 };
 
-enum Action
-{
+enum Action {
     Action_Idle = 0,
     Action_JumpStart,
     Action_JumpFloat,
@@ -51,8 +49,7 @@ const Float:SP_BigScaleMul = 2.0;
 const Float:SP_JumpVelocityZ = 160.0;
 const Float:SP_AttackJumpVelocityZ = 256.0;
 
-new const g_szSndIdleList[][] =
-{
+new const g_szSndIdleList[][] = {
     "hwn/npc/spookypumpkin/sp_laugh01.wav",
     "hwn/npc/spookypumpkin/sp_laugh02.wav",
     "hwn/npc/spookypumpkin/sp_laugh03.wav"
@@ -66,30 +63,29 @@ new const g_actions[Action][NPC_Action] = {
     { Sequence_Attack, Sequence_Attack, 1.2 }
 };
 
-new g_mdlGibs;
+new g_iGibsModelIndex;
 
-new g_sprBlood;
-new g_sprBloodSpray;
+new g_iBloodModelIndex;
+new g_iBloodSprayModelIndex;
 
-new Float:g_fThinkDelay;
+new Float:g_flThinkDelay;
 
 new g_ceHandlerSp;
 new g_ceHandlerSpBig;
 
-new g_cvarPumpkinMutateChance;
+new g_pCvarPumpkinMutateChance;
 
-public plugin_precache()
-{
-    g_mdlGibs = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
-    g_sprBlood = precache_model("sprites/blood.spr");
-    g_sprBloodSpray = precache_model("sprites/bloodspray.spr");
+public plugin_precache() {
+    g_iGibsModelIndex = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
+    g_iBloodModelIndex = precache_model("sprites/blood.spr");
+    g_iBloodSprayModelIndex = precache_model("sprites/bloodspray.spr");
 
     for (new i = 0; i < sizeof(g_szSndIdleList); ++i) {
         precache_sound(g_szSndIdleList[i]);
     }
 
     g_ceHandlerSp = CE_Register(
-        .szName = ENTITY_NAME_SP,
+        ENTITY_NAME_SP,
         .modelIndex = precache_model("models/hwn/npc/spookypumpkin.mdl"),
         .vMins = Float:{-12.0, -12.0, 0.0},
         .vMaxs = Float:{12.0, 12.0, 24.0},
@@ -99,7 +95,7 @@ public plugin_precache()
     );
 
     g_ceHandlerSpBig = CE_Register(
-        .szName = ENTITY_NAME_SP_BIG,
+        ENTITY_NAME_SP_BIG,
         .modelIndex = precache_model("models/hwn/npc/spookypumpkin_big.mdl"),
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
@@ -120,166 +116,155 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Killed, "hwn_item_pumpkin_big", "OnItemPumpkinBigKilled");
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "OnTraceAttack", .Post = 1);
+    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "HamHook_Base_TraceAttack_Post", .Post = 1);
 
-    g_cvarPumpkinMutateChance = register_cvar("hwn_pumpkin_mutate_chance", "20");
+    g_pCvarPumpkinMutateChance = register_cvar("hwn_pumpkin_mutate_chance", "20");
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-public Hwn_Fw_ConfigLoaded()
-{
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
+public Hwn_Fw_ConfigLoaded() {
+    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnSpawn(ent)
-{
-    NPC_Create(ent);
+public OnSpawn(pEntity) {
+    NPC_Create(pEntity);
 
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+    new Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    new Float:fHealth = NPC_Health;
-    if (isBig(ent)) {
-        fHealth *= SP_BigScaleMul;
-        UTIL_Message_Dlight(vOrigin, 16, {HWN_COLOR_YELLOW}, 20, 8);
+    new Float:flHealth = NPC_Health;
+    if (bIsBig(pEntity)) {
+        flHealth *= SP_BigScaleMul;
+        UTIL_Message_Dlight(vecOrigin, 16, {HWN_COLOR_YELLOW}, 20, 8);
     } else {
-        UTIL_Message_Dlight(vOrigin, 8, {HWN_COLOR_YELLOW}, 20, 8);
+        UTIL_Message_Dlight(vecOrigin, 8, {HWN_COLOR_YELLOW}, 20, 8);
     }
 
-    set_pev(ent, pev_rendermode, kRenderNormal);
-    set_pev(ent, pev_renderfx, kRenderFxGlowShell);
-    set_pev(ent, pev_renderamt, 4.0);
-    set_pev(ent, pev_rendercolor, {HWN_COLOR_ORANGE_DIRTY_F});
-    set_pev(ent, pev_health, fHealth);
+    set_pev(pEntity, pev_rendermode, kRenderNormal);
+    set_pev(pEntity, pev_renderfx, kRenderFxGlowShell);
+    set_pev(pEntity, pev_renderamt, 4.0);
+    set_pev(pEntity, pev_rendercolor, {HWN_COLOR_ORANGE_DIRTY_F});
+    set_pev(pEntity, pev_health, flHealth);
 
-    engfunc(EngFunc_DropToFloor, ent);
+    engfunc(EngFunc_DropToFloor, pEntity);
 
-    EmitRandomLaugh(ent);
+    EmitRandomLaugh(pEntity);
 
-    RemoveTasks(ent);
-    set_task(0.0, "TaskThink", ent);
+    RemoveTasks(pEntity);
+    set_task(0.0, "Task_Think", pEntity);
 }
 
-public OnKilled(ent)
-{
-    DisappearEffect(ent);
+public OnKilled(pEntity) {
+    DisappearEffect(pEntity);
 }
 
-public OnRemove(ent)
-{
-    RemoveTasks(ent);
-    NPC_Destroy(ent);
-    DisappearEffect(ent);
+public OnRemove(pEntity) {
+    RemoveTasks(pEntity);
+    NPC_Destroy(pEntity);
+    DisappearEffect(pEntity);
 }
 
-public OnItemPumpkinKilled(ent, killer, bool:picked)
-{
-    if (picked) {
+public OnItemPumpkinKilled(pEntity, pKiller, bool:bPicked) {
+    if (bPicked) {
         return;
     }
 
-    MutatePumpkin(ent, false);
+    MutatePumpkin(pEntity, false);
 }
 
-public OnItemPumpkinBigKilled(ent, killer, bool:picked)
-{
-    if (picked) {
+public OnItemPumpkinBigKilled(pEntity, pKiller, bool:bPicked) {
+    if (bPicked) {
         return;
     }
 
-    MutatePumpkin(ent, true);
+    MutatePumpkin(pEntity, true);
 }
 
-public OnTraceAttack(ent, attacker, Float:fDamage, Float:vDirection[3], trace, damageBits)
-{
-    new ceHandler = CE_GetHandlerByEntity(ent);
+public HamHook_Base_TraceAttack_Post(pEntity, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
+    new iCeHandler = CE_GetHandlerByEntity(pEntity);
 
-    if (ceHandler != g_ceHandlerSp && ceHandler != g_ceHandlerSpBig) {
+    if (iCeHandler != g_ceHandlerSp && iCeHandler != g_ceHandlerSpBig) {
         return;
     }
 
-    static Float:vEnd[3];
-    get_tr2(trace, TR_vecEndPos, vEnd);
+    static Float:vecEnd[3];
+    get_tr2(pTrace, TR_vecEndPos, vecEnd);
 
-    UTIL_Message_BloodSprite(vEnd, g_sprBloodSpray, g_sprBlood, 103, floatround(fDamage/4));
+    UTIL_Message_BloodSprite(vecEnd, g_iBloodSprayModelIndex, g_iBloodModelIndex, 103, floatround(flDamage/4));
 }
 
-Attack(ent, target, &Action:action)
-{
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+Attack(pEntity, pTarget, &Action:action) {
+    static Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    if (NPC_CanHit(ent, target, NPC_HitRange) && !task_exists(ent+TASKID_SUM_HIT)) {
-        if (Jump(ent, 0.0, SP_AttackJumpVelocityZ)) {
-            EmitRandomLaugh(ent);
-            set_task(NPC_HitDelay, "TaskHit", ent+TASKID_SUM_HIT);
+    if (NPC_CanHit(pEntity, pTarget, NPC_HitRange) && !task_exists(pEntity+TASKID_SUM_HIT)) {
+        if (Jump(pEntity, 0.0, SP_AttackJumpVelocityZ)) {
+            EmitRandomLaugh(pEntity);
+            set_task(NPC_HitDelay, "Task_Hit", pEntity+TASKID_SUM_HIT);
             action = Action_Attack;
         }
     } else {
-        static Float:vTarget[3];
-        if (NPC_GetTarget(ent, NPC_Speed, vTarget)) {
-            NPC_MoveToTarget(ent, vTarget, 0.0);
-            if (!task_exists(ent+TASKID_SUM_JUMP)) {
-                new Float:fJumpDelay = g_actions[Action_JumpStart][NPC_Action_Time];
-                set_task(fJumpDelay, "TaskJump", ent+TASKID_SUM_JUMP);
+        static Float:vecTarget[3];
+        if (NPC_GetTarget(pEntity, NPC_Speed, vecTarget)) {
+            NPC_MoveToTarget(pEntity, vecTarget, 0.0);
+            if (!task_exists(pEntity+TASKID_SUM_JUMP)) {
+                new Float:flJumpDelay = g_actions[Action_JumpStart][NPC_Action_Time];
+                set_task(flJumpDelay, "Task_Jump", pEntity+TASKID_SUM_JUMP);
                 action = Action_JumpStart;
 
                 if (random(100) < 10) {
-                    EmitRandomLaugh(ent);
+                    EmitRandomLaugh(pEntity);
                 }
             }
         } else {
-            NPC_SetEnemy(ent, 0);
+            NPC_SetEnemy(pEntity, 0);
         }
     }
 }
 
-RemoveTasks(ent)
-{
-    remove_task(ent);
-    remove_task(ent+TASKID_SUM_HIT);
-    remove_task(ent+TASKID_SUM_JUMP);
+RemoveTasks(pEntity) {
+    remove_task(pEntity);
+    remove_task(pEntity+TASKID_SUM_HIT);
+    remove_task(pEntity+TASKID_SUM_JUMP);
 }
 
-DisappearEffect(ent)
-{
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+DisappearEffect(pEntity) {
+    new Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    new Float:vVelocity[3];
-    UTIL_RandomVector(-16.0, 16.0, vVelocity);
+    new Float:vecVelocity[3];
+    UTIL_RandomVector(-16.0, 16.0, vecVelocity);
 
-    UTIL_Message_Dlight(vOrigin, isBig(ent) ? 16 : 8, {HWN_COLOR_YELLOW}, 10, 32);
-    UTIL_Message_BreakModel(vOrigin, Float:{4.0, 4.0, 4.0}, vVelocity, 32, g_mdlGibs, 4, 25, 0);
+    UTIL_Message_Dlight(vecOrigin, bIsBig(pEntity) ? 16 : 8, {HWN_COLOR_YELLOW}, 10, 32);
+    UTIL_Message_BreakModel(vecOrigin, Float:{4.0, 4.0, 4.0}, vecVelocity, 32, g_iGibsModelIndex, 4, 25, 0);
 }
 
-bool:Jump(ent, Float:fVelocity, Float:fJumpHeight) {
-    if (~pev(ent, pev_flags) & FL_ONGROUND) {
+bool:Jump(pEntity, Float:flVelocity, Float:flJumpHeight) {
+    if (~pev(pEntity, pev_flags) & FL_ONGROUND) {
         return false;
     }
 
-    static Float:vVelocity[3];
-    UTIL_GetDirectionVector(ent, vVelocity, fVelocity);
-    vVelocity[2] = fJumpHeight;
+    static Float:vecVelocity[3];
+    UTIL_GetDirectionVector(pEntity, vecVelocity, flVelocity);
+    vecVelocity[2] = flJumpHeight;
 
-    set_pev(ent, pev_velocity, vVelocity);
+    set_pev(pEntity, pev_velocity, vecVelocity);
 
     return true;
 }
 
-EmitRandomLaugh(ent) {
-    NPC_EmitVoice(ent, g_szSndIdleList[random(sizeof(g_szSndIdleList))]);
+EmitRandomLaugh(pEntity) {
+    NPC_EmitVoice(pEntity, g_szSndIdleList[random(sizeof(g_szSndIdleList))]);
 }
 
-MutatePumpkin(ent, bool:big = false) {
-    new chance = get_pcvar_num(g_cvarPumpkinMutateChance);
+MutatePumpkin(pEntity, bool:bBig = false) {
+    new chance = get_pcvar_num(g_pCvarPumpkinMutateChance);
     if (!chance) {
         return;
     }
@@ -288,87 +273,84 @@ MutatePumpkin(ent, bool:big = false) {
         return;
     }
 
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+    new Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    new monsterEnt = CE_Create(big ? ENTITY_NAME_SP_BIG : ENTITY_NAME_SP, vOrigin);
-    if (!monsterEnt) {
+    new pMonster = CE_Create(bBig ? ENTITY_NAME_SP_BIG : ENTITY_NAME_SP, vecOrigin);
+    if (!pMonster) {
         return;
     }
 
-    new Float:vAngles[3];
+    new Float:vecAngles[3];
     for (new i = 0; i < 3; ++i) {
-        vAngles[i] = 0.0;
+        vecAngles[i] = 0.0;
     }
 
-    vAngles[1] = random_float(0.0, 360.0);
-    set_pev(monsterEnt, pev_angles, vAngles);
+    vecAngles[1] = random_float(0.0, 360.0);
+    set_pev(pMonster, pev_angles, vecAngles);
 
-    dllfunc(DLLFunc_Spawn, monsterEnt);
+    dllfunc(DLLFunc_Spawn, pMonster);
 }
 
-bool:isBig(ent) {
-    return CE_GetHandlerByEntity(ent) == g_ceHandlerSpBig;
+bool:bIsBig(pEntity) {
+    return CE_GetHandlerByEntity(pEntity) == g_ceHandlerSpBig;
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
-public TaskHit(taskID)
-{
-    new ent = taskID - TASKID_SUM_HIT;
+public Task_Hit(iTaskId) {
+    new pEntity = iTaskId - TASKID_SUM_HIT;
 
-    if (pev(ent, pev_deadflag) != DEAD_NO) {
+    if (pev(pEntity, pev_deadflag) != DEAD_NO) {
         return;
     }
 
-    new Float:fDamage = NPC_Damage;
-    if (isBig(ent)) {
-        fDamage *= SP_BigScaleMul;
+    new Float:flDamage = NPC_Damage;
+    if (bIsBig(pEntity)) {
+        flDamage *= SP_BigScaleMul;
     }
 
-    NPC_Hit(ent, fDamage, NPC_HitRange, NPC_HitDelay);
+    NPC_Hit(pEntity, flDamage, NPC_HitRange, NPC_HitDelay);
 }
 
-public TaskJump(taskID)
-{
-    new ent = taskID - TASKID_SUM_JUMP;
+public Task_Jump(iTaskId) {
+    new pEntity = iTaskId - TASKID_SUM_JUMP;
 
-    new enemy = NPC_GetEnemy(ent);
-    if (enemy) {
-        static Float:vTarget[3];
-        pev(enemy, pev_origin, vTarget);
-        NPC_MoveToTarget(ent, vTarget, 0.0);
+    new pEnemy = NPC_GetEnemy(pEntity);
+    if (pEnemy) {
+        static Float:vecTarget[3];
+        pev(pEnemy, pev_origin, vecTarget);
+        NPC_MoveToTarget(pEntity, vecTarget, 0.0);
     }
 
-    Jump(ent, NPC_Speed, SP_JumpVelocityZ);
+    Jump(pEntity, NPC_Speed, SP_JumpVelocityZ);
 }
 
-public TaskThink(taskID)
-{
-    new ent = taskID;
+public Task_Think(iTaskId) {
+    new pEntity = iTaskId;
 
-    if (pev(ent, pev_deadflag) != DEAD_NO) {
+    if (pev(pEntity, pev_deadflag) != DEAD_NO) {
         return;
     }
 
-    if (!pev_valid(ent)) {
+    if (!pev_valid(pEntity)) {
         return;
     }
 
     new Action:action = Action_Idle;
-    if (pev(ent, pev_flags) & FL_ONGROUND) {
-        new enemy = NPC_GetEnemy(ent);
-        if (enemy) {
-            Attack(ent, enemy, action);
+    if (pev(pEntity, pev_flags) & FL_ONGROUND) {
+        new pEnemy = NPC_GetEnemy(pEntity);
+        if (pEnemy) {
+            Attack(pEntity, pEnemy, action);
         } else {
-            NPC_FindEnemy(ent, NPC_ViewRange);
+            NPC_FindEnemy(pEntity, NPC_ViewRange);
         }
     } else {
         action = Action_JumpFloat;
     }
 
-    new bool:supercede = action == Action_JumpStart || action == Action_Attack;
-    NPC_PlayAction(ent, g_actions[action], supercede);
+    new bool:bSupercede = action == Action_JumpStart || action == Action_Attack;
+    NPC_PlayAction(pEntity, g_actions[action], bSupercede);
 
-    set_task(g_fThinkDelay, "TaskThink", ent);
+    set_task(g_flThinkDelay, "Task_Think", pEntity);
 }

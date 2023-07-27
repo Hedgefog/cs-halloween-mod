@@ -2,6 +2,7 @@
 
 #include <amxmodx>
 #include <hamsandwich>
+#include <reapi>
 
 #include <hwn>
 #include <api_player_inventory>
@@ -12,64 +13,55 @@
 
 #define COSMETIC_TIME 3600
 
-new g_cvarCosmeticCount;
+new g_pCvarCosmeticsNum;
 
-new g_playerFirstSpawnFlag = 0;
+new g_rgiPlayerFirstSpawnFlag = 0;
 new PInv_ItemType:g_hItemTypeCosmetic;
 
-public plugin_precache()
-{
-    g_cvarCosmeticCount = register_cvar("hwn_bots_cosmetics", "2");
+public plugin_precache() {
+    g_pCvarCosmeticsNum = register_cvar("hwn_bots_cosmetics", "2");
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
+    RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
 
     g_hItemTypeCosmetic = PInv_GetItemTypeHandler("cosmetic");
 }
 
-public client_connect(id)
-{
-    if (get_pcvar_num(g_cvarCosmeticCount) <= 0) {
+public client_connect(pPlayer) {
+    if (get_pcvar_num(g_pCvarCosmeticsNum) <= 0) {
         return;
     }
 
-    if (!is_user_bot(id)) {
+    if (!is_user_bot(pPlayer)) {
         return;
     }
 
-    g_playerFirstSpawnFlag |= (1 << (id & 31));
+    g_rgiPlayerFirstSpawnFlag |= BIT(pPlayer & 31);
 }
 
-#if AMXX_VERSION_NUM < 183
-    public client_disconnect(id)
-#else
-    public client_disconnected(id)
-#endif
-{
-    if (!is_user_bot(id)) {
+public client_disconnected(pPlayer) {
+    if (!is_user_bot(pPlayer)) {
         return;
     }
 
-    g_playerFirstSpawnFlag &= ~(1 << (id & 31));
+    g_rgiPlayerFirstSpawnFlag &= ~BIT(pPlayer & 31);
 
-    TakeAllCosmetic(id);
+    TakeAllCosmetic(pPlayer);
 }
 
-public OnPlayerSpawn(id)
-{
-    if (!is_user_bot(id)) {
+public HamHook_Player_Spawn_Post(pPlayer) {
+    if (!is_user_bot(pPlayer)) {
         return HAM_IGNORED;
     }
 
-    if (g_playerFirstSpawnFlag & (1 << (id & 31))) {
-        TakeAllCosmetic(id);
-        GiveAllCosmetic(id);
-        EquipRandomCosmetics(id);
-        g_playerFirstSpawnFlag &= ~(1 << (id & 31));
+    if (g_rgiPlayerFirstSpawnFlag & BIT(pPlayer & 31)) {
+        TakeAllCosmetic(pPlayer);
+        GiveAllCosmetic(pPlayer);
+        EquipRandomCosmetics(pPlayer);
+        g_rgiPlayerFirstSpawnFlag &= ~BIT(pPlayer & 31);
 
         return HAM_HANDLED;
     }
@@ -77,20 +69,19 @@ public OnPlayerSpawn(id)
     return HAM_IGNORED;
 }
 
-EquipRandomCosmetics(id)
-{
-    new cosmeticLimit = get_pcvar_num(g_cvarCosmeticCount);
+EquipRandomCosmetics(pPlayer) {
+    new iMaxCosmetic = get_pcvar_num(g_pCvarCosmeticsNum);
 
-    new invSize = PInv_Size(id);
-    new total = 0;
+    new iInvSize = PInv_Size(pPlayer);
+    new iTotal = 0;
 
-    for (new i = 0; i < invSize; ++i) {
-        if (PInv_GetItemType(id, i) != g_hItemTypeCosmetic) {
+    for (new i = 0; i < iInvSize; ++i) {
+        if (PInv_GetItemType(pPlayer, i) != g_hItemTypeCosmetic) {
             continue;
         }
 
-        new cosmetic = PCosmetic_GetItemCosmetic(id, i);
-        if (!PCosmetic_CanBeEquiped(id, cosmetic)) {
+        new iCosmetic = PCosmetic_GetItemCosmetic(pPlayer, i);
+        if (!PCosmetic_CanBeEquiped(pPlayer, iCosmetic)) {
             continue;
         }
     
@@ -98,34 +89,32 @@ EquipRandomCosmetics(id)
             continue;
         }
 
-        PCosmetic_Equip(id, i);
-        total++;
+        PCosmetic_Equip(pPlayer, i);
+        iTotal++;
 
-        if (total >= cosmeticLimit) {
+        if (iTotal >= iMaxCosmetic) {
             break;
         }
     }
 }
 
-GiveAllCosmetic(id)
-{
-    new count = Hwn_Cosmetic_GetCount();
-    for (new i = 0; i < count; ++i) {
-        new cosmetic = Hwn_Cosmetic_GetCosmetic(i);
-        PCosmetic_Give(id, cosmetic, random(2) == 1 ? PCosmetic_Type_Unusual : PCosmetic_Type_Normal, COSMETIC_TIME);
+GiveAllCosmetic(pPlayer) {
+    new iNum = Hwn_Cosmetic_GetCount();
+    for (new i = 0; i < iNum; ++i) {
+        new iCosmetic = Hwn_Cosmetic_GetCosmetic(i);
+        PCosmetic_Give(pPlayer, iCosmetic, random(2) == 1 ? PCosmetic_Type_Unusual : PCosmetic_Type_Normal, COSMETIC_TIME);
     }
 }
 
-TakeAllCosmetic(id)
-{
-    new invSize = PInv_Size(id);
+TakeAllCosmetic(pPlayer) {
+    new iInvSize = PInv_Size(pPlayer);
 
-    for (new i = 0; i < invSize; ++i) {
-        if (PInv_GetItemType(id, i) != g_hItemTypeCosmetic) {
+    for (new iSlot = 0; iSlot < iInvSize; ++iSlot) {
+        if (PInv_GetItemType(pPlayer, iSlot) != g_hItemTypeCosmetic) {
             continue;
         }
 
-        PCosmetic_Unequip(id, i);
-        PInv_TakeItem(id, i);
+        PCosmetic_Unequip(pPlayer, iSlot);
+        PInv_TakeItem(pPlayer, iSlot);
     }
 }

@@ -11,18 +11,18 @@ enum PInv_ItemType
 native PInv_ItemType:PInv_RegisterItemType(const szTypeName[]);
 native PInv_ItemType:PInv_GetItemTypeHandler(const szTypeName[]);
 
-native any:PInv_GetItem(id, slotIdx);
-native PInv_ItemType:PInv_GetItemType(id, slotIdx);
+native any:PInv_GetItem(pPlayer, slotIdx);
+native PInv_ItemType:PInv_GetItemType(pPlayer, slotIdx);
 
-native PInv_GiveItem(id, any:item, PInv_ItemType:itemType);
-native PInv_TakeItem(id, slotIdx);
+native PInv_GiveItem(pPlayer, any:item, PInv_ItemType:itemType);
+native PInv_TakeItem(pPlayer, slotIdx);
 
-native PInv_SetItem(id, slotIdx, any:item, PInv_ItemType:itemType);
+native PInv_SetItem(pPlayer, slotIdx, any:item, PInv_ItemType:itemType);
 
-native PInv_Size(id);
+native PInv_Size(pPlayer);
 
-forward PInv_Event_SlotLoaded(id, slotIdx);
-forward PInv_Event_SlotSaved(id, slotIdx);
-forward Pinv_Event_NewSlot(id, slotIdx);
-forward Pinv_Event_TakeSlot(id, slotIdx);
+forward PInv_Event_SlotLoaded(pPlayer, slotIdx);
+forward PInv_Event_SlotSaved(pPlayer, slotIdx);
+forward Pinv_Event_NewSlot(pPlayer, slotIdx);
+forward Pinv_Event_TakeSlot(pPlayer, slotIdx);
 forward PInv_Event_Destroy();

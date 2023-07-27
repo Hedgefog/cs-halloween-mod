@@ -12,10 +12,6 @@
 #define PLUGIN "[Hwn] Dance Spell"
 #define AUTHOR "Hedgehog Fog"
 
-#if !defined MAX_PLAYERS
-    #define MAX_PLAYERS 32
-#endif
-
 #define LIGHT_RANGE 24
 #define LIGHT_LIFETIME 5
 #define LIGHT_DECAY_RATE LIGHT_RANGE * (10 / LIGHT_LIFETIME)
@@ -35,142 +31,123 @@ new const g_szSndLoop[] = "hwn/spells/spell_dance_loop.wav";
 
 new g_hWofSpell;
 
-new g_maxPlayers;
+new Float:g_rgvecPlayerLastAngle[MAX_PLAYERS + 1][3];
+new Float:g_rgvecPlayerLastViewAngle[MAX_PLAYERS + 1][3];
 
-new Float:g_playerLastAngle[MAX_PLAYERS + 1][3];
-new Float:g_playerLastViewAngle[MAX_PLAYERS + 1][3];
-
-public plugin_precache()
-{
+public plugin_precache() {
     precache_sound(g_szSndLoop);
 
     g_hWofSpell = Hwn_Wof_Spell_Register("Dance", "Invoke");
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Killed, "player", "OnPlayerKilled");
+    RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed");
 
-    g_maxPlayers = get_maxplayers();
-
-    for (new id = 0; id <= g_maxPlayers; ++id) {
-        xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastAngle[id]);
-        xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastViewAngle[id]);
+    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
+        xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_rgvecPlayerLastAngle[pPlayer]);
+        xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_rgvecPlayerLastViewAngle[pPlayer]);
     }
 }
 
-
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-#if AMXX_VERSION_NUM < 183
-    public client_disconnect(id)
-#else
-    public client_disconnected(id)
-#endif
-{
-    Revoke(id);
+public client_disconnected(pPlayer) {
+    Revoke(pPlayer);
 }
 
-public Hwn_Wof_Fw_Effect_Start(spellIdx)
-{
-    if (g_hWofSpell == spellIdx) {
+public Hwn_Wof_Fw_Effect_Start(iSpell) {
+    if (g_hWofSpell == iSpell) {
         Hwn_Wof_Abort();
     }
 }
 
-public Round_Fw_NewRound()
-{
-    for (new i = 1; i <= g_maxPlayers; ++i) {
-        Revoke(i);
+public Round_Fw_NewRound() {
+    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
+        Revoke(pPlayer);
     }
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnPlayerKilled(id)
-{
-    Revoke(id);
+public HamHook_Player_Killed(pPlayer) {
+    Revoke(pPlayer);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-public Invoke(id)
-{
-    if (!is_user_alive(id)) {
+public Invoke(pPlayer) {
+    if (!is_user_alive(pPlayer)) {
         return;
     }
 
-    set_task(DANCE_CHECK_DELAY, "CheckDance", id, _, _, "b");
-    set_task(EffectTime, "Revoke", id);
+    set_task(DANCE_CHECK_DELAY, "CheckDance", pPlayer, _, _, "b");
+    set_task(EffectTime, "Revoke", pPlayer);
 
-    new iterationCount = floatround(EffectTime / SOUND_DURATION, floatround_ceil);
-    for (new i = 1; i < iterationCount; ++i) {
-        set_task(i * SOUND_DURATION, "PlaySound", id);
+    new iIterationsNum = floatround(EffectTime / SOUND_DURATION, floatround_ceil);
+    for (new i = 1; i < iIterationsNum; ++i) {
+        set_task(i * SOUND_DURATION, "PlaySound", pPlayer);
     }
 
-    PlaySound(id);
+    PlaySound(pPlayer);
 }
 
-public Revoke(id)
-{
-    remove_task(id);
-    xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastAngle[id]);
-    xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_playerLastViewAngle[id]);
+public Revoke(pPlayer) {
+    remove_task(pPlayer);
+    xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_rgvecPlayerLastAngle[pPlayer]);
+    xs_vec_copy(Float:{0.0, 0.0, 0.0}, g_rgvecPlayerLastViewAngle[pPlayer]);
 }
 
-public PlaySound(id)
-{
-    client_cmd(id, "spk %s", g_szSndLoop);
+public PlaySound(pPlayer) {
+    client_cmd(pPlayer, "spk %s", g_szSndLoop);
 }
 
-public CheckDance(id)
-{
-    if (!is_user_alive(id)) {
+public CheckDance(pPlayer) {
+    if (!is_user_alive(pPlayer)) {
         return;
     }
 
-    static Float:vViewAngles[3];
-    pev(id, pev_v_angle, vViewAngles);
+    static Float:vecViewAngles[3];
+    pev(pPlayer, pev_v_angle, vecViewAngles);
 
-    static Float:vAngles[3];
+    static Float:vecAngles[3];
     {
-        static Float:vVelocity[3];
-        pev(id, pev_velocity, vVelocity);
-        engfunc(EngFunc_VecToAngles, vVelocity, vAngles);
+        static Float:vecVelocity[3];
+        pev(pPlayer, pev_velocity, vecVelocity);
+        engfunc(EngFunc_VecToAngles, vecVelocity, vecAngles);
     }
 
-    new color[3];
+    new rgiColor[3];
     for (new i = 0; i < 2; ++i) {
-        color[random(3)] = LIGHT_COLOR_MIN + random(256 - LIGHT_COLOR_MIN);
+        rgiColor[random(3)] = LIGHT_COLOR_MIN + random(256 - LIGHT_COLOR_MIN);
     }
 
-    static Float:vOrigin[3];
+    static Float:vecOrigin[3];
     {
-        pev(id, pev_origin, vOrigin);
+        pev(pPlayer, pev_origin, vecOrigin);
 
         for (new i = 0; i < 2; ++i) {
-            vOrigin[i] += random_float(-LIGHT_OFFSET_MAX, LIGHT_OFFSET_MAX);
+            vecOrigin[i] += random_float(-LIGHT_OFFSET_MAX, LIGHT_OFFSET_MAX);
         }
 
-        vOrigin[2] += LIGHT_HEIGHT;
+        vecOrigin[2] += LIGHT_HEIGHT;
     }
 
-    UTIL_Message_Dlight(vOrigin, LIGHT_RANGE, color, LIGHT_LIFETIME, LIGHT_DECAY_RATE);
+    UTIL_Message_Dlight(vecOrigin, LIGHT_RANGE, rgiColor, LIGHT_LIFETIME, LIGHT_DECAY_RATE);
 
-    if (xs_vec_len(g_playerLastAngle[id]) > 0
-        && xs_vec_len(g_playerLastViewAngle[id]) > 0
-        && get_distance_f(g_playerLastAngle[id], vAngles) <= DANCE_MIN_MOVE_ANGLE
+    if (xs_vec_len(g_rgvecPlayerLastAngle[pPlayer]) > 0
+        && xs_vec_len(g_rgvecPlayerLastViewAngle[pPlayer]) > 0
+        && get_distance_f(g_rgvecPlayerLastAngle[pPlayer], vecAngles) <= DANCE_MIN_MOVE_ANGLE
         && (
-            get_distance_f(g_playerLastViewAngle[id], vViewAngles) <= DANCE_MIN_VIEW_ANGLE
-                || get_distance_f(g_playerLastAngle[id], vAngles) > 0.1 // restrict forward movement on "camera dance"
+            get_distance_f(g_rgvecPlayerLastViewAngle[pPlayer], vecViewAngles) <= DANCE_MIN_VIEW_ANGLE
+                || get_distance_f(g_rgvecPlayerLastAngle[pPlayer], vecAngles) > 0.1 // restrict forward movement on "camera dance"
         )
-        && pev(id, pev_flags) & FL_ONGROUND
+        && pev(pPlayer, pev_flags) & FL_ONGROUND
     ) {
-        ExecuteHamB(Ham_TakeDamage, id, 0, 0, EFFECT_DAMAGE, DMG_GENERIC);
+        ExecuteHamB(Ham_TakeDamage, pPlayer, 0, 0, EFFECT_DAMAGE, DMG_GENERIC);
     }
     
-    xs_vec_copy(vAngles, g_playerLastAngle[id]);
-    xs_vec_copy(vViewAngles, g_playerLastViewAngle[id]);
+    xs_vec_copy(vecAngles, g_rgvecPlayerLastAngle[pPlayer]);
+    xs_vec_copy(vecViewAngles, g_rgvecPlayerLastViewAngle[pPlayer]);
 }

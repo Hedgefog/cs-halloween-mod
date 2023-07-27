@@ -12,51 +12,44 @@
 #define PLUGIN "[Hwn] Spell Shop"
 #define AUTHOR "Hedgehog Fog"
 
-#if !defined MAX_PLAYERS
-    #define MAX_PLAYERS 32
-#endif
-
-new g_cvarEnabled;
-new g_cvarPrice;
-new g_cvarPriceThrowable;
-new g_cvarPriceApplicable;
-new g_cvarPriceAbility;
-new g_cvarPriceHeal;
-new g_cvarPriceDamage;
-new g_cvarPriceRadius;
-new g_cvarPriceProtection;
-new g_cvarPriceMultRare;
+new g_pCvarEnabled;
+new g_pCvarPrice;
+new g_pCvarPriceThrowable;
+new g_pCvarPriceApplicable;
+new g_pCvarPriceAbility;
+new g_pCvarPriceHeal;
+new g_pCvarPriceDamage;
+new g_pCvarPriceRadius;
+new g_pCvarPriceProtection;
+new g_pCvarPriceMultRare;
 
 new g_fwOpen;
 new g_fwBuySpell;
 
-public plugin_precache()
-{
+public plugin_precache() {
     register_dictionary("hwn.txt");
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    g_cvarEnabled = register_cvar("hwn_spellshop", "1");
+    g_pCvarEnabled = register_cvar("hwn_spellshop", "1");
 
-    g_cvarPrice = register_cvar("hwn_spellshop_spell_price", "500");
-    g_cvarPriceMultRare = register_cvar("hwn_spellshop_spell_price_mult_rare", "1.5");
-    g_cvarPriceThrowable = register_cvar("hwn_spellshop_spell_price_throwable", "300");
-    g_cvarPriceApplicable = register_cvar("hwn_spellshop_spell_price_applicable", "150");
-    g_cvarPriceAbility = register_cvar("hwn_spellshop_spell_price_ability", "550");
-    g_cvarPriceHeal = register_cvar("hwn_spellshop_spell_price_heal", "600");
-    g_cvarPriceDamage = register_cvar("hwn_spellshop_spell_price_damage", "800");
-    g_cvarPriceRadius = register_cvar("hwn_spellshop_spell_price_radius", "650");
-    g_cvarPriceProtection = register_cvar("hwn_spellshop_spell_price_protection", "750");
+    g_pCvarPrice = register_cvar("hwn_spellshop_spell_price", "500");
+    g_pCvarPriceMultRare = register_cvar("hwn_spellshop_spell_price_mult_rare", "1.5");
+    g_pCvarPriceThrowable = register_cvar("hwn_spellshop_spell_price_throwable", "300");
+    g_pCvarPriceApplicable = register_cvar("hwn_spellshop_spell_price_applicable", "150");
+    g_pCvarPriceAbility = register_cvar("hwn_spellshop_spell_price_ability", "550");
+    g_pCvarPriceHeal = register_cvar("hwn_spellshop_spell_price_heal", "600");
+    g_pCvarPriceDamage = register_cvar("hwn_spellshop_spell_price_damage", "800");
+    g_pCvarPriceRadius = register_cvar("hwn_spellshop_spell_price_radius", "650");
+    g_pCvarPriceProtection = register_cvar("hwn_spellshop_spell_price_protection", "750");
 
     g_fwOpen = CreateMultiForward("Hwn_SpellShop_Fw_Open", ET_STOP, FP_CELL);
     g_fwBuySpell = CreateMultiForward("Hwn_SpellShop_Fw_BuySpell", ET_STOP, FP_CELL, FP_CELL);
 }
 
-public plugin_natives()
-{
+public plugin_natives() {
     register_library("hwn");
     register_native("Hwn_SpellShop_Open", "Native_Open");
     register_native("Hwn_SpellShop_BuySpell", "Native_BuySpell");
@@ -66,214 +59,200 @@ public plugin_natives()
 
 /*--------------------------------[ Natives ]--------------------------------*/
 
-public bool:Native_Open(pluginID, argc)
-{
-    new id = get_param(1);
-    return Open(id);
+public bool:Native_Open(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    return Open(pPlayer);
 }
 
-public bool:Native_BuySpell(pluginID, argc)
-{
-    new id = get_param(1);
-    new spell = get_param(2);
+public bool:Native_BuySpell(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    new iSpell = get_param(2);
 
-    return BuySpell(id, spell);
+    return BuySpell(pPlayer, iSpell);
 }
 
-public bool:Native_CanBuySpell(pluginID, argc)
-{
-    new id = get_param(1);
-    new spell = get_param(2);
+public bool:Native_CanBuySpell(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    new iSpell = get_param(2);
 
-    return CanBuySpell(id, spell);
+    return CanBuySpell(pPlayer, iSpell);
 }
 
-public Native_GetSpellPrice(pluginID, argc)
-{
-    new spell = get_param(1);
+public Native_GetSpellPrice(iPluginId, iArgc) {
+    new iSpell = get_param(1);
 
-    return GetSpellPrice(spell);
+    return GetSpellPrice(iSpell);
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-GetSpellPrice(spell)
-{
-    new price = get_pcvar_num(g_cvarPrice);
+GetSpellPrice(iSpell) {
+    new iPrice = get_pcvar_num(g_pCvarPrice);
 
-    new Hwn_SpellFlags:spellFlags = Hwn_Spell_GetFlags(spell);
+    new Hwn_SpellFlags:spellFlags = Hwn_Spell_GetFlags(iSpell);
 
     if (spellFlags & Hwn_SpellFlag_Throwable) {
-        price += get_pcvar_num(g_cvarPriceThrowable);
+        iPrice += get_pcvar_num(g_pCvarPriceThrowable);
     }
 
     if (spellFlags & Hwn_SpellFlag_Applicable) {
-        price += get_pcvar_num(g_cvarPriceApplicable);
+        iPrice += get_pcvar_num(g_pCvarPriceApplicable);
     }
 
     if (spellFlags & Hwn_SpellFlag_Ability) {
-        price += get_pcvar_num(g_cvarPriceAbility);
+        iPrice += get_pcvar_num(g_pCvarPriceAbility);
     }
 
     if (spellFlags & Hwn_SpellFlag_Heal) {
-        price += get_pcvar_num(g_cvarPriceHeal);
+        iPrice += get_pcvar_num(g_pCvarPriceHeal);
     }
 
     if (spellFlags & Hwn_SpellFlag_Damage) {
-        price += get_pcvar_num(g_cvarPriceDamage);
+        iPrice += get_pcvar_num(g_pCvarPriceDamage);
     }
 
     if (spellFlags & Hwn_SpellFlag_Radius) {
-        price += get_pcvar_num(g_cvarPriceRadius);
+        iPrice += get_pcvar_num(g_pCvarPriceRadius);
     }
 
     if (spellFlags & Hwn_SpellFlag_Protection) {
-        price += get_pcvar_num(g_cvarPriceProtection);
+        iPrice += get_pcvar_num(g_pCvarPriceProtection);
     }
 
     if (spellFlags & Hwn_SpellFlag_Rare) {
-        price = floatround(price * get_pcvar_float(g_cvarPriceMultRare));
+        iPrice = floatround(iPrice * get_pcvar_float(g_pCvarPriceMultRare));
     }
 
-    return price;
+    return iPrice;
 }
 
-bool:CanBuySpell(id, spell)
-{
-    if (!is_user_alive(id)) {
+bool:CanBuySpell(pPlayer, iSpell) {
+    if (!is_user_alive(pPlayer)) {
         return false;
     }
 
-    new price = GetSpellPrice(spell);
+    new iPrice = GetSpellPrice(iSpell);
 
-    if (cs_get_user_money(id) < price) {
+    if (cs_get_user_money(pPlayer) < iPrice) {
         return false;
     }
 
     return true;
 }
 
-bool:BuySpell(id, spell)
-{
-    if (!CanBuySpell(id, spell)) {
+bool:BuySpell(pPlayer, iSpell) {
+    if (!CanBuySpell(pPlayer, iSpell)) {
         return false;
     }
 
-    new fwResult;
-    ExecuteForward(g_fwBuySpell, fwResult, id, spell);
-
-    if (fwResult != PLUGIN_CONTINUE) {
+    new iResult = 0;
+    ExecuteForward(g_fwBuySpell, iResult, pPlayer, iSpell);
+    if (iResult != PLUGIN_CONTINUE) {
         return false;
     }
 
-    new price = GetSpellPrice(spell);
-    new spellAmount = 0;
-    new currentSpell = Hwn_Spell_GetPlayerSpell(id, spellAmount);
+    new iPrice = GetSpellPrice(iSpell);
+    new iSpellAmount = 0;
+    new iPlayerSpell = Hwn_Spell_GetPlayerSpell(pPlayer, iSpellAmount);
 
-    spellAmount = spell == currentSpell ? spellAmount + 1 : 1;
+    iSpellAmount = iSpell == iPlayerSpell ? iSpellAmount + 1 : 1;
 
-    if (spell != currentSpell) {
-        DropPlayerSpell(id);
+    if (iSpell != iPlayerSpell) {
+        DropPlayerSpell(pPlayer);
     }
 
-    new money = cs_get_user_money(id);
-    cs_set_user_money(id, money - price);
-    Hwn_Spell_SetPlayerSpell(id, spell, spellAmount);
+    new iMoney = cs_get_user_money(pPlayer);
+    cs_set_user_money(pPlayer, iMoney - iPrice);
+    Hwn_Spell_SetPlayerSpell(pPlayer, iSpell, iSpellAmount);
 
     return true;
 }
 
-DropPlayerSpell(id)
-{
-    new spellAmount = 0;
-    new spell = Hwn_Spell_GetPlayerSpell(id, spellAmount);
+DropPlayerSpell(pPlayer) {
+    new iSpellAmount = 0;
+    new iSpell = Hwn_Spell_GetPlayerSpell(pPlayer, iSpellAmount);
 
-    if (spell == -1) {
+    if (iSpell == -1) {
         return;
     }
 
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
+    static Float:vecOrigin[3];
+    pev(pPlayer, pev_origin, vecOrigin);
 
-    new ent = CE_Create("hwn_item_spellbook", vOrigin);
-    set_pev(ent, pev_iuser1, spell);
-    set_pev(ent, pev_iuser2, spellAmount);
+    new pEntity = CE_Create("hwn_item_spellbook", vecOrigin);
+    set_pev(pEntity, pev_iuser1, iSpell);
+    set_pev(pEntity, pev_iuser2, iSpellAmount);
 
-    if (ent) {
-        dllfunc(DLLFunc_Spawn, ent);
+    if (pEntity) {
+        dllfunc(DLLFunc_Spawn, pEntity);
     }
 
-    static Float:vVelocity[3];
-    UTIL_GetDirectionVector(id, vVelocity, 250.0);
-    set_pev(ent, pev_velocity, vVelocity);
+    static Float:vecVelocity[3];
+    UTIL_GetDirectionVector(pPlayer, vecVelocity, 250.0);
+    set_pev(pEntity, pev_velocity, vecVelocity);
 }
 
-bool:Open(id) 
-{
-    if (!is_user_alive(id)) {
+bool:Open(pPlayer)  {
+    if (!is_user_alive(pPlayer)) {
         return false;
     }
 
-    if (!get_pcvar_num(g_cvarEnabled)) {
-        client_print(id, print_center, "%L", id, "HWN_SPELLSHOP_DISABLED");
+    if (!get_pcvar_num(g_pCvarEnabled)) {
+        client_print(pPlayer, print_center, "%L", pPlayer, "HWN_SPELLSHOP_DISABLED");
         return false;
     }
 
-    new fwResult;
-    ExecuteForward(g_fwOpen, fwResult, id);
-
-    if (fwResult != PLUGIN_CONTINUE) {
+    new iResult = 0;
+    ExecuteForward(g_fwOpen, iResult, pPlayer);
+    if (iResult != PLUGIN_CONTINUE) {
         return false;
     }
 
-    new menu = CreateMenu(id);
-    menu_display(id, menu);
+    new iMenu = CreateMenu(pPlayer);
+    menu_display(pPlayer, iMenu);
 
     return true;
 }
 
-CreateMenu(id)
-{
+CreateMenu(pPlayer) {
     static szMenuTitle[32];
-    format(szMenuTitle, charsmax(szMenuTitle), "%L\RCost", id, "HWN_SPELLSHOP_MENU_TITLE");
+    format(szMenuTitle, charsmax(szMenuTitle), "%L\RCost", pPlayer, "HWN_SPELLSHOP_MENU_TITLE");
 
-    new callback = menu_makecallback("MenuCallback");
-    new menu = menu_create(szMenuTitle, "MenuHandler");
+    new iCallback = menu_makecallback("MenuCallback");
+    new iMenu = menu_create(szMenuTitle, "MenuHandler");
 
-    new count = Hwn_Spell_GetCount();
-    for (new spell = 0; spell < count; ++spell) {
+    new iNum = Hwn_Spell_GetCount();
+    for (new iSpell = 0; iSpell < iNum; ++iSpell) {
         static szSpellName[128];
-        Hwn_Spell_GetDictionaryKey(spell, szSpellName, charsmax(szSpellName));
+        Hwn_Spell_GetDictionaryKey(iSpell, szSpellName, charsmax(szSpellName));
 
-        new price = GetSpellPrice(spell);
+        new iPrice = GetSpellPrice(iSpell);
       
         static szText[128];
-        format(szText, charsmax(szText), "%L\R\y$%d", id, szSpellName, price);
+        format(szText, charsmax(szText), "%L\R\y$%d", pPlayer, szSpellName, iPrice);
 
-        menu_additem(menu, szText, .callback = callback);
+        menu_additem(iMenu, szText, .callback = iCallback);
     }
 
-    menu_setprop(menu, MPROP_EXIT, MEXIT_ALL);
+    menu_setprop(iMenu, MPROP_EXIT, MEXIT_ALL);
 
-    return menu;
+    return iMenu;
 }
 
 /*--------------------------------[ Menu ]--------------------------------*/
 
-public MenuHandler(id, menu, item, page)
-{
+public MenuHandler(pPlayer, iMenu, item, page) {
     if (item != MENU_EXIT) {
-        new spell = item * (page + 1);
-        BuySpell(id, spell);
+        new iSpell = item * (page + 1);
+        BuySpell(pPlayer, iSpell);
     }
 
-    menu_destroy(menu);
+    menu_destroy(iMenu);
 
     return PLUGIN_HANDLED;
 }
 
-public MenuCallback(id, menu, item)
-{
-    new spell = item;
-    return CanBuySpell(id, spell) ? ITEM_ENABLED : ITEM_DISABLED;
+public MenuCallback(pPlayer, iMenu, item) {
+    new iSpell = item;
+    return CanBuySpell(pPlayer, iSpell) ? ITEM_ENABLED : ITEM_DISABLED;
 }

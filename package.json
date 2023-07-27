@@ -1,14 +1,10 @@
 {
   "name": "halloween-mod",
-  "version": "6.5.0",
-  "description": "Halloween Mod",
+  "version": "7.0.0",
+  "description": "CS Halloween Mod",
   "scripts": {
-    "build": "npm run build:vanilla && npm run build:reapi",
-    "build:vanilla": "amxxpack build --config .amxxpack.vanilla.js",
-    "build:reapi": "amxxpack build --config .amxxpack.reapi.js",
-    "watch": "concurrently \"npm run watch:vanilla\" \"npm run watch:reapi\"",
-    "watch:vanilla": "amxxpack build --watch --config .amxxpack.vanilla.js",
-    "watch:reapi": "amxxpack build --watch --config .amxxpack.reapi.js",
+    "build": "amxxpack build",
+    "watch": "amxxpack build --watch",
     "postinstall": "amxxpack install",
     "pack": "gulp",
     "update-version": "node ./scripts/update-version.js",
@@ -17,7 +13,7 @@
   "author": "Hedgehog Fog",
   "license": "MIT",
   "devDependencies": {
-    "amxxpack": "^1.1.1",
+    "amxxpack": "^1.4.4",
     "concurrently": "^7.4.0",
     "gulp": "^4.0.2",
     "gulp-file": "^0.4.0",

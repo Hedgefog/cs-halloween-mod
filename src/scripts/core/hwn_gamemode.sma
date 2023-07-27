@@ -3,6 +3,7 @@
 #include <amxmodx>
 #include <fakemeta>
 #include <hamsandwich>
+#include <reapi>
 
 #include <api_rounds>
 
@@ -17,35 +18,31 @@
 
 #define SPAWN_RANGE 192.0
 
-new g_fwResult;
 new g_fwGamemodeActivated;
 
 new g_fmFwSpawn;
 
-new g_cvarRespawnTime;
-new g_cvarSpawnProtectionTime;
-new g_cvarNewRoundDelay;
+new g_pCvarRespawnTime;
+new g_pCvarSpawnProtectionTime;
+new g_pCvarNewRoundDelay;
 
-new g_gamemode = -1;
-new g_defaultGamemode = -1;
+new g_iGamemode = -1;
+new g_iDefaultGamemode = -1;
 
-new Trie:g_gamemodeIndex;
-new Array:g_gamemodeName;
-new Array:g_gamemodeFlags;
-new Array:g_gamemodePluginID;
-new g_gamemodeCount = 0;
+new Trie:g_itGamemodes;
+new Array:g_irgGamemodeName;
+new Array:g_irgGamemodeFlags;
+new Array:g_irgGamemodeiPluginId;
+new g_iGamemodesNum = 0;
 
-new g_playerFirstSpawnFlag = 0;
-new Array:g_tSpawnPoints;
-new Array:g_ctSpawnPoints;
-
-new g_maxPlayers;
+new g_rgiPlayerFirstSpawnFlag = 0;
+new Array:g_iTSpawnPoints;
+new Array:g_iCtSpawnPoints;
 
 static g_szEquipmentMenuTitle[32];
 static g_szSpellShopMenuTitle[32];
 
-public plugin_precache()
-{
+public plugin_precache() {
     register_dictionary("hwn.txt");
 
     format(g_szEquipmentMenuTitle, charsmax(g_szEquipmentMenuTitle), "%L", LANG_SERVER, "HWN_EQUIPMENT_MENU_TITLE");
@@ -55,60 +52,55 @@ public plugin_precache()
 
     g_fmFwSpawn = register_forward(FM_Spawn, "OnSpawn", 1);
 
-    g_tSpawnPoints = ArrayCreate(3);
-    g_ctSpawnPoints = ArrayCreate(3);
+    g_iTSpawnPoints = ArrayCreate(3);
+    g_iCtSpawnPoints = ArrayCreate(3);
 }
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    if (g_gamemode < 0 && g_defaultGamemode >= 0) {
-        SetGamemode(g_defaultGamemode);
+    if (g_iGamemode < 0 && g_iDefaultGamemode >= 0) {
+        SetGamemode(g_iDefaultGamemode);
     }
 
     Round_HookCheckWinConditions("OnCheckWinConditions");
 
-    RegisterHam(Ham_Spawn, "player", "OnPlayerSpawn", .Post = 1);
-    RegisterHam(Ham_Killed, "player", "OnPlayerKilled", .Post = 1);
+    RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
+    RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed_Post", .Post = 1);
 
-    register_message(get_user_msgid("ClCorpse"), "OnMessage_ClCorpse");
+    register_message(get_user_msgid("ClCorpse"), "Message_ClCorpse");
 
-    register_clcmd("joinclass", "OnClCmd_JoinClass");
-    register_clcmd("menuselect", "OnClCmd_JoinClass");
+    register_clcmd("joinclass", "Command_JoinClass");
+    register_clcmd("menuselect", "Command_JoinClass");
 
-    g_maxPlayers = get_maxplayers();
-
-    g_cvarRespawnTime = register_cvar("hwn_gamemode_respawn_time", "5.0");
-    g_cvarSpawnProtectionTime = register_cvar("hwn_gamemode_spawn_protection_time", "3.0");
-    g_cvarNewRoundDelay = register_cvar("hwn_gamemode_new_round_delay", "10.0");
+    g_pCvarRespawnTime = register_cvar("hwn_iGamemode_respawn_time", "5.0");
+    g_pCvarSpawnProtectionTime = register_cvar("hwn_iGamemode_spawn_protection_time", "3.0");
+    g_pCvarNewRoundDelay = register_cvar("hwn_iGamemode_new_round_delay", "10.0");
 
     register_forward(FM_SetModel, "OnSetModel");
 
     unregister_forward(FM_Spawn, g_fmFwSpawn, 1);
 }
 
-public OnSpawn(ent)
-{
-    if (!pev_valid(ent)) {
+public OnSpawn(pEntity) {
+    if (!pev_valid(pEntity)) {
         return;
     }
 
-    new szClassname[32];
-    pev(ent, pev_classname, szClassname, charsmax(szClassname));
+    new szClassName[32];
+    pev(pEntity, pev_classname, szClassName, charsmax(szClassName));
 
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+    new Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    if (equal(szClassname, "info_player_start")) {
-        ArrayPushArray(g_ctSpawnPoints, vOrigin);
-    } else if(equal(szClassname, "info_player_deathmatch")) {
-        ArrayPushArray(g_tSpawnPoints, vOrigin);
+    if (equal(szClassName, "info_player_start")) {
+        ArrayPushArray(g_iCtSpawnPoints, vecOrigin);
+    } else if (equal(szClassName, "info_player_deathmatch")) {
+        ArrayPushArray(g_iTSpawnPoints, vecOrigin);
     }
 }
 
-public plugin_natives()
-{
+public plugin_natives() {
     register_library("hwn");
     register_native("Hwn_Gamemode_Register", "Native_Register");
     register_native("Hwn_Gamemode_Activate", "Native_Activate");
@@ -119,317 +111,287 @@ public plugin_natives()
     register_native("Hwn_Gamemode_GetFlags", "Native_GetFlags");
 }
 
-public plugin_end()
-{
-    if (!g_gamemodeCount) {
-        TrieDestroy(g_gamemodeIndex);
-        ArrayDestroy(g_gamemodeName);
-        ArrayDestroy(g_gamemodeFlags);
-        ArrayDestroy(g_gamemodePluginID);
+public plugin_end() {
+    if (!g_iGamemodesNum) {
+        TrieDestroy(g_itGamemodes);
+        ArrayDestroy(g_irgGamemodeName);
+        ArrayDestroy(g_irgGamemodeFlags);
+        ArrayDestroy(g_irgGamemodeiPluginId);
     }
 
-    ArrayDestroy(g_tSpawnPoints);
-    ArrayDestroy(g_ctSpawnPoints);
+    ArrayDestroy(g_iTSpawnPoints);
+    ArrayDestroy(g_iCtSpawnPoints);
 }
 
-public client_connect(id)
-{
-    g_playerFirstSpawnFlag |= (1 << (id & 31));
+public client_connect(pPlayer) {
+    g_rgiPlayerFirstSpawnFlag |= BIT(pPlayer & 31);
 }
 
-#if AMXX_VERSION_NUM < 183
-    public client_disconnect(id)
-#else
-    public client_disconnected(id)
-#endif
-{
-    remove_task(id + TASKID_SUM_RESPAWN_PLAYER);
-    remove_task(id + TASKID_SUM_SPAWN_PROTECTION);
+public client_disconnected(pPlayer) {
+    remove_task(pPlayer + TASKID_SUM_RESPAWN_PLAYER);
+    remove_task(pPlayer + TASKID_SUM_SPAWN_PROTECTION);
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
 
-public Native_Register(pluginID, argc)
-{
+public Native_Register(iPluginId, iArgc) {
     new szName[32];
     get_string(1, szName, charsmax(szName));
 
-    new Hwn_GamemodeFlags:flags = Hwn_GamemodeFlags:get_param(2);
+    new Hwn_GamemodeFlags:iFlags = Hwn_GamemodeFlags:get_param(2);
 
-    if (!g_gamemodeCount) {
-        g_gamemodeIndex = TrieCreate();
-        g_gamemodeName = ArrayCreate(32);
-        g_gamemodeFlags = ArrayCreate();
-        g_gamemodePluginID = ArrayCreate();
+    if (!g_iGamemodesNum) {
+        g_itGamemodes = TrieCreate();
+        g_irgGamemodeName = ArrayCreate(32);
+        g_irgGamemodeFlags = ArrayCreate();
+        g_irgGamemodeiPluginId = ArrayCreate();
     }
 
-    new index = g_gamemodeCount;
-    TrieSetCell(g_gamemodeIndex, szName, index);
-    ArrayPushString(g_gamemodeName, szName);
-    ArrayPushCell(g_gamemodeFlags, flags);
-    ArrayPushCell(g_gamemodePluginID, pluginID);
+    new iGamemode = g_iGamemodesNum;
+    TrieSetCell(g_itGamemodes, szName, iGamemode);
+    ArrayPushString(g_irgGamemodeName, szName);
+    ArrayPushCell(g_irgGamemodeFlags, iFlags);
+    ArrayPushCell(g_irgGamemodeiPluginId, iPluginId);
 
-    if ((flags & Hwn_GamemodeFlag_Default) && g_defaultGamemode < 0) {
-        g_defaultGamemode = index;
+    if ((iFlags & Hwn_GamemodeFlag_Default) && g_iDefaultGamemode < 0) {
+        g_iDefaultGamemode = iGamemode;
     }
 
-    g_gamemodeCount++;
+    g_iGamemodesNum++;
 
-    return index;
+    return iGamemode;
 }
 
-public bool:Native_Activate(pluginID, argc)
-{
-    new gamemode = GetGamemodeByPluginID(pluginID);
-    if (gamemode < 0) {
+public bool:Native_Activate(iPluginId, iArgc) {
+    new iGamemode = GetGamemodeByiPluginId(iPluginId);
+    if (iGamemode < 0) {
         return false;
     }
 
-    SetGamemode(gamemode);
+    SetGamemode(iGamemode);
 
     return true;
 }
 
-public Native_DispatchWin(pluginID, argc)
-{
-    if (!g_gamemodeCount) {
+public Native_DispatchWin(iPluginId, iArgc) {
+    if (!g_iGamemodesNum) {
         return;
     }
 
-    if (pluginID != ArrayGetCell(g_gamemodePluginID, g_gamemode)) {
+    if (iPluginId != ArrayGetCell(g_irgGamemodeiPluginId, g_iGamemode)) {
         return;
     }
 
-    new team = get_param(1);
-    DispatchWin(team);
+    new iTeam = get_param(1);
+    DispatchWin(iTeam);
 }
 
-public Native_GetCurrent(pluginID, argc)
-{
-    return g_gamemode;
+public Native_GetCurrent(iPluginId, iArgc) {
+    return g_iGamemode;
 }
 
-public Native_GetHandler(pluginID, argc)
-{
+public Native_GetHandler(iPluginId, iArgc) {
     new szName[32];
     get_string(1, szName, charsmax(szName));
 
-    new gamemode;
-    if (TrieGetCell(g_gamemodeIndex, szName, gamemode)) {
-        return gamemode;
+    static iGamemode;
+    if (!TrieGetCell(g_itGamemodes, szName, iGamemode)) {
+        return -1;
     }
 
-    return -1;
+    return iGamemode;
 }
 
-public Native_IsPlayerOnSpawn(pluginID, argc)
-{
-    new id = get_param(1);
-    new bool:ignoreTeam = bool:get_param(2);
+public Native_IsPlayerOnSpawn(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+    new bool:bIgnoreTeam = bool:get_param(2);
 
-    return IsPlayerOnSpawn(id, ignoreTeam);
+    return IsPlayerOnSpawn(pPlayer, bIgnoreTeam);
 }
 
-public Hwn_GamemodeFlags:Native_GetFlags(pluginID, argc)
-{
-    if (!g_gamemodeCount) {
+public Hwn_GamemodeFlags:Native_GetFlags(iPluginId, iArgc) {
+    if (!g_iGamemodesNum) {
         return Hwn_GamemodeFlag_None;
     }
 
-    return ArrayGetCell(g_gamemodeFlags, g_gamemode);
+    return ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public Hwn_PEquipment_Event_Changed(id)
-{
-    if (!g_gamemodeCount) {
+public Hwn_PEquipment_Event_Changed(pPlayer) {
+    if (!g_iGamemodesNum) {
         return;
     }
 
-    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if (~flags & Hwn_GamemodeFlag_SpecialEquip) {
+    new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
+    if (~iFlags & Hwn_GamemodeFlag_SpecialEquip) {
         return;
     }
 
-    if (IsPlayerOnSpawn(id)) {
-        Hwn_PEquipment_Equip(id);
+    if (IsPlayerOnSpawn(pPlayer)) {
+        Hwn_PEquipment_Equip(pPlayer);
     }
 }
 
-public OnClCmd_JoinClass(id)
-{
-    if (!g_gamemodeCount) {
+public Command_JoinClass(pPlayer) {
+    if (!g_iGamemodesNum) {
         return PLUGIN_CONTINUE;
     }
 
-    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if (~flags & Hwn_GamemodeFlag_RespawnPlayers) {
+    new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
+    if (~iFlags & Hwn_GamemodeFlag_RespawnPlayers) {
         return PLUGIN_CONTINUE;
     }
 
-    #if defined _reapi_included
-        new menu = get_member(id, m_iMenu);
-        new joinState = get_member(id, m_iJoiningState);
-    #else
-        new menu = get_pdata_int(id, m_iMenu);
-        new joinState = get_pdata_int(id, m_iJoiningState);
-    #endif
+    new iMenu = get_member(pPlayer, m_iMenu);
+    new iJoinState = get_member(pPlayer, m_iJoiningState);
 
-    if (menu != MENU_CHOOSEAPPEARANCE) {
+    if (iMenu != MENU_CHOOSEAPPEARANCE) {
         return PLUGIN_CONTINUE;
     }
 
-    new team = UTIL_GetPlayerTeam(id);
-    new bool:inPlayableTeam = team == 1 || team == 2;
+    new iTeam = get_member(pPlayer, m_iTeam);
+    new bool:inPlayableTeam = iTeam == 1 || iTeam == 2;
 
-    if (joinState != JOIN_CHOOSEAPPEARANCE && (joinState || !inPlayableTeam)) {
+    if (iJoinState != JOIN_CHOOSEAPPEARANCE && (iJoinState || !inPlayableTeam)) {
         return PLUGIN_CONTINUE;
     }
 
     //ConnorMcLeod
-    new command[11], arg1[32];
-    read_argv(0, command, charsmax(command));
-    read_argv(1, arg1, charsmax(arg1));
-    engclient_cmd(id, command, arg1);
+    new szCommand[11], szArg1[32];
+    read_argv(0, szCommand, charsmax(szCommand));
+    read_argv(1, szArg1, charsmax(szArg1));
+    engclient_cmd(pPlayer, szCommand, szArg1);
 
-    ExecuteHam(Ham_Player_PreThink, id);
+    ExecuteHam(Ham_Player_PreThink, pPlayer);
 
-    if (!is_user_alive(id)) {
-        SetRespawnTask(id);
+    if (!is_user_alive(pPlayer)) {
+        SetRespawnTask(pPlayer);
     }
 
     return PLUGIN_HANDLED;
 }
 
-public OnMessage_ClCorpse()
-{
-    if (!g_gamemodeCount) {
+public Message_ClCorpse() {
+    if (!g_iGamemodesNum) {
         return PLUGIN_CONTINUE;
     }
 
-    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if (flags & Hwn_GamemodeFlag_RespawnPlayers) {
+    new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
+    if (iFlags & Hwn_GamemodeFlag_RespawnPlayers) {
         return PLUGIN_HANDLED;
     }
 
     return PLUGIN_CONTINUE;
 }
 
-public OnPlayerSpawn(id)
-{
-    if (!is_user_alive(id)) {
+public HamHook_Player_Spawn_Post(pPlayer) {
+    if (!is_user_alive(pPlayer)) {
         return;
     }
 
-    if (!g_gamemodeCount) {
+    if (!g_iGamemodesNum) {
         return;
     }
 
-    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if ((flags & Hwn_GamemodeFlag_SpecialEquip)) {
-        Hwn_PEquipment_Equip(id);
+    new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
+    if ((iFlags & Hwn_GamemodeFlag_SpecialEquip)) {
+        Hwn_PEquipment_Equip(pPlayer);
 
-        if (g_playerFirstSpawnFlag & (1 << (id & 31))) {
-            Hwn_PEquipment_ShowMenu(id);
-            g_playerFirstSpawnFlag &= ~(1 << (id & 31));
+        if (g_rgiPlayerFirstSpawnFlag & BIT(pPlayer & 31)) {
+            Hwn_PEquipment_ShowMenu(pPlayer);
+            g_rgiPlayerFirstSpawnFlag &= ~BIT(pPlayer & 31);
         }
     }
 
-    if (flags & Hwn_GamemodeFlag_RespawnPlayers) {
-        set_pev(id, pev_takedamage, DAMAGE_NO);
-        remove_task(id + TASKID_SUM_SPAWN_PROTECTION);
-        set_task(get_pcvar_float(g_cvarSpawnProtectionTime), "TaskDisableSpawnProtection", id + TASKID_SUM_SPAWN_PROTECTION);
-        UTIL_SetPlayerTeamChange(id, true);
+    if (iFlags & Hwn_GamemodeFlag_RespawnPlayers) {
+        set_pev(pPlayer, pev_takedamage, DAMAGE_NO);
+        remove_task(pPlayer + TASKID_SUM_SPAWN_PROTECTION);
+        set_task(get_pcvar_float(g_pCvarSpawnProtectionTime), "Task_DisableSpawnProtection", pPlayer + TASKID_SUM_SPAWN_PROTECTION);
+        UTIL_SetPlayerTeamChange(pPlayer, true);
     }
 }
 
-public OnPlayerKilled(id)
-{
-    if (!g_gamemodeCount) {
+public HamHook_Player_Killed_Post(pPlayer) {
+    if (!g_iGamemodesNum) {
         return;
     }
 
-    if (g_gamemode < 0) {
+    if (g_iGamemode < 0) {
         return;
     }
 
-    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if ((flags & Hwn_GamemodeFlag_RespawnPlayers) && !Round_IsRoundEnd()) {
-        SetRespawnTask(id);
+    new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
+    if ((iFlags & Hwn_GamemodeFlag_RespawnPlayers) && !Round_IsRoundEnd()) {
+        SetRespawnTask(pPlayer);
     }
 }
 
-public OnSetModel(ent)
-{
-    if (!g_gamemodeCount) {
+public OnSetModel(pEntity) {
+    if (!g_iGamemodesNum) {
         return;
     }
 
-    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if (~flags & Hwn_GamemodeFlag_SpecialEquip) {
+    new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
+    if (~iFlags & Hwn_GamemodeFlag_SpecialEquip) {
         return;
     }
 
-    static szClassname[32];
-    pev(ent, pev_classname, szClassname, charsmax(szClassname));
+    static szClassName[32];
+    pev(pEntity, pev_classname, szClassName, charsmax(szClassName));
 
-    if (szClassname[9] == '^0' && szClassname[0] == 'w' && szClassname[6] == 'b') {
-        dllfunc(DLLFunc_Think, ent);
+    if (equal(szClassName, "weaponbox")) {
+        dllfunc(DLLFunc_Think, pEntity);
     }
 }
 
-public MenuItem_ChangeEquipment(id)
-{
-    Hwn_PEquipment_ShowMenu(id);
+public MenuItem_ChangeEquipment(pPlayer) {
+    Hwn_PEquipment_ShowMenu(pPlayer);
 }
 
-public MenuItem_SpellShop(id)
-{
-    Hwn_SpellShop_Open(id);
+public MenuItem_SpellShop(pPlayer) {
+    Hwn_SpellShop_Open(pPlayer);
 }
 
-public OnCheckWinConditions()
-{
-    if (!g_gamemodeCount) {
+public OnCheckWinConditions() {
+    if (!g_iGamemodesNum) {
         return PLUGIN_CONTINUE;
     }
 
-    if (g_gamemode < 0) {
+    if (g_iGamemode < 0) {
         return PLUGIN_CONTINUE;
     }
 
-    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if ((flags & Hwn_GamemodeFlag_RespawnPlayers) && IsTeamExtermination()) {
+    new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
+    if ((iFlags & Hwn_GamemodeFlag_RespawnPlayers) && IsTeamExtermination()) {
         return PLUGIN_HANDLED;
     }
 
     return PLUGIN_CONTINUE;
 }
 
-public Hwn_SpellShop_Fw_Open(id)
-{
-    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if (~flags & Hwn_GamemodeFlag_SpellShop) {
+public Hwn_SpellShop_Fw_Open(pPlayer) {
+    new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
+    if (~iFlags & Hwn_GamemodeFlag_SpellShop) {
         return PLUGIN_HANDLED;
     }
 
-    if (!IsPlayerOnSpawn(id)) {
-        client_print(id, print_center, "%L", id, "HWN_SPELLSHOP_NOT_AT_SPAWN");
+    if (!IsPlayerOnSpawn(pPlayer)) {
+        client_print(pPlayer, print_center, "%L", pPlayer, "HWN_SPELLSHOP_NOT_AT_SPAWN");
         return PLUGIN_HANDLED;
     }
 
     return PLUGIN_CONTINUE;
 }
 
-public Hwn_SpellShop_Fw_BuySpell(id, spell)
-{
-    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if (~flags & Hwn_GamemodeFlag_SpellShop) {
+public Hwn_SpellShop_Fw_BuySpell(pPlayer, iSpell) {
+    new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
+    if (~iFlags & Hwn_GamemodeFlag_SpellShop) {
         return PLUGIN_HANDLED;
     }
 
-    if (!IsPlayerOnSpawn(id)) {
+    if (!IsPlayerOnSpawn(pPlayer)) {
         return PLUGIN_HANDLED;
     }
 
@@ -438,81 +400,76 @@ public Hwn_SpellShop_Fw_BuySpell(id, spell)
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-SetGamemode(gamemode)
-{
-    g_gamemode = gamemode;
-    new Hwn_GamemodeFlags:flags = ArrayGetCell(g_gamemodeFlags, g_gamemode);
-    if (flags & Hwn_GamemodeFlag_SpecialEquip) {
+SetGamemode(iGamemode) {
+    g_iGamemode = iGamemode;
+    new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
+    if (iFlags & Hwn_GamemodeFlag_SpecialEquip) {
         Hwn_Menu_AddItem(g_szEquipmentMenuTitle, "MenuItem_ChangeEquipment");
     }
 
-    if (flags & Hwn_GamemodeFlag_SpellShop) {
+    if (iFlags & Hwn_GamemodeFlag_SpellShop) {
         Hwn_Menu_AddItem(g_szSpellShopMenuTitle, "MenuItem_SpellShop");
     }
 
     new szGamemodeName[32];
-    ArrayGetString(g_gamemodeName, gamemode, szGamemodeName, charsmax(szGamemodeName));
+    ArrayGetString(g_irgGamemodeName, iGamemode, szGamemodeName, charsmax(szGamemodeName));
     log_amx("[Hwn] Gamemode '%s' activated", szGamemodeName);
 
-    ExecuteForward(g_fwGamemodeActivated, g_fwResult, gamemode);
+    ExecuteForward(g_fwGamemodeActivated, _, iGamemode);
 }
 
-GetGamemodeByPluginID(pluginID)
-{
-    for (new gamemode = 0; gamemode < g_gamemodeCount; ++gamemode) {
-        new gamemodePluginID = ArrayGetCell(g_gamemodePluginID, gamemode);
+GetGamemodeByiPluginId(iPluginId) {
+    for (new iGamemode = 0; iGamemode < g_iGamemodesNum; ++iGamemode) {
+        new iGamemodeiPluginId = ArrayGetCell(g_irgGamemodeiPluginId, iGamemode);
 
-        if (pluginID == gamemodePluginID) {
-            return gamemode;
+        if (iPluginId == iGamemodeiPluginId) {
+            return iGamemode;
         }
     }
 
     return -1;
 }
 
-RespawnPlayer(id)
-{
-    if (!is_user_connected(id)) {
+RespawnPlayer(pPlayer) {
+    if (!is_user_connected(pPlayer)) {
         return;
     }
 
-    if (is_user_alive(id)) {
+    if (is_user_alive(pPlayer)) {
         return;
     }
 
-    new team = UTIL_GetPlayerTeam(id);
+    new iTeam = get_member(pPlayer, m_iTeam);
 
-    if (team != 1 && team != 2) {
+    if (iTeam != 1 && iTeam != 2) {
         return;
     }
 
-    ExecuteHamB(Ham_CS_RoundRespawn, id);
+    ExecuteHamB(Ham_CS_RoundRespawn, pPlayer);
 }
 
-bool:IsPlayerOnSpawn(id, bool:ignoreTeam = false)
-{
-    new team = UTIL_GetPlayerTeam(id);
-    if (team < 1 || team > 2) {
+bool:IsPlayerOnSpawn(pPlayer, bool:bIgnoreTeam = false) {
+    new iTeam = get_member(pPlayer, m_iTeam);
+    if (iTeam < 1 || iTeam > 2) {
         return false;
     }
 
-    return ignoreTeam
-        ? IsPlayerOnTeamSpawn(id, 1) || IsPlayerOnTeamSpawn(id, 2)
-        : IsPlayerOnTeamSpawn(id, team);
+    return bIgnoreTeam
+        ? IsPlayerOnTeamSpawn(pPlayer, 1) || IsPlayerOnTeamSpawn(pPlayer, 2)
+        : IsPlayerOnTeamSpawn(pPlayer, iTeam);
 }
 
-bool:IsPlayerOnTeamSpawn(id, team)
-{
-    new Array:spawnPoints = team == 1 ? g_tSpawnPoints : g_ctSpawnPoints;
-    new spawnPointsSize = ArraySize(spawnPoints);
+bool:IsPlayerOnTeamSpawn(pPlayer, iTeam) {
+    new Array:spawnPoints = iTeam == 1 ? g_iTSpawnPoints : g_iCtSpawnPoints;
+    new iSpawnPointsNum = ArraySize(spawnPoints);
 
-    static Float:vOrigin[3];
-    pev(id, pev_origin, vOrigin);
+    static Float:vecOrigin[3];
+    pev(pPlayer, pev_origin, vecOrigin);
 
-    static Float:vSpawnOrigin[3];
-    for (new i = 0; i < spawnPointsSize; ++i) {
-        ArrayGetArray(spawnPoints, i, vSpawnOrigin);
-        if (get_distance_f(vOrigin, vSpawnOrigin) <= SPAWN_RANGE) {
+    static Float:vecSpawnOrigin[3];
+    for (new i = 0; i < iSpawnPointsNum; ++i) {
+        ArrayGetArray(spawnPoints, i, vecSpawnOrigin);
+        if (get_distance_f(vecOrigin, vecSpawnOrigin) <= SPAWN_RANGE) {
             return true;
         }
     }
@@ -520,31 +477,29 @@ bool:IsPlayerOnTeamSpawn(id, team)
     return false;
 }
 
-DispatchWin(team)
-{
-    new Float:fDelay = get_pcvar_float(g_cvarNewRoundDelay);
-    Round_DispatchWin(team, fDelay);
+DispatchWin(iTeam) {
+    new Float:flDelay = get_pcvar_float(g_pCvarNewRoundDelay);
+    Round_DispatchWin(iTeam, flDelay);
 }
 
-bool:IsTeamExtermination()
-{
-    new bool:aliveT = false;
-    new bool:aliveCT = false;
+bool:IsTeamExtermination() {
+    new bool:bAliveT = false;
+    new bool:bAliveCT = false;
 
-    for (new id = 1; id <= g_maxPlayers; ++id) {
-        if (is_user_connected(id) && is_user_alive(id)) {
-            new team = UTIL_GetPlayerTeam(id);
+    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
+        if (is_user_connected(pPlayer) && is_user_alive(pPlayer)) {
+            new iTeam = get_member(pPlayer, m_iTeam);
 
-            if (team == 1) {
-                aliveT = true;
+            if (iTeam == 1) {
+                bAliveT = true;
 
-                if (aliveCT) {
+                if (bAliveCT) {
                     return false;
                 }
-            } else if (team == 2) {
-                aliveCT = true;
+            } else if (iTeam == 2) {
+                bAliveCT = true;
 
-                if (aliveT) {
+                if (bAliveT) {
                     return false;
                 }
             }
@@ -554,23 +509,20 @@ bool:IsTeamExtermination()
     return true;
 }
 
-SetRespawnTask(id)
-{
-    set_task(get_pcvar_float(g_cvarRespawnTime), "TaskRespawnPlayer", id + TASKID_SUM_RESPAWN_PLAYER);
+SetRespawnTask(pPlayer) {
+    set_task(get_pcvar_float(g_pCvarRespawnTime), "Task_RespawnPlayer", pPlayer + TASKID_SUM_RESPAWN_PLAYER);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
-public TaskRespawnPlayer(taskID)
-{
-    new id = taskID - TASKID_SUM_RESPAWN_PLAYER;
+public Task_RespawnPlayer(iTaskId) {
+    new pPlayer = iTaskId - TASKID_SUM_RESPAWN_PLAYER;
 
-    RespawnPlayer(id);
+    RespawnPlayer(pPlayer);
 }
 
-public TaskDisableSpawnProtection(taskID)
-{
-    new id = taskID - TASKID_SUM_SPAWN_PROTECTION;
+public Task_DisableSpawnProtection(iTaskId) {
+    new pPlayer = iTaskId - TASKID_SUM_SPAWN_PROTECTION;
 
-    set_pev(id, pev_takedamage, DAMAGE_AIM);
+    set_pev(pPlayer, pev_takedamage, DAMAGE_AIM);
 }

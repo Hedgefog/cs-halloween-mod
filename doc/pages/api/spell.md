@@ -52,14 +52,14 @@ public OnCast(id)
     new Float:spellballScale = 0.75;
     new Float:spellballFramerate = 10.0;
 
-    new ent = UTIL_HwnSpawnPlayerSpellball(id, {255, 0, 0}, spellballSpeed, g_szSpellballSprite, spellballRenderAmt, spellballScale, spellballFramerate);
+    new pEntity = UTIL_HwnSpawnPlayerSpellball(id, {255, 0, 0}, spellballSpeed, g_szSpellballSprite, spellballRenderAmt, spellballScale, spellballFramerate);
 
-    if (!ent) {
+    if (!pEntity) {
         return PLUGIN_HANDLED; // discard cast
     }
 
     // create task to kill spellball after 5 seconds and pass entity index as task id.
-    set_task(5.0, "TaskKillSpellball", ent);
+    set_task(5.0, "TaskKillSpellball", pEntity);
 
     return PLUGIN_CONTINUE; // allow cast
 }
@@ -70,10 +70,10 @@ Now implement task to kill spellball using hwn_utils include to make detonation 
 Spellball entity is a custom entity created using Custom Entities API, so you should use CE_Kill to kill this entity.
 
 ```SourcePawn
-public TaskKillSpellball(ent)
+public TaskKillSpellball(pEntity)
 {
     static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+    pev(pEntity, pev_origin, vOrigin);
 
     UTIL_Message_BeamCylinder(
         vOrigin,
@@ -86,6 +86,6 @@ public TaskKillSpellball(ent)
         .brightness = 100
     );
 
-    CE_Kill(ent);
+    CE_Kill(pEntity);
 }
 ```

@@ -14,6 +14,7 @@
 #define PLUGIN "[Hwn] Boss Healthbar"
 #define AUTHOR "Hedgehog Fog"
 
+#define HEALTHBAR_CLASSNAME "info_target"
 #define BOSS_TARGET_ENTITY_CLASSNAME "hwn_boss_target"
 
 #define HEALTHBAR_Z_OFFSET 48.0
@@ -21,134 +22,109 @@
 #define HEALTHBAR_SCALE 1.0
 #define HEALTHBAR_RENDERAMT 200.0
 
-new g_cvarEnabled;
+new g_pCvarEnabled;
+new g_pCvarFps;
 
-new g_bossEnt = 0;
+new g_iszHealthBarClassname;
+new g_iBossHealthBarModelIndex;
 
-new g_ptrInfoTargetClassname;
-new g_sprBossHealthBar;
+new g_pHealthBar;
+new Float:g_flBossHealth;
+new g_pBoss = 0;
 
-new Float:g_fThinkDelay;
-new bool:g_enabled = true;
-
-new g_healthBarEnt;
-new Float:g_fBossHealth;
-new Float:g_fHealthBarOffsetZ;
-
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    if (get_pcvar_num(g_cvarEnabled) <= 0) {
-        g_enabled = false;
+    g_pCvarEnabled = register_cvar("hwn_boss_healthbar", "1");
+    g_pCvarFps = get_cvar_pointer("hwn_fps");
+
+    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "HamHook_Base_TakeDamage_Post", .Post = 1);
+}
+
+public plugin_precache() {
+    g_iBossHealthBarModelIndex = precache_model("sprites/hwn/boss_healthbar.spr");
+    g_iszHealthBarClassname = engfunc(EngFunc_AllocString, HEALTHBAR_CLASSNAME);
+}
+
+public Hwn_Bosses_Fw_BossSpawn(pEntity) {
+    if (!get_pcvar_bool(g_pCvarEnabled)) {
         return;
     }
 
-    g_ptrInfoTargetClassname = engfunc(EngFunc_AllocString, "info_target");
+    g_pBoss = pEntity;
+    pev(g_pBoss, pev_health, g_flBossHealth);
 
-    RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "OnTargetTakeDamage", .Post = 1);
+    if (!g_pHealthBar) {
+        g_pHealthBar = @HealthBar_Create();
+    }
 }
 
-public plugin_precache()
-{
-    g_cvarEnabled = register_cvar("hwn_boss_healthbar", "1");
-    g_sprBossHealthBar = precache_model("sprites/hwn/boss_healthbar.spr");
+public Hwn_Bosses_Fw_BossRemove() {
+    g_pBoss = 0;
+
+    if (g_pHealthBar) {
+        @HealthBar_Destroy(g_pHealthBar);
+        g_pHealthBar = 0;
+    }
 }
 
-public Hwn_Fw_ConfigLoaded()
-{
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
-    set_task(g_fThinkDelay, "TaskThink", 0, _, _, "b");
-}
-
-public Hwn_Bosses_Fw_BossSpawn(ent)
-{
-    if (!g_enabled) {
+public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDamage) {
+    if (pEntity != g_pBoss) {
         return;
     }
 
-    g_bossEnt = ent;
-
-    pev(ent, pev_health, g_fBossHealth);
-
-    new Float:vMaxs[3];
-    pev(ent, pev_maxs, vMaxs);
-    g_fHealthBarOffsetZ = vMaxs[2] + HEALTHBAR_Z_OFFSET;
-
-    SpawnHealthBar();
-}
-
-public Hwn_Bosses_Fw_BossKill()
-{
-    ResetBoss();
-}
-
-public Hwn_Bosses_Fw_BossEscape()
-{
-    ResetBoss();
-}
-
-public OnTargetTakeDamage(ent, inflictor, attacker, Float:fDamage)
-{
-    if (ent != g_bossEnt) {
+    if (!IS_PLAYER(pAttacker)) {
         return;
     }
 
-    if (!UTIL_IsPlayer(attacker)) {
-        return;
-    }
+    static Float:flHealth;
+    pev(g_pBoss, pev_health, flHealth);
 
-    static Float:fHealth;
-    pev(g_bossEnt, pev_health, fHealth);
+    new Float:flHealthMultiplier = floatclamp(1.0 - (flHealth / g_flBossHealth), 0.0, 1.0);
 
-    new Float:fMultiplier = (1.0 - fHealth/g_fBossHealth);
-    if (fMultiplier > 1.0) {
-        fMultiplier = 1.0;
-    }
-
-    new Float:fFrame = (HEALTHBAR_FRAME_COUNT - 1) * fMultiplier;
-    set_pev(g_healthBarEnt, pev_frame, fFrame);
+    new Float:flFrame = (HEALTHBAR_FRAME_COUNT - 1) * flHealthMultiplier;
+    set_pev(g_pHealthBar, pev_frame, flFrame);
 }
 
-ResetBoss()
-{
-    g_bossEnt = 0;
-    if (g_healthBarEnt) {
-        set_pev(g_healthBarEnt, pev_effects, EF_NODRAW);
-    }
+@HealthBar_Create() {
+    new this = engfunc(EngFunc_CreateNamedEntity, g_iszHealthBarClassname);
+
+    set_pev(this, pev_modelindex, g_iBossHealthBarModelIndex);
+    set_pev(this, pev_rendermode, kRenderTransAdd);
+    set_pev(this, pev_renderamt, HEALTHBAR_RENDERAMT);
+    set_pev(this, pev_scale, HEALTHBAR_SCALE);
+    set_pev(this, pev_solid, SOLID_NOT);
+    set_pev(this, pev_movetype, MOVETYPE_NONE);
+    set_pev(this, pev_framerate, 0.0);
+    set_pev(this, pev_frame, 0);
+    set_pev(this, pev_effects, 0);
+
+    dllfunc(DLLFunc_Spawn, this);
+
+    SetThink(this, "@HealthBar_Think");
+
+    set_pev(this, pev_nextthink, get_gametime());
+
+    return this;
 }
 
-SpawnHealthBar()
-{
-    if (!g_healthBarEnt) {
-        g_healthBarEnt = engfunc(EngFunc_CreateNamedEntity, g_ptrInfoTargetClassname);
-        dllfunc(DLLFunc_Spawn, g_healthBarEnt);
-    }
-
-    InitHealthBar(g_healthBarEnt);
+@HealthBar_Destroy(this) {
+    SetThink(this, NULL_STRING);
+    set_pev(this, pev_flags, pev(this, pev_flags) | FL_KILLME);
+    dllfunc(DLLFunc_Think, this);
 }
 
-InitHealthBar(ent)
-{
-    set_pev(ent, pev_modelindex, g_sprBossHealthBar);
-    set_pev(ent, pev_rendermode, kRenderTransAdd);
-    set_pev(ent, pev_renderamt, HEALTHBAR_RENDERAMT);
-    set_pev(ent, pev_scale, HEALTHBAR_SCALE);
-    set_pev(ent, pev_solid, SOLID_NOT);
-    set_pev(ent, pev_movetype, MOVETYPE_NONE);
-    set_pev(ent, pev_framerate, 0.0);
-    set_pev(ent, pev_frame, 0);
-    set_pev(ent, pev_effects, 0);
-}
+@HealthBar_Think(this) {
+    if (g_pBoss) {
+        static Float:vecBossMaxs[3];
+        pev(g_pBoss, pev_maxs, vecBossMaxs);
 
-public TaskThink()
-{
-    if (!g_healthBarEnt || !g_bossEnt) {
-        return;
+        static Float:vecOrigin[3];
+        pev(g_pBoss, pev_origin, vecOrigin);
+        vecOrigin[2] += (vecBossMaxs[2] + HEALTHBAR_Z_OFFSET);
+        engfunc(EngFunc_SetOrigin, this, vecOrigin);
     }
 
-    static Float:vBarOrigin[3];
-    pev(g_bossEnt, pev_origin, vBarOrigin);
-    vBarOrigin[2] += g_fHealthBarOffsetZ;
-    engfunc(EngFunc_SetOrigin, g_healthBarEnt, vBarOrigin);
+    new Float:flRate = UTIL_FpsToDelay(get_pcvar_num(g_pCvarFps));
+    set_pev(this, pev_nextthink, get_gametime() + flRate);
 }

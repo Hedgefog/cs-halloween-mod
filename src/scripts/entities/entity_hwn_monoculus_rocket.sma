@@ -20,28 +20,26 @@
 #define EXPLOSION_DAMAGE 160.0
 #define EXPLOSION_SPRITE_SIZE 80.0
 
-new g_sprSmoke;
-new g_sprExplodeSmoke;
+new g_iSmokeModelIndex;
+new g_iExplodeSmokeModelIndex;
 
-new Float:g_fThinkDelay;
+new Float:g_flThinkDelay;
 
-new g_ceHandler;
+new g_iCeHandler;
 
-new g_sprExlplosion;
+new g_iExlplosionModelIndex;
 
 new const g_szSndExplode[] = "hwn/misc/pumpkin_explode.wav";
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "OnTouch");
+    RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "HamHook_Base_Touch");
 }
 
-public plugin_precache()
-{
-    g_ceHandler = CE_Register(
-        .szName = ENTITY_NAME,
+public plugin_precache() {
+    g_iCeHandler = CE_Register(
+        ENTITY_NAME,
         .modelIndex = precache_model("models/hwn/props/monoculus_rocket.mdl"),
         .vMins = Float:{-8.0, -8.0, -8.0},
         .vMaxs = Float:{8.0, 8.0, 8.0},
@@ -52,143 +50,135 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
 
-    g_sprSmoke = precache_model("sprites/black_smoke1.spr");
-    g_sprExplodeSmoke = precache_model("sprites/hwn/magic_smoke.spr");
+    g_iSmokeModelIndex = precache_model("sprites/black_smoke1.spr");
+    g_iExplodeSmokeModelIndex = precache_model("sprites/hwn/magic_smoke.spr");
 
     precache_sound(g_szSndExplode);
 
-    g_sprExlplosion = precache_model("sprites/eexplo.spr");
+    g_iExlplosionModelIndex = precache_model("sprites/eexplo.spr");
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-public Hwn_Fw_ConfigLoaded()
-{
-    g_fThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
+public Hwn_Fw_ConfigLoaded() {
+    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnSpawn(ent)
-{
-    set_pev(ent, pev_solid, SOLID_TRIGGER);
-    set_pev(ent, pev_movetype, MOVETYPE_FLY);
+public OnSpawn(pEntity) {
+    set_pev(pEntity, pev_solid, SOLID_TRIGGER);
+    set_pev(pEntity, pev_movetype, MOVETYPE_FLY);
 
-    set_pev(ent, pev_rendermode, kRenderNormal);
-    set_pev(ent, pev_renderfx, kRenderFxGlowShell);
-    set_pev(ent, pev_renderamt, 4.0);
-    set_pev(ent, pev_rendercolor, {HWN_COLOR_PRIMARY_F});
+    set_pev(pEntity, pev_rendermode, kRenderNormal);
+    set_pev(pEntity, pev_renderfx, kRenderFxGlowShell);
+    set_pev(pEntity, pev_renderamt, 4.0);
+    set_pev(pEntity, pev_rendercolor, {HWN_COLOR_PRIMARY_F});
 
-    TaskThink(ent);
+    Task_Think(pEntity);
 }
 
-public OnRemove(ent)
-{
-    remove_task(ent);
+public OnRemove(pEntity) {
+    remove_task(pEntity);
 }
 
-public OnKilled(ent)
-{
-    ExplosionEffect(ent);
+public OnKilled(pEntity) {
+    ExplosionEffect(pEntity);
 
-    new owner = pev(ent, pev_owner);
-    if (!pev_valid(owner)) {
-        owner = 0;
+    new pOwner = pev(pEntity, pev_owner);
+    if (!pev_valid(pOwner)) {
+        pOwner = 0;
     }
 
-    RocketRadiusDamage(ent, owner);
+    RocketRadiusDamage(pEntity, pOwner);
 }
 
-public OnTouch(ent, target)
-{
-    if (g_ceHandler != CE_GetHandlerByEntity(ent)) {
+public HamHook_Base_Touch(pEntity, pTarget) {
+    if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) {
         return;
     }
 
-    CE_Kill(ent, target);
+    CE_Kill(pEntity, pTarget);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
-public TaskThink(ent)
-{
-    if (!pev_valid(ent)) {
+public Task_Think(pEntity) {
+    if (!pev_valid(pEntity)) {
         return;
     }
 
-    static Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+    static Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
     //Fix for smoke origin
     {
-        static Float:vSub[3];
-        UTIL_GetDirectionVector(ent, vSub, 32.0);
-        vSub[2] += 18.0;
+        static Float:vecSub[3];
+        UTIL_GetDirectionVector(pEntity, vecSub, 32.0);
+        vecSub[2] += 18.0;
 
-        xs_vec_sub(vOrigin, vSub, vOrigin);
+        xs_vec_sub(vecOrigin, vecSub, vecOrigin);
     }
 
-    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vecOrigin, 0);
     write_byte(TE_SMOKE);
-    engfunc(EngFunc_WriteCoord, vOrigin[0]);
-    engfunc(EngFunc_WriteCoord, vOrigin[1]);
-    engfunc(EngFunc_WriteCoord, vOrigin[2]);
-    write_short(g_sprSmoke);
+    engfunc(EngFunc_WriteCoord, vecOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vecOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vecOrigin[2]);
+    write_short(g_iSmokeModelIndex);
     write_byte(10);
     write_byte(90);
     message_end();
 
-    set_task(g_fThinkDelay, "TaskThink", ent);
+    set_task(g_flThinkDelay, "Task_Think", pEntity);
 }
 
-RocketRadiusDamage(ent, owner)
-{
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
+RocketRadiusDamage(pEntity, pOwner) {
+    new Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
 
-    new target;
-    while ((target = UTIL_FindEntityNearby(target, vOrigin, EXPLOSION_RADIUS * 2)) != 0) {
-        if (ent == target) {
+    new pTarget = 0;
+    while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EXPLOSION_RADIUS * 2)) != 0) {
+        if (pEntity == pTarget) {
             continue;
         }
 
-        if (pev(target, pev_deadflag) != DEAD_NO) {
+        if (pev(pTarget, pev_deadflag) != DEAD_NO) {
             continue;
         }
 
-        if (pev(target, pev_takedamage) == DAMAGE_NO) {
+        if (pev(pTarget, pev_takedamage) == DAMAGE_NO) {
             continue;
         }
 
-        static Float:vTargetOrigin[3];
-        pev(target, pev_origin, vTargetOrigin);
+        static Float:vecTargetOrigin[3];
+        pev(pTarget, pev_origin, vecTargetOrigin);
 
-        new Float:fDamage = UTIL_CalculateRadiusDamage(vOrigin, vTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE, false, target);
+        new Float:flDamage = UTIL_CalculateRadiusDamage(vecOrigin, vecTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE, false, pTarget);
 
-        ExecuteHamB(Ham_TakeDamage, target, ent, owner, fDamage, DMG_ALWAYSGIB);
+        ExecuteHamB(Ham_TakeDamage, pTarget, pEntity, pOwner, flDamage, DMG_ALWAYSGIB);
     }
 }
 
-ExplosionEffect(ent)
-{
-    new Float:vOrigin[3];
-    pev(ent, pev_origin, vOrigin);
-    vOrigin[2] += 16.0;
+ExplosionEffect(pEntity) {
+    new Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
+    vecOrigin[2] += 16.0;
 
-    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vOrigin, 0);
+    engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vecOrigin, 0);
     write_byte(TE_EXPLOSION);
-    engfunc(EngFunc_WriteCoord, vOrigin[0]);
-    engfunc(EngFunc_WriteCoord, vOrigin[1]);
-    engfunc(EngFunc_WriteCoord, vOrigin[2]);
-    write_short(g_sprExlplosion);
+    engfunc(EngFunc_WriteCoord, vecOrigin[0]);
+    engfunc(EngFunc_WriteCoord, vecOrigin[1]);
+    engfunc(EngFunc_WriteCoord, vecOrigin[2]);
+    write_short(g_iExlplosionModelIndex);
     write_byte(floatround(((EXPLOSION_RADIUS * 2) / EXPLOSION_SPRITE_SIZE) * 10));
     write_byte(24);
     write_byte(0);
     message_end();
     
-    UTIL_Message_FireField(vOrigin, 32, g_sprExplodeSmoke, 4, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 15);
+    UTIL_Message_FireField(vecOrigin, 32, g_iExplodeSmokeModelIndex, 4, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 15);
 
-    emit_sound(ent, CHAN_BODY, g_szSndExplode, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(pEntity, CHAN_BODY, g_szSndExplode, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
-    UTIL_Message_Dlight(vOrigin, 32, {HWN_COLOR_PRIMARY}, UTIL_DelayToLifeTime(g_fThinkDelay), 0);
+    UTIL_Message_Dlight(vecOrigin, 32, {HWN_COLOR_PRIMARY}, UTIL_DelayToLifeTime(g_flThinkDelay), 0);
 }

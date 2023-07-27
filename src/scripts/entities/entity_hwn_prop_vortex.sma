@@ -15,15 +15,13 @@
 
 #define ENTITY_NAME "hwn_prop_vortex"
 
-public plugin_init()
-{
+public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
-public plugin_precache()
-{
+public plugin_precache() {
     CE_Register(
-        .szName = ENTITY_NAME,
+        ENTITY_NAME,
         .modelIndex = precache_model("models/hwn/props/vortex.mdl"),
         .vMins = Float:{-256.0, -256.0, -32.0},
         .vMaxs = Float:{256.0, 256.0, 32.0},
@@ -33,11 +31,10 @@ public plugin_precache()
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
 }
 
-public OnSpawn(ent)
-{
-    set_pev(ent, pev_movetype, MOVETYPE_NOCLIP);
-    set_pev(ent, pev_solid, SOLID_NOT);
-    set_pev(ent, pev_framerate, 0.25);
-    set_pev(ent, pev_rendermode, kRenderTransAdd);
-    set_pev(ent, pev_renderamt, 255.0);
+public OnSpawn(pEntity) {
+    set_pev(pEntity, pev_movetype, MOVETYPE_NOCLIP);
+    set_pev(pEntity, pev_solid, SOLID_NOT);
+    set_pev(pEntity, pev_framerate, 0.25);
+    set_pev(pEntity, pev_rendermode, kRenderTransAdd);
+    set_pev(pEntity, pev_renderamt, 255.0);
 }
