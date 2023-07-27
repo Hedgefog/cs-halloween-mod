@@ -13,8 +13,6 @@
 #define PLUGIN "[Custom Entity] Hwn NPC Skeleton"
 #define AUTHOR "Hedgehog Fog"
 
-#define TASKID_SUM_HIT 1000
-
 #define ENTITY_NAME "hwn_npc_skeleton"
 #define ENTITY_NAME_SMALL "hwn_npc_skeleton_small"
 
@@ -119,6 +117,11 @@ public plugin_precache() {
         .preset = CEPreset_NPC
     );
 
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
+    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
+    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
+
     g_ceHandlerSmall = CE_Register(
         ENTITY_NAME_SMALL,
         .modelIndex = precache_model("models/hwn/npc/skeleton_small_v3.mdl"),
@@ -129,13 +132,10 @@ public plugin_precache() {
         .preset = CEPreset_NPC
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
-    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
-
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_SMALL, "OnSpawn");
-    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME_SMALL, "OnKilled");
-    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME_SMALL, "OnRemove");
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_SMALL, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME_SMALL, "@Entity_Killed");
+    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME_SMALL, "@Entity_Remove");
+    CE_RegisterHook(CEFunction_Think, ENTITY_NAME_SMALL, "@Entity_Think");
 }
 
 public plugin_init() {
@@ -143,67 +143,219 @@ public plugin_init() {
 
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "HamHook_Base_TraceAttack", .Post = 0);
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "HamHook_Base_TraceAttack_Post", .Post = 1);
-    RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "HamHook_Base_Think_Post", .Post = 1);
     RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed", .Post = 0);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnSpawn(pEntity) {
-    new Float:flHealth = IsSmall(pEntity) ? NPC_Small_Health : NPC_Health;
-    
-    NPC_Create(pEntity);
+@Entity_Spawn(this) {
+    new Float:flGameTime = get_gametime();
+
+    NPC_Create(this);
+
+    new bool:bSmall = CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_SMALL);
+    CE_SetMember(this, "bSmall", bSmall);
+    CE_SetMember(this, "flNextUpdate", flGameTime);
+    CE_SetMember(this, "flNextVoice", flGameTime);
+
+    set_pev(this, pev_rendermode, kRenderNormal);
+    set_pev(this, pev_renderfx, kRenderFxGlowShell);
+    set_pev(this, pev_renderamt, 4.0);
+    set_pev(this, pev_health, bSmall ? NPC_Small_Health : NPC_Health);
+    set_pev(this, pev_groupinfo, 128);
+    set_pev(this, pev_fuser1, 0.0);
+
+    engfunc(EngFunc_DropToFloor, this);
+
+    @Entity_UpdateColor(this);
 
     new Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
+    UTIL_Message_Dlight(vecOrigin, bSmall ? 8 : 16, {HWN_COLOR_SECONDARY}, 20, 8);
 
-    UTIL_Message_Dlight(vecOrigin, IsSmall(pEntity) ? 8 : 16, {HWN_COLOR_SECONDARY}, 20, 8);
-
-    set_pev(pEntity, pev_rendermode, kRenderNormal);
-    set_pev(pEntity, pev_renderfx, kRenderFxGlowShell);
-    set_pev(pEntity, pev_renderamt, 4.0);
-    set_pev(pEntity, pev_health, flHealth);
-    set_pev(pEntity, pev_groupinfo, 128);
-    set_pev(pEntity, pev_fuser1, 0.0);
-
-    engfunc(EngFunc_DropToFloor, pEntity);
-
-    NPC_PlayAction(pEntity, g_actions[Action_Spawn]);
+    NPC_PlayAction(this, g_actions[Action_Spawn]);
     
-    RemoveTasks(pEntity);
-    set_pev(pEntity, pev_nextthink, get_gametime() + 2.0);
-
-    UpdateColor(pEntity);
+    set_pev(this, pev_nextthink, flGameTime + g_actions[Action_Spawn][NPC_Action_Time]);
 }
 
-public OnKilled(pEntity, pKiller) {
-    DisappearEffect(pEntity);
+@Entity_Killed(this, pKiller) {
+    new bool:bSmall = CE_GetMember(this, "bSmall");
 
-    if (!IsSmall(pEntity)) {
-        new Float:vecOrigin[3];
-        pev(pEntity, pev_origin, vecOrigin);
+    @Entity_DisappearEffect(this);
 
-        for (new i = 0; i < SKELETON_EGG_COUNT; ++i) {
-            new pEgg = CE_Create(SKELETON_EGG_ENTITY_NAME, vecOrigin);
-
-            if (!pEgg) {
-                continue;
-            }
-
-            set_pev(pEgg, pev_team, pev(pEntity, pev_team));
-            set_pev(pEgg, pev_owner, pev(pEntity, pev_owner));
-            dllfunc(DLLFunc_Spawn, pEgg);
-
-            new Float:vecVelocity[3];
-            xs_vec_set(vecVelocity, random_float(-96.0, 96.0), random_float(-96.0, 96.0), 128.0);
-            set_pev(pEgg, pev_velocity, vecVelocity);
-        }
+    if (!bSmall) {
+        @Entity_SpawnEggs(this);
     }
 }
 
-public OnRemove(pEntity) {
-    RemoveTasks(pEntity);
-    NPC_Destroy(pEntity);
+@Entity_Remove(this) {
+    NPC_Destroy(this);
+}
+
+@Entity_Think(this) {
+    new Float:flGameTime = get_gametime();
+
+    if (pev(this, pev_deadflag) == DEAD_NO) {
+        new Float:flNextUpdate = CE_GetMember(this, "flNextUpdate");
+        new bool:bShouldUpdate = flNextUpdate <= flGameTime;
+
+        new pEnemy = NPC_GetEnemy(this);
+        if (pEnemy) {
+            @Entity_Attack(this, pEnemy, bShouldUpdate);
+        }
+
+        if (bShouldUpdate) {
+            if (!pEnemy) {
+                NPC_FindEnemy(this, 1024.0);
+            } else {
+                new Float:flNextVoice = CE_GetMember(this, "flNextVoice");
+                if (flNextVoice <= flGameTime) {
+                    new bool:bSmall = CE_GetMember(this, "bSmall");
+
+                    if (bSmall) {
+                        NPC_EmitVoice(this, g_szSndSmallIdleList[random(sizeof(g_szSndSmallIdleList))]);
+                    } else {
+                        NPC_EmitVoice(this, g_szSndIdleList[random(sizeof(g_szSndIdleList))]);
+                    }
+
+                    CE_SetMember(this, "flNextVoice", flGameTime + random_float(1.0, 2.0));
+                }
+            }
+
+            new Action:iAction = @Entity_GetAction(this);
+            NPC_PlayAction(this, g_actions[iAction]);
+
+            @Entity_UpdateColor(this);
+
+            CE_SetMember(this, "flNextUpdate", flGameTime + Hwn_GetNpcUpdateRate());
+        }
+    }
+
+    set_pev(this, pev_nextthink, flGameTime + Hwn_GetUpdateRate());
+}
+
+@Entity_UpdateColor(this) {
+    new iTeam = pev(this, pev_team);
+
+    switch (iTeam) {
+        case 0: set_pev(this, pev_rendercolor, {HWN_COLOR_SECONDARY_F});
+        case 1: set_pev(this, pev_rendercolor, {HWN_COLOR_RED_F});
+        case 2: set_pev(this, pev_rendercolor, {HWN_COLOR_BLUE_F});
+    }
+}
+
+bool:@Entity_Attack(this, pTarget, bool:bCheckTarget) {
+    new Float:flGameTime = get_gametime();
+
+    new bool:bSmall = CE_GetMember(this, "bSmall");
+
+    new Float:flHitRange = bSmall ? NPC_Small_HitRange : NPC_HitRange;
+    new Float:flHitDelay = bSmall ? NPC_Small_HitDelay : NPC_HitDelay;
+    new Float:flSpeed = bSmall ? NPC_Small_Speed : NPC_Speed;
+
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+
+    static Float:vecTarget[3];
+    if (bCheckTarget) {
+        if (!NPC_GetTarget(this, flSpeed, vecTarget)) {
+            NPC_SetEnemy(this, 0);
+            NPC_StopMovement(this);
+            set_pev(this, pev_vuser1, vecOrigin);
+            return false;
+        }
+
+        set_pev(this, pev_vuser1, vecTarget);
+    } else {
+        pev(this, pev_vuser1, vecTarget);
+    }
+
+    new bool:bCanHit = NPC_CanHit(this, pTarget, flHitRange);
+
+    if (bCheckTarget && bCanHit) {
+        new Float:flNextHit = CE_GetMember(this, "flNextHit");
+        if (!flNextHit) {
+            CE_SetMember(this, "flNextHit", flGameTime + flHitDelay);
+        } else if (flNextHit <= flGameTime) {
+            @Entity_Hit(this);
+            CE_SetMember(this, "flNextHit", 0.0);
+        }
+    }
+
+    static Float:vecTargetVelocity[3];
+    pev(pTarget, pev_velocity, vecTargetVelocity);
+
+    new bool:bShouldRun = !bCanHit || xs_vec_len(vecTargetVelocity) > flHitRange;
+    if (bShouldRun) {
+        NPC_MoveToTarget(this, vecTarget, NPC_Speed);
+    } else {
+        NPC_StopMovement(this);
+    }
+
+    return true;
+}
+
+Action:@Entity_GetAction(this) {
+    new Action:iAction = Action_Idle;
+
+    static Float:vecTargetVelocity[3];
+    pev(this, pev_velocity, vecTargetVelocity);
+
+    new Float:flNextHit = CE_GetMember(this, "flNextHit");
+    if (flNextHit) {
+        iAction = Action_Attack;
+    }
+
+    if (xs_vec_len(vecTargetVelocity) > 10.0) {
+        iAction = iAction == Action_Attack ? Action_RunAttack : Action_Run;
+    }
+
+    return iAction;
+}
+
+@Entity_Hit(this) {
+    new bool:bSmall = CE_GetMember(this, "bSmall");
+
+    new Float:flHitRange = bSmall ? NPC_Small_HitRange : NPC_HitRange;
+    new Float:flHitDelay = bSmall ? NPC_Small_HitDelay : NPC_HitDelay;
+    new Float:flDamage = bSmall ? NPC_Small_Damage : NPC_Damage;
+
+    NPC_Hit(this, flDamage, flHitRange, flHitDelay);
+}
+
+@Entity_DisappearEffect(this) {
+    new bool:bSmall = CE_GetMember(this, "bSmall");
+
+    new Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+
+    new Float:vecVelocity[3];
+    UTIL_RandomVector(-48.0, 48.0, vecVelocity);
+
+    UTIL_Message_Dlight(vecOrigin, bSmall ? 8 : 16, {HWN_COLOR_SECONDARY}, 10, 32);
+    UTIL_Message_BreakModel(vecOrigin, Float:{16.0, 16.0, 16.0}, vecVelocity, 10, g_mdlGibs, 5, 25, 0);
+
+    emit_sound(this, CHAN_BODY, g_szSndBreak, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+}
+
+@Entity_SpawnEggs(this) {
+    new Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+
+    for (new i = 0; i < SKELETON_EGG_COUNT; ++i) {
+        new pEgg = CE_Create(SKELETON_EGG_ENTITY_NAME, vecOrigin);
+        if (!pEgg) {
+            continue;
+        }
+
+        set_pev(pEgg, pev_team, pev(this, pev_team));
+        set_pev(pEgg, pev_owner, pev(this, pev_owner));
+        dllfunc(DLLFunc_Spawn, pEgg);
+
+        new Float:vecVelocity[3];
+        xs_vec_set(vecVelocity, random_float(-96.0, 96.0), random_float(-96.0, 96.0), 128.0);
+        set_pev(pEgg, pev_velocity, vecVelocity);
+    }
 }
 
 public HamHook_Base_TraceAttack(pEntity, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
@@ -236,50 +388,6 @@ public HamHook_Base_TraceAttack_Post(pEntity, pAttacker, Float:flDamage, Float:v
     return HAM_HANDLED;
 }
 
-public HamHook_Base_Think_Post(pEntity) {
-    if (g_iCeHandler != CE_GetHandlerByEntity(pEntity) && g_ceHandlerSmall != CE_GetHandlerByEntity(pEntity)) {
-        return HAM_IGNORED;
-    }
-
-    if (pev(pEntity, pev_deadflag) != DEAD_NO) {
-        return HAM_IGNORED;
-    }
-
-    new pEnemy = NPC_GetEnemy(pEntity);
-    new Action:action = Action_Idle;
-
-    static Float:flLastUpdate;
-    pev(pEntity, pev_fuser1, flLastUpdate);
-    new bool:shouldUpdate = get_gametime() - flLastUpdate >= Hwn_GetUpdateRate();
-
-    if (pEnemy) {
-        Attack(pEntity, pEnemy, action, shouldUpdate);
-    }
-
-    if (shouldUpdate) {
-        if (!pEnemy) {
-            NPC_FindEnemy(pEntity, 1024.0);
-        } else {
-            if (random(100) < 10) {
-                if (IsSmall(pEntity)) {
-                    NPC_EmitVoice(pEntity, g_szSndSmallIdleList[random(sizeof(g_szSndSmallIdleList))]);
-                } else {
-                    NPC_EmitVoice(pEntity, g_szSndIdleList[random(sizeof(g_szSndIdleList))]);
-                }
-            }
-        }
-
-        NPC_PlayAction(pEntity, g_actions[action]);
-        UpdateColor(pEntity);
-
-        set_pev(pEntity, pev_fuser1, get_gametime());
-    }
-
-    set_pev(pEntity, pev_nextthink, get_gametime() + 0.01);
-
-    return HAM_HANDLED;
-}
-
 public HamHook_Player_Killed(pPlayer, pKiller) {
     new iCeHandler = CE_GetHandlerByEntity(pKiller);
     if (iCeHandler == g_iCeHandler || iCeHandler == g_ceHandlerSmall) {
@@ -290,98 +398,4 @@ public HamHook_Player_Killed(pPlayer, pKiller) {
     }
 
     return HAM_HANDLED;
-}
-
-bool:Attack(pEntity, pTarget, &Action:action, bool:checkTarget = true) {
-    new Float:flHitRange = IsSmall(pEntity) ? NPC_Small_HitRange : NPC_HitRange;
-    new Float:flHitDelay = IsSmall(pEntity) ? NPC_Small_HitDelay : NPC_HitDelay;
-    new Float:flSpeed = IsSmall(pEntity) ? NPC_Small_Speed : NPC_Speed;
-
-    static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
-
-    static Float:vecTarget[3];
-    if (checkTarget) {
-        if (!NPC_GetTarget(pEntity, flSpeed, vecTarget)) {
-            NPC_SetEnemy(pEntity, 0);
-            NPC_StopMovement(pEntity);
-            set_pev(pEntity, pev_vuser1, vecOrigin);
-            return false;
-        }
-
-        set_pev(pEntity, pev_vuser1, vecTarget);
-    } else {
-        pev(pEntity, pev_vuser1, vecTarget);
-    }
-
-    new bool:canHit = NPC_CanHit(pEntity, pTarget, flHitRange);
-
-    if (checkTarget && canHit && !task_exists(pEntity+TASKID_SUM_HIT)) {
-        set_task(flHitDelay, "Task_Hit", pEntity+TASKID_SUM_HIT);
-        action = Action_Attack;
-    }
-
-    static Float:vecTargetVelocity[3];
-    pev(pTarget, pev_velocity, vecTargetVelocity);
-
-    new bool:shouldRun = !canHit || xs_vec_len(vecTargetVelocity) > flHitRange;
-
-    if (shouldRun) {
-        NPC_MoveToTarget(pEntity, vecTarget, NPC_Speed);
-        action = (action == Action_Attack) ? Action_RunAttack : Action_Run;
-    } else {
-        NPC_StopMovement(pEntity);
-    }
-
-    return true;
-}
-
-RemoveTasks(pEntity) {
-    remove_task(pEntity+TASKID_SUM_HIT);
-}
-
-DisappearEffect(pEntity) {
-    new Float:vecVelocity[3];
-    UTIL_RandomVector(-48.0, 48.0, vecVelocity);
-
-    new Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
-    UTIL_Message_Dlight(vecOrigin, IsSmall(pEntity) ? 8 : 16, {HWN_COLOR_SECONDARY}, 10, 32);
-
-    UTIL_Message_BreakModel(vecOrigin, Float:{16.0, 16.0, 16.0}, vecVelocity, 10, g_mdlGibs, 5, 25, 0);
-
-    emit_sound(pEntity, CHAN_BODY, g_szSndBreak, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-}
-
-UpdateColor(pEntity) {
-    new iTeam = pev(pEntity, pev_team);
-
-    switch (iTeam) {
-        case 0:
-            set_pev(pEntity, pev_rendercolor, {HWN_COLOR_SECONDARY_F});
-        case 1:
-            set_pev(pEntity, pev_rendercolor, {HWN_COLOR_RED_F});
-        case 2:
-            set_pev(pEntity, pev_rendercolor, {HWN_COLOR_BLUE_F});
-    }
-}
-
-/*--------------------------------[ Tasks ]--------------------------------*/
-
-public Task_Hit(iTaskId) {
-    new pEntity = iTaskId - TASKID_SUM_HIT;
-
-    if (pev(pEntity, pev_deadflag) != DEAD_NO) {
-        return;
-    }
-
-    new Float:flHitRange = IsSmall(pEntity) ? NPC_Small_HitRange : NPC_HitRange;
-    new Float:flHitDelay = IsSmall(pEntity) ? NPC_Small_HitDelay : NPC_HitDelay;
-    new Float:flDamage = IsSmall(pEntity) ? NPC_Small_Damage : NPC_Damage;
-
-    NPC_Hit(pEntity, flDamage, flHitRange, flHitDelay);
-}
-
-bool:IsSmall(pEntity) {
-    return CE_GetHandlerByEntity(pEntity) == g_ceHandlerSmall;
 }

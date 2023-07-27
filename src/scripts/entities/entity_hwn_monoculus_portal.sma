@@ -1,6 +1,7 @@
 #pragma semicolon 1
 
 #include <amxmodx>
+
 #include <api_custom_entities>
 
 #include <hwn>

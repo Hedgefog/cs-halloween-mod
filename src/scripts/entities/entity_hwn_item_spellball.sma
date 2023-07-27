@@ -41,8 +41,6 @@ public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
-
 @Entity_Spawn(this) {        
     set_pev(this, pev_gravity, 0.20);
     set_pev(this, pev_health, 1.0);

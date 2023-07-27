@@ -77,8 +77,6 @@ public plugin_init() {
     g_pCvarPumpkinFlash = register_cvar("hwn_pumpkin_pickup_flash", "1");
 }
 
-/*------------[ Methods ]------------*/
-
 @Entity_Spawn(pEntity) {
     set_pev(pEntity, pev_rendermode, kRenderNormal);
     set_pev(pEntity, pev_renderfx, kRenderFxGlowShell);

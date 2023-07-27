@@ -73,12 +73,15 @@ public plugin_natives() {
 }
 
 public client_connect(pPlayer) {
+    if (g_rgPlayerInventories[pPlayer] != Invalid_Array) {
+        ArrayDestroy(g_rgPlayerInventories[pPlayer]);
+    }
+
     g_rgPlayerInventories[pPlayer] = ArrayCreate();
 }
 
 public client_disconnected(pPlayer) {
     SavePlayerInventory(pPlayer);
-    ArrayDestroy(g_rgPlayerInventories[pPlayer]);
 }
 
 public client_authorized(pPlayer) {
