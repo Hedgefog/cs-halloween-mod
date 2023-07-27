@@ -274,7 +274,6 @@ public @Entity_Kill(this) {
     }
 
     new pEnemy = NPC_GetEnemy(this);
-    // new Action:iAction = Action_Idle;
 
     static Float:flLastUpdate;
     pev(this, pev_fuser1, flLastUpdate);
@@ -459,11 +458,9 @@ bool:@Entity_AStarAttack(this) {
             CE_SetMember(this, "flNextPathSearch", flGameTime + 10.0);
         }
 
-        // NPC_PlayAction(this, g_actions[Action_Idle]);
     } else if (irgPath != Invalid_Array) {
         @Entity_ProcessPath(this, irgPath);
         NPC_EmitFootStep(this, g_szSndStep[random(sizeof(g_szSndStep))]);
-        // iAction = Action_Run;
     } else {
         if (flGameTime > flNextSearch) {
             @Entity_ResetPath(this);

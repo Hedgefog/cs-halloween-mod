@@ -30,11 +30,7 @@ public plugin_init() {
 }
 
 public plugin_precache() {
-    CE_Register(
-        ENTITY_NAME,
-        .vMins = Float:{-64.0, -64.0, 0.0},
-        .vMaxs = Float:{64.0, 64.0, 64.0}
-    );
+    CE_Register(ENTITY_NAME, .vMins = Float:{-64.0, -64.0, 0.0}, .vMaxs = Float:{64.0, 64.0, 64.0});
 
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
     CE_RegisterHook(CEFunction_KVD, ENTITY_NAME, "@Entity_KeyValue");

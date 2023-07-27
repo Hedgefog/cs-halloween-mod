@@ -28,13 +28,13 @@ public plugin_precache() {
         .preset = CEPreset_Prop
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
 }
 
-public OnSpawn(pEntity) {
-    set_pev(pEntity, pev_movetype, MOVETYPE_NOCLIP);
-    set_pev(pEntity, pev_solid, SOLID_NOT);
-    set_pev(pEntity, pev_framerate, 0.25);
-    set_pev(pEntity, pev_rendermode, kRenderTransAdd);
-    set_pev(pEntity, pev_renderamt, 255.0);
+@Entity_Spawn(this) {
+    set_pev(this, pev_movetype, MOVETYPE_NOCLIP);
+    set_pev(this, pev_solid, SOLID_NOT);
+    set_pev(this, pev_framerate, 0.25);
+    set_pev(this, pev_rendermode, kRenderTransAdd);
+    set_pev(this, pev_renderamt, 255.0);
 }

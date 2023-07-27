@@ -24,7 +24,6 @@ new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
 new g_szSprSpellBall[] = "sprites/xsmoke1.spr";
 
 new g_iSpell;
-new g_iCeSpellballHandler;
 new g_iCeMysteryHandler;
 
 public plugin_precache() {
@@ -37,21 +36,15 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "HamHook_Base_Touch_Post", .Post = 1);
-    RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "HamHook_Base_Think_Post", .Post = 1);
-
-    g_iCeSpellballHandler = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
     g_iCeMysteryHandler = CE_GetHandler("hwn_mystery_smoke");
 
-    CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
-    CE_RegisterHook(CEFunction_Remove, "hwn_mystery_smoke", "OnMagicSmokeRemove");
+    CE_RegisterHook(CEFunction_Kill, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Kill");
+    CE_RegisterHook(CEFunction_Touch, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Touch");
+    CE_RegisterHook(CEFunction_Think, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Think");
 }
-
-/*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnCast(pPlayer) {
     new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
-
     if (!pEntity) {
         return PLUGIN_HANDLED;
     }
@@ -64,80 +57,56 @@ public OnCast(pPlayer) {
     return PLUGIN_CONTINUE;
 }
 
-public HamHook_Base_Touch_Post(pEntity, pTarget) {
-    if (!pev_valid(pEntity)) {
+@SpellBall_Kill(this) {
+    if (pev(this, pev_iuser1) != g_iSpell) {
         return;
     }
 
-    if (g_iCeSpellballHandler != CE_GetHandlerByEntity(pEntity)) {
-        return;
-    }
-
-    if (pev(pEntity, pev_iuser1) != g_iSpell) {
-        return;
-    }
-
-    if (pTarget == pev(pEntity, pev_owner)) {
-        return;
-    }
-
-    if (pev(pEntity, pev_deadflag) == DEAD_DEAD) {
-        return;
-    }
-
-    if (pev(pTarget, pev_solid) < SOLID_BBOX) {
-        return;
-    }
-
-    CE_Kill(pEntity);
+    @Entity_Detonate(this);
 }
 
-public HamHook_Base_Think_Post(pEntity) {
-    if (!pev_valid(pEntity)) {
+@SpellBall_Touch(this, pToucher) {
+    if (pev(this, pev_iuser1) != g_iSpell) {
         return;
     }
 
-    if (g_iCeSpellballHandler != CE_GetHandlerByEntity(pEntity)) {
+    if (pToucher == pev(this, pev_owner)) {
         return;
     }
 
-    if (pev(pEntity, pev_iuser1) != g_iSpell) {
+    if (pev(this, pev_deadflag) == DEAD_DEAD) {
         return;
     }
 
-    if (pev(pEntity, pev_deadflag) == DEAD_DEAD) {
+    if (pev(pToucher, pev_solid) < SOLID_BBOX) {
+        return;
+    }
+
+    CE_Kill(this);
+}
+
+@SpellBall_Think(this) {
+    if (pev(this, pev_iuser1) != g_iSpell) {
+        return;
+    }
+
+    if (pev(this, pev_deadflag) == DEAD_DEAD) {
         return;
     }
 
     static Float:vecVelocity[3];
-    pev(pEntity, pev_velocity, vecVelocity);
+    pev(this, pev_velocity, vecVelocity);
 
     if (!xs_vec_len(vecVelocity)) {
-        CE_Kill(pEntity);
+        CE_Kill(this);
     }
 }
 
-public OnSpellballKilled(pEntity) {
-    new iSpell = pev(pEntity, pev_iuser1);
-
-    if (iSpell != g_iSpell) {
-        return;
-    }
-
-    Detonate(pEntity);
-}
-
-public OnMagicSmokeRemove(pEntity) {
-    remove_task(pEntity);
-}
-
-/*--------------------------------[ Methods ]--------------------------------*/
-
-Detonate(pEntity) {
-    new iTeam = pev(pEntity, pev_team);
+@Entity_Detonate(this) {
+    new iTeam = pev(this, pev_team);
 
     static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
 
     new Float:flLifeTime = 0.0;
 
@@ -220,7 +189,7 @@ Detonate(pEntity) {
         xs_vec_copy(SmokeSize, vecSize);
     }
 
-    new pSmoke = CreateSmoke(vecOrigin, vecSize, flLifeTime, pev(pEntity, pev_team), pev(pEntity, pev_owner));
+    new pSmoke = CreateSmoke(vecOrigin, vecSize, flLifeTime, pev(this, pev_team), pev(this, pev_owner));
     set_pev(pSmoke, pev_iuser4, iStackSize);
 }
 
@@ -243,18 +212,13 @@ CreateSmoke(const Float:vecOrigin[3], const Float:vecSize[3], Float:flLifeTime, 
         }
     }
 
+    dllfunc(DLLFunc_Spawn, pEntity);
     set_pev(pEntity, pev_team, iTeam);
     set_pev(pEntity, pev_owner, pOwner);
     set_pev(pEntity, pev_fuser4, get_gametime() + flLifeTime);
-    dllfunc(DLLFunc_Spawn, pEntity);
     engfunc(EngFunc_SetSize, pEntity, vecMins, vecMaxs);
 
-    set_task(flLifeTime, "Task_RemoveMagicSmoke", pEntity);
+    CE_SetMember(pEntity, CE_MEMBER_NEXTKILL, get_gametime() + flLifeTime);
 
     return pEntity;
-}
-
-public Task_RemoveMagicSmoke(iTaskId) {
-    new pEntity = iTaskId;
-    CE_Kill(pEntity);
 }
