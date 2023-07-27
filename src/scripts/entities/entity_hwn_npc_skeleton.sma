@@ -91,8 +91,6 @@ new g_mdlGibs;
 new g_iBloodModelIndex;
 new g_iBloodSprayModelIndex;
 
-new Float:g_flThinkDelay;
-
 new g_iCeHandler;
 new g_ceHandlerSmall;
 
@@ -147,12 +145,6 @@ public plugin_init() {
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "HamHook_Base_TraceAttack_Post", .Post = 1);
     RegisterHam(Ham_Think, CE_BASE_CLASSNAME, "HamHook_Base_Think_Post", .Post = 1);
     RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed", .Post = 0);
-}
-
-/*--------------------------------[ Forwards ]--------------------------------*/
-
-public Hwn_Fw_ConfigLoaded() {
-    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -258,7 +250,7 @@ public HamHook_Base_Think_Post(pEntity) {
 
     static Float:flLastUpdate;
     pev(pEntity, pev_fuser1, flLastUpdate);
-    new bool:shouldUpdate = get_gametime() - flLastUpdate >= g_flThinkDelay;
+    new bool:shouldUpdate = get_gametime() - flLastUpdate >= Hwn_GetUpdateRate();
 
     if (pEnemy) {
         Attack(pEntity, pEnemy, action, shouldUpdate);

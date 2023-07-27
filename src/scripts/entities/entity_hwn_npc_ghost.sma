@@ -36,7 +36,6 @@ new const g_szSndIdle[][128] = {
     "hwn/npc/ghost/ghost_moan04.wav"
 };
 
-new Float:g_flThinkDelay;
 new g_particlesEnabled;
 
 new g_rgPlayerKiller[MAX_PLAYERS + 1];
@@ -83,7 +82,6 @@ public plugin_init() {
 
 public Hwn_Fw_ConfigLoaded() {
     g_particlesEnabled = get_cvar_num("hwn_enable_particles");
-    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -148,7 +146,7 @@ public Task_Think(pEntity) {
         }
     }
 
-    set_task(g_flThinkDelay, "Task_Think", pEntity);
+    set_task(Hwn_GetUpdateRate(), "Task_Think", pEntity);
 }
 
 Attack(pEntity, pTarget) {

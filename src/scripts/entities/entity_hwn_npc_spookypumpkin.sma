@@ -68,8 +68,6 @@ new g_iGibsModelIndex;
 new g_iBloodModelIndex;
 new g_iBloodSprayModelIndex;
 
-new Float:g_flThinkDelay;
-
 new g_ceHandlerSp;
 new g_ceHandlerSpBig;
 
@@ -122,12 +120,6 @@ public plugin_init() {
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "HamHook_Base_TraceAttack_Post", .Post = 1);
 
     g_pCvarPumpkinMutateChance = register_cvar("hwn_pumpkin_mutate_chance", "20");
-}
-
-/*--------------------------------[ Forwards ]--------------------------------*/
-
-public Hwn_Fw_ConfigLoaded() {
-    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -352,5 +344,5 @@ public Task_Think(iTaskId) {
     new bool:bSupercede = action == Action_JumpStart || action == Action_Attack;
     NPC_PlayAction(pEntity, g_actions[action], bSupercede);
 
-    set_task(g_flThinkDelay, "Task_Think", pEntity);
+    set_task(Hwn_GetUpdateRate(), "Task_Think", pEntity);
 }

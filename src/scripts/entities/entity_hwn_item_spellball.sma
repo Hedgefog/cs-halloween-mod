@@ -19,8 +19,6 @@
 new g_iSmokeModelIndex;
 new g_iNullModelIndex;
 
-new Float:g_flThinkDelay;
-
 public plugin_precache() {
     g_iSmokeModelIndex = precache_model("sprites/black_smoke1.spr");
     g_iNullModelIndex = precache_model("sprites/white.spr");
@@ -41,12 +39,6 @@ public plugin_precache() {
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-}
-
-/*--------------------------------[ Forwards ]--------------------------------*/
-
-public Hwn_Fw_ConfigLoaded() {
-    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -75,6 +67,9 @@ public Hwn_Fw_ConfigLoaded() {
 }
 
 @Entity_Think(this) {
+    new Float:flRate = Hwn_GetUpdateRate();
+    new iLifeTime = max(floatround(flRate * 10), 1);
+
     static Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);
 
@@ -86,7 +81,7 @@ public Hwn_Fw_ConfigLoaded() {
         }
     }
 
-    UTIL_Message_Dlight(vecOrigin, 16, rgiColor, UTIL_DelayToLifeTime(g_flThinkDelay), 0);
+    UTIL_Message_Dlight(vecOrigin, 16, rgiColor, iLifeTime, 0);
 
     // Fix for smoke origin
     {
@@ -113,7 +108,7 @@ public Hwn_Fw_ConfigLoaded() {
     write_byte(90);
     message_end();
 
-    UTIL_Message_Dlight(vecOrigin, 16, rgiColor, UTIL_DelayToLifeTime(g_flThinkDelay), 0);
+    UTIL_Message_Dlight(vecOrigin, 16, rgiColor, iLifeTime, 0);
 
-    set_pev(this, pev_nextthink, get_gametime() + g_flThinkDelay);
+    set_pev(this, pev_nextthink, get_gametime() + flRate);
 }

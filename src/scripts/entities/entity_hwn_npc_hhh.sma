@@ -102,8 +102,6 @@ new g_iSmokeModelIndex;
 
 new g_mdlGibs;
 
-new Float:g_flThinkDelay;
-
 new g_pAstar[10];
 
 new g_pCvarUseAstar;
@@ -173,10 +171,6 @@ public client_putinserver() {
 
 public client_disconnected(pPlayer) {
     NPC_Health -= NPC_HealthBonusPerPlayer;
-}
-
-public Hwn_Fw_ConfigLoaded() {
-    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
 }
 
 public Hwn_Bosses_Fw_BossTeleport(pEntity, handler) {
@@ -270,6 +264,8 @@ public HamHook_Base_Think_Post(pEntity) {
         return HAM_IGNORED;
     }
 
+    new Float:flRate = Hwn_GetUpdateRate();
+
     new Array:hhh = HHH_Get(pEntity);
 
     new Float:flNextAction = ArrayGetCell(hhh, HHH_NextAction);
@@ -296,7 +292,7 @@ public HamHook_Base_Think_Post(pEntity) {
 
         static Float:flLastUpdate;
         pev(pEntity, pev_fuser1, flLastUpdate);
-        new bool:shouldUpdate = get_gametime() - flLastUpdate >= g_flThinkDelay;
+        new bool:shouldUpdate = get_gametime() - flLastUpdate >= flRate;
 
         if (pEnemy) {
             Attack(pEntity, pEnemy, action, shouldUpdate);
@@ -323,10 +319,7 @@ public HamHook_Base_Think_Post(pEntity) {
             }
 
             {
-                static iLifeTime;
-                if (!iLifeTime) {
-                    iLifeTime = UTIL_DelayToLifeTime(g_flThinkDelay);
-                }
+                new iLifeTime = min(floatround(flRate * 10), 1);
 
                 UTIL_Message_Dlight(vecOrigin, 4, {HWN_COLOR_PRIMARY}, iLifeTime, 0);
 

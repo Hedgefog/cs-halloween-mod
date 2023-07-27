@@ -23,7 +23,6 @@
 #define HEALTHBAR_RENDERAMT 200.0
 
 new g_pCvarEnabled;
-new g_pCvarFps;
 
 new g_iszHealthBarClassname;
 new g_iBossHealthBarModelIndex;
@@ -36,7 +35,6 @@ public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     g_pCvarEnabled = register_cvar("hwn_boss_healthbar", "1");
-    g_pCvarFps = get_cvar_pointer("hwn_fps");
 
     RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "HamHook_Base_TakeDamage_Post", .Post = 1);
 }
@@ -125,6 +123,5 @@ public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDama
         engfunc(EngFunc_SetOrigin, this, vecOrigin);
     }
 
-    new Float:flRate = UTIL_FpsToDelay(get_pcvar_num(g_pCvarFps));
-    set_pev(this, pev_nextthink, get_gametime() + flRate);
+    set_pev(this, pev_nextthink, get_gametime() + Hwn_GetUpdateRate());
 }

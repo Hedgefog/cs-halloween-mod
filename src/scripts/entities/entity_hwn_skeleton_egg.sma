@@ -20,60 +20,44 @@ public plugin_init() {
 }
 
 public plugin_precache() {
-    CE_Register(
-        ENTITY_NAME,
-        .vMins = Float:{-12.0, -12.0, -16.0},
-        .vMaxs = Float:{12.0, 12.0, 16.0},
-        .preset = CEPreset_Prop
-    );
+    CE_Register(ENTITY_NAME, .vMins = Float:{-12.0, -12.0, -16.0}, .vMaxs = Float:{12.0, 12.0, 16.0}, .preset = CEPreset_Prop);
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
-
-    CE_Register(
-        ENTITY_NAME_BIG,
-        .vMins = Float:{-12.0, -12.0, -32.0},
-        .vMaxs = Float:{12.0, 12.0, 32.0},
-        .preset = CEPreset_Prop
-    );
-
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_BIG, "OnSpawn");
-    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME_BIG, "OnRemove");
+    CE_Register(ENTITY_NAME_BIG, .vMins = Float:{-12.0, -12.0, -32.0}, .vMaxs = Float:{12.0, 12.0, 32.0}, .preset = CEPreset_Prop);
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_BIG, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Think, ENTITY_NAME_BIG, "@Entity_Think");
 }
 
-public OnSpawn(pEntity) {
-    set_pev(pEntity, pev_solid, SOLID_NOT);
-    set_pev(pEntity, pev_movetype, MOVETYPE_BOUNCE);
-
-    set_task(2.0, "Birth", pEntity);
+@Entity_Spawn(this) {
+    CE_SetMember(this, "bBig", CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_BIG));
+    
+    set_pev(this, pev_solid, SOLID_NOT);
+    set_pev(this, pev_movetype, MOVETYPE_BOUNCE);
+    set_pev(this, pev_nextthink, get_gametime() + 2.0);
 }
 
-public OnRemove(pEntity) {
-    remove_task(pEntity);
+@Entity_Think(this) {
+    @Entity_Birth(this);
+    CE_Kill(this);
 }
 
-public Birth(pEntity) {
+@Entity_Birth(this) {
     new Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
 
     new pSkeleton = CE_Create(
-        IsBig(pEntity) ? "hwn_npc_skeleton" : "hwn_npc_skeleton_small",
+        CE_GetMember(this, "bBig") ? "hwn_npc_skeleton" : "hwn_npc_skeleton_small",
         vecOrigin
     );
 
     if (pSkeleton) {
-        set_pev(pSkeleton, pev_team, pev(pEntity, pev_team));
-        set_pev(pSkeleton, pev_owner, pev(pEntity, pev_owner));
+        set_pev(pSkeleton, pev_team, pev(this, pev_team));
+        set_pev(pSkeleton, pev_owner, pev(this, pev_owner));
         dllfunc(DLLFunc_Spawn, pSkeleton);
+
+        if (UTIL_IsStuck(pSkeleton)) {
+            CE_Kill(pSkeleton);
+        }
     }
-
-    CE_Kill(pEntity);
-
-    if (UTIL_IsStuck(pSkeleton)) {
-        CE_Kill(pSkeleton);
-    }
-}
-
-bool:IsBig(pEntity) {
-    return CE_GetHandlerByEntity(pEntity) == CE_GetHandler(ENTITY_NAME_BIG);
 }

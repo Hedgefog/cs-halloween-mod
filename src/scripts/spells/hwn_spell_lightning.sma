@@ -40,7 +40,6 @@ new g_rgpPlayerFocalPoint[MAX_PLAYERS + 1];
 
 new g_iEffectModelIndex;
 new g_hSpell;
-new Float:g_flThinkDelay;
 
 public plugin_precache() {
     g_iEffectModelIndex = precache_model("sprites/lgtning.spr");
@@ -70,12 +69,6 @@ public plugin_init() {
     RegisterHamPlayer(Ham_Player_PreThink, "HamHook_Player_PreThink_Post", .Post = 1);
 }
 
-/*--------------------------------[ Forwards ]--------------------------------*/
-
-public Hwn_Fw_ConfigLoaded() {
-    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
-}
-
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnCast(pPlayer) {
@@ -92,7 +85,7 @@ public OnCast(pPlayer) {
     set_pev(pEntity, pev_groupinfo, 128);
 
     set_task(SpellballLifeTime, "Task_Kill", pEntity+TASKID_SUM_KILL);
-    set_task(g_flThinkDelay, "Task_Think", pEntity, _, _, "b");
+    set_task(Hwn_GetUpdateRate(), "Task_Think", pEntity, _, _, "b");
     set_task(EffectDamageDelay, "Task_Damage", pEntity+TASKID_SUM_DAMAGE, _, _, "b");
     set_task(EffectLightningDelay, "Task_LightningEffect", pEntity+TASKID_SUM_LIGHTNING_EFFECT, _, _, "b");
 
@@ -185,7 +178,6 @@ RadiusDamage(pEntity, bool:push = false) {
     pev(pEntity, pev_origin, vecOrigin);
 
     new pOwner = pev(pEntity, pev_owner);
-    new iTeam = pOwner ? get_member(pOwner, m_iTeam) : -1;
 
     new pTarget = 0;
     while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EffectRadius)) != 0) {
@@ -210,7 +202,7 @@ RadiusDamage(pEntity, bool:push = false) {
 
         new Float:flDamage = UTIL_CalculateRadiusDamage(vecOrigin, vecTargetOrigin, EffectRadius * EffectDamageRadiusMultiplier, EffectDamage, false, pTarget);
 
-        if (UTIL_IsTeammate(pTarget, iTeam)) {
+        if (!UTIL_CanTakeDamage(pTarget, pOwner)) {
             continue;
         }
 
@@ -271,40 +263,31 @@ DetonateEffect(pEntity) {
 /*--------------------------------[ Task ]--------------------------------*/
 
 public Task_Think(pEntity) {
+    new pOwner = pev(pEntity, pev_owner);
+
     static Float:vecOrigin[3];
     pev(pEntity, pev_origin, vecOrigin);
 
-    new pOwner = pev(pEntity, pev_owner);
-    new iTeam = pOwner ? get_member(pOwner, m_iTeam) : -1;
-
-    new pTarget = 0;
-    while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EffectRadius)) != 0)
-    {
-        if (pEntity == pTarget) {
+    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
+        if (!is_user_alive(pPlayer)) {
             continue;
         }
 
-        if (pev(pTarget, pev_takedamage) == DAMAGE_NO) {
+        if (pPlayer == pOwner) {
             continue;
         }
 
-        if (pTarget == pOwner) {
+        if (g_rgpPlayerFocalPoint[pPlayer] == pEntity) {
+            g_rgpPlayerFocalPoint[pPlayer] = 0;
+        }
+
+        if (!rg_is_player_can_takedamage(pPlayer, pOwner)) {
             continue;
         }
 
-        if (!IS_PLAYER(pTarget)) {
-            continue;
+        if (!g_rgpPlayerFocalPoint[pPlayer]) {
+            g_rgpPlayerFocalPoint[pPlayer] = pEntity;
         }
-
-        if (UTIL_IsTeammate(pTarget, iTeam)) {
-            continue;
-        }
-
-        if (g_rgpPlayerFocalPoint[pTarget]) {
-            continue;
-        }
-
-        g_rgpPlayerFocalPoint[pTarget] = pEntity;
     }
 
     // update velocity

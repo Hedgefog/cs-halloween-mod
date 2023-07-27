@@ -123,8 +123,6 @@ new g_iBloodModelIndex;
 new g_iBloodSprayModelIndex;
 new g_iSmokeModelIndex;
 
-new Float:g_flThinkDelay;
-
 new g_pCvarAngryTime;
 new g_pCvarDamageToStun;
 new g_pCvarJumpTimeMin;
@@ -203,10 +201,6 @@ public plugin_end() {
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-public Hwn_Fw_ConfigLoaded() {
-    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_npc_fps"));
-}
-
 public Hwn_Bosses_Fw_BossTeleport(pEntity, handler) {
     if (handler != g_iBossHandler) {
         return;
@@ -272,7 +266,7 @@ public OnSpawn(pEntity) {
     ClearTasks(pEntity);
     CreateJumpToPortalTask(pEntity);
 
-    set_task(g_flThinkDelay, "Task_Think", pEntity, _, _, "b");
+    set_task(Hwn_GetUpdateRate(), "Task_Think", pEntity, _, _, "b");
     set_task(1.0, "Task_Float", pEntity + TASKID_SUM_FLOAT, _, _, "b");
 }
 

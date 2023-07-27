@@ -1,9 +1,8 @@
 #pragma semicolon 1
 
 #include <amxmodx>
-#include <engine>
 #include <fakemeta>
-#include <hamsandwich>
+#include <reapi>
 
 #include <api_custom_entities>
 
@@ -14,8 +13,6 @@
 #define AUTHOR "Hedgehog Fog"
 
 #define ENTITY_NAME "hwn_prop_jackolantern"
-
-new Float:g_flThinkDelay;
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -30,38 +27,31 @@ public plugin_precache() {
         .preset = CEPreset_Prop
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 }
 
-public Hwn_Fw_ConfigLoaded() {
-    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
-}
+@Entity_Spawn(this) {
+    set_pev(this, pev_body, random(2));
 
-public OnSpawn(pEntity) {
-    set_pev(pEntity, pev_body, random(2));
-    engfunc(EngFunc_DropToFloor, pEntity);
-    dllfunc(DLLFunc_Think, pEntity);
+    engfunc(EngFunc_DropToFloor, this);
 
-    if (~pev(pEntity, pev_spawnflags) & (1<<0)) {
-        Task_Think(pEntity);
+    if (~pev(this, pev_spawnflags) & BIT(0)) {
+        set_pev(this, pev_nextthink, get_gametime());
     }
 }
 
-public OnRemove(pEntity) {
-    remove_task(pEntity);
-}
+@Entity_Think(this) {
+    static const iRadius = 8;
 
-public Task_Think(pEntity) {
-    if (!pev_valid(pEntity)) {
-        return;
-    }
+    new Float:flRate = Hwn_GetUpdateRate();
+    new iLifeTime = min(floatround(flRate * 10), 1);
 
     static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
     vecOrigin[2] += 16.0;
 
-    UTIL_Message_Dlight(vecOrigin, 8, {64, 52, 4}, UTIL_DelayToLifeTime(g_flThinkDelay), 0);
+    UTIL_Message_Dlight(vecOrigin, iRadius, {64, 52, 4}, iLifeTime + 1, 0);
 
-    set_task(g_flThinkDelay, "Task_Think", pEntity);
+    set_pev(this, pev_nextthink, get_gametime() + flRate);
 }

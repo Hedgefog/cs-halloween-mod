@@ -11,15 +11,6 @@
 
 #define HUD_HIDE_TIMER (1<<4)
 
-stock UTIL_DelayToLifeTime(Float:flDelay) {
-    new iLifeTime = floatround(flDelay * 10);
-    if (!iLifeTime) {
-        return 1;
-    }
-
-    return iLifeTime;
-}
-
 stock Float:UTIL_FpsToDelay(iFps) {
     return (100/iFps) * 0.01;
 }
@@ -65,6 +56,33 @@ stock bool:UTIL_IsMonster(pEntity) {
 stock bool:UTIL_IsTeammate(pEntity, iTeam) {
     new iTargetTeam = IS_PLAYER(pEntity) ? get_member(pEntity, m_iTeam) : pev(pEntity, pev_team);
     return iTeam == iTargetTeam;
+}
+
+stock bool:UTIL_CanTakeDamage(pEntity, pAttacker) {
+    new iAttackerTeam = get_member(pAttacker, m_iTeam);
+
+    if (IS_PLAYER(pEntity)) {
+        if (!rg_is_player_can_takedamage(pEntity, pAttacker)) {
+            return false;
+        }
+    } else {
+        new pOwner = pev(pEntity, pev_owner);
+        if (pOwner == pAttacker) {
+            return false;
+        }
+
+        if (IS_PLAYER(pOwner)) {
+            if (!rg_is_player_can_takedamage(pOwner, pAttacker)) {
+                return false;
+            }
+        } else {
+            if (pev(pEntity, pev_team) == iAttackerTeam) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 stock Float:UTIL_GetDistanceToFloor(pEntity, const Float:vecOrigin[3]) {

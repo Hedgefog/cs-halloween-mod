@@ -93,15 +93,11 @@ new g_iCeHandler;
 new Array:g_irgBuckets;
 new bool:g_bRoundStarted = false;
 
-new g_pCvarFps;
-
 public plugin_precache() {
     g_iBloodModelIndex = precache_model("sprites/blood.spr");
     g_iSparkleModelIndex = precache_model("sprites/exit1.spr");
     g_iPotionSplashModelIndex = precache_model("sprites/bm1.spr");
     g_iPotionBeamModelIndex = precache_model("sprites/streak.spr");
-
-    g_pCvarFps = get_cvar_pointer("hwn_npc_fps");
 
     precache_sound(g_szSndBoil);
 
@@ -264,8 +260,7 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
         CE_SetMember(this, "flNextBoil", get_gametime() + BOIL_SOUND_DURATION);
     }
 
-    new Float:flThinkDelay = UTIL_FpsToDelay(get_pcvar_num(g_pCvarFps));
-    set_pev(this, pev_nextthink, flGameTime + flThinkDelay);
+    set_pev(this, pev_nextthink, flGameTime + Hwn_GetNpcUpdateRate());
 }
 
 bool:@Entity_CollectPoints(this) {

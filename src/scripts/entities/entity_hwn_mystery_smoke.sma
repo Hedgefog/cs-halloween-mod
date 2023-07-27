@@ -25,8 +25,6 @@ const Float:EffectPushForce = 100.0;
 new g_iTeamSmokeModelIndex[3];
 new g_iNullModelIndex;
 
-new Float:g_flThinkDelay;
-
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
@@ -47,12 +45,6 @@ public plugin_precache() {
     g_iTeamSmokeModelIndex[0] = precache_model("sprites/hwn/magic_smoke.spr");
     g_iTeamSmokeModelIndex[1] = precache_model("sprites/hwn/magic_smoke_red.spr");
     g_iTeamSmokeModelIndex[2] = precache_model("sprites/hwn/magic_smoke_blue.spr");
-}
-
-/*--------------------------------[ Forwards ]--------------------------------*/
-
-public Hwn_Fw_ConfigLoaded() {
-    g_flThinkDelay = UTIL_FpsToDelay(get_cvar_num("hwn_fps"));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -85,7 +77,7 @@ public Hwn_Fw_ConfigLoaded() {
         set_pev(this, pev_fuser1, get_gametime() + flDelay);
     }
 
-    set_pev(this, pev_nextthink, get_gametime() + g_flThinkDelay);
+    set_pev(this, pev_nextthink, get_gametime() + Hwn_GetUpdateRate());
 }
 
 @Entity_Touch(this, pToucher) {

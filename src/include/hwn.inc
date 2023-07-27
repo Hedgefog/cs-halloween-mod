@@ -414,6 +414,9 @@ enum Hwn_SpellFlags (<<=1)
 
 /*--------------------------------[ Core ]--------------------------------*/
 
+native Float:Hwn_GetUpdateRate();
+native Float:Hwn_GetNpcUpdateRate();
+
 forward Hwn_Fw_ConfigLoaded();
 
 /*--------------------------------[ Event Points ]--------------------------------*/

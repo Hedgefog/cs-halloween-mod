@@ -25,11 +25,13 @@ new g_iExplodeSmokeModelIndex;
 
 new const g_szSndExplode[] = "hwn/misc/pumpkin_explode.wav";
 
-public plugin_init() {
-    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-}
-
 public plugin_precache() {
+    precache_sound(g_szSndExplode);
+
+    g_iExlplosionModelIndex = precache_model("sprites/eexplo.spr");
+    g_iExplodeSmokeModelIndex = precache_model("sprites/hwn/pumpkin_smoke.spr");
+    g_iGibsModelIndex = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
+    
     CE_Register(
         ENTITY_NAME,
         .modelIndex = precache_model("models/hwn/props/pumpkin_explode_v2.mdl"),
@@ -39,36 +41,32 @@ public plugin_precache() {
         .preset = CEPreset_Prop
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "OnKilled");
-
-    precache_sound(g_szSndExplode);
-
-    g_iExlplosionModelIndex = precache_model("sprites/eexplo.spr");
-    g_iExplodeSmokeModelIndex = precache_model("sprites/hwn/pumpkin_smoke.spr");
-    g_iGibsModelIndex = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
 }
 
-public OnSpawn(pEntity) {
-    set_pev(pEntity, pev_takedamage, DAMAGE_AIM);
-    set_pev(pEntity, pev_health, 1.0);
-
-    engfunc(EngFunc_DropToFloor, pEntity);
+public plugin_init() {
+    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
-public OnKilled(pEntity, pAttacker) {
-    ExplosionEffect(pEntity);
-    PumpkinRadiusDamage(pEntity, pAttacker);
+@Entity_Spawn(this) {
+    set_pev(this, pev_takedamage, DAMAGE_AIM);
+    set_pev(this, pev_health, 1.0);
+    engfunc(EngFunc_DropToFloor, this);
 }
 
-PumpkinRadiusDamage(pEntity, pOwner) {
+@Entity_Killed(this, pAttacker) {
+    @Entity_ExplosionEffect(this);
+    @Entity_RadiusDamage(this, pAttacker);
+}
+
+@Entity_RadiusDamage(this, pOwner) {
     new Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
 
     new pTarget = 0;
-    while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EXPLOSION_RADIUS * 2)) > 0)
-    {
-        if (pEntity == pTarget) {
+    while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EXPLOSION_RADIUS * 2)) > 0) {
+        if (this == pTarget) {
             continue;
         }
 
@@ -85,13 +83,13 @@ PumpkinRadiusDamage(pEntity, pOwner) {
 
         new Float:flDamage = UTIL_CalculateRadiusDamage(vecOrigin, vecTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE);
 
-        ExecuteHamB(Ham_TakeDamage, pTarget, pEntity, pTarget == pOwner ? 0 : pOwner, flDamage, DMG_ALWAYSGIB);
+        ExecuteHamB(Ham_TakeDamage, pTarget, this, pTarget == pOwner ? 0 : pOwner, flDamage, DMG_ALWAYSGIB);
     }
 }
 
-ExplosionEffect(pEntity) {
+@Entity_ExplosionEffect(this) {
     new Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
     vecOrigin[2] += 16.0;
 
     engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vecOrigin, 0);
@@ -112,5 +110,5 @@ ExplosionEffect(pEntity) {
 
     UTIL_Message_BreakModel(vecOrigin, Float:{16.0, 16.0, 16.0}, vecVelocity, 32, g_iGibsModelIndex, 4, 25, 0);
 
-    emit_sound(pEntity, CHAN_BODY, g_szSndExplode, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(this, CHAN_BODY, g_szSndExplode, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
