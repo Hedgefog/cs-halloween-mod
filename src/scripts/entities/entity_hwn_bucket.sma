@@ -38,13 +38,13 @@
 #define EFFECT_SPLASH_LIFETIME 10
 #define EFFECT_SPLASH_ALPHA 50
 
-#define ENTITY_NAME "hwn_bucket"
-#define LIQUID_ENTITY_NAME "hwn_bucket_liquid"
-
 #define FLASH_RADIUS 32
 #define FLASH_LIFETIME 10
 #define FLASH_DECAY_RATE 28
 #define BOIL_SOUND_DURATION 2.2
+
+#define ENTITY_NAME "hwn_bucket"
+#define LIQUID_ENTITY_NAME "hwn_bucket_liquid"
 
 enum _:Sequence {
     Sequence_Idle = 0,
@@ -91,7 +91,6 @@ new g_pCvarBucketBonusChance;
 
 new g_iCeHandler;
 new Array:g_irgBuckets;
-new bool:g_bRoundStarted = false;
 
 public plugin_precache() {
     g_iBloodModelIndex = precache_model("sprites/blood.spr");
@@ -121,6 +120,7 @@ public plugin_precache() {
         .preset = CEPreset_Prop
     );
 
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
@@ -153,14 +153,6 @@ public plugin_end() {
 
 /*------------[ Forward ]------------*/
 
-public Round_Fw_RoundStart() {
-    g_bRoundStarted = true;
-}
-
-public Round_Fw_RoundEnd() {
-    g_bRoundStarted = false;
-}
-
 public Hwn_Collector_Fw_WinnerTeam(iTeam) {
     new iBucketsNum = ArraySize(g_irgBuckets);
 
@@ -186,6 +178,13 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
 
 /*------------[ Methods ]------------*/
 
+@Entity_Init(this) {
+    new pLiquid = CE_Create("hwn_bucket_liquid", Float:{0.0, 0.0, 0.0}, false);
+    set_pev(pLiquid, pev_owner, this);
+    dllfunc(DLLFunc_Spawn, pLiquid);
+    CE_SetMember(this, "pLiquid", pLiquid);
+}
+
 @Entity_Spawn(this) {
     new iTeam = pev(this, pev_team);
 
@@ -204,13 +203,6 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
     CE_SetMember(this, "flNextAction", 0.0);
     CE_SetMember(this, "flNextRemoveLid", 0.0);
     CE_SetMember(this, "iBonusChance", 0);
-
-    if (!CE_GetMember(this, "pLiquid")) {
-        new pLiquid = CE_Create("hwn_bucket_liquid", Float:{0.0, 0.0, 0.0}, false);
-        set_pev(pLiquid, pev_owner, this);
-        dllfunc(DLLFunc_Spawn, pLiquid);
-        CE_SetMember(this, "pLiquid", pLiquid);
-    }
 
     set_pev(this, pev_nextthink, get_gametime());
 
@@ -235,17 +227,25 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
 
 @Entity_Remove(this) {
     new pLiquid = CE_GetMember(this, "pLiquid");
+    CE_SetMember(this, "pLiquid", 0);
     CE_Remove(pLiquid);
 }
 
 @Entity_Think(this) {
     new Float:flGameTime = get_gametime();
 
+    new pLiquid = CE_GetMember(this, "pLiquid");
+    if (pLiquid) {
+        new Float:vecOrigin[3];
+        pev(this, pev_origin, vecOrigin);
+        engfunc(EngFunc_SetOrigin, pLiquid, vecOrigin);
+    }
+
     if (@Entity_CollectPoints(this)) {
         @Entity_CollectEffect(this);
         @Entity_PlayActionSequence(this, Sequence_Pop, ACTION_POP_DURATION);
     } else {
-        new iSequence = !g_bRoundStarted || Hwn_Collector_ObjectiveBlocked() ? Sequence_Idle : Sequence_Bubbling;
+        new iSequence = Hwn_Collector_ObjectiveBlocked() ? Sequence_Idle : Sequence_Bubbling;
         @Entity_PlayActionSequence(this, iSequence, 0.0);
     }
 
@@ -544,17 +544,9 @@ bool:@Entity_DropEntity(this, pEntity) {
 }
 
 @Liquid_Spawn(this) {
-    new pOwner = pev(this, pev_owner);
-
     set_pev(this, pev_solid, SOLID_NOT);
     set_pev(this, pev_rendermode, kRenderTransAdd);
     set_pev(this, pev_renderamt, 255.0);
-
-    new Float:vecOrigin[3];
-    pev(pOwner, pev_origin, vecOrigin);
-    engfunc(EngFunc_SetOrigin, this, vecOrigin);
-
-    CE_SetMember(this, "flNextRemoveLid", 0.0);
 }
 
 /*------------[ Hook ]------------*/

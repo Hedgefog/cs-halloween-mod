@@ -46,7 +46,9 @@ public plugin_precache() {
     g_irgMarks = ArrayCreate(_, MAX_PLAYER_MARKS);
     g_iMarkModelIndex = precache_model("sprites/hwn/mark_cauldron.spr");
 
-    CE_RegisterHook(CEFunction_Spawn, "hwn_bucket", "OnBucketSpawn_Post");
+    CE_RegisterHook(CEFunction_Init, "hwn_bucket", "@Bucket_Init");
+    CE_RegisterHook(CEFunction_Remove, "hwn_bucket", "@Bucket_Remove");
+
     g_iszInfoTargetClassname = engfunc(EngFunc_AllocString, "info_target");
 }
 
@@ -66,17 +68,23 @@ public plugin_end() {
     ArrayDestroy(g_irgMarks);
 }
 
-public OnBucketSpawn_Post(pEntity) {
+@Bucket_Init(this) {
     if (ArraySize(g_irgMarks) >= MAX_PLAYER_MARKS) {
         log_amx("WARNING: Objective marks limit reached!");
         return;
     }
 
-    if (!CE_HasMember(pEntity, "mark")) {
-        new pMark = CreateMark(pEntity);
-        set_pev(pMark, pev_iuser1, ArraySize(g_irgMarks));
-        ArrayPushCell(g_irgMarks, pMark);
-        CE_SetMember(pEntity, "mark", pMark);
+    new pMark = CreateMark(this);
+    set_pev(pMark, pev_iuser1, ArraySize(g_irgMarks));
+    ArrayPushCell(g_irgMarks, pMark);
+    CE_SetMember(this, "pMark", pMark);
+}
+
+@Bucket_Remove(this) {
+    new pMark = CE_GetMember(this, "pMark");
+    if (pMark) {
+        set_pev(pMark, pev_flags, pev(pMark, pev_flags) | FL_KILLME);
+        dllfunc(DLLFunc_Think, pMark);
     }
 }
 

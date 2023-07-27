@@ -32,13 +32,13 @@ public plugin_init() {
 }
 
 public plugin_precache() {
-    CE_Register(ENTITY_NAME);
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
-    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
-
     for (new i = 0; i < sizeof(g_szSndAimbent); ++i) {
         precache_sound(g_szSndAimbent[i]);
     }
+
+    CE_Register(ENTITY_NAME);
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 }
 
 @Entity_Spawn(this) {
