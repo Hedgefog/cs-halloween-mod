@@ -68,7 +68,7 @@ public Native_AddTarget(iPluginId, iArgc) {
     new Float:vecOrigin[3];
     get_array_f(1, vecOrigin, sizeof(vecOrigin));
 
-    AddGiftTarget(vecOrigin);
+    return AddGiftTarget(vecOrigin);
 }
 
 public Native_GetTargetCount(iPluginId, iArgc) {
@@ -138,7 +138,7 @@ AddGiftTarget(const Float:vecOrigin[3]) {
         g_irgGiftTargets = ArrayCreate(3);
     }
 
-    ArrayPushArray(g_irgGiftTargets, vecOrigin);
+    return ArrayPushArray(g_irgGiftTargets, vecOrigin);
 }
 
 SpawnGift(pPlayer, const Float:vecOrigin[3]) {

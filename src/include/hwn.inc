@@ -512,6 +512,9 @@ native Hwn_Bosses_Spawn();
 native Hwn_Bosses_GetCurrent(&pEntity = 0);
 native Hwn_Bosses_GetName(iBoss, szOutput[], iLen);
 native Hwn_Bosses_GetDictionaryKey(iBoss, szOutput[], iLen);
+native Hwn_Bosses_AddTarget(const Float:vecOrigin[3]);
+native Hwn_Bosses_GetTarget(iTarget, Float:vecOrigin[3]);
+native Hwn_Bosses_GetTargetCount();
 
 forward Hwn_Bosses_Fw_BossSpawn(pEntity, Float:flLifeTime);
 forward Hwn_Bosses_Fw_BossKill(pEntity);

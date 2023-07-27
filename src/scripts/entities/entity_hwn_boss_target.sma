@@ -1,6 +1,7 @@
 #pragma semicolon 1
 
 #include <amxmodx>
+#include <fakemeta>
 
 #include <api_custom_entities>
 
@@ -17,4 +18,12 @@ public plugin_init() {
 
 public plugin_precache() {
     CE_Register(ENTITY_NAME, .vMins = Float:{-48.0, -48.0, -48.0}, .vMaxs = Float:{48.0, 48.0, 48.0});
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+}
+
+@Entity_Spawn(this) {
+    new Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+    Hwn_Bosses_AddTarget(vecOrigin);
+    CE_Remove(this);
 }

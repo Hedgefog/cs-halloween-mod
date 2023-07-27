@@ -19,7 +19,6 @@
 #define TASKID_SPAWN_BOSS 0
 #define TASKID_REMOVE_BOSS 1
 
-#define BOSS_TARGET_ENTITY_CLASSNAME "hwn_boss_target"
 #define BOSS_SPAWN_DAMAGE 1000.0
 
 new const g_szSndBossSpawn[] = "hwn/misc/halloween_boss_summoned.wav";
@@ -88,8 +87,6 @@ public plugin_end() {
 }
 
 public plugin_precache() {
-    CE_RegisterHook(CEFunction_Spawn, BOSS_TARGET_ENTITY_CLASSNAME, "OnBossTargetSpawn");
-
     precache_sound(g_szSndBossSpawn);
     precache_sound(g_szSndBossDefeat);
     precache_sound(g_szSndBossEscape);
@@ -103,6 +100,9 @@ public plugin_natives() {
     register_native("Hwn_Bosses_GetCurrent", "Native_GetCurrent");
     register_native("Hwn_Bosses_GetName", "Native_GetName");
     register_native("Hwn_Bosses_GetDictionaryKey", "Native_GetDictionaryKey");
+    register_native("Hwn_Bosses_AddTarget", "Native_AddTarget");
+    register_native("Hwn_Bosses_GetTarget", "Native_GetTarget");
+    register_native("Hwn_Bosses_GetTargetCount", "Native_GetTargetCount");
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
@@ -167,6 +167,30 @@ public Native_GetDictionaryKey(iPluginId, iArgc) {
     set_string(2, szDictKey, iLen);
 }
 
+public Native_AddTarget(iPluginId, iArgc) {
+    new Float:vecOrigin[3];
+    get_array_f(1, vecOrigin, sizeof(vecOrigin));
+
+    if (!g_irgBossSpawnPoints) {
+        g_irgBossSpawnPoints = ArrayCreate(3);
+    }
+    
+    return ArrayPushArray(g_irgBossSpawnPoints, vecOrigin);
+}
+
+public Native_GetTarget(iPluginId, iArgc) {
+    return g_irgBossSpawnPoints == Invalid_Array ? 0 : ArraySize(g_irgBossSpawnPoints);
+}
+
+public Native_GetTargetCount(iPluginId, iArgc) {
+    new iTarget = get_param(1);
+
+    new Float:vecOrigin[3];
+    ArrayGetArray(g_irgBossSpawnPoints, iTarget, vecOrigin);
+
+    set_array_f(2, vecOrigin, sizeof(vecOrigin));
+}
+
 /*--------------------------------[ Forwards ]--------------------------------*/
 
 public client_putinserver(pPlayer) {
@@ -183,18 +207,6 @@ public Command_SpawnBoss(pPlayer, iLevel, iCId) {
     SpawnBoss();
 
     return PLUGIN_HANDLED;
-}
-
-public OnBossTargetSpawn(pEntity) {
-    if (!g_irgBossSpawnPoints) {
-        g_irgBossSpawnPoints = ArrayCreate(3);
-    }
-
-    new Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
-    ArrayPushArray(g_irgBossSpawnPoints, vecOrigin);
-
-    CE_Remove(pEntity);
 }
 
 public OnBossRemove(pEntity) {

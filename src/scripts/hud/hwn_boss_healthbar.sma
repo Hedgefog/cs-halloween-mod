@@ -15,7 +15,6 @@
 #define AUTHOR "Hedgehog Fog"
 
 #define HEALTHBAR_CLASSNAME "info_target"
-#define BOSS_TARGET_ENTITY_CLASSNAME "hwn_boss_target"
 
 #define HEALTHBAR_Z_OFFSET 48.0
 #define HEALTHBAR_FRAME_COUNT 32
