@@ -1,22 +1,33 @@
 #pragma semicolon 1
 
 #include <amxmodx>
+#include <hamsandwich>
+#include <fakemeta>
 
 #include <api_player_inventory>
 #include <api_player_cosmetic>
-#include <api_player_preview>
+#include <api_player_camera>
 
 #include <hwn>
 
 #define PLUGIN "[Hwn] Menu Player Cosmetic"
 #define AUTHOR "Hedgehog Fog"
 
+#define PREVIEW_CAMERA_ANGLES Float:{15.0, 180.0, 0.0}
+#define PREVIEW_CAMERA_DISTANCE 96.0
+#define PREVIEW_CAMERA_LIGHT_RADIUS 4
+#define PREVIEW_CAMERA_LIGHT_BRIGHTNESS 1.0
+#define PREVIEW_CAMERA_LIGHT_LIFETIME 5
+#define PREVIEW_CAMERA_LIGHT_DECAYRATE 1
+
 new g_pCvarPreview;
 new g_pCvarPreviewLight;
 
 new PInv_ItemType:g_iCosmeticItemType;
-new Array:g_rgirgPlayerMenuSlotRefs[MAX_PLAYERS + 1] = { Invalid_Array, ... };
 
+new Array:g_rgirgPlayerMenuSlotRefs[MAX_PLAYERS + 1] = { Invalid_Array, ... };
+new bool:g_rbPlayerInPreview[MAX_PLAYERS + 1];
+new Float:g_rgflPlayerNextHighlight[MAX_PLAYERS + 1];
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -25,6 +36,11 @@ public plugin_init() {
     g_pCvarPreviewLight = register_cvar("hwn_pcosmetic_menu_preview_light", "1");
 
     g_iCosmeticItemType = PInv_GetItemTypeHandler("cosmetic");
+
+    register_forward(FM_AddToFullPack, "FMHook_AddToFullPack", 1);
+    RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed", .Post = 0);
+    RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
+    RegisterHamPlayer(Ham_Player_PreThink, "HamHook_Player_PreThink_Post", .Post = 1);
 }
 
 public plugin_natives() {
@@ -40,14 +56,65 @@ public plugin_end() {
     }
 }
 
-/*--------------------------------[ Natives ]--------------------------------*/
-
 public Native_Open(iPluginId, iArgc) {
     new pPlayer = get_param(1);
     @Player_OpenMenu(pPlayer, 0);
 }
 
-/*--------------------------------[ Methods ]--------------------------------*/
+public client_disconnected(pPlayer) {
+    @Player_DeactivatePreview(pPlayer);
+}
+
+public HamHook_Player_Killed(pPlayer) {
+    @Player_DeactivatePreview(pPlayer);
+}
+
+public HamHook_Player_Spawn_Post(pPlayer) {
+    @Player_DeactivatePreview(pPlayer);
+}
+
+public HamHook_Player_PreThink_Post(pPlayer) {
+    if (g_rgflPlayerNextHighlight[pPlayer] && g_rgflPlayerNextHighlight[pPlayer] <= get_gametime()) {
+      static Float:vecOrigin[3];
+      pev(pPlayer, pev_origin, vecOrigin);
+
+      new iBrightness = floatround(255 * PREVIEW_CAMERA_LIGHT_BRIGHTNESS);
+
+      engfunc(EngFunc_MessageBegin, MSG_ONE, SVC_TEMPENTITY, vecOrigin, pPlayer);
+      write_byte(TE_DLIGHT);
+      engfunc(EngFunc_WriteCoord, vecOrigin[0]);
+      engfunc(EngFunc_WriteCoord, vecOrigin[1]);
+      engfunc(EngFunc_WriteCoord, vecOrigin[2]);
+      write_byte(PREVIEW_CAMERA_LIGHT_RADIUS);
+      write_byte(iBrightness);
+      write_byte(iBrightness);
+      write_byte(iBrightness);
+      write_byte(PREVIEW_CAMERA_LIGHT_LIFETIME);
+      write_byte(PREVIEW_CAMERA_LIGHT_DECAYRATE);
+      message_end();
+
+      g_rgflPlayerNextHighlight[pPlayer] = get_gametime() + (PREVIEW_CAMERA_LIGHT_DECAYRATE * 0.1);
+    }
+}
+
+public FMHook_AddToFullPack(es, e, pEntity, host, hostflags, player, pSet) {
+    if (pEntity != host) {
+        return;
+    }
+
+    if (!is_user_alive(pEntity)) {
+        return;
+    }
+
+    if (g_rbPlayerInPreview[pEntity]) {
+        set_es(es, ES_Sequence, 64);
+        set_es(es, ES_GaitSequence, 1);
+        set_es(es, ES_RenderMode, kRenderNormal);
+        set_es(es, ES_RenderFx, kRenderFxNone);
+        set_es(es, ES_RenderAmt, 255.0);
+        set_es(es, ES_MoveType, MOVETYPE_NONE); // disable blending
+    }
+}
 
 @Player_OpenMenu(pPlayer, iPage) {
     new iMenu = CreateMenu(pPlayer);
@@ -56,11 +123,45 @@ public Native_Open(iPluginId, iArgc) {
 
     if (get_pcvar_num(g_pCvarPreview) > 0 && Hwn_Gamemode_IsPlayerOnSpawn(pPlayer)) {
         new bool:bLight = get_pcvar_num(g_pCvarPreviewLight) > 0;
-        PlayerPreview_Activate(pPlayer, bLight);
+        @Player_ActivatePreview(pPlayer, bLight);
     }
 }
 
-/*--------------------------------[ Functions ]--------------------------------*/
+bool:@Player_ActivatePreview(pPlayer, bool:bLight) {
+    if (!is_user_alive(pPlayer)) {
+        return false;
+    }
+
+    if (PlayerCamera_IsActive(pPlayer)) {
+        return false;
+    }
+
+    set_pev(pPlayer, pev_velocity, Float:{0.0, 0.0, 0.0});
+    set_pev(pPlayer, pev_avelocity, Float:{0.0, 0.0, 0.0});
+    set_pev(pPlayer, pev_flags, pev(pPlayer, pev_flags) | FL_FROZEN);
+
+    PlayerCamera_Activate(pPlayer);
+    PlayerCamera_SetDistance(pPlayer, PREVIEW_CAMERA_DISTANCE);
+    PlayerCamera_SetAngles(pPlayer, PREVIEW_CAMERA_ANGLES);
+    // PlayerCamera_SetOffset(pPlayer);
+    PlayerCamera_SetThinkDelay(pPlayer, 1.0);
+
+    g_rbPlayerInPreview[pPlayer] = true;
+    g_rgflPlayerNextHighlight[pPlayer] = bLight ? get_gametime() : 0.0;
+
+    return true;
+}
+
+@Player_DeactivatePreview(pPlayer) {
+    if (!g_rbPlayerInPreview[pPlayer]) {
+        return;
+    }
+
+    PlayerCamera_Deactivate(pPlayer);
+    g_rbPlayerInPreview[pPlayer] = false;
+    g_rgflPlayerNextHighlight[pPlayer] = 0.0;
+    set_pev(pPlayer, pev_flags, pev(pPlayer, pev_flags) & ~FL_FROZEN);
+}
 
 CreateMenu(pPlayer) {
     static szMenuTitle[32];
@@ -100,8 +201,6 @@ CreateMenu(pPlayer) {
     return iMenu;
 }
 
-/*--------------------------------[ Menu ]--------------------------------*/
-
 public MenuHandler_Main(pPlayer, iMenu, iItem) {
     menu_destroy(iMenu);
 
@@ -129,7 +228,7 @@ public MenuHandler_Main(pPlayer, iMenu, iItem) {
 
             @Player_OpenMenu(pPlayer, iPage);
         } else {
-            PlayerPreview_Deactivate(pPlayer);
+            @Player_DeactivatePreview(pPlayer);
         }
     }
 

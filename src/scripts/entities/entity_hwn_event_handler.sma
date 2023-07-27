@@ -18,7 +18,8 @@ new Array:g_irgEventHandlers = Invalid_Array;
 
 public plugin_precache() {
     CE_Register(ENTITY_NAME);
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
+    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
 }
 
 public plugin_init() {
@@ -31,9 +32,7 @@ public plugin_end() {
     }
 }
 
-/*------------[ Hooks ]------------*/
-
-@Entity_Spawn(this) {
+@Entity_Init(this) {
     if (g_irgEventHandlers == Invalid_Array) {
         g_irgEventHandlers = ArrayCreate();
     }
@@ -41,17 +40,21 @@ public plugin_end() {
     ArrayPushCell(g_irgEventHandlers, this);
 }
 
-/*------------[ Methods ]------------*/
+@Entity_Remove(this) {
+    new iGlobalId = ArrayFindValue(g_irgEventHandlers, this);
+    if (iGlobalId != -1) {
+        ArrayDeleteItem(g_irgEventHandlers, iGlobalId);
+    }
+}
 
-Dispatch(const eventName[], caller = 0) {
+DispatchEvent(const eventName[], caller = 0) {
     if (g_irgEventHandlers == Invalid_Array) {
         return;
     }
 
     new iSize = ArraySize(g_irgEventHandlers);
-
-    for (new i = 0; i < iSize; ++i) {
-        new pEntity = ArrayGetCell(g_irgEventHandlers, i);
+    for (new iGlobalId = 0; iGlobalId < iSize; ++iGlobalId) {
+        new pEntity = ArrayGetCell(g_irgEventHandlers, iGlobalId);
 
         static szTargetname[32];
         pev(pEntity, pev_targetname, szTargetname, charsmax(szTargetname));
@@ -70,84 +73,82 @@ Dispatch(const eventName[], caller = 0) {
     }
 }
 
-/*------------[ Events ]------------*/
-
 public Round_Fw_NewRound() {
-    Dispatch("new_round");
+    DispatchEvent("new_round");
 }
 
 public Round_Fw_RoundStart() {
-    Dispatch("round_start");
+    DispatchEvent("round_start");
 }
 
 public Round_Fw_RoundEnd() {
-    Dispatch("round_end");
+    DispatchEvent("round_end");
 }
 
 public Hwn_Bosses_Fw_BossSpawn(pEntity) {
-    Dispatch("boss_spawn", pEntity);
+    DispatchEvent("boss_spawn", pEntity);
 }
 
 public Hwn_Bosses_Fw_BossKill(pEntity) {
-    Dispatch("boss_kill", pEntity);
+    DispatchEvent("boss_kill", pEntity);
 }
 
 public Hwn_Bosses_Fw_BossRemove(pEntity) {
-    Dispatch("boss_remove", pEntity);
+    DispatchEvent("boss_remove", pEntity);
 }
 
 public Hwn_Bosses_Fw_BossEscape(pEntity) {
-    Dispatch("boss_escape", pEntity);
+    DispatchEvent("boss_escape", pEntity);
 }
 
 public Hwn_Bosses_Fw_BossTeleport(pEntity) {
-    Dispatch("boss_teleport", pEntity);
+    DispatchEvent("boss_teleport", pEntity);
 }
 
 public Hwn_Bosses_Fw_Winner(pPlayer, damage) {
-    Dispatch("boss_winner", pPlayer);
+    DispatchEvent("boss_winner", pPlayer);
 }
 
 public Hwn_Collector_Fw_TeamPoints(iTeam) {
     if (iTeam == 1) {
-        Dispatch("teampoints_team1");
+        DispatchEvent("teampoints_team1");
     } else if (iTeam == 2) {
-        Dispatch("teampoints_team2");
+        DispatchEvent("teampoints_team2");
     }
 }
 
 public Hwn_Collector_Fw_PlayerPoints(pPlayer) {
-    Dispatch("playerpoints", pPlayer);
+    DispatchEvent("playerpoints", pPlayer);
 }
 
 public Hwn_Spell_Fw_Cast(pPlayer) {
-    Dispatch("spell_cast", pPlayer);
+    DispatchEvent("spell_cast", pPlayer);
 }
 
 public Hwn_Wof_Fw_Roll_Start() {
-    Dispatch("wof_roll_start");
+    DispatchEvent("wof_roll_start");
 }
 
 public Hwn_Wof_Fw_Roll_End() {
-    Dispatch("wof_roll_end");
+    DispatchEvent("wof_roll_end");
 }
 
 public Hwn_Wof_Fw_Effect_Start() {
-    Dispatch("wof_effect_start");
+    DispatchEvent("wof_effect_start");
 }
 
 public Hwn_Wof_Fw_Effect_End() {
-    Dispatch("wof_effect_end");
+    DispatchEvent("wof_effect_end");
 }
 
 public Hwn_Wof_Fw_Effect_Invoke(pPlayer) {
-    Dispatch("wof_effect_invoke", pPlayer);
+    DispatchEvent("wof_effect_invoke", pPlayer);
 }
 
 public Hwn_Wof_Fw_Effect_Revoke(pPlayer) {
-    Dispatch("wof_effect_revoke", pPlayer);
+    DispatchEvent("wof_effect_revoke", pPlayer);
 }
 
 public Hwn_Wof_Fw_Abort() {
-    Dispatch("wof_abort");
+    DispatchEvent("wof_abort");
 }

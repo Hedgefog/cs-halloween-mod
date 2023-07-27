@@ -133,7 +133,7 @@ public bool:Native_IsOvertime(iPluginId, iArgc) {
 }
 
 public bool:Native_ObjectiveBlocked(iPluginId, iArgc) {
-    return Hwn_Bosses_GetCurrent() != -1;
+    return IsObjectiveBlocked();
 }
 
 public bool:Native_ScorePlayerPointsToTeam(iPluginId, iArgc) {
@@ -377,7 +377,7 @@ bool:ScorePlayerPointsToTeam(pPlayer, iAmount) {
         return false;
     }
 
-    if (Hwn_Collector_ObjectiveBlocked()) {
+    if (IsObjectiveBlocked()) {
         ExecuteForward(g_fwObjectiveBlocked, _, pPlayer);
         return false;
     }
@@ -398,6 +398,22 @@ bool:ScorePlayerPointsToTeam(pPlayer, iAmount) {
     ExecuteForward(g_fwTeamPointsScored, _, iTeam, iAmount, pPlayer);
 
     return true;
+}
+
+bool:IsObjectiveBlocked() {
+    if (!Round_IsRoundStarted()) {
+        return true;
+    }
+    
+    if (Round_IsRoundEnd()) {
+        return true;
+    }
+
+    if (Hwn_Bosses_GetCurrent() != -1) {
+        return true;
+    }
+
+    return false;
 }
 
 ResetVariables() {

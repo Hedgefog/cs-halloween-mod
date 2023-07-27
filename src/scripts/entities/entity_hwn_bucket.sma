@@ -179,10 +179,12 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
 /*------------[ Methods ]------------*/
 
 @Entity_Init(this) {
-    new pLiquid = CE_Create("hwn_bucket_liquid", Float:{0.0, 0.0, 0.0}, false);
+    new pLiquid = CE_Create(LIQUID_ENTITY_NAME, Float:{0.0, 0.0, 0.0}, false);
     set_pev(pLiquid, pev_owner, this);
     dllfunc(DLLFunc_Spawn, pLiquid);
     CE_SetMember(this, "pLiquid", pLiquid);
+
+    ArrayPushCell(g_irgBuckets, this);
 }
 
 @Entity_Spawn(this) {
@@ -205,8 +207,6 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
     CE_SetMember(this, "iBonusChance", 0);
 
     set_pev(this, pev_nextthink, get_gametime());
-
-    ArrayPushCell(g_irgBuckets, this);
 }
 
 @Entity_Kill(this) {
@@ -229,6 +229,11 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
     new pLiquid = CE_GetMember(this, "pLiquid");
     CE_SetMember(this, "pLiquid", 0);
     CE_Remove(pLiquid);
+
+    new iGlobalId = ArrayFindValue(g_irgBuckets, this);
+    if (iGlobalId != -1) {
+        ArrayDeleteItem(g_irgBuckets, iGlobalId);
+    }
 }
 
 @Entity_Think(this) {
@@ -423,9 +428,8 @@ bool:@Entity_DropEntity(this, pEntity) {
 
 @Entity_PlayActionSequence(this, iSequence, Float:flDuration) {
     new Float:flGameTime = get_gametime();
-    new Float:flNextAction = CE_GetMember(this, "flNextAction");
 
-    if (flNextAction > flGameTime) {
+    if (CE_GetMember(this, "flNextAction") > flGameTime) {
         return false;
     }
 
