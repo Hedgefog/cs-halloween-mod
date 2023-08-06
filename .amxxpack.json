@@ -37,7 +37,7 @@
     "assets": "./assets"
   },
   "output": {
-    "base": "C:/Program Files (x86)/Steam/steamapps/common/Half-Life/cstrike",
+    "base": "./dist/build",
     "plugins": "./addons/amxmodx/plugins",
     "scripts": "./addons/amxmodx/scripting",
     "include": "./addons/amxmodx/scripting/include",
