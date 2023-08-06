@@ -57,8 +57,8 @@ public plugin_init() {
 
     RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
 
-    register_forward(FM_AddToFullPack, "OnAddToFullPack", 0);
-    register_forward(FM_AddToFullPack, "OnAddToFullPack_Post", 1);
+    register_forward(FM_AddToFullPack, "FMHook_AddToFullPack", 0);
+    register_forward(FM_AddToFullPack, "FMHook_AddToFullPack_Post", 1);
     register_forward(FM_CheckVisibility, "OnCheckVisibility");
 
     g_pCvarEnabled = register_cvar("hwn_objective_marks", "1");
@@ -95,7 +95,7 @@ public HamHook_Player_Spawn_Post(pPlayer) {
     }
 }
 
-public OnAddToFullPack(es, e, pEntity, pHost, pHostFlags, pPlayer, pSet) {
+public FMHook_AddToFullPack(es, e, pEntity, pHost, pHostFlags, pPlayer, pSet) {
     if (!IS_PLAYER(pHost)) {
         return FMRES_IGNORED;
     }
@@ -139,7 +139,7 @@ public OnAddToFullPack(es, e, pEntity, pHost, pHostFlags, pPlayer, pSet) {
     return FMRES_HANDLED;
 }
 
-public OnAddToFullPack_Post(es, e, pEntity, pHost, pHostFlags, pPlayer, pSet) {
+public FMHook_AddToFullPack_Post(es, e, pEntity, pHost, pHostFlags, pPlayer, pSet) {
     if (!IS_PLAYER(pHost)) {
         return FMRES_IGNORED;
     }

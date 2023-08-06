@@ -40,6 +40,9 @@ public plugin_init() {
 
 public plugin_cfg() {
     LoadConfig();
+
+    g_flUpdateRate = UTIL_FpsToDelay(get_pcvar_num(g_pFpsCvar));
+    g_flNpcUpdateRate = UTIL_FpsToDelay(get_pcvar_num(g_pNpcFpsCvar));
 }
 
 public plugin_natives() {
@@ -62,12 +65,10 @@ public CvarHook_Version() {
 }
 
 public CvarHook_Fps(pCvar) {
-    log_amx("CvarHook_Fps");
     g_flUpdateRate = UTIL_FpsToDelay(get_pcvar_num(pCvar));
 }
 
 public CvarHook_NpcFps(pCvar) {
-    log_amx("CvarHook_NpcFps");
     g_flNpcUpdateRate = UTIL_FpsToDelay(get_pcvar_num(pCvar));
 }
 

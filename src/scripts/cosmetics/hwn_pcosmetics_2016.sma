@@ -14,7 +14,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Coffin Pack",
             .iModelIndex = precache_model("models/hwn/cosmetics/coffinpack.mdl"),
-            .groups = (PCosmetic_Group_Back),
+            .iGroups = (PCosmetic_Group_Back),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );
@@ -23,7 +23,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Devil Horns",
             .iModelIndex = precache_model("models/hwn/cosmetics/devil_horns.mdl"),
-            .groups = (PCosmetic_Group_Mask),
+            .iGroups = (PCosmetic_Group_Mask),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );
@@ -32,7 +32,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Devil Tail",
             .iModelIndex = precache_model("models/hwn/cosmetics/devil_tail.mdl"),
-            .groups = (PCosmetic_Group_Fanny),
+            .iGroups = (PCosmetic_Group_Fanny),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );
@@ -41,7 +41,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Devil Wings",
             .iModelIndex = precache_model("models/hwn/cosmetics/devil_wings.mdl"),
-            .groups = (PCosmetic_Group_Back),
+            .iGroups = (PCosmetic_Group_Back),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );
@@ -50,7 +50,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Garlik Flank Stake",
             .iModelIndex = precache_model("models/hwn/cosmetics/garlic_flank_stake.mdl"),
-            .groups = (PCosmetic_Group_Legs),
+            .iGroups = (PCosmetic_Group_Legs),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );
@@ -59,7 +59,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Holy Hunter",
             .iModelIndex = precache_model("models/hwn/cosmetics/holy_hunter.mdl"),
-            .groups = (PCosmetic_Group_Hat),
+            .iGroups = (PCosmetic_Group_Hat),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );
@@ -68,7 +68,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Pumpkin",
             .iModelIndex = precache_model("models/hwn/cosmetics/pumpkin_hat.mdl"),
-            .groups = (PCosmetic_Group_Hat | PCosmetic_Group_Mask),
+            .iGroups = (PCosmetic_Group_Hat | PCosmetic_Group_Mask),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );
@@ -77,7 +77,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Silver Bullets",
             .iModelIndex = precache_model("models/hwn/cosmetics/silver_bullets.mdl"),
-            .groups = (PCosmetic_Group_Body),
+            .iGroups = (PCosmetic_Group_Body),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );
@@ -86,7 +86,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Skull",
             .iModelIndex = precache_model("models/hwn/cosmetics/skull.mdl"),
-            .groups = (PCosmetic_Group_Mask),
+            .iGroups = (PCosmetic_Group_Mask),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );
@@ -95,7 +95,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Spookyhood",
             .iModelIndex = precache_model("models/hwn/cosmetics/spookyhood.mdl"),
-            .groups = (PCosmetic_Group_Hat),
+            .iGroups = (PCosmetic_Group_Hat),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );

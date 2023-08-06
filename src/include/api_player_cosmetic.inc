@@ -20,7 +20,7 @@ enum PCosmetic_Type
     PCosmetic_Type_Unusual
 };
 
-native PCosmetic:PCosmetic_Register(const szName[], PCosmetic_Groups:groups, iModelIndex, Float:flUnusualColor[3]);
+native PCosmetic:PCosmetic_Register(const szName[], PCosmetic_Groups:iGroups, iModelIndex, Float:flUnusualColor[3]);
 native PCosmetic_Give(pPlayer, cosmetic, PCosmetic_Type:type, time);
 
 native PCosmetic_Equip(pPlayer, slotIdx);

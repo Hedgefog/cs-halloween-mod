@@ -38,7 +38,7 @@ public plugin_precache() {
     g_iszTargetClassname = engfunc(EngFunc_AllocString, "info_target");
     g_iszParticleClassname = engfunc(EngFunc_AllocString, "env_sprite");
 
-    register_forward(FM_AddToFullPack, "OnAddToFullPack", 0);
+    register_forward(FM_AddToFullPack, "FMHook_AddToFullPack", 0);
 }
 
 public plugin_init() {
@@ -104,7 +104,7 @@ public Native_Remove(iPluginId, iArgc) {
     RemoveParticles(pEntity);
 }
 
-public OnAddToFullPack(es, e, pEntity, pHost, hostflags, player, pSet) {
+public FMHook_AddToFullPack(es, e, pEntity, pHost, hostflags, player, pSet) {
     if (!IS_PLAYER(pHost)) {
         return FMRES_IGNORED;
     }

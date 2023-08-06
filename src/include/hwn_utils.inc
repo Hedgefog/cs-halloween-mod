@@ -1,3 +1,8 @@
+#if defined _hwn_utils_included
+  #endinput
+#endif
+#define _hwn_utils_included
+
 #include <reapi>
 
 #define IS_PLAYER(%1) (%1 >= 1 && %1 <= MaxClients)
@@ -12,7 +17,7 @@
 #define HUD_HIDE_TIMER (1<<4)
 
 stock Float:UTIL_FpsToDelay(iFps) {
-    return (100/iFps) * 0.01;
+    return (100 / iFps) * 0.01;
 }
 
 stock Float:UTIL_CalculateRadiusDamage(
@@ -120,15 +125,17 @@ stock bool:UTIL_IsPointVisible(const Float:vecOrigin1[3], const Float:vecOrigin2
     return flFraction == 1.0;
 }
 
-stock UTIL_SetSequence(pEntity, iSequence) {
+stock bool:UTIL_SetSequence(pEntity, iSequence) {
     if (pev(pEntity, pev_sequence) == iSequence) {
-        return;
+        return false;
     }
 
     set_pev(pEntity, pev_frame, 0);
     set_pev(pEntity, pev_framerate, 1.0);
     set_pev(pEntity, pev_animtime, get_gametime());
     set_pev(pEntity, pev_sequence, iSequence);
+
+    return true;
 }
 
 stock UTIL_GetDirectionVector(pEntity, Float:vecOut[3], Float:flLength = 1.0) {

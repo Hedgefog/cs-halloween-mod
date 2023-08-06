@@ -70,6 +70,7 @@ public plugin_init() {
     g_fwWinner = CreateMultiForward("Hwn_Bosses_Fw_Winner", ET_IGNORE, FP_CELL, FP_CELL);
 
     register_concmd("hwn_boss_spawn", "Command_SpawnBoss", ADMIN_CVAR);
+    register_concmd("hwn_boss_abort", "Command_AbortBoss", ADMIN_CVAR);
 
     CreateBossSpawnTask();
 }
@@ -205,6 +206,18 @@ public Command_SpawnBoss(pPlayer, iLevel, iCId) {
     }
 
     SpawnBoss();
+
+    return PLUGIN_HANDLED;
+}
+
+public Command_AbortBoss(pPlayer, iLevel, iCId) {
+    if (!cmd_access(pPlayer, iLevel, iCId, 1)) {
+        return PLUGIN_HANDLED;
+    }
+
+    if (g_pBoss != -1) {
+        CE_Remove(g_pBoss);
+    }
 
     return PLUGIN_HANDLED;
 }

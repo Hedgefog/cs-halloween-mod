@@ -17,7 +17,7 @@ new g_iCeHandler;
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    register_forward(FM_AddToFullPack, "FMHook_AddToFullPack", ._post = 1);
+    register_forward(FM_AddToFullPack, "FMHook_AddToFullPack_Post", 1);
 }
 
 public plugin_precache() {
@@ -51,7 +51,7 @@ public plugin_precache() {
     return PLUGIN_HANDLED;
 }
 
-public FMHook_AddToFullPack(es, e, pEntity, host, hostflags, player, pSet) {
+public FMHook_AddToFullPack_Post(es, e, pEntity, host, hostflags, player, pSet) {
     if (!pev_valid(pEntity)) {
         return;
     }

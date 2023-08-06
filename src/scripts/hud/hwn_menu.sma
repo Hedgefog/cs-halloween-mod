@@ -33,8 +33,6 @@ public plugin_end() {
     }
 }
 
-/*--------------------------------[ Natives ]--------------------------------*/
-
 public Native_Open(iPluginId, iArgc) {
     new pPlayer = get_param(1);
     @Player_OpenMenu(pPlayer);
@@ -47,17 +45,13 @@ public Native_AddItem(iPluginId, iArgc) {
     new szCallback[32];
     get_string(2, szCallback, charsmax(szCallback));
 
-    return AddItem(szTitle, iPluginId, get_func_id(szCallback, iPluginId));
+    return AddMenuItem(szTitle, iPluginId, get_func_id(szCallback, iPluginId));
 }
-
-/*--------------------------------[ Hooks ]--------------------------------*/
 
 public Command_Menu(pPlayer) {
     @Player_OpenMenu(pPlayer);
     return PLUGIN_HANDLED;
 }
-
-/*--------------------------------[ Methods ]--------------------------------*/
 
 @Player_OpenMenu(pPlayer) {    
     static szMenuTitle[32];
@@ -75,9 +69,7 @@ public Command_Menu(pPlayer) {
     menu_display(pPlayer, iMenu);
 }
 
-/*--------------------------------[ Function ]--------------------------------*/
-
-AddItem(const szTitle[], iPluginId, iFunctionId) {
+AddMenuItem(const szTitle[], iPluginId, iFunctionId) {
     if (!g_iItemsNum) {
         g_irgItemTitle = ArrayCreate(32);
         g_irgItemiPluginId = ArrayCreate();
@@ -93,8 +85,6 @@ AddItem(const szTitle[], iPluginId, iFunctionId) {
 
     return iId;
 }
-
-/*--------------------------------[ Menu ]--------------------------------*/
 
 public MenuHandler(pPlayer, iMenu, item) {
     menu_destroy(iMenu);

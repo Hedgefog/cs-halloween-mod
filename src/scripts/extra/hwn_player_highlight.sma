@@ -14,14 +14,14 @@ new g_pCvarSecondaryBrightness;
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
     
-    register_forward(FM_AddToFullPack, "OnAddToFullPack", 1);
+    register_forward(FM_AddToFullPack, "FMHook_AddToFullPack_Post", 1);
 
     g_pCvarEnabled = register_cvar("hwn_player_highlight", "1");
     g_pCvarPrimaryBrightness = register_cvar("hwn_player_highlight_primary_brightness", "80");
     g_pCvarSecondaryBrightness = register_cvar("hwn_player_highlight_secondary_brightness", "15");
 }
 
-public OnAddToFullPack(es, e, pEntity, pHost, hostflags, player, pSet) {
+public FMHook_AddToFullPack_Post(es, e, pEntity, pHost, hostflags, player, pSet) {
     if (!get_pcvar_num(g_pCvarEnabled)) {
         return FMRES_IGNORED;
     }

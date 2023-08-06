@@ -14,7 +14,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Ethereal Hood",
             .iModelIndex = precache_model("models/hwn/cosmetics/ethereal_hood.mdl"),
-            .groups = (PCosmetic_Group_Hat | PCosmetic_Group_Mask),
+            .iGroups = (PCosmetic_Group_Hat | PCosmetic_Group_Mask),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );
@@ -23,7 +23,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Hallowed Headcase",
             .iModelIndex = precache_model("models/hwn/cosmetics/hallowed_headcase.mdl"),
-            .groups = (PCosmetic_Group_Mask),
+            .iGroups = (PCosmetic_Group_Mask),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );
@@ -32,7 +32,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Horsemann's Hand-Me-Down",
             .iModelIndex = precache_model("models/hwn/cosmetics/hhh_cape.mdl"),
-            .groups = (PCosmetic_Group_Cape),
+            .iGroups = (PCosmetic_Group_Cape),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );
@@ -41,7 +41,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Nightmare Hunter",
             .iModelIndex = precache_model("models/hwn/cosmetics/nightmare_fedora.mdl"),
-            .groups = (PCosmetic_Group_Hat),
+            .iGroups = (PCosmetic_Group_Hat),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );
@@ -50,7 +50,7 @@ public plugin_precache() {
         PCosmetic_Register(
             .szName = "Manneater",
             .iModelIndex = precache_model("models/hwn/cosmetics/manneater.mdl"),
-            .groups = (PCosmetic_Group_Hat | PCosmetic_Group_Mask),
+            .iGroups = (PCosmetic_Group_Hat | PCosmetic_Group_Mask),
             .flUnusualColor = UNUSUAL_COLOR
         )
     );

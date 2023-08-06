@@ -37,7 +37,7 @@ public plugin_init() {
 
     g_iCosmeticItemType = PInv_GetItemTypeHandler("cosmetic");
 
-    register_forward(FM_AddToFullPack, "FMHook_AddToFullPack", 1);
+    register_forward(FM_AddToFullPack, "FMHook_AddToFullPack_Post", 1);
     RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed", .Post = 0);
     RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
     RegisterHamPlayer(Ham_Player_PreThink, "HamHook_Player_PreThink_Post", .Post = 1);
@@ -97,7 +97,7 @@ public HamHook_Player_PreThink_Post(pPlayer) {
     }
 }
 
-public FMHook_AddToFullPack(es, e, pEntity, host, hostflags, player, pSet) {
+public FMHook_AddToFullPack_Post(es, e, pEntity, host, hostflags, player, pSet) {
     if (pEntity != host) {
         return;
     }
