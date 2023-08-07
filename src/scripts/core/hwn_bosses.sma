@@ -17,7 +17,6 @@
 #define AUTHOR "Hedgehog Fog"
 
 #define TASKID_SPAWN_BOSS 0
-#define TASKID_REMOVE_BOSS 1
 
 #define BOSS_SPAWN_DAMAGE 1000.0
 
@@ -55,7 +54,8 @@ public plugin_init() {
 
     RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "HamHook_Base_TakeDamage_Post", .Post = 1);
     RegisterHam(Ham_Touch, "trigger_hurt", "HamHook_Hurt_Touch", .Post = 0);
-    RegisterHamPlayer(Ham_TakeDamage, "HamHook_Player_TakeDamage", .Post = 0);
+
+    RegisterHookChain(RG_CSGameRules_FPlayerCanTakeDamage, "HC_Player_CanTakeDamage");
 
     g_pCvarBossSpawnDelay = register_cvar("hwn_boss_spawn_delay", "300.0");
     g_pCvarBossLifeTime = register_cvar("hwn_boss_life_time", "120.0");
@@ -134,7 +134,7 @@ public Native_Register(iPluginId, iArgc) {
         ArrayPushString(g_irgszBossesDictKeys, "");
     }
 
-    CE_RegisterHook(CEFunction_Remove, szClassName, "OnBossRemove");
+    CE_RegisterHook(CEFunction_Killed, szClassName, "@Boss_Killed");
 
     return idx;
 }
@@ -194,11 +194,11 @@ public Native_GetTargetCount(iPluginId, iArgc) {
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-public client_putinserver(pPlayer) {
+public client_connect(pPlayer) {
     g_rgiPlayerTotalDamage[pPlayer] = 0;
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
+/*--------------------------------[ Commands ]--------------------------------*/
 
 public Command_SpawnBoss(pPlayer, iLevel, iCId) {
     if (!cmd_access(pPlayer, iLevel, iCId, 1)) {
@@ -222,12 +222,14 @@ public Command_AbortBoss(pPlayer, iLevel, iCId) {
     return PLUGIN_HANDLED;
 }
 
-public OnBossRemove(pEntity) {
-    if (g_pBoss != pEntity) {
+/*--------------------------------[ Methods ]--------------------------------*/
+
+@Boss_Killed(this, pKiller) {
+    if (g_pBoss != this) {
         return;
     }
 
-    if (pev(pEntity, pev_deadflag) != DEAD_NO) {
+    if (pKiller) {
         client_cmd(0, "spk %s", g_szSndBossDefeat);
         ExecuteForward(g_fwBossKill, g_fwResult, g_pBoss);
         SelectWinners();
@@ -241,10 +243,10 @@ public OnBossRemove(pEntity) {
     g_pBoss = -1;
     g_iBossIdx = -1;
 
-    remove_task(TASKID_REMOVE_BOSS);
-
     CreateBossSpawnTask();
 }
+
+/*--------------------------------[ Hooks ]--------------------------------*/
 
 public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDamage) {
     if (pEntity != g_pBoss) {
@@ -258,26 +260,6 @@ public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDama
     g_rgiPlayerTotalDamage[pAttacker] += floatround(flDamage);
 
     return HAM_HANDLED;
-}
-
-public HamHook_Player_TakeDamage(pPlayer, pInflictor, pAttacker, Float:flDamage) {
-    if (g_iBossIdx == -1) {
-        return HAM_IGNORED;
-    }
-
-    if (!IS_PLAYER(pPlayer)) {
-        return HAM_IGNORED;
-    }
-
-    if (!IS_PLAYER(pAttacker)) {
-        return HAM_IGNORED;
-    }
-
-    if (get_pcvar_num(g_pCvarBossPve) > 0) {
-        return HAM_SUPERCEDE;
-    }
-
-    return HAM_IGNORED;
 }
 
 public HamHook_Hurt_Touch(pEntity, pToucher) {
@@ -294,7 +276,18 @@ public HamHook_Hurt_Touch(pEntity, pToucher) {
     return HAM_SUPERCEDE;
 }
 
-/*--------------------------------[ Methods ]--------------------------------*/
+public HC_Player_CanTakeDamage(pPlayer, pAttacker) {
+    if (g_iBossIdx != -1 && get_pcvar_num(g_pCvarBossPve) > 0) {
+        if (IS_PLAYER(pPlayer) && IS_PLAYER(pAttacker)) {
+            SetHookChainReturn(ATYPE_INTEGER, 0);
+            return HC_SUPERCEDE;
+        }
+    }
+
+    return HC_CONTINUE;
+}
+
+/*--------------------------------[ Functions ]--------------------------------*/
 
 SpawnBoss() {
     if (g_pBoss != -1) {
@@ -309,7 +302,7 @@ SpawnBoss() {
         return;
     }
 
-    ResetPlayerTotalDamage();
+    ResetPlayersTotalDamage();
 
     new iBossesNum = ArraySize(g_irgpBosses);
     new iBossIdx = random(iBossesNum);
@@ -324,7 +317,6 @@ SpawnBoss() {
     ArrayGetArray(g_irgBossSpawnPoints, iPointIdx, vecOrigin);
 
     g_pBoss = CE_Create(szClassName, vecOrigin);
-
     if (g_pBoss == -1) {
         return;
     }
@@ -337,9 +329,10 @@ SpawnBoss() {
     IntersectKill();
 
     new Float:flLifeTime = get_pcvar_float(g_pCvarBossLifeTime);
+    CE_SetMember(g_pBoss, CE_MEMBER_NEXTKILL, get_gametime() + flLifeTime);
 
     remove_task(TASKID_SPAWN_BOSS);
-    set_task(flLifeTime, "TaskRemoveBoss", TASKID_REMOVE_BOSS);
+
     ExecuteForward(g_fwBossSpawn, g_fwResult, g_pBoss, flLifeTime);
 }
 
@@ -368,7 +361,7 @@ CreateBossSpawnTask() {
     set_task(get_pcvar_float(g_pCvarBossSpawnDelay), "TaskSpawnBoss", TASKID_SPAWN_BOSS);
 }
 
-ResetPlayerTotalDamage() {
+ResetPlayersTotalDamage() {
     for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
         g_rgiPlayerTotalDamage[pPlayer] = 0;
     }

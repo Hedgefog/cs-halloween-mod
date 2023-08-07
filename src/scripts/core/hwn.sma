@@ -36,6 +36,8 @@ public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     g_fwConfigLoaded = CreateMultiForward("Hwn_Fw_ConfigLoaded", ET_IGNORE);
+
+    register_forward(FM_GetGameDescription, "FMHook_GetGameDescription");
 }
 
 public plugin_cfg() {
@@ -58,6 +60,13 @@ public Float:Native_GetUpdateRate(iPluginId, iArgc) {
 
 public Float:Native_GetNpcUpdateRate(iPluginId, iArgc) {
     return g_flNpcUpdateRate;
+}
+
+public FMHook_GetGameDescription() {
+    static szGameName[32];
+    format(szGameName, charsmax(szGameName), "%s %s", HWN_TITLE, HWN_VERSION);
+    forward_return(FMV_STRING, szGameName);
+    return FMRES_SUPERCEDE;
 }
 
 public CvarHook_Version() {

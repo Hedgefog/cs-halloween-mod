@@ -204,20 +204,6 @@ stock bool:UTIL_TurnTo(pEntity, const Float:vecTarget[3], const bool:rgbLockAxis
     return true;
 }
 
-stock Float:UTIL_NormalizeAngle(Float:flAngle) {
-    new iDirection = flAngle > 0 ? 1 : -1;
-    new Float:flAbsAngle = flAngle * iDirection;
-
-    new Float:flFixedAngle = (flAbsAngle - (360.0 * floatround(flAbsAngle / 360.0, floatround_floor)));
-    if (flFixedAngle > 180.0) {
-      flFixedAngle -= 360.0;
-    }
-
-    flFixedAngle *= iDirection;
-
-    return flFixedAngle;
-}
-
 stock UTIL_Message_BloodSprite(const Float:vecOrigin[3], iBloodSprayModelIndex, iBloodModelIndex, iColor, iScale) {
     engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vecOrigin, 0);
     write_byte(TE_BLOODSPRITE);
@@ -231,8 +217,7 @@ stock UTIL_Message_BloodSprite(const Float:vecOrigin[3], iBloodSprayModelIndex, 
     message_end();
 }
 
-stock UTIL_Message_BreakModel
-(
+stock UTIL_Message_BreakModel(
     const Float:vecOrigin[3],
     const Float:vecSize[3] = {16.0, 16.0, 16.0},
     const Float:vecVelocity[3] = {0.0, 0.0, 0.0},
@@ -261,8 +246,7 @@ stock UTIL_Message_BreakModel
     message_end();
 }
 
-stock UTIL_Message_ExplodeModel
-(
+stock UTIL_Message_ExplodeModel(
     const Float:vecOrigin[3],
     const Float:flVelocity = 0.0,
     iModelIndex = 0,
@@ -281,8 +265,7 @@ stock UTIL_Message_ExplodeModel
     message_end();
 }
 
-stock UTIL_Message_Dlight
-(
+stock UTIL_Message_Dlight(
     const Float:vecOrigin[3],
     iRadius = 16,
     const iColor[3] = {255, 255, 255},
@@ -707,17 +690,6 @@ stock UTIL_Message_ParticleBurst(const Float:vecOrigin[3], iRadius, iColor, iLif
     write_short(iRadius);
     write_byte(iColor);
     write_byte(iLifeTime);
-    message_end();
-}
-
-stock UTIL_Message_RoundTime(pPlayer, time) {
-    static iMsgId = 0;
-    if(!iMsgId) {
-        iMsgId = get_user_msgid("RoundTime");
-    }
-
-    message_begin(pPlayer ? MSG_ONE : MSG_ALL, iMsgId);
-    write_short(time);
     message_end();
 }
 

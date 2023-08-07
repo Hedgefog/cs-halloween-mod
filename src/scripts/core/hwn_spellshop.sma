@@ -84,7 +84,7 @@ public Native_GetSpellPrice(iPluginId, iArgc) {
     return GetSpellPrice(iSpell);
 }
 
-/*--------------------------------[ Methods ]--------------------------------*/
+/*--------------------------------[ Functions ]--------------------------------*/
 
 GetSpellPrice(iSpell) {
     new iPrice = get_pcvar_num(g_pCvarPrice);

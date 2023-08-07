@@ -2,6 +2,7 @@
 
 #include <amxmodx>
 #include <engine>
+#include <reapi>
 #include <hamsandwich>
 
 #include <cstrike>
@@ -111,7 +112,7 @@ Equip(pPlayer) {
         return;
     }
 
-    strip_user_weapons(pPlayer);
+    rg_remove_all_items(pPlayer);
 
     give_item(pPlayer, WeaponEntityNames[CSW_KNIFE]);
 

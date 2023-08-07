@@ -69,6 +69,8 @@ public plugin_init() {
     RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed", .Post = 0);
     RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed_Post", .Post = 1);
 
+    RegisterHookChain(RG_CBasePlayer_OnSpawnEquip, "HC_Player_SpawnEquip");
+
     register_message(get_user_msgid("ClCorpse"), "Message_ClCorpse");
 
     register_clcmd("joinclass", "Command_JoinClass");
@@ -78,7 +80,7 @@ public plugin_init() {
     g_pCvarSpawnProtectionTime = register_cvar("hwn_iGamemode_spawn_protection_time", "3.0");
     g_pCvarNewRoundDelay = register_cvar("hwn_iGamemode_new_round_delay", "10.0");
 
-    register_forward(FM_SetModel, "OnSetModel");
+    register_forward(FM_SetModel, "FMHook_SetModel");
 
     unregister_forward(FM_Spawn, g_fmFwSpawn, 1);
 }
@@ -297,9 +299,8 @@ public HamHook_Player_Spawn_Post(pPlayer) {
     }
 
     new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
-    if ((iFlags & Hwn_GamemodeFlag_SpecialEquip)) {
-        Hwn_PEquipment_Equip(pPlayer);
 
+    if ((iFlags & Hwn_GamemodeFlag_SpecialEquip)) {
         if (g_rgiPlayerFirstSpawnFlag & BIT(pPlayer & 31)) {
             Hwn_PEquipment_ShowMenu(pPlayer);
             g_rgiPlayerFirstSpawnFlag &= ~BIT(pPlayer & 31);
@@ -338,7 +339,18 @@ public HamHook_Player_Killed_Post(pPlayer) {
     }
 }
 
-public OnSetModel(pEntity) {
+public HC_Player_SpawnEquip(pPlayer) {
+    new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
+    if ((iFlags & Hwn_GamemodeFlag_SpecialEquip)) {
+        Hwn_PEquipment_Equip(pPlayer);
+        return HC_SUPERCEDE;
+    }
+
+
+    return HC_CONTINUE;
+}
+
+public FMHook_SetModel(pEntity) {
     if (!g_iGamemodesNum) {
         return;
     }
