@@ -32,6 +32,7 @@
 #define m_flNextSmokeEmit "flNextSmokeEmit"
 #define m_flNextLaugh "flNextLaugh"
 #define m_flNextFootStep "flNextFootStep"
+#define m_pKiller "pKiller"
 
 enum _:Sequence {
     Sequence_Idle = 0,
@@ -253,6 +254,7 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     CE_SetMember(this, m_flTargetArrivalTime, 0.0);
     CE_DeleteMember(this, m_vecGoal);
     CE_DeleteMember(this, m_vecTarget);
+    CE_SetMember(this, m_pKiller, 0);
 
     new Float:flRenderColor[3] = {HWN_COLOR_PRIMARY_F};
     for (new i = 0; i < 3; ++i) {
@@ -285,11 +287,18 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     set_pev(this, pev_nextthink, flGameTime + g_actions[Action_Spawn][NPC_Action_Time]);
 }
 
-@Entity_Kill(this) {
+@Entity_Kill(this, pKiller) {
     new iDeadFlag = pev(this, pev_deadflag);
+
+    CE_SetMember(this, m_pKiller, pKiller);
 
     switch (iDeadFlag) {
         case DEAD_NO: {
+            if (!pKiller) {
+                set_pev(this, pev_deadflag, DEAD_DEAD);
+                return PLUGIN_CONTINUE;
+            }
+
             NPC_EmitVoice(this, g_szSndDying, .supercede = true);
             @Entity_PlayAction(this, Action_Shake, true);
 
@@ -389,7 +398,7 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
         case DEAD_DYING: {
             new Float:flDieTime = CE_GetMember(this, m_flDieTime);
             if (flDieTime <= flGameTime) {
-                CE_Kill(this);
+                CE_Kill(this, CE_GetMember(this, m_pKiller));
             }
         }
     }

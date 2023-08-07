@@ -33,6 +33,7 @@
 #define m_flNextPathSearch "flNextPathSearch"
 #define m_flNextLaugh "flNextLaugh"
 #define m_flDieTime "flDieTime"
+#define m_pKiller "pKiller"
 #define m_bSmall "bSmall"
 
 enum _:Sequence {
@@ -203,6 +204,7 @@ public plugin_init() {
     CE_SetMember(this, m_flTargetArrivalTime, 0.0);
     CE_DeleteMember(this, m_vecGoal);
     CE_DeleteMember(this, m_vecTarget);
+    CE_SetMember(this, m_pKiller, 0);
 
     set_pev(this, pev_groupinfo, 128);
     set_pev(this, pev_rendermode, kRenderNormal);
@@ -229,8 +231,10 @@ public plugin_init() {
     set_pev(this, pev_nextthink, flGameTime + g_actions[Action_Spawn][NPC_Action_Time]);
 }
 
-@Entity_Kill(this) {
+@Entity_Kill(this, pKiller) {
     new iDeadFlag = pev(this, pev_deadflag);
+
+    CE_SetMember(this, m_pKiller, pKiller);
 
     switch (iDeadFlag) {
         case DEAD_NO: {
@@ -330,7 +334,7 @@ public plugin_init() {
         case DEAD_DYING: {
             new Float:flDieTime = CE_GetMember(this, m_flDieTime);
             if (flDieTime <= flGameTime) {
-                CE_Kill(this);
+                CE_Kill(this, CE_GetMember(this, m_pKiller));
             }
         }
     }
