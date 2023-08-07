@@ -19,6 +19,7 @@ enum PEffectData {
   Array:PEffectData_RevokeFunctionId,
   Array:PEffectData_PluginId,
   Array:PEffectData_Players,
+  Array:PEffectData_PlayerEffectDuration[MAX_PLAYERS],
   Array:PEffectData_PlayerEffectEnd[MAX_PLAYERS]
 };
 
@@ -40,6 +41,7 @@ public plugin_init() {
     g_rgPEffectData[PEffectData_PluginId] = ArrayCreate();
     g_rgPEffectData[PEffectData_Players] = ArrayCreate();
     g_rgPEffectData[PEffectData_PlayerEffectEnd] = ArrayCreate(MAX_PLAYERS + 1);
+    g_rgPEffectData[PEffectData_PlayerEffectDuration] = ArrayCreate(MAX_PLAYERS + 1);
 
     register_concmd("hwn_plyer_effect_set", "Command_Set", ADMIN_CVAR);
 }
@@ -57,6 +59,8 @@ public plugin_natives() {
     register_native("Hwn_PlayerEffect_Register", "Native_Register");
     register_native("Hwn_Player_SetEffect", "Native_SetPlayerEffect");
     register_native("Hwn_Player_GetEffect", "Native_GetPlayerEffect");
+    register_native("Hwn_Player_GetEffectEndtime", "Native_GetPlayerEffectEndTime");
+    register_native("Hwn_Player_GetEffectDuration", "Native_GetPlayerEffectDuration");
 }
 
 public Native_Register(iPluginId, iArgc) {
@@ -104,6 +108,34 @@ public bool:Native_GetPlayerEffect(iPluginId, iArgc) {
     }
 
     return GetPlayerEffect(pPlayer, iEffectId);
+}
+
+public Float:Native_GetPlayerEffectEndTime(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+
+    new szEffectId[32];
+    get_string(2, szEffectId, charsmax(szEffectId));
+
+    new iEffectId = -1;
+    if (!TrieGetCell(g_itEffectsIds, szEffectId, iEffectId)) {
+        return 0.0;
+    }
+
+    return Float:ArrayGetCell(g_rgPEffectData[PEffectData_PlayerEffectEnd], iEffectId, pPlayer);
+}
+
+public Float:Native_GetPlayerEffectDuration(iPluginId, iArgc) {
+    new pPlayer = get_param(1);
+
+    new szEffectId[32];
+    get_string(2, szEffectId, charsmax(szEffectId));
+
+    new iEffectId = -1;
+    if (!TrieGetCell(g_itEffectsIds, szEffectId, iEffectId)) {
+        return 0.0;
+    }
+
+    return Float:ArrayGetCell(g_rgPEffectData[PEffectData_PlayerEffectDuration], iEffectId, pPlayer);
 }
 
 public Command_Set(pPlayer, iLevel, iCId) {
@@ -194,6 +226,7 @@ bool:SetPlayerEffect(pPlayer, iEffectId, bool:bValue, Float:flDuration = -1.0) {
 
         new Float:flEndTime = flDuration < 0.0 ? 0.0 : get_gametime() + flDuration;
         ArraySetCell(g_rgPEffectData[PEffectData_PlayerEffectEnd], iEffectId, flEndTime, pPlayer);
+        ArraySetCell(g_rgPEffectData[PEffectData_PlayerEffectDuration], iEffectId, flDuration, pPlayer);
     } else {
         ArraySetCell(g_rgPEffectData[PEffectData_Players], iEffectId, iPlayers & ~BIT(pPlayer & 31));
     }
@@ -211,6 +244,7 @@ Register(const szId[], iInvokeFunctionId, iRevokeFunctionId, iPluginId) {
     ArrayPushCell(g_rgPEffectData[PEffectData_PluginId], iPluginId);
     ArrayPushCell(g_rgPEffectData[PEffectData_Players], 0);
     ArrayPushCell(g_rgPEffectData[PEffectData_PlayerEffectEnd], 0);
+    ArrayPushCell(g_rgPEffectData[PEffectData_PlayerEffectDuration], 0);
 
     TrieSetCell(g_itEffectsIds, szId, iEffectId);
 

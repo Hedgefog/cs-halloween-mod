@@ -26,7 +26,6 @@
 #define SPEED_BOOST 2.0
 #define WEAPON_SPEED_BOOST 1.25
 
-const Float:EffectTime = 10.0;
 const EffectRadius = 48;
 new const EffectColor[3] = {HWN_COLOR_PRIMARY};
 
@@ -113,8 +112,10 @@ public plugin_cfg() {
     set_pev(pPlayer, pev_velocity, vecVelocity);
     set_pev(pPlayer, pev_gaitsequence, 6);
 
-    new Float:flTimeLeft = EffectTime;
-    new Float:flTimeRatio = floatclamp(1.0 - (flTimeLeft / EffectTime), 0.0, 1.0);
+
+    new Float:flDuration = Hwn_Player_GetEffectDuration(pPlayer, EFFECT_ID);
+    new Float:flTimeLeft = Hwn_Player_GetEffectEndtime(pPlayer, EFFECT_ID) - get_gametime();
+    new Float:flTimeRatio = floatclamp(1.0 - (flTimeLeft / flDuration), 0.0, 1.0);
     new iPitch = PITCH_NORM + floatround(80 * flTimeRatio);
     emit_sound(pPlayer, CHAN_STATIC, g_szSndJump, VOL_NORM, ATTN_NORM, 0, iPitch);
 }

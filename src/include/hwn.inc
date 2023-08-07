@@ -558,3 +558,5 @@ native Hwn_Crits_Set(pPlayer, bool:value);
 native Hwn_PlayerEffect_Register(const szId[], const szInvokeFunction[], const szRevokeFunction[]);
 native Hwn_Player_SetEffect(pPlayer, const szId[], bool:bValue, Float:flDuration = -1.0);
 native bool:Hwn_Player_GetEffect(pPlayer, const szId[]);
+native Float:Hwn_Player_GetEffectEndtime(pPlayer, const szId[]);
+native Float:Hwn_Player_GetEffectDuration(pPlayer, const szId[]);
