@@ -32,7 +32,7 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
-    Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke");
+    Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "hostage", {90, 90, 90});
     register_message(get_user_msgid("ScreenFade"), "Message_ScreenFade");
 }
 

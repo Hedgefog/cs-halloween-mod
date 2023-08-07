@@ -26,7 +26,6 @@
 #define CRIT_EFFECT_FLASH_DECAYRATE 80
 
 #define EFFECT_COLOR_BYTE HWN_COLOR_PRIMARY_PALETTE2
-#define CRIT_STATUS_ICON "dmg_shock"
 
 #define TASKID_SUM_PENALTY 1000
 #define TASKID_SUM_HIT_BONUS 2000
@@ -41,7 +40,6 @@ new g_pCvarCritsDmgMultiplier;
 new g_pCvarCritsEffectTrace;
 new g_pCvarCritsEffectSplash;
 new g_pCvarCritsEffectFlash;
-new g_pCvarCritsEffectStatucIcon;
 new g_pCvarCritsRandom;
 new g_pCvarCritsRandomChanceInitial;
 new g_pCvarCritsRandomChanceMax;
@@ -74,7 +72,6 @@ public plugin_precache() {
     g_pCvarCritsEffectTrace = register_cvar("hwn_crits_effect_trace", "1");
     g_pCvarCritsEffectSplash = register_cvar("hwn_crits_effect_splash", "1");
     g_pCvarCritsEffectFlash = register_cvar("hwn_crits_effect_flash", "1");
-    g_pCvarCritsEffectStatucIcon = register_cvar("hwn_crits_effect_status_icon", "1");
     g_pCvarCritsSoundUse = register_cvar("hwn_crits_sound_use", "1");
     g_pCvarCritsSoundHit = register_cvar("hwn_crits_sound_hit", "1");
     g_pCvarCritsSoundShoot = register_cvar("hwn_crits_sound_shoot", "1");
@@ -153,7 +150,6 @@ public HamHook_Player_Spawn_Post(pPlayer) {
     }
 
     ResetCritChance(pPlayer);
-    UpdateStatusIcon(pPlayer);
 }
 
 public HamHook_TraceAttack(pEntity, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
@@ -220,10 +216,6 @@ SetPlayerCrits(pPlayer, bool:bValue) {
     } else {
         g_rgiPlayerCritsFlag &= ~BIT(pPlayer & 31);
     }
-
-    if (is_user_connected(pPlayer)) {
-        UpdateStatusIcon(pPlayer);
-    }
 }
 
 ProcessCrit(pPlayer, bool:bIsHit) {
@@ -285,11 +277,6 @@ SetCritChance(pPlayer, Float:flValue) {
 ResetCrits(pPlayer) {
     SetPlayerCrits(pPlayer, false);
     g_rgflPlayerCritChance[pPlayer] = 0.0;
-}
-
-UpdateStatusIcon(pPlayer) {
-        new bool:bValue = get_pcvar_bool(g_pCvarCritsEffectStatucIcon) && GetPlayerCrits(pPlayer);
-        UTIL_Message_StatusIcon(pPlayer, bValue, CRIT_STATUS_ICON, {HWN_COLOR_PRIMARY});
 }
 
 CritEffect(const Float:vecOrigin[3], const Float:vecAttackerOrigin[3], const Float:vecDirection[3], bool:bIsHit) {

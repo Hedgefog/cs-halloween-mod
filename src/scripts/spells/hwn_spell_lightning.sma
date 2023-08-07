@@ -63,8 +63,8 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
-    CE_RegisterHook(CEFunction_Remove, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballRemove");
+    CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Killed");
+    CE_RegisterHook(CEFunction_Remove, SPELLBALL_ENTITY_CLASSNAME, "@Spellball_Remove");
 
     RegisterHamPlayer(Ham_Player_PreThink, "HamHook_Player_PreThink_Post", .Post = 1);
 }
@@ -96,14 +96,14 @@ public OnCast(pPlayer) {
     return PLUGIN_CONTINUE;
 }
 
-public OnSpellballRemove(pEntity) {
+public @Spellball_Remove(pEntity) {
     remove_task(pEntity);
     remove_task(pEntity+TASKID_SUM_DAMAGE);
     remove_task(pEntity+TASKID_SUM_KILL);
     remove_task(pEntity+TASKID_SUM_LIGHTNING_EFFECT);
 }
 
-public OnSpellballKilled(pEntity) {
+public @SpellBall_Killed(pEntity) {
     new iSpell = pev(pEntity, pev_iuser1);
     if (iSpell != g_hSpell) {
         return;

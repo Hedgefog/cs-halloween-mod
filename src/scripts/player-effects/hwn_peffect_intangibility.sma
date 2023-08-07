@@ -13,8 +13,6 @@
 
 #define EFFECT_ID "intangibility"
 
-#define STATUS_ICON "suit_empty"
-
 new const g_szSndDetonate[] = "hwn/spells/spell_intangibility.wav";
 
 public plugin_precache() {
@@ -24,7 +22,7 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
-    Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke");
+    Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "suit_empty", {32, 32, 32});
 
     RegisterHamPlayer(Ham_TraceAttack, "HamHook_Player_TraceAttack", .Post = 0);
     RegisterHamPlayer(Ham_TraceAttack, "HamHook_Player_TraceAttack_Post", .Post = 1);
@@ -35,15 +33,12 @@ public plugin_init() {
     set_pev(pPlayer, pev_renderfx, kRenderFxHologram);
 
     UTIL_ScreenFade(pPlayer, {50, 50, 50}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
-    UTIL_Message_StatusIcon(pPlayer, true, STATUS_ICON, {HWN_COLOR_PRIMARY});
 
     emit_sound(pPlayer, CHAN_STATIC, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
 @Player_EffectRevoke(pPlayer) {
     set_pev(pPlayer, pev_renderfx, kRenderFxNone);
-
-    UTIL_Message_StatusIcon(pPlayer, false, STATUS_ICON, {HWN_COLOR_PRIMARY});
 }
 
 public HamHook_Player_TraceAttack(pPlayer, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {

@@ -9,18 +9,21 @@
 #include <api_rounds>
 
 #include <hwn>
+#include <hwn_utils>
 
 #define PLUGIN "[Hwn] Player Effects"
 #define AUTHOR "Hedgehog Fog"
 
 enum PEffectData {
-  Array:PEffectData_Id[32],
+  Array:PEffectData_Id,
   Array:PEffectData_InvokeFunctionId,
   Array:PEffectData_RevokeFunctionId,
   Array:PEffectData_PluginId,
+  Array:PEffectData_Icon,
+  Array:PEffectData_IconColor,
   Array:PEffectData_Players,
-  Array:PEffectData_PlayerEffectDuration[MAX_PLAYERS],
-  Array:PEffectData_PlayerEffectEnd[MAX_PLAYERS]
+  Array:PEffectData_PlayerEffectDuration,
+  Array:PEffectData_PlayerEffectEnd
 };
 
 new Trie:g_itEffectsIds = Invalid_Trie;
@@ -39,6 +42,8 @@ public plugin_init() {
     g_rgPEffectData[PEffectData_InvokeFunctionId] = ArrayCreate();
     g_rgPEffectData[PEffectData_RevokeFunctionId] = ArrayCreate();
     g_rgPEffectData[PEffectData_PluginId] = ArrayCreate();
+    g_rgPEffectData[PEffectData_Icon] = ArrayCreate(32);
+    g_rgPEffectData[PEffectData_IconColor] = ArrayCreate(3);
     g_rgPEffectData[PEffectData_Players] = ArrayCreate();
     g_rgPEffectData[PEffectData_PlayerEffectEnd] = ArrayCreate(MAX_PLAYERS + 1);
     g_rgPEffectData[PEffectData_PlayerEffectDuration] = ArrayCreate(MAX_PLAYERS + 1);
@@ -73,10 +78,16 @@ public Native_Register(iPluginId, iArgc) {
     new szRevokeFunction[32];
     get_string(3, szRevokeFunction, charsmax(szRevokeFunction));
 
+    new szIcon[32];
+    get_string(4, szIcon, charsmax(szIcon));
+
+    new rgiIconColor[3];
+    get_array(5, rgiIconColor, sizeof(rgiIconColor));
+
     new iInvokeFunctionId = get_func_id(szInvokeFunction, iPluginId);
     new iRevokeFunctionId = get_func_id(szRevokeFunction, iPluginId);
 
-    return Register(szId, iInvokeFunctionId, iRevokeFunctionId, iPluginId);
+    return Register(szId, iInvokeFunctionId, iRevokeFunctionId, iPluginId, szIcon, rgiIconColor);
 }
 
 public bool:Native_SetPlayerEffect(iPluginId, iArgc) {
@@ -231,17 +242,27 @@ bool:SetPlayerEffect(pPlayer, iEffectId, bool:bValue, Float:flDuration = -1.0) {
         ArraySetCell(g_rgPEffectData[PEffectData_Players], iEffectId, iPlayers & ~BIT(pPlayer & 31));
     }
 
+    static szIcon[32];
+    ArrayGetString(g_rgPEffectData[PEffectData_Icon], iEffectId, szIcon, charsmax(szIcon));
+
+    if (!equal(szIcon, NULL_STRING)) {
+        new irgIconColor[3];
+        ArrayGetArray(g_rgPEffectData[PEffectData_IconColor], iEffectId, irgIconColor, sizeof(irgIconColor));
+        UTIL_Message_StatusIcon(pPlayer, bValue, szIcon, irgIconColor);
+    }
 
     return true;
 }
 
-Register(const szId[], iInvokeFunctionId, iRevokeFunctionId, iPluginId) {
+Register(const szId[], iInvokeFunctionId, iRevokeFunctionId, iPluginId, const szIcon[], const rgiIconColor[3]) {
     new iEffectId = g_iEffectssNum;
 
     ArrayPushString(g_rgPEffectData[PEffectData_Id], szId);
     ArrayPushCell(g_rgPEffectData[PEffectData_InvokeFunctionId], iInvokeFunctionId);
     ArrayPushCell(g_rgPEffectData[PEffectData_RevokeFunctionId], iRevokeFunctionId);
     ArrayPushCell(g_rgPEffectData[PEffectData_PluginId], iPluginId);
+    ArrayPushString(g_rgPEffectData[PEffectData_Icon], szIcon);
+    ArrayPushArray(g_rgPEffectData[PEffectData_IconColor], rgiIconColor);
     ArrayPushCell(g_rgPEffectData[PEffectData_Players], 0);
     ArrayPushCell(g_rgPEffectData[PEffectData_PlayerEffectEnd], 0);
     ArrayPushCell(g_rgPEffectData[PEffectData_PlayerEffectDuration], 0);

@@ -54,7 +54,7 @@ public plugin_init() {
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 
-    CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
+    CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Killed");
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -79,7 +79,7 @@ public HamHook_Base_Touch_Post(pEntity, pTarget) {
     CE_Kill(pEntity);
 }
 
-public OnSpellballKilled(pEntity) {
+public @SpellBall_Killed(pEntity) {
     new iSpell = pev(pEntity, pev_iuser1);
 
     if (iSpell != g_hSpell) {
@@ -170,10 +170,10 @@ SpawnEggs(const Float:vecOrigin[3], iTeam = 0, pOwner = 0) {
 }
 
 DetonateEffect(pEntity) {
-    new Float:vecVelocity[3];
+    static Float:vecVelocity[3];
     UTIL_RandomVector(-128.0, 128.0, vecVelocity);
 
-    new Float:vecOrigin[3];
+    static Float:vecOrigin[3];
     pev(pEntity, pev_origin, vecOrigin);
     UTIL_Message_Dlight(vecOrigin, 36, {HWN_COLOR_SECONDARY}, 30, 12);
 

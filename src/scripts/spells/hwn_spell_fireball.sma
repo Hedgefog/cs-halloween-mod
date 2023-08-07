@@ -53,7 +53,7 @@ public plugin_init() {
 
     g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 
-    CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "OnSpellballKilled");
+    CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Killed");
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -78,7 +78,7 @@ public HamHook_Base_Touch_Post(pEntity, pTarget) {
     CE_Kill(pEntity);
 }
 
-public OnSpellballKilled(pEntity) {
+public @SpellBall_Killed(pEntity) {
     new iSpell = pev(pEntity, pev_iuser1);
 
     if (iSpell != g_hSpell) {

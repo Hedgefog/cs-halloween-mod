@@ -34,7 +34,7 @@ public plugin_precache() {
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
 
-    g_hSpell = Hwn_Spell_Register("Blink", Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage, "OnCast");
+    g_hSpell = Hwn_Spell_Register("Blink", Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage, "Cast");
 }
 
 public plugin_init() {
@@ -49,7 +49,7 @@ public plugin_init() {
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnCast(pPlayer) {
+public Cast(pPlayer) {
     new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
 
     if (!pEntity) {
