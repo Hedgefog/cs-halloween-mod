@@ -209,7 +209,6 @@ public plugin_init() {
     set_pev(this, pev_renderfx, kRenderFxGlowShell);
     set_pev(this, pev_renderamt, 4.0);
     set_pev(this, pev_rendercolor, Float:{0.0, 0.0, 0.0});
-    set_pev(this, pev_team, 0);
     set_pev(this, pev_health, bSmall ? NPC_Small_Health : NPC_Health);
     set_pev(this, pev_takedamage, DAMAGE_AIM);
     set_pev(this, pev_view_ofs, Flaot:{0.0, 0.0, 32.0});
