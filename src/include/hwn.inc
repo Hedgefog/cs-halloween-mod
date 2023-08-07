@@ -552,3 +552,9 @@ forward Hwn_SpellShop_Fw_BuySpell(pPlayer, iSpell);
 
 native Hwn_Crits_Get(pPlayer);
 native Hwn_Crits_Set(pPlayer, bool:value);
+
+/*--------------------------------[ Player Effects ]--------------------------------*/
+
+native Hwn_PlayerEffect_Register(const szId[], const szInvokeFunction[], const szRevokeFunction[]);
+native Hwn_Player_SetEffect(pPlayer, const szId[], bool:bValue, Float:flDuration = -1.0);
+native bool:Hwn_Player_GetEffect(pPlayer, const szId[]);
