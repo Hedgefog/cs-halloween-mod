@@ -42,8 +42,6 @@ public plugin_precache() {
         Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Radius,
         "Cast"
     );
-
-    Hwn_Wof_Spell_Register("Fire", "Invoke", "Revoke");
 }
 
 public plugin_init() {
@@ -102,23 +100,6 @@ public Cast(pPlayer) {
     emit_sound(pPlayer, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     return PLUGIN_CONTINUE;
-}
-
-public Invoke(pPlayer, Float:flTime) {
-    if (!is_user_alive(pPlayer)) {
-        return;
-    }
-
-    burn_player(pPlayer, 0);
-    DetonateEffect(pPlayer);
-}
-
-public Revoke(pPlayer, Float:flTime) {
-    if (!is_user_alive(pPlayer)) {
-        return;
-    }
-
-    extinguish_player(pPlayer);
 }
 
 Detonate(pEntity) {

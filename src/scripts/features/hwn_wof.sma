@@ -14,8 +14,9 @@
 #define PLUGIN "[Hwn] Wheel of Fate"
 #define AUTHOR "Hedgehog Fog"
 
-#define TASKID_ROLL_END 1000
-#define TASKID_EFFECT_END 2000
+#define TASKID_ROLL 1000
+#define TASKID_ROLL_END 2000
+#define TASKID_EFFECT_END 3000
 
 #define ROLL_TIME 6.8
 
@@ -34,6 +35,8 @@ new bool:g_bEffectStarted = false;
 new Float:g_flEffectTime;
 new Float:g_flEffectStartTime;
 
+new g_pCvarEnabled;
+new g_pCvarRollDelay;
 new g_pCvarEffectTime;
 
 new g_fwRollStart;
@@ -54,6 +57,8 @@ public plugin_init() {
     RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
     RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed_Post", .Post = 1);
 
+    g_pCvarEnabled = register_cvar("hwn_wof_enabled", "1");
+    g_pCvarRollDelay = register_cvar("hwn_wof_delay", "90.0");
     g_pCvarEffectTime = register_cvar("hwn_wof_effect_time", "20.0");
 
     register_concmd("hwn_wof_roll", "Command_WofRoll", ADMIN_CVAR);
@@ -80,7 +85,7 @@ public plugin_end() {
 }
 
 public plugin_natives() {
-    register_library("hwn");
+    register_library("hwn_wof");
     register_native("Hwn_Wof_Spell_Register", "Native_Spell_Register");
     register_native("Hwn_Wof_Spell_GetName", "Native_Spell_GetName");
     register_native("Hwn_Wof_Spell_GetDictionaryKey", "Native_Spell_GetDictionaryKey");
@@ -234,6 +239,13 @@ public HamHook_Player_Killed_Post(pPlayer) {
 
 public Round_Fw_NewRound() {
     Abort();
+    SetRollTask();
+}
+
+/*--------------------------------[ Forwards ]--------------------------------*/
+
+public Hwn_Fw_ConfigLoaded() {
+    SetRollTask();
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -295,6 +307,7 @@ EndEffect() {
     }
 
     Reset();
+    SetRollTask();
 }
 
 Abort() {
@@ -373,11 +386,30 @@ Reset() {
     g_iSpell = -1;
     g_bEffectStarted = false;
     g_flEffectStartTime = 0.0;
+    remove_task(TASKID_ROLL);
     remove_task(TASKID_ROLL_END);
     remove_task(TASKID_EFFECT_END);
 }
 
+SetRollTask() {
+    if (get_pcvar_num(g_pCvarEnabled) <= 0) {
+        return;
+    }
+
+    new Hwn_GamemodeFlags:iGameModeFlags = Hwn_Gamemode_GetFlags();
+    if (~iGameModeFlags & Hwn_GamemodeFlag_RespawnPlayers) {
+        return;
+    }
+
+    remove_task(TASKID_ROLL);
+    set_task(get_pcvar_float(g_pCvarRollDelay), "Task_Roll", TASKID_ROLL);
+}
+
 /*--------------------------------[ Tasks ]--------------------------------*/
+
+public Task_Roll() {
+    StartRoll();
+}
 
 public Task_EndRoll() {
     EndRoll();

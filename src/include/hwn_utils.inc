@@ -361,31 +361,6 @@ stock UTIL_FindEntityNearby(startEnt = 0, const Float:vecOrigin[3], const Float:
     return pTarget;
 }
 
-stock bool:UTIL_EntityIntersects(pStartEnt, pEndEnt) {
-    new Float:vecAbsMin1[3];
-    pev(pStartEnt, pev_absmin, vecAbsMin1);
-
-    new Float:vecAbsMax1[3];
-    pev(pStartEnt, pev_absmax, vecAbsMax1);
-
-    new Float:vecAbsMin2[3];
-    pev(pEndEnt, pev_absmin, vecAbsMin2);
-
-    new Float:vecAbsMax2[3];
-    pev(pEndEnt, pev_absmax, vecAbsMax2);
-
-    if (vecAbsMin2[0] > vecAbsMax1[0]
-        || vecAbsMin2[1] > vecAbsMax1[1]
-        || vecAbsMin2[2] > vecAbsMax1[2]
-        || vecAbsMax2[0] < vecAbsMin1[0]
-        || vecAbsMax2[1] < vecAbsMin1[1]
-        || vecAbsMax2[2] < vecAbsMin1[2]) {
-        return false;
-    }
-
-    return true;
-}
-
 stock bool:UTIL_FindPlaceToTeleport(pEntity, const Float:vecTarget[3], Float:vecOut[3], iHull = HULL_POINT, iIgnoreFlags = DONT_IGNORE_MONSTERS) {
     static Float:vecMins[3];
     pev(pEntity, pev_mins, vecMins);

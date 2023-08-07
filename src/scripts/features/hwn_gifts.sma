@@ -56,7 +56,7 @@ public plugin_end() {
 }
 
 public plugin_natives() {
-    register_library("hwn");
+    register_library("hwn_gifts");
     register_native("Hwn_Gifts_AddTarget", "Native_AddTarget");
     register_native("Hwn_Gifts_GetTargetCount", "Native_GetTargetCount");
     register_native("Hwn_Gifts_GetTarget", "Native_GetTarget");
@@ -92,6 +92,13 @@ public client_putinserver(pPlayer) {
 
 public client_disconnected(pPlayer) {
     remove_task(pPlayer + TASKID_SUM_SPAWN_GIFT);
+}
+
+public Hwn_Bosses_Fw_Winner(pPlayer) {
+    new iNum = Hwn_Cosmetic_GetCount();
+    new iCosmetic = Hwn_Cosmetic_GetCosmetic(random(iNum));
+
+    PCosmetic_Give(pPlayer, iCosmetic, PCosmetic_Type_Unusual, get_pcvar_num(g_pCvarGiftCosmeticMaxTime));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/

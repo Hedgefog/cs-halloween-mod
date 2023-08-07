@@ -1,6 +1,7 @@
 #include <amxmodx>
 
 #include <hwn>
+#include <hwn_crits>
 
 #define PLUGIN "[Hwn] Player Effect"
 #define VERSION HWN_VERSION

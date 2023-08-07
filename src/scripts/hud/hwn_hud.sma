@@ -7,6 +7,7 @@
 #include <api_custom_entities>
 
 #include <hwn>
+#include <hwn_wof>
 #include <hwn_utils>
 
 #define PLUGIN "[Hwn] HUD"

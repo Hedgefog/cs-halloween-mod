@@ -97,7 +97,7 @@ public plugin_init() {
 }
 
 public plugin_natives() {
-    register_library("hwn");
+    register_library("hwn_crits");
     register_native("Hwn_Crits_Get", "Native_GetPlayerCrits");
     register_native("Hwn_Crits_Set", "Native_SetPlayerCrits");
 }

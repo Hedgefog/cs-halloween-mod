@@ -25,14 +25,13 @@ new const g_szSndCast[] = "hwn/spells/spell_skeletons_horde_cast.wav";
 new const g_szSndDetonate[] = "hwn/spells/spell_skeletons_horde_rise.wav";
 new const g_szSprSpellBall[] = "sprites/xsmoke1.spr";
 
-new g_mdlGibs;
+new g_iGibsModelIndex;
 
 new g_hSpell;
-new g_hWofSpell;
 new g_hCeSpellball;
 
 public plugin_precache() {
-    g_mdlGibs = precache_model("models/bonegibs.mdl");
+    g_iGibsModelIndex = precache_model("models/bonegibs.mdl");
     precache_model(g_szSprSpellBall);
 
     precache_sound(g_szSndCast);
@@ -43,8 +42,6 @@ public plugin_precache() {
         Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Radius | Hwn_SpellFlag_Rare,
         "Cast"
     );
-
-    g_hWofSpell = Hwn_Wof_Spell_Register("Skeletons Horde", "Invoke");
 }
 
 public plugin_init() {
@@ -89,32 +86,6 @@ public @SpellBall_Killed(pEntity) {
     Detonate(pEntity);
 }
 
-/*--------------------------------[ Forwards ]--------------------------------*/
-
-public Hwn_Wof_Fw_Effect_Start(iSpell) {
-    if (g_hWofSpell != iSpell) {
-        return;
-    }
-
-    Hwn_Wof_Abort();
-
-    new pTarget = -1;
-    while ((pTarget = engfunc(EngFunc_FindEntityByString, pTarget, "classname", "hwn_pumpkin_dispenser")) != 0) {
-        static Float:vecOrigin[3];
-        pev(pTarget, pev_origin, vecOrigin);
-
-        static Float:vecDir[3];
-        pev(pTarget, pev_angles, vecDir);
-        angle_vector(vecDir, ANGLEVECTOR_UP, vecDir);
-        xs_vec_mul_scalar(vecDir, -64.0, vecDir);
-
-        xs_vec_add(vecOrigin, vecDir, vecOrigin);
-
-        SpawnEggs(vecOrigin);
-        DetonateEffect(pTarget);
-    }
-}
-
 /*--------------------------------[ Methods ]--------------------------------*/
 
 public Cast(pPlayer) {
@@ -129,8 +100,6 @@ public Cast(pPlayer) {
 
     return PLUGIN_CONTINUE;
 }
-
-public Invoke(pPlayer) {}
 
 Detonate(pEntity) {
     new pOwner = pev(pEntity, pev_owner);
@@ -177,7 +146,7 @@ DetonateEffect(pEntity) {
     pev(pEntity, pev_origin, vecOrigin);
     UTIL_Message_Dlight(vecOrigin, 36, {HWN_COLOR_SECONDARY}, 30, 12);
 
-    UTIL_Message_BreakModel(vecOrigin, Float:{16.0, 16.0, 16.0}, vecVelocity, 30, g_mdlGibs, 20, 25, 0);
+    UTIL_Message_BreakModel(vecOrigin, Float:{16.0, 16.0, 16.0}, vecVelocity, 30, g_iGibsModelIndex, 20, 25, 0);
 
     emit_sound(pEntity, CHAN_BODY , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

@@ -26,6 +26,7 @@ new const g_szSndBossEscape[] = "hwn/misc/halloween_boss_escape.wav";
 new const g_szSndCongratulations[] = "hwn/misc/congratulations.wav";
 
 new g_pCvarBossSpawnDelay;
+new g_pCvarBossSpawnKillRadius;
 new g_pCvarBossLifeTime;
 new g_pCvarBossMinDamageToWin;
 new g_pCvarBossPve;
@@ -58,6 +59,7 @@ public plugin_init() {
     RegisterHookChain(RG_CSGameRules_FPlayerCanTakeDamage, "HC_Player_CanTakeDamage");
 
     g_pCvarBossSpawnDelay = register_cvar("hwn_boss_spawn_delay", "300.0");
+    g_pCvarBossSpawnKillRadius = register_cvar("hwn_boss_spawn_kill_radius", "64.0");
     g_pCvarBossLifeTime = register_cvar("hwn_boss_life_time", "120.0");
     g_pCvarBossMinDamageToWin = register_cvar("hwn_boss_min_damage_to_win", "300");
     g_pCvarBossPve = register_cvar("hwn_boss_pve", "0");
@@ -256,31 +258,29 @@ public @Boss_Remove(this) {
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDamage) {
-    if (pEntity != g_pBoss) {
-        return HAM_IGNORED;
+    if (pEntity == g_pBoss) {
+        if (IS_PLAYER(pAttacker)) {
+            g_rgiPlayerTotalDamage[pAttacker] += floatround(flDamage);
+        }
+
+        return HAM_HANDLED;
     }
 
-    if (!IS_PLAYER(pAttacker)) {
-        return HAM_IGNORED;
-    }
-
-    g_rgiPlayerTotalDamage[pAttacker] += floatround(flDamage);
-
-    return HAM_HANDLED;
+    return HAM_IGNORED;
 }
 
 public HamHook_Hurt_Touch(pEntity, pToucher) {
-    if (pToucher != g_pBoss) {
-        return HAM_IGNORED;
+    if (pToucher == g_pBoss) {
+        static Float:vecOrigin[3];
+        ArrayGetArray(g_irgBossSpawnPoints, g_iBossSpawnPoint, vecOrigin);
+        engfunc(EngFunc_SetOrigin, g_pBoss, vecOrigin);
+
+        ExecuteForward(g_fwBossTeleport, g_fwResult, g_pBoss, g_iBossIdx);
+
+        return HAM_SUPERCEDE;
     }
 
-    new Float:vecOrigin[3];
-    ArrayGetArray(g_irgBossSpawnPoints, g_iBossSpawnPoint, vecOrigin);
-    engfunc(EngFunc_SetOrigin, g_pBoss, vecOrigin);
-
-    ExecuteForward(g_fwBossTeleport, g_fwResult, g_pBoss, g_iBossIdx);
-
-    return HAM_SUPERCEDE;
+    return HAM_IGNORED;
 }
 
 public HC_Player_CanTakeDamage(pPlayer, pAttacker) {
@@ -333,7 +333,8 @@ SpawnBoss() {
 
     dllfunc(DLLFunc_Spawn, g_pBoss);
     client_cmd(0, "spk %s", g_szSndBossSpawn);
-    IntersectKill();
+
+    RadiusKill(vecOrigin);
 
     new Float:flLifeTime = get_pcvar_float(g_pCvarBossLifeTime);
     CE_SetMember(g_pBoss, CE_MEMBER_NEXTKILL, get_gametime() + flLifeTime);
@@ -343,29 +344,24 @@ SpawnBoss() {
     ExecuteForward(g_fwBossSpawn, g_fwResult, g_pBoss, flLifeTime);
 }
 
-IntersectKill() {
-    if (g_pBoss == -1) {
-        return;
-    }
+RadiusKill(const Float:vecOrigin[3]) {
+    new Float:flRadius = get_pcvar_float(g_pCvarBossSpawnKillRadius);
 
-    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
-        if (!is_user_connected(pPlayer)) {
+    new pTarget = 0;
+    while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, flRadius)) > 0) {
+        if (g_pBoss == pTarget) {
             continue;
         }
 
-        if (!is_user_alive(pPlayer)) {
-            continue;
-        }
-
-        if (UTIL_EntityIntersects(pPlayer, g_pBoss)) {
-            ExecuteHamB(Ham_TakeDamage, pPlayer, g_pBoss, g_pBoss, BOSS_SPAWN_DAMAGE, DMG_ALWAYSGIB);
+        if ((IS_PLAYER(pTarget) && is_user_alive(pTarget)) || UTIL_IsMonster(pTarget)) {
+            ExecuteHamB(Ham_Killed, pTarget, g_pBoss, GIB_ALWAYS);
         }
     }
 }
 
 CreateBossSpawnTask() {
     remove_task(TASKID_SPAWN_BOSS);
-    set_task(get_pcvar_float(g_pCvarBossSpawnDelay), "TaskSpawnBoss", TASKID_SPAWN_BOSS);
+    set_task(get_pcvar_float(g_pCvarBossSpawnDelay), "Task_SpawnBoss", TASKID_SPAWN_BOSS);
 }
 
 ResetPlayersTotalDamage() {
@@ -375,37 +371,21 @@ ResetPlayersTotalDamage() {
 }
 
 SelectWinners() {
-    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer)
-    {
+    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
         if (!is_user_connected(pPlayer)) {
             continue;
         }
 
         new iTotalDamage = g_rgiPlayerTotalDamage[pPlayer];
         if (iTotalDamage >= get_pcvar_num(g_pCvarBossMinDamageToWin)) {
-            ExecuteForward(g_fwWinner, g_fwResult, pPlayer, iTotalDamage);
-
-            static pCvarGiftCosmeticMaxTime;
-            if (!pCvarGiftCosmeticMaxTime) {
-                pCvarGiftCosmeticMaxTime = get_cvar_pointer("hwn_gifts_cosmetic_max_time");
-            }
-
-            new iNum = Hwn_Cosmetic_GetCount();
-            new iCosmetic = Hwn_Cosmetic_GetCosmetic(random(iNum));
-
-            PCosmetic_Give(pPlayer, iCosmetic, PCosmetic_Type_Unusual, get_pcvar_num(pCvarGiftCosmeticMaxTime));
-
             client_cmd(pPlayer, "spk %s", g_szSndCongratulations);
+            ExecuteForward(g_fwWinner, g_fwResult, pPlayer, iTotalDamage);
         }
     }
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/
 
-public TaskSpawnBoss() {
+public Task_SpawnBoss() {
     SpawnBoss();
-}
-
-public TaskRemoveBoss() {
-    CE_Remove(g_pBoss);
 }

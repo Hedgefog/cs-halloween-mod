@@ -20,8 +20,6 @@
 #define SPELLBOOK_ENTITY_CLASSNAME "hwn_item_spellbook"
 #define BACKPACK_ENTITY_CLASSNAME "hwn_item_pumpkin_big"
 
-#define TASKID_WOF_ROLL 1000
-
 #define TEAM_COUNT 4
 
 new const g_szSndPointCollected[] = "hwn/misc/collected.wav";
@@ -43,8 +41,6 @@ new g_iGamemode;
 new g_pCvarTeamPointsLimit;
 new g_pCvarRoundTime;
 new g_pCvarRoundTimeOvertime;
-new g_pCvarWofEnabled;
-new g_pCvarWofDelay;
 new g_pCvarNpcDropChanceSpell;
 new g_pCvarTeamPointsToBossSpawn;
 new g_pCvarTeamPointsReward;
@@ -75,8 +71,6 @@ public plugin_init() {
     g_pCvarTeamPointsLimit = register_cvar("hwn_collector_teampoints_limit", "50");
     g_pCvarRoundTime = register_cvar("hwn_collector_roundtime", "10.0");
     g_pCvarRoundTimeOvertime = register_cvar("hwn_collector_roundtime_overtime", "30");
-    g_pCvarWofEnabled = register_cvar("hwn_collector_wof", "1");
-    g_pCvarWofDelay = register_cvar("hwn_collector_wof_delay", "90.0");
     g_pCvarNpcDropChanceSpell = register_cvar("hwn_collector_npc_drop_chance_spell", "7.5");
     g_pCvarTeamPointsToBossSpawn = register_cvar("hwn_collector_teampoints_to_boss_spawn", "20");
     g_pCvarTeamPointsReward = register_cvar("hwn_collector_teampoints_reward", "150");
@@ -228,22 +222,12 @@ public HamHook_Base_Killed_Post(pEntity) {
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
-public Hwn_Fw_ConfigLoaded() {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) {
-        return;
-    }
-
-    SetWofTask();
-}
-
 public Round_Fw_NewRound() {
     if (g_iGamemode != Hwn_Gamemode_GetCurrent()) {
         return;
     }
 
     ResetVariables();
-    ClearWofTasks();
-    SetWofTask();
 
     g_bOvertime = false;
 }
@@ -284,18 +268,6 @@ public Round_Fw_RoundExpired() {
     } else {
         DispatchWin(iTTeamPoints > iCtTeamPoints ? 1 : 2);
     }
-}
-
-public Hwn_Wof_Fw_Effect_End() {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) {
-        return;
-    }
-
-    SetWofTask();
-}
-
-public Hwn_Wof_Fw_Roll_Start() {
-    ClearWofTasks();
 }
 
 public Hwn_Bosses_Fw_BossSpawn(pEntity, Float:flLifeTime) {
@@ -429,26 +401,7 @@ ResetVariables() {
     g_iTeamPointsToSpawnBoss = 0;
 }
 
-SetWofTask() {
-    if (get_pcvar_num(g_pCvarWofEnabled) <= 0) {
-        return;
-    }
-
-    remove_task(TASKID_WOF_ROLL);
-    set_task(get_pcvar_float(g_pCvarWofDelay), "Task_WofRoll", TASKID_WOF_ROLL);
-}
-
-ClearWofTasks() {
-    remove_task(TASKID_WOF_ROLL);
-}
-
 DispatchWin(iTeam) {
     Hwn_Gamemode_DispatchWin(iTeam);
     ExecuteForward(g_fwWinnerTeam, _, iTeam);
-}
-
-/*--------------------------------[ Tasks ]--------------------------------*/
-
-public Task_WofRoll() {
-    Hwn_Wof_Roll();
 }

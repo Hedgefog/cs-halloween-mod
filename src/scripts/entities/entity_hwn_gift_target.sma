@@ -5,6 +5,7 @@
 #include <api_custom_entities>
 
 #include <hwn>
+#include <hwn_gifts>
 
 #define PLUGIN "[Custom Entity] Hwn Gift Target"
 #define AUTHOR "Hedgehog Fog"

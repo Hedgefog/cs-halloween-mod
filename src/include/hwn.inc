@@ -455,15 +455,6 @@ forward Hwn_Collector_Fw_WinnerTeam(iTeam);
 forward Hwn_Collector_Fw_TeamPointsScored(iTeam, iCount, pPlayer);
 forward Hwn_Collector_Fw_ObjectiveBlocked(pPlayer);
 
-/*--------------------------------[ Gifts ]--------------------------------*/
-native Hwn_Gifts_AddTarget(const Float:vecOrigin[3]);
-native Hwn_Gifts_GetTargetCount();
-native Hwn_Gifts_GetTarget(iTarget, Float:vecOrigin[3]);
-
-forward Hwn_Gifts_Fw_GiftSpawn(pPlayer, pEntity);
-forward Hwn_Gifts_Fw_GiftPicked(pPlayer, pEntity);
-forward Hwn_Gifts_Fw_GiftDisappear(pPlayer, pEntity);
-
 /*--------------------------------[ Spells ]--------------------------------*/
 
 native Hwn_Spell_Register(const szName[], Hwn_SpellFlags:iFlags = Hwn_SpellFlag_None, const szCastCallback[]);
@@ -478,26 +469,6 @@ native Hwn_Spell_SetPlayerSpell(pPlayer, iSpell, iAmount = 0);
 native Hwn_Spell_CastPlayerSpell(pPlayer);
 
 forward Hwn_Spell_Fw_Cast(pPlayer, iSpell);
-
-/*--------------------------------[ Wheel of Fate ]--------------------------------*/
-native Hwn_Wof_Spell_Register(const szName[], const szInvokeCallback[] = "", const szRevokeCallback[] = "");
-native Hwn_Wof_Spell_GetCount();
-native Hwn_Wof_Spell_GetName(iSpell, szOutput[], iLen);
-native Hwn_Wof_Spell_GetHandler(const szName[]);
-native Hwn_Wof_Spell_GetDictionaryKey(iSpell, szOutput[], iLen);
-native Hwn_Wof_Roll();
-native Hwn_Wof_Abort();
-native Hwn_Wof_Effect_GetCurrentSpell();
-native Float:Hwn_Wof_Effect_GetStartTime();
-native Float:Hwn_Wof_Effect_GetDuration();
-
-forward Hwn_Wof_Fw_Roll_Start();
-forward Hwn_Wof_Fw_Roll_End();
-forward Hwn_Wof_Fw_Effect_Start(iSpell);
-forward Hwn_Wof_Fw_Effect_End(iSpell);
-forward Hwn_Wof_Fw_Effect_Invoke(pPlayer, iSpell, Float:flEffectTime);
-forward Hwn_Wof_Fw_Effect_Revoke(pPlayer, iSpell);
-forward Hwn_Wof_Fw_Abort();
 
 /*--------------------------------[ Cosmetic ]--------------------------------*/
 
@@ -547,11 +518,6 @@ native Hwn_SpellShop_GetSpellPrice(iSpell);
 
 forward Hwn_SpellShop_Fw_Open(pPlayer);
 forward Hwn_SpellShop_Fw_BuySpell(pPlayer, iSpell);
-
-/*--------------------------------[ Crits ]--------------------------------*/
-
-native Hwn_Crits_Get(pPlayer);
-native Hwn_Crits_Set(pPlayer, bool:value);
 
 /*--------------------------------[ Player Effects ]--------------------------------*/
 
