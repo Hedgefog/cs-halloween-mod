@@ -66,6 +66,7 @@ public plugin_init() {
     Round_HookCheckWinConditions("OnCheckWinConditions");
 
     RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
+    RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed", .Post = 0);
     RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed_Post", .Post = 1);
 
     register_message(get_user_msgid("ClCorpse"), "Message_ClCorpse");
@@ -311,6 +312,15 @@ public HamHook_Player_Spawn_Post(pPlayer) {
         set_task(get_pcvar_float(g_pCvarSpawnProtectionTime), "Task_DisableSpawnProtection", pPlayer + TASKID_SUM_SPAWN_PROTECTION);
         UTIL_SetPlayerTeamChange(pPlayer, true);
     }
+}
+
+public HamHook_Player_Killed(pPlayer, pKiller) {
+    new pOwner = pev(pKiller, pev_owner);
+    if (IS_PLAYER(pOwner) && is_user_alive(pOwner)) {
+        SetHamParamEntity2(2, pOwner);
+    }
+
+    return HAM_HANDLED;
 }
 
 public HamHook_Player_Killed_Post(pPlayer) {
