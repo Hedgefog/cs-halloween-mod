@@ -77,9 +77,7 @@ public Hwn_Fw_ConfigLoaded() {
     g_particlesEnabled = get_cvar_num("hwn_enable_particles");
 }
 
-@Entity_Init(pEntity) {
-
-}
+@Entity_Init(pEntity) {}
 
 @Entity_Spawn(pEntity) {
     @Entity_RemoveParticles(pEntity);
@@ -96,8 +94,8 @@ public Hwn_Fw_ConfigLoaded() {
     }
 
     new bool:bIsRare = !!(Hwn_Spell_GetFlags(iSpell) & Hwn_SpellFlag_Rare);
-    new iMaxSpellsNum = bIsRare ? get_pcvar_num(g_pCvarMaxRareSpellsNum) : get_pcvar_num(g_pCvarMaxSpellsNum);
 
+    new iMaxSpellsNum = bIsRare ? get_pcvar_num(g_pCvarMaxRareSpellsNum) : get_pcvar_num(g_pCvarMaxSpellsNum);
     if (iMaxSpellsNum <= 0) {
         CE_Remove(pEntity);
         return;
@@ -120,7 +118,8 @@ public Hwn_Fw_ConfigLoaded() {
 }
 
 @Entity_Killed(pEntity) {
-    CE_SetMember(pEntity, "iAmount", 0);
+    CE_DeleteMember(pEntity, "iSpell");
+    CE_DeleteMember(pEntity, "iAmount");
     @Entity_RemoveParticles(pEntity);
 }
 
