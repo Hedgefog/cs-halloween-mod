@@ -15,11 +15,9 @@ public plugin_init() {
 }
 
 @Player_EffectInvoke(pPlayer) {
-    client_print(pPlayer, print_chat, "Crits Invoke");
     Hwn_Crits_Set(pPlayer, true);
 }
 
 @Player_EffectRevoke(pPlayer) {
-    client_print(pPlayer, print_chat, "Crits Revoke");
     Hwn_Crits_Set(pPlayer, false);
 }

@@ -17,9 +17,6 @@
 #define ENTITY_NAME "hwn_item_pumpkin"
 #define ENTITY_NAME_BIG "hwn_item_pumpkin_big"
 
-#define TASKID_SUM_DISABLE_CRITS 1000
-#define TASKID_SUM_DISABLE_GRAVITY 1100
-
 #define FLASH_RADIUS 16
 #define FLASH_LIFETIME 10
 #define FLASH_DECAY_RATE 16
@@ -102,7 +99,7 @@ public plugin_init() {
 
     switch (iType) {
         case Hwn_PumpkinType_Crits: {
-            GiveCrits(pPlayer, 2.0);
+            Hwn_Player_SetEffect(pPlayer, "crits", true, 2.0);
         }
         case Hwn_PumpkinType_Equipment: {
             Hwn_PEquipment_GiveAmmo(pPlayer);
@@ -112,7 +109,7 @@ public plugin_init() {
             Hwn_PEquipment_GiveHealth(pPlayer, 30);
         }
         case Hwn_PumpkinType_Gravity: {
-            GiveGravity(pPlayer, 2.0);
+            Hwn_Player_SetEffect(pPlayer, "moonjump", true, 2.0);
         }
     }
 
@@ -141,39 +138,3 @@ public plugin_init() {
     }
 }
 
-/*------------[ Functions ]------------*/
-
-GiveCrits(pPlayer, Float:flTime) {
-    if (Hwn_Crits_Get(pPlayer) && !task_exists(pPlayer + TASKID_SUM_DISABLE_CRITS)) {
-        return;
-    }
-
-    Hwn_Crits_Set(pPlayer, true);
-    remove_task(pPlayer + TASKID_SUM_DISABLE_CRITS);
-    set_task(flTime, "Task_DisableCrits", pPlayer + TASKID_SUM_DISABLE_CRITS);
-}
-
-GiveGravity(pPlayer, Float:flTime) {
-    static Float:flGravity;
-    pev(pPlayer, pev_gravity, flGravity);
-    
-    if (flGravity != 1.0 && !task_exists(pPlayer + TASKID_SUM_DISABLE_GRAVITY)) {
-        return;
-    }
-
-    set_pev(pPlayer, pev_gravity, MOON_GRAVIY);
-    remove_task(pPlayer + TASKID_SUM_DISABLE_GRAVITY);
-    set_task(flTime, "Task_DisableGravity", pPlayer + TASKID_SUM_DISABLE_GRAVITY);
-}
-
-/*------------[ Tasks ]------------*/
-
-public Task_DisableCrits(iTaskId) {
-    new pPlayer = iTaskId - TASKID_SUM_DISABLE_CRITS;
-    Hwn_Crits_Set(pPlayer, false);
-}
-
-public Task_DisableGravity(iTaskId) {
-    new pPlayer = iTaskId - TASKID_SUM_DISABLE_GRAVITY;
-    set_pev(pPlayer, pev_gravity, 1.0);
-}

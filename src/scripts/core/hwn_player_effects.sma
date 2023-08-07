@@ -103,8 +103,9 @@ public bool:Native_SetPlayerEffect(iPluginId, iArgc) {
 
     new bool:bValue = bool:get_param(3);
     new Float:flDuration = get_param_f(4);
+    new bool:bExtend = bool:get_param(5);
 
-    return SetPlayerEffect(pPlayer, iEffectId, bValue, flDuration);
+    return SetPlayerEffect(pPlayer, iEffectId, bValue, flDuration, bExtend);
 }
 
 public bool:Native_GetPlayerEffect(iPluginId, iArgc) {
@@ -193,9 +194,7 @@ public Command_Set(pPlayer, iLevel, iCId) {
 
     new Float:flDuration = equal(szDuration, NULL_STRING) ? -1.0 : str_to_float(szDuration);
 
-    SetPlayerEffect(pTarget, iEffectId, bValue, flDuration);
-
-    // log_amx("[Set Effect] %d %d %d %f", pTarget, iEffectId, bValue, flDuration);
+    SetPlayerEffect(pTarget, iEffectId, bValue, flDuration, false);
 
     return PLUGIN_HANDLED;
 }
@@ -210,7 +209,7 @@ bool:GetPlayerEffect(pPlayer, iEffectId) {
     return !!(iPlayers & BIT(pPlayer & 31));
 }
 
-bool:SetPlayerEffect(pPlayer, iEffectId, bool:bValue, Float:flDuration = -1.0) {
+bool:SetPlayerEffect(pPlayer, iEffectId, bool:bValue, Float:flDuration = -1.0, bool:bExtend = true) {
     if (bValue && !is_user_alive(pPlayer)) {
         return false;
     }
@@ -218,7 +217,7 @@ bool:SetPlayerEffect(pPlayer, iEffectId, bool:bValue, Float:flDuration = -1.0) {
     new iPlayers = ArrayGetCell(g_rgPEffectData[PEffectData_Players], iEffectId);
     new bool:bCurrentValue = !!(iPlayers & BIT(pPlayer & 31));
 
-    if (bValue == bCurrentValue) {
+    if (bValue == bCurrentValue && (!bValue || !bExtend)) {
         return false;
     }
 
@@ -235,9 +234,20 @@ bool:SetPlayerEffect(pPlayer, iEffectId, bool:bValue, Float:flDuration = -1.0) {
     if (bValue) {
         ArraySetCell(g_rgPEffectData[PEffectData_Players], iEffectId, iPlayers | BIT(pPlayer & 31));
 
-        new Float:flEndTime = flDuration < 0.0 ? 0.0 : get_gametime() + flDuration;
-        ArraySetCell(g_rgPEffectData[PEffectData_PlayerEffectEnd], iEffectId, flEndTime, pPlayer);
-        ArraySetCell(g_rgPEffectData[PEffectData_PlayerEffectDuration], iEffectId, flDuration, pPlayer);
+
+        if (bCurrentValue && bExtend && flDuration >= 0.0) {
+            new Float:flEndTime = ArrayGetCell(g_rgPEffectData[PEffectData_PlayerEffectEnd], iEffectId, pPlayer);
+            if (flEndTime) {
+                new Float:flPrevDuration = ArrayGetCell(g_rgPEffectData[PEffectData_PlayerEffectDuration], iEffectId, pPlayer);
+                ArraySetCell(g_rgPEffectData[PEffectData_PlayerEffectEnd], iEffectId, flEndTime + flDuration, pPlayer);
+                ArraySetCell(g_rgPEffectData[PEffectData_PlayerEffectDuration], iEffectId, flPrevDuration + flDuration, pPlayer);
+            }
+        } else {
+            new Float:flEndTime = flDuration < 0.0 ? 0.0 : get_gametime() + flDuration;
+            ArraySetCell(g_rgPEffectData[PEffectData_PlayerEffectEnd], iEffectId, flEndTime, pPlayer);
+            ArraySetCell(g_rgPEffectData[PEffectData_PlayerEffectDuration], iEffectId, flDuration, pPlayer);
+        }
+     
     } else {
         ArraySetCell(g_rgPEffectData[PEffectData_Players], iEffectId, iPlayers & ~BIT(pPlayer & 31));
     }
