@@ -17,7 +17,7 @@
 #define HUD_HIDE_TIMER (1<<4)
 
 stock Float:UTIL_FpsToDelay(iFps) {
-    return (100 / iFps) * 0.01;
+    return iFps > 0 ? ((100.0 / iFps) / 100.0) : 0.0;
 }
 
 stock Float:UTIL_CalculateRadiusDamage(
