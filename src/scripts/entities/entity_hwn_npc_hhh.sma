@@ -322,14 +322,16 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     return PLUGIN_HANDLED;
 }
 
-@Entity_Killed(this) {
+@Entity_Killed(this, pKiller) {
     @Entity_ResetPath(this);
 
-    static Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
+    if (pKiller) {
+        static Float:vecOrigin[3];
+        pev(this, pev_origin, vecOrigin);
 
-    UTIL_Message_ExplodeModel(vecOrigin, random_float(-512.0, 512.0), g_iGibsModelIndex, 5, 25);
-    NPC_EmitVoice(this, g_szSndDeath, .supercede = true);
+        UTIL_Message_ExplodeModel(vecOrigin, random_float(-512.0, 512.0), g_iGibsModelIndex, 5, 25);
+        NPC_EmitVoice(this, g_szSndDeath, .supercede = true);
+    }
 }
 
 @Entity_Remove(this) {
