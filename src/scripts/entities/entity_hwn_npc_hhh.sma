@@ -6,22 +6,36 @@
 #include <hamsandwich>
 #include <xs>
 
-#include <astar>
 #include <api_custom_entities>
+#include <api_navsystem>
 
 #include <hwn>
+#include <hwn_utils>
 #include <hwn_npc_stocks>
 
-#define PLUGIN    "[Custom Entity] Hwn NPC HHH"
-#define AUTHOR    "Hedgehog Fog"
+#define PLUGIN "[Custom Entity] Hwn NPC HHH"
+#define AUTHOR "Hedgehog Fog"
 
 #define ENTITY_NAME "hwn_npc_hhh"
 
+#define m_irgPath "irgPath"
+#define m_vecGoal "vecGoal"
+#define m_vecTarget "vecTarget"
+#define m_pBuildPathTask "pBuildPathTask"
+#define m_flDieTime "flDieTime"
+#define m_flReleaseHit "flReleaseHit"
+#define m_flTargetArrivalTime "flTargetArrivalTime"
+#define m_flNextAIThink "flNextAIThink"
+#define m_flNextAttack "flNextAttack"
+#define m_flNextPathSearch "flNextPathSearch"
+#define m_flNextEffectEmit "flNextEffectEmit"
+#define m_flNextSmokeEmit "flNextSmokeEmit"
+#define m_flNextLaugh "flNextLaugh"
+#define m_flNextFootStep "flNextFootStep"
+
 enum _:Sequence {
     Sequence_Idle = 0,
-
     Sequence_Run,
-
     Sequence_Attack,
     Sequence_RunAttack,
     Sequence_Shake,
@@ -68,42 +82,46 @@ new const g_szSndDying[] = "hwn/npc/hhh/hhh_dying.wav";
 new const g_szSndDeath[] = "hwn/npc/hhh/hhh_death.wav";
 
 new const g_actions[Action][NPC_Action] = {
-    {    Sequence_Idle,            Sequence_Idle,        0.0    },
-    {    Sequence_Run,            Sequence_Run,        0.0    },
-    {    Sequence_Attack,        Sequence_Attack,    1.0    },
-    {    Sequence_RunAttack,        Sequence_RunAttack,    1.0    },
-    {    Sequence_Shake,            Sequence_Shake,        2.0    },
-    {    Sequence_Spawn,            Sequence_Spawn,        6.0    }
+    { Sequence_Idle, Sequence_Idle, 0.0 },
+    { Sequence_Run, Sequence_Run, 0.0 },
+    { Sequence_Attack, Sequence_Attack, 0.75 },
+    { Sequence_RunAttack, Sequence_RunAttack, 0.75 },
+    { Sequence_Shake, Sequence_Shake, 2.0 },
+    { Sequence_Spawn, Sequence_Spawn, 6.0 }
 };
 
-new Float:NPC_Health                = 4000.0;
-new Float:NPC_HealthBonusPerPlayer  = 300.0;
-const Float:NPC_Speed               = 300.0;
-const Float:NPC_Damage              = 160.0;
-const Float:NPC_HitRange            = 96.0;
-const Float:NPC_HitDelay            = 0.75;
-const Float:NPC_ViewRange           = 2048.0;
+const Float:NPC_Health = 4000.0;
+const Float:NPC_HealthBonusPerPlayer = 300.0;
+const Float:NPC_Speed = 300.0;
+const Float:NPC_Damage = 160.0;
+const Float:NPC_HitRange = 96.0;
+const Float:NPC_HitDelay = 0.75;
+const Float:NPC_PathSearchDelay = 5.0;
+const Float:NPC_TargetUpdateRate = 1.0;
+const Float:NPC_ViewRange = 4096.0;
+new const Float:NPC_TargetHitOffset[3] = {0.0, 0.0, 16.0};
 
 new gmsgScreenShake;
 
 new g_iBloodModelIndex;
 new g_iBloodSprayModelIndex;
 new g_iSmokeModelIndex;
+new g_iGibsModelIndex;
 
-new g_mdlGibs;
-
-new g_pAstar[10];
+new g_iCeHandler;
+new g_iBossHandler;
 
 new g_pCvarUseAstar;
 
-new g_iCeHandler;
-new g_iBoss;
+new Float:g_flStartHealth = NPC_Health;
 
 public plugin_precache() {
+    Nav_Precache();
+
     g_iBloodModelIndex = precache_model("sprites/blood.spr");
     g_iBloodSprayModelIndex = precache_model("sprites/bloodspray.spr");
-    g_mdlGibs = precache_model("models/hwn/npc/headless_hatman_gibs.mdl");
     g_iSmokeModelIndex = precache_model("sprites/hwn/magic_smoke_tiny.spr");
+    g_iGibsModelIndex = precache_model("models/hwn/npc/headless_hatman_gibs.mdl");
 
     for (new i = 0; i < sizeof(g_szSndAttack); ++i) {
         precache_sound(g_szSndAttack[i]);
@@ -135,12 +153,14 @@ public plugin_precache() {
     );
 
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
+    CE_RegisterHook(CEFunction_Restart, ENTITY_NAME, "@Entity_Restart");
     CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
+    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 
-    g_iBoss = Hwn_Bosses_Register(ENTITY_NAME, "Horseless Headless Horsemann");
+    g_iBossHandler = Hwn_Bosses_Register(ENTITY_NAME, "Horseless Headless Horsemann");
 }
 
 public plugin_init() {
@@ -152,20 +172,54 @@ public plugin_init() {
     g_pCvarUseAstar = register_cvar("hwn_npc_hhh_use_astar", "1");
 
     gmsgScreenShake = get_user_msgid("ScreenShake");
+
+    register_clcmd("nav", "Command_Nav");
+    register_clcmd("navstart", "Command_Start");
+    register_clcmd("navend", "Command_End");
+}
+
+new Float:g_vecStart[3];
+new Float:g_vecEnd[3];
+
+stock GetAimDir(pPlayer, Float:vecOut[3]) {
+    static Float:vecOrigin[3];
+    pev(pPlayer, pev_origin, vecOrigin);
+
+    UTIL_GetDirectionVector(pPlayer, vecOut, 8192.0);
+    xs_vec_add(vecOrigin, vecOut, vecOut);
+
+    new pTrace = create_tr2();
+    engfunc(EngFunc_TraceLine, vecOrigin, vecOut, DONT_IGNORE_MONSTERS, pPlayer, pTrace);
+    get_tr2(pTrace, TR_vecEndPos, vecOut);
+    free_tr2(pTrace);
+}
+
+public Command_Start(pPlayer) {
+    GetAimDir(pPlayer, g_vecStart);
+    UTIL_Message_BeamCylinder(g_vecStart, 32.0, g_iSmokeModelIndex, 0, 10, 8, 0, {255, 0, 0}, 255, 0);
+}
+
+public Command_End(pPlayer) {
+    GetAimDir(pPlayer, g_vecEnd);
+    UTIL_Message_BeamCylinder(g_vecEnd, 32.0, g_iSmokeModelIndex, 0, 10, 8, 0, {0, 0, 255}, 255, 0);
+}
+
+public Command_Nav(pPlayer) {
+    Nav_Path_Find(g_vecStart, g_vecEnd, "", 0, 0, "NavPathCost");
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
 public client_putinserver() {
-    NPC_Health += NPC_HealthBonusPerPlayer;
+    g_flStartHealth += NPC_HealthBonusPerPlayer;
 }
 
 public client_disconnected(pPlayer) {
-    NPC_Health -= NPC_HealthBonusPerPlayer;
+    g_flStartHealth -= NPC_HealthBonusPerPlayer;
 }
 
 public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
-    if (iBoss != g_iBoss) {
+    if (iBoss != g_iBossHandler) {
         return;
     }
 
@@ -174,23 +228,31 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-public @Entity_Init(this) {
-    CE_SetMember(this, "iAstarIndex", -1);
-    CE_SetMember(this, "irgPath", Invalid_Array);
+@Entity_Init(this) {
+    CE_SetMember(this, m_pBuildPathTask, Invalid_NavBuildPathTask);
+    CE_SetMember(this, m_irgPath, ArrayCreate(3));
 
     NPC_Create(this);
 }
 
-public @Entity_Spawn(this) {
+@Entity_Restart(this) {
+    @Entity_ResetPath(this);
+}
+
+@Entity_Spawn(this) {
     new Float:flGameTime = get_gametime();
 
-    @Entity_ResetPath(this);
-
-    CE_SetMember(this, "flNextHit", 0.0);
-    CE_SetMember(this, "flNextSmokeEmit", flGameTime);
-    CE_SetMember(this, "flNextLaugh", flGameTime);
-    CE_SetMember(this, "flNextPathSearch", flGameTime);
-    CE_SetMemberVec(this, "vecTarget", Float:{0.0, 0.0, 0.0});
+    CE_SetMember(this, m_flNextAttack, 0.0);
+    CE_SetMember(this, m_flReleaseHit, 0.0);
+    CE_SetMember(this, m_flNextAIThink, flGameTime);
+    CE_SetMember(this, m_flNextSmokeEmit, flGameTime);
+    CE_SetMember(this, m_flNextLaugh, flGameTime);
+    CE_SetMember(this, m_flNextPathSearch, flGameTime);
+    CE_SetMember(this, m_flNextEffectEmit, flGameTime);
+    CE_SetMember(this, m_flNextFootStep, flGameTime);
+    CE_SetMember(this, m_flTargetArrivalTime, 0.0);
+    CE_DeleteMember(this, m_vecGoal);
+    CE_DeleteMember(this, m_vecTarget);
 
     new Float:flRenderColor[3] = {HWN_COLOR_PRIMARY_F};
     for (new i = 0; i < 3; ++i) {
@@ -201,10 +263,13 @@ public @Entity_Spawn(this) {
     set_pev(this, pev_renderfx, kRenderFxGlowShell);
     set_pev(this, pev_renderamt, 4.0);
     set_pev(this, pev_rendercolor, flRenderColor);
-    set_pev(this, pev_fuser1, 0.0);
     set_pev(this, pev_team, 666);
-    set_pev(this, pev_health, NPC_Health);
+    set_pev(this, pev_health, g_flStartHealth);
     set_pev(this, pev_takedamage, DAMAGE_NO);
+    set_pev(this, pev_view_ofs, Flaot:{0.0, 0.0, 32.0});
+    set_pev(this, pev_maxspeed, NPC_Speed);
+    set_pev(this, pev_dmg, NPC_Damage);
+    set_pev(this, pev_enemy, 0);
 
     engfunc(EngFunc_DropToFloor, this);
 
@@ -214,111 +279,479 @@ public @Entity_Spawn(this) {
     pev(this, pev_origin, vecOrigin);
     UTIL_Message_Dlight(vecOrigin, 32, {HWN_COLOR_PRIMARY}, 60, 4);
 
-    NPC_PlayAction(this, g_actions[Action_Spawn]);
+    @Entity_PlayAction(this, Action_Spawn, false);
+    // CE_SetMember(this, "flNextUpdate", get_gametime() + g_actions[Action_Spawn][NPC_Action_Time]);
 
     set_pev(this, pev_nextthink, flGameTime + g_actions[Action_Spawn][NPC_Action_Time]);
 }
 
-public @Entity_Remove(this) {
-    new Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
-    UTIL_Message_Dlight(vecOrigin, 32, {HWN_COLOR_PRIMARY}, 10, 32);
-
-    @Entity_ResetPath(this);
-    NPC_Destroy(this);
-}
-
-public @Entity_Kill(this) {
+@Entity_Kill(this) {
     new iDeadFlag = pev(this, pev_deadflag);
 
-    if (iDeadFlag == DEAD_NO) {
-        NPC_EmitVoice(this, g_szSndDying, .supercede = true);
-        NPC_PlayAction(this, g_actions[Action_Shake], .supercede = true);
+    switch (iDeadFlag) {
+        case DEAD_NO: {
+            NPC_EmitVoice(this, g_szSndDying, .supercede = true);
+            @Entity_PlayAction(this, Action_Shake, true);
 
-        NPC_StopMovement(this);
-        set_pev(this, pev_takedamage, DAMAGE_NO);
-        set_pev(this, pev_deadflag, DEAD_DYING);
+            NPC_StopMovement(this);
 
-        set_pev(this, pev_nextthink, get_gametime() + 2.0);
-    } else if (iDeadFlag == DEAD_DEAD) {
-        return PLUGIN_CONTINUE;
+            set_pev(this, pev_takedamage, DAMAGE_NO);
+            set_pev(this, pev_deadflag, DEAD_DYING);
+
+            CE_SetMember(this, m_flNextAIThink, get_gametime() + 2.0);
+            CE_SetMember(this, m_flDieTime, get_gametime() + 2.0);
+
+            // cancel first kill function to play duing animation
+            return PLUGIN_HANDLED;
+        }
+        case DEAD_DYING: {
+            set_pev(this, pev_deadflag, DEAD_DEAD);
+            return PLUGIN_CONTINUE;
+        }
     }
 
     return PLUGIN_HANDLED;
 }
 
-@Entity_Think(this) {
+@Entity_Killed(this) {
+    @Entity_ResetPath(this);
+
     static Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);
 
-    if (pev(this, pev_deadflag) == DEAD_DYING) {
-        UTIL_Message_ExplodeModel(vecOrigin, random_float(-512.0, 512.0), g_mdlGibs, 5, 25);
-        NPC_EmitVoice(this, g_szSndDeath, .supercede = true);
-        set_pev(this, pev_deadflag, DEAD_DEAD);
-        CE_Kill(this);
+    UTIL_Message_ExplodeModel(vecOrigin, random_float(-512.0, 512.0), g_iGibsModelIndex, 5, 25);
+    NPC_EmitVoice(this, g_szSndDeath, .supercede = true);
+}
 
-        return HAM_HANDLED;
+@Entity_Remove(this) {
+    @Entity_ResetPath(this);
+
+    new Array:irgPath = CE_GetMember(this, m_irgPath);
+    ArrayDestroy(irgPath);
+
+    NPC_Destroy(this);
+
+    new Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+    UTIL_Message_Dlight(vecOrigin, 32, {HWN_COLOR_PRIMARY}, 10, 32);
+}
+
+@Entity_TakeDamage(this, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
+    if (IS_PLAYER(pAttacker) && NPC_IsValidEnemy(pAttacker)) {
+        static Float:vecOrigin[3];
+        pev(this, pev_origin, vecOrigin);
+
+        static Float:vecTarget[3];
+        pev(pAttacker, pev_origin, vecTarget);
+
+        if (get_distance_f(vecOrigin, vecTarget) <= NPC_HitRange && NPC_IsVisible(this, vecTarget)) {
+            if (get_gametime() - NPC_GetEnemyTime(this) > 6.0) {
+                NPC_SetEnemy(this, pAttacker);
+            }
+        }
     }
 
+    if (random(100) < 50) {
+        NPC_EmitVoice(this, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
+    }
+}
+
+@Entity_TraceAttack(this, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
+    static Float:vecEnd[3];
+    get_tr2(pTrace, TR_vecEndPos, vecEnd);
+
+    UTIL_Message_BloodSprite(vecEnd, g_iBloodSprayModelIndex, g_iBloodModelIndex, 212, floatround(flDamage / 4));
+}
+
+@Entity_Think(this) {
     new Float:flGameTime = get_gametime();
-    new Float:flRate = Hwn_GetUpdateRate();
+    new Float:flNextAIThink = CE_GetMember(this, m_flNextAIThink);
+    new bool:bShouldUpdateAI = flNextAIThink <= flGameTime;
+    new iDeadFlag = pev(this, pev_deadflag);
+
+    switch (iDeadFlag) {
+        case DEAD_NO: {
+            if (bShouldUpdateAI) {
+                @Entity_AIThink(this);
+                CE_SetMember(this, m_flNextAIThink, flGameTime + Hwn_GetNpcUpdateRate());
+            }
+
+            // update velocity at high rate to avoid inconsistent velocity
+            if (CE_HasMember(this, m_vecTarget)) {
+                static Float:vecTarget[3];
+                CE_GetMemberVec(this, m_vecTarget, vecTarget);
+
+                static Float:flMaxSpeed;
+                pev(this, pev_maxspeed, flMaxSpeed);
+                NPC_MoveToTarget(this, vecTarget, flMaxSpeed);
+            }
+        }
+        case DEAD_DYING: {
+            new Float:flDieTime = CE_GetMember(this, m_flDieTime);
+            if (flDieTime <= flGameTime) {
+                CE_Kill(this);
+            }
+        }
+    }
+
+    // animations update based on NPC activity
+    if (bShouldUpdateAI) {
+        new Action:iAction = @Entity_GetAction(this);
+        @Entity_PlayAction(this, iAction, false);
+    }
+
+    set_pev(this, pev_ltime, flGameTime);
+    set_pev(this, pev_nextthink, flGameTime + 0.01);
+
+    return HAM_HANDLED;
+}
+
+@Entity_AIThink(this) {
+    static Float:flLastThink;
+    pev(this, pev_ltime, flLastThink);
+
+    static Float:flGameTime; flGameTime = get_gametime();
+    // new Float:flRate = Hwn_GetNpcUpdateRate();
+    // new Float:flDelta = flGameTime - flLastThink;
 
     if (pev(this, pev_takedamage) == DAMAGE_NO) {
         set_pev(this, pev_takedamage, DAMAGE_AIM);
     }
 
-    new Float:flNextLaugh = CE_GetMember(this, "flNextLaugh");
-    if (flNextLaugh <= flGameTime) {
-        NPC_EmitVoice(this, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
-        CE_SetMember(this, "flNextLaugh", flGameTime + random_float(1.0, 2.0));
-    }
-
-    new pEnemy = NPC_GetEnemy(this);
-
-    static Float:flLastUpdate;
-    pev(this, pev_fuser1, flLastUpdate);
-    new bool:shouldUpdate = get_gametime() - flLastUpdate >= flRate;
-
-    if (pEnemy) {
-        @Entity_Attack(this, pEnemy, shouldUpdate);
-        pEnemy = NPC_GetEnemy(this);
-    }
-
-    if (pEnemy && shouldUpdate) {
-        @Entity_ResetPath(this);
-    }
-
-    if (shouldUpdate) {
-        if (!pEnemy) {
-            NPC_FindEnemy(this, 96.0, .allowMonsters = true);
-            pEnemy = NPC_GetEnemy(this);
-        }
-
-        if (!pEnemy) {
-            NPC_FindEnemy(this, NPC_ViewRange, .allowMonsters = false);
-            pEnemy = NPC_GetEnemy(this);
-        }
-
-        if (!pEnemy && get_pcvar_num(g_pCvarUseAstar) > 0) {
-            @Entity_AStarAttack(this);
-        }
-
+    static Float:flNextEffectEmit; flNextEffectEmit = CE_GetMember(this, m_flNextEffectEmit);
+    if (flNextEffectEmit <= flGameTime) {
         @Entity_EmitLight(this);
-
-        new Action:iAction = @Entity_GetAction(this);
-        NPC_PlayAction(this, g_actions[iAction]);
-
-        set_pev(this, pev_fuser1, get_gametime());
+        @Entity_EmitSmoke(this);
+        CE_SetMember(this, m_flNextEffectEmit, flGameTime + 0.1);
     }
 
-    @Entity_EmitSmoke(this);
-    set_pev(this, pev_nextthink, flGameTime+ 0.01);
+    static Float:flReleaseHit; flReleaseHit = CE_GetMember(this, m_flReleaseHit);
+    if (!flReleaseHit) {
+        static Float:flNextAttack; flNextAttack = CE_GetMember(this, m_flNextAttack);
+        if (flNextAttack <= get_gametime()) {
+            static pEnemy; pEnemy = NPC_GetEnemy(this);
+            if (pEnemy && NPC_CanHit(this, pEnemy, NPC_HitRange, NPC_TargetHitOffset)) {
+                NPC_EmitVoice(this, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.5);
+                CE_SetMember(this, m_flReleaseHit, flGameTime + NPC_HitDelay);
 
-    return HAM_HANDLED;
+                static Float:vecTargetVelocity[3];
+                pev(pEnemy, pev_velocity, vecTargetVelocity);
+                if (xs_vec_len(vecTargetVelocity) < NPC_HitRange) {
+                    NPC_StopMovement(this);
+                }
+            }
+        }
+    } else if (flReleaseHit <= flGameTime) {
+        static Float:flDamage;
+        pev(this, pev_dmg, flDamage);
+
+        if (NPC_Hit(this, NPC_Damage, NPC_HitRange, 0.0, NPC_TargetHitOffset)) {
+            emit_sound(this, CHAN_WEAPON, g_szSndHit, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+        }
+
+        CE_SetMember(this, m_flReleaseHit, 0.0);
+        CE_SetMember(this, m_flNextAttack, flGameTime + 0.5);
+    }
+
+    @Entity_UpdateGoal(this);
+    @Entity_UpdateTarget(this);
+
+    static Float:vecVelocity[3];
+    pev(this, pev_velocity, vecVelocity);
+
+    if (xs_vec_len(vecVelocity) > 50.0) {
+        static Float:flNextLaugh; flNextLaugh = CE_GetMember(this, m_flNextLaugh);
+        if (flNextLaugh <= flGameTime) {
+            NPC_EmitVoice(this, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
+            CE_SetMember(this, m_flNextLaugh, flGameTime + random_float(1.0, 2.0));
+        }
+
+        static Float:flNextFootStep; flNextFootStep = CE_GetMember(this, m_flNextFootStep);
+        if (flNextFootStep <= flGameTime) {
+            NPC_EmitFootStep(this, g_szSndStep[random(sizeof(g_szSndStep))]);
+            @Entity_ScareAway(this);
+            CE_SetMember(this, m_flNextFootStep, flGameTime + 0.25);
+        }
+    }
+
+    static Action:iAction; iAction = @Entity_GetAction(this);
+    @Entity_PlayAction(this, iAction, false);
+}
+
+@Entity_UpdateGoal(this) {
+    new pEnemy = pev(this, pev_enemy);
+
+    if (@Entity_UpdateEnemy(this, NPC_ViewRange, 0.0)) {
+        pEnemy = pev(this, pev_enemy);
+    }
+
+    static Float:vecGoal[3];
+    pev(pEnemy, pev_origin, vecGoal);
+    CE_SetMemberVec(this, m_vecGoal, vecGoal);
+}
+
+@Entity_UpdateEnemy(this, Float:flMaxDistance, Float:flMinPriority) {
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+
+    static iTeam; iTeam = pev(this, pev_team);
+    static pClosestTarget; pClosestTarget = 0;
+    static Float:flClosestTargetPriority; flClosestTargetPriority = 0.0;
+
+    new pTarget = 0;
+    while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, flMaxDistance)) > 0) {
+        if (this == pTarget) {
+            continue;
+        }
+
+        if (!NPC_IsValidEnemy(pTarget, iTeam)) {
+            continue;
+        }
+
+        static Float:vecTarget[3];
+        pev(pTarget, pev_origin, vecTarget);
+
+        static Float:flDistance; flDistance = xs_vec_distance(vecOrigin, vecTarget);
+        static Float:flTargetPriority; flTargetPriority = 1.0 - (flDistance / flMaxDistance);
+
+        if (IS_PLAYER(pTarget)) {
+            flTargetPriority *= 1.0;
+        } else if (UTIL_IsMonster(pTarget)) {
+            flTargetPriority *= 0.075;
+        } else {
+            flTargetPriority *= 0.0;
+        }
+
+        if (flTargetPriority >= flMinPriority && !NPC_IsReachable(this, vecTarget, pTarget)) {
+            flTargetPriority *= 0.1;
+        }
+
+        if (flTargetPriority >= flMinPriority && flTargetPriority > flClosestTargetPriority) {
+            pClosestTarget = pTarget;
+            flClosestTargetPriority = flTargetPriority;
+        }
+    }
+
+    if (pClosestTarget) {
+        set_pev(this, pev_enemy, pClosestTarget);
+    }
+
+    return pClosestTarget;
+}
+
+@Entity_UpdateTarget(this) {
+    static Float:flGameTime; flGameTime = get_gametime();
+
+    if (CE_HasMember(this, m_vecTarget)) {
+        static Float:flArrivalTime; flArrivalTime = CE_GetMember(this, m_flTargetArrivalTime);
+
+        static Float:vecOrigin[3];
+        pev(this, pev_origin, vecOrigin);
+
+        static Float:vecMins[3];
+        pev(this, pev_mins, vecMins);
+
+        static Float:vecTarget[3];
+        CE_GetMemberVec(this, m_vecTarget, vecTarget);
+    
+        new bool:bHasReached = xs_vec_distance_2d(vecOrigin, vecTarget) < 10.0;
+        if (bHasReached || flGameTime > flArrivalTime) {
+            CE_DeleteMember(this, m_vecTarget);
+        }
+    }
+
+    @Entity_ProcessPath(this);
+
+    if (CE_HasMember(this, m_vecGoal)) {
+        static Float:vecGoal[3];
+        CE_GetMemberVec(this, m_vecGoal, vecGoal);
+
+        if (!NPC_IsReachable(this, vecGoal, pev(this, pev_enemy))) {
+            if (get_pcvar_bool(g_pCvarUseAstar)) {
+                if (CE_GetMember(this, m_flNextPathSearch) <= flGameTime) {
+                    @Entity_FindPath(this, vecGoal);
+                    CE_SetMember(this, m_flNextPathSearch, flGameTime + NPC_PathSearchDelay);
+                    CE_DeleteMember(this, m_vecTarget);
+                }
+            } else {
+                CE_DeleteMember(this, m_vecGoal);
+                CE_DeleteMember(this, m_vecTarget);
+            }
+        } else {
+            CE_DeleteMember(this, m_vecGoal);
+            @Entity_SetTarget(this, vecGoal);
+        }
+    }
+}
+
+@Entity_SetTarget(this, const Float:vecTarget[3]) {
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+
+    static Float:flMaxSpeed;
+    pev(this, pev_maxspeed, flMaxSpeed);
+
+    new Float:flDuration = xs_vec_distance(vecOrigin, vecTarget) / flMaxSpeed;
+
+    CE_SetMemberVec(this, m_vecTarget, vecTarget);
+    CE_SetMember(this, m_flTargetArrivalTime, get_gametime() + flDuration);
+}
+
+@Entity_PlayAction(this, Action:iAction, bool:bSupercede) {
+    NPC_PlayAction(this, g_actions[iAction], bSupercede);
+    // CE_SetMember(this, "flNextUpdate", get_gametime() + g_actions[iAction][NPC_Action_Time]);
+}
+
+Action:@Entity_GetAction(this) {
+    new Action:iAction = Action_Idle;
+
+    new iDeadFlag = pev(this, pev_deadflag);
+
+    switch (iDeadFlag) {
+        case DEAD_NO: {
+            if (CE_GetMember(this, m_flReleaseHit) > 0.0) {
+                iAction = Action_Attack;
+            }
+
+            if (pev(this, pev_flags) | FL_ONGROUND) {
+                static Float:vecVelocity[3];
+                pev(this, pev_velocity, vecVelocity);
+
+                if (xs_vec_len(vecVelocity) > 10.0) {
+                    iAction = iAction == Action_Attack ? Action_RunAttack : Action_Run;
+                }
+            }
+        }
+        case DEAD_DYING: {
+            iAction = Action_Shake;
+        }
+    }
+
+    return iAction;
+}
+
+@Entity_FindPath(this, Float:vecTarget[3]) {
+    @Entity_ResetPath(this);
+
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+
+    new NavBuildPathTask:pTask = Nav_Path_Find(vecOrigin, vecTarget, "NavPathCallback", this, this, "NavPathCost");
+    CE_SetMember(this, m_pBuildPathTask, pTask);
+}
+
+@Entity_ResetPath(this) {
+    new Array:irgPath = CE_GetMember(this, m_irgPath);
+    ArrayClear(irgPath);
+
+    new NavBuildPathTask:pTask = CE_GetMember(this, m_pBuildPathTask);
+    if (pTask != Invalid_NavBuildPathTask) {
+        Nav_Path_FindTask_Abort(pTask);
+        CE_SetMember(this, m_pBuildPathTask, Invalid_NavBuildPathTask);
+    }
+
+    // CE_DeleteMember(this, m_vecGoal);
+    CE_DeleteMember(this, m_vecTarget);
+}
+
+bool:@Entity_ProcessPath(this) {
+    if (CE_HasMember(this, m_vecTarget)) {
+        return true;
+    }
+
+    new Array:irgPath = CE_GetMember(this, m_irgPath);
+    if (!ArraySize(irgPath)) {
+        // set_pev(this, pev_enemy, 0);
+        return false;
+    }
+    
+    static Float:vecMins[3];
+    pev(this, pev_mins, vecMins);
+
+    static Float:vecTarget[3];
+    ArrayGetArray(irgPath, 0, vecTarget);
+    ArrayDeleteItem(irgPath, 0);
+    vecTarget[2] -= vecMins[2];
+
+    @Entity_SetTarget(this, vecTarget);
+
+    return true;
+}
+
+Float:@Entity_GetPathCost(this, NavArea:newArea, NavArea:prevArea) {
+    new NavAttributeType:iAttributes = Nav_Area_GetAttributes(newArea);
+
+    // NPC can't jump or crouch
+    if (iAttributes & NAV_JUMP || iAttributes & NAV_CROUCH) {
+        return -1.0;
+    }
+
+    static Float:vecTarget[3];
+    Nav_Area_GetCenter(newArea, vecTarget);
+
+    static Float:vecSrc[3];
+    if (prevArea != Invalid_NavArea) {
+        Nav_Area_GetCenter(prevArea, vecSrc);
+    } else {
+        pev(this, pev_origin, vecSrc);
+    }
+
+    new pTrace = create_tr2();
+    engfunc(EngFunc_TraceLine, vecSrc, vecTarget, IGNORE_MONSTERS, 0, pTrace);
+    new pHit = get_tr2(pTrace, TR_pHit);
+    free_tr2(pTrace);
+
+    // cancel if there is a wall
+    if (!pHit) {
+        return -1.0;
+    }
+
+    // cancel path if there is a obstacle
+    if (pHit != -1 && !IS_PLAYER(pHit) && !UTIL_IsMonster(pHit)) {
+        return -1.0;
+    }
+
+    new pTarget = 0;
+    while ((pTarget = engfunc(EngFunc_FindEntityInSphere, pTarget, vecTarget, 64.0)) > 0) {
+        static szClassName[32];
+        pev(pTarget, pev_classname, szClassName, charsmax(szClassName));
+
+        // don't go through the hurt entities
+        if (equal(szClassName, "trigger_hurt")) {
+            return -1.0;
+        }
+
+        // path cost penalty for going through the spawn area
+        if (equal(szClassName, "info_player_start") || equal(szClassName, "info_player_deathmatch")) {
+            return 100.0;
+        }
+    }
+
+    return 1.0;
+}
+
+@Entity_HandlePath(this, NavPath:pPath) {
+    if (Nav_Path_IsValid(pPath)) {
+        new Array:irgSegments = Nav_Path_GetSegments(pPath);
+        
+        new Array:irgPath = CE_GetMember(this, m_irgPath);
+        ArrayClear(irgPath);
+
+        for (new i = 0; i < ArraySize(irgSegments); ++i) {
+            new NavPathSegment:pSegment = ArrayGetCell(irgSegments, i);
+            static Float:vecPos[3];
+            Nav_Path_Segment_GetPos(pSegment, vecPos);
+            ArrayPushArray(irgPath, vecPos, sizeof(vecPos));
+        }
+    } else {
+        set_pev(this, pev_enemy, 0);
+    }
+
+    CE_SetMember(this, m_pBuildPathTask, Invalid_NavBuildPathTask);
 }
 
 @Entity_EmitLight(this) {
-    new Float:flRate = Hwn_GetUpdateRate();
+    new Float:flRate = Hwn_GetNpcUpdateRate();
 
     static Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);
@@ -342,187 +775,8 @@ public @Entity_Kill(this) {
     message_end();
 }
 
-
-bool:@Entity_Attack(this, pTarget, bool:bCheckTarget) {
-    new Float:flGameTime = get_gametime();
-
-    static Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
-
-    static Float:vecTarget[3];
-
-    if (bCheckTarget) {
-        if (!NPC_GetTarget(this, NPC_Speed, vecTarget)) {
-            NPC_SetEnemy(this, 0);
-            NPC_StopMovement(this);
-            set_pev(this, pev_vuser1, vecOrigin);
-            return false;
-        }
-
-        set_pev(this, pev_vuser1, vecTarget);
-    } else {
-        pev(this, pev_vuser1, vecTarget);
-    }
-
-    new bool:bCanHit = NPC_CanHit(this, pTarget, NPC_HitRange);
-    if (bCheckTarget && bCanHit) {
-        new Float:flNextHit = CE_GetMember(this, "flNextHit");
-        if (!flNextHit) {
-            NPC_EmitVoice(this, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.5);     
-            CE_SetMember(this, "flNextHit", flGameTime + NPC_HitDelay);
-        } else if (flNextHit <= flGameTime) {
-            @Entity_Hit(this);
-            CE_SetMember(this, "flNextHit", 0.0);
-        }
-    }
-
-    static Float:vecTargetVelocity[3];
-    pev(pTarget, pev_velocity, vecTargetVelocity);
-
-    new bool:bShouldRun = !bCanHit || xs_vec_len(vecTargetVelocity) > NPC_HitRange;
-    if (bShouldRun) {
-        @Entity_ScareAway(this);
-        NPC_EmitFootStep(this, g_szSndStep[random(sizeof(g_szSndStep))]);
-        NPC_MoveToTarget(this, vecTarget, NPC_Speed);
-    } else {
-        NPC_StopMovement(this);
-    }
-
-    return true;
-}
-
-@Entity_Hit(this) {
-    if (NPC_Hit(this, NPC_Damage, NPC_HitRange, NPC_HitDelay, Float:{0.0, 0.0, 16.0})) {
-        emit_sound(this, CHAN_WEAPON, g_szSndHit, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-    }
-}
-
-Action:@Entity_GetAction(this) {
-    new Action:iAction = Action_Idle;
-
-    new iDeadFlag = pev(this, pev_deadflag);
-
-    switch (iDeadFlag) {
-        case DEAD_NO: {
-            static Float:vecTargetVelocity[3];
-            pev(this, pev_velocity, vecTargetVelocity);
-
-            new Float:flNextHit = CE_GetMember(this, "flNextHit");
-            if (flNextHit) {
-                iAction = Action_Attack;
-            }
-
-            if (xs_vec_len(vecTargetVelocity) > 10.0) {
-                iAction = iAction == Action_Attack ? Action_RunAttack : Action_Run;
-            }
-        }
-        case DEAD_DYING: {
-            iAction = Action_Shake;
-        }
-    }
-
-    return iAction;
-}
-
-@Entity_FindPath(this) {
-    new pEnemy = pev(this, pev_enemy);
-
-    static Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
-
-    static Float:vecTarget[3];
-    pev(pEnemy, pev_origin, vecTarget);
-
-    static Float:vecMins[3];
-    pev(this, pev_mins, vecMins);
-
-    new iAStar = AStarThreaded(vecOrigin, vecTarget, "AStarThreadHandler", 30, DONT_IGNORE_MONSTERS, this, floatround(-vecMins[2]), 50);
-    CE_SetMember(this, "iAstarIndex", iAStar);
-
-    if (iAStar != -1) {
-        g_pAstar[iAStar] = this;
-    }
-}
-
-bool:@Entity_AStarAttack(this) {
-    new Float:flGameTime = get_gametime();
-
-    new iAStar = CE_GetMember(this, "iAstarIndex");
-    new Array:irgPath = CE_GetMember(this, "irgPath");
-    new Float:flNextSearch = CE_GetMember(this, "flNextPathSearch");
-
-    if (iAStar == -1) {
-        new pEnemy = NPC_GetEnemy(this);
-        if (pEnemy || NPC_FindEnemy(this, NPC_ViewRange, .reachableOnly = false, .visibleOnly = false, .allowMonsters = false)) {
-            @Entity_FindPath(this);
-            CE_SetMember(this, "flNextPathSearch", flGameTime + 10.0);
-        }
-
-    } else if (irgPath != Invalid_Array) {
-        @Entity_ProcessPath(this, irgPath);
-        NPC_EmitFootStep(this, g_szSndStep[random(sizeof(g_szSndStep))]);
-    } else {
-        if (flGameTime > flNextSearch) {
-            @Entity_ResetPath(this);
-        }
-    }
-}
-
-@Entity_ProcessPath(this, Array:irgPath) {
-    new Float:flArrivalTime = CE_GetMember(this, "flArrivalTime");
-
-    static Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
-
-    static Float:vecTarget[3];
-    CE_GetMemberVec(this, "vecTarget", vecTarget);
-
-    if (ArraySize(irgPath) > 0) {
-        if (get_gametime() >= flArrivalTime) {
-            static curStep[3];
-            ArrayGetArray(irgPath, 0, curStep);
-            ArrayDeleteItem(irgPath, 0);
-
-            for (new i = 0; i < 3; ++i) {
-                vecTarget[i] = float(curStep[i]);
-            }
-
-            if (NPC_IsReachable(this, vecTarget)) {
-                new Float:flDistance = get_distance_f(vecOrigin, vecTarget);
-                CE_SetMemberVec(this, "vecTarget", vecTarget);
-                CE_SetMember(this, "flArrivalTime", get_gametime() + (flDistance / NPC_Speed));
-            } else {
-                @Entity_ResetPath(this);
-            }
-        }
-
-        NPC_PlayAction(this, g_actions[Action_Run]);
-        NPC_MoveToTarget(this, vecTarget, NPC_Speed);
-    } else {
-        vecOrigin[2] = vecTarget[2];
-
-        if (get_distance_f(vecOrigin, vecTarget) <= 64.0 && get_gametime() >= flArrivalTime) {
-            @Entity_ResetPath(this);
-            NPC_PlayAction(this, g_actions[Action_Idle]);
-        }
-    }
-}
-
-@Entity_ResetPath(this) {
-    new Array:irgPath = CE_GetMember(this, "irgPath");
-    if (irgPath != Invalid_Array) {
-        ArrayDestroy(irgPath);
-    }
-
-    new iAStar = CE_GetMember(this, "iAstarIndex");
-    AStarAbort(iAStar);
-
-    CE_SetMember(this, "iAstarIndex", -1);
-    CE_SetMember(this, "irgPath", Invalid_Array);
-}
-
 @Entity_EmitSmoke(this) {
-    new Float:flNextSmokeEmit = CE_GetMember(this, "flNextSmokeEmit");
+    new Float:flNextSmokeEmit = CE_GetMember(this, m_flNextSmokeEmit);
     if (get_gametime() < flNextSmokeEmit) {
         return;
     }
@@ -532,12 +786,12 @@ bool:@Entity_AStarAttack(this) {
     vecOrigin[2] += random_float(-16.0, 16.0);
     UTIL_Message_FireField(vecOrigin, 8, g_iSmokeModelIndex, 2, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
 
-    CE_SetMember(this, "flNextSmokeEmit", get_gametime() + 0.1);
+    CE_SetMember(this, m_flNextSmokeEmit, get_gametime() + 0.1);
 }
 
-@Entity_ScareAway(pEntity) {
+@Entity_ScareAway(this) {
     static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
 
     for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
         if (!is_user_alive(pPlayer)) {
@@ -557,33 +811,6 @@ bool:@Entity_AStarAttack(this) {
         write_short(UTIL_FixedUnsigned16(1.0, 1<<8));
         message_end();
     }
-}
-
-@Entity_TakeDamage(this, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
-    if (IS_PLAYER(pAttacker) && NPC_IsValidEnemy(pAttacker)) {
-        static Float:vecOrigin[3];
-        pev(this, pev_origin, vecOrigin);
-
-        static Float:vecTarget[3];
-        pev(pAttacker, pev_origin, vecTarget);
-
-        if (get_distance_f(vecOrigin, vecTarget) <= NPC_HitRange && NPC_IsVisible(this, vecTarget)) {
-            if (get_gametime() - NPC_GetEnemyTime(this) > 6.0) {
-                NPC_SetEnemy(this, pAttacker);
-            }
-        }
-    }
-
-    if (random(100) < 10) {
-        NPC_EmitVoice(this, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
-    }
-}
-
-@Entity_TraceAttack(this, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
-    static Float:vecEnd[3];
-    get_tr2(pTrace, TR_vecEndPos, vecEnd);
-
-    UTIL_Message_BloodSprite(vecEnd, g_iBloodSprayModelIndex, g_iBloodModelIndex, 212, floatround(flDamage/4));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -608,20 +835,17 @@ public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDama
 
 /*--------------------------------[ Callbacks ]--------------------------------*/
 
-public AStarThreadHandler(iAStar, Array:irgPath, Float:Distance, NodesAdded, NodesValidated, NodesCleared) {
-    if (irgPath == Invalid_Array) {
-        return;
+public Float:NavPathCost(NavBuildPathTask:pTask, NavArea:newArea, NavArea:prevArea) {
+    new pEntity = Nav_Path_FindTask_GetUserToken(pTask);
+    if (!pEntity) {
+        return 1.0;
     }
+    
+    return @Entity_GetPathCost(pEntity, newArea, prevArea);
+}
 
-    new pEntity = g_pAstar[iAStar];
-
-    if (!pev_valid(pEntity)) {
-        return;
-    }
-
-    if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) {
-        return;
-    }
-
-    CE_SetMember(pEntity, "irgPath", irgPath);
+public NavPathCallback(NavBuildPathTask:pTask) {
+    new pEntity = Nav_Path_FindTask_GetUserToken(pTask);
+    new NavPath:pPath = Nav_Path_FindTask_GetPath(pTask);
+    @Entity_HandlePath(pEntity, pPath);
 }

@@ -175,52 +175,33 @@ stock bool:UTIL_IsOpen(const Float:vecOrigin1[3], const Float:vecOrigin2[3], pEn
     return isOpen;
 }
 
-stock bool:UTIL_TurnTo(pEntity, const Float:vecTarget[3], const bool:rgbLockAxis[3] = {true, false, false}, const Float:flMaxAngle = -1.0) {
-    //Get user origin
+stock bool:UTIL_TurnTo(pEntity, const Float:vecTarget[3], const bool:rgbLockAxis[3] = {true, false, false}, const Float:flSpeed = -1.0) {
     new Float:vecOrigin[3];
     pev(pEntity, pev_origin, vecOrigin);
 
     new Float:vecAngles[3];
     pev(pEntity, pev_angles, vecAngles);
 
-    static Float:vecDiffAngles[3];
-    {
-        static Float:vecSub[3];
-        xs_vec_sub(vecTarget, vecOrigin, vecSub);
+    static Float:vecTargetAngles[3];
+    xs_vec_sub(vecTarget, vecOrigin, vecTargetAngles);
+    engfunc(EngFunc_VecToAngles, vecTargetAngles, vecTargetAngles);
 
-        static Float:vecSubAngles[3];
-        engfunc(EngFunc_VecToAngles, vecSub, vecSubAngles);
-
-        for (new i = 0; i < 3; ++i) {
-            if (rgbLockAxis[i]) {
-                vecDiffAngles[i] = 0.0;
-            } else {
-                vecDiffAngles[i] = UTIL_NormalizeAngle(vecSubAngles[i] - vecAngles[i]);
-            }
-        }
-    }
-
-    new bool:bTurnResult = true;
-    if (flMaxAngle >= 0.0) {
-        new Float:flAngle = xs_vec_len(vecDiffAngles);
-        if (flAngle > flMaxAngle) {
-            xs_vec_normalize(vecDiffAngles, vecDiffAngles);
-            xs_vec_mul_scalar(vecDiffAngles, flMaxAngle, vecDiffAngles);
-            bTurnResult = false;
-        }
-    }
-
-    xs_vec_add(vecAngles, vecDiffAngles, vecAngles);
-
+    static Float:vecNewAngles[3];
     for (new i = 0; i < 3; ++i) {
-        vecAngles[i] = UTIL_NormalizeAngle(vecAngles[i]);
+        if (rgbLockAxis[i]) {
+            vecNewAngles[i] = vecAngles[i];
+        } else if (flSpeed >= 0.0) {
+            vecNewAngles[i] = ApproachAngle(vecTargetAngles[i], vecAngles[i], flSpeed);
+        } else {
+            vecNewAngles[i] = vecTargetAngles[i];
+        }
     }
 
-    //Apply new angles
-    set_pev(pEntity, pev_angles, vecAngles);
-    set_pev(pEntity, pev_v_angle, vecAngles);
+    set_pev(pEntity, pev_angles, vecNewAngles);
+    set_pev(pEntity, pev_v_angle, vecNewAngles);
+    set_pev(pEntity, pev_ideal_yaw, vecNewAngles[1]);
 
-    return bTurnResult;
+    return true;
 }
 
 stock Float:UTIL_NormalizeAngle(Float:flAngle) {
@@ -844,4 +825,58 @@ stock UTIL_PushFromOrigin(const Float:vecOrigin[3], pEntity, Float:flImpulse, co
     pev(pEntity, pev_velocity, vecTargetVelocity);
     xs_vec_add(vecTargetVelocity, vecVelocity, vecTargetVelocity);
     set_pev(pEntity, pev_velocity, vecTargetVelocity);
+}
+
+stock UTIL_DrawArrow(pPlayer, const Float:vecSrc[3], const Float:vecTarget[3], const irgColor[3] = {255, 255, 255}, iBrightness = 255, iLifeTime = 10, iWidth = 64) {
+    new iModelIndex = engfunc(EngFunc_ModelIndex, "sprites/arrow1.spr");
+    
+    engfunc(EngFunc_MessageBegin, pPlayer ? MSG_ONE : MSG_ALL, SVC_TEMPENTITY, vecSrc, pPlayer);
+    write_byte(TE_BEAMPOINTS);
+    engfunc(EngFunc_WriteCoord, vecTarget[0]);
+    engfunc(EngFunc_WriteCoord, vecTarget[1]);
+    engfunc(EngFunc_WriteCoord, vecTarget[2]);
+    engfunc(EngFunc_WriteCoord, vecSrc[0]);
+    engfunc(EngFunc_WriteCoord, vecSrc[1]);
+    engfunc(EngFunc_WriteCoord, vecSrc[2]);
+    write_short(iModelIndex);
+    write_byte(0);
+    write_byte(0);
+    write_byte(iLifeTime);
+    write_byte(iWidth);
+    write_byte(0);
+    write_byte(irgColor[0]);
+    write_byte(irgColor[1]);
+    write_byte(irgColor[2]);
+    write_byte(iBrightness);
+    write_byte(0);
+    message_end();
+}
+
+stock Float:ApproachAngle(Float:target, Float:value, Float:speed) {
+  target = anglemod( target );
+  value = anglemod( value );
+
+  new Float:delta = target - value;
+
+  // Speed is assumed to be positive
+  if ( speed < 0 )
+    speed = -speed;
+
+  if ( delta < -180 )
+    delta += 360;
+  else if ( delta > 180 )
+    delta -= 360;
+
+  if ( delta > speed )
+    value += speed;
+  else if ( delta < -speed )
+    value -= speed;
+  else 
+    value = target;
+
+  return value;
+}
+
+stock Float:anglemod(Float:a) {
+  return (360.0/65536) * (floatround(a * (65536.0/360.0), floatround_floor) & 65535);
 }

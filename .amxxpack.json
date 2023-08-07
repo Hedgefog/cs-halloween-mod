@@ -16,7 +16,10 @@
         "filter": [
           "api_custom_entities.@(sma|inc)",
           "api_rounds.@(sma|inc)",
-          "api_player_camera.@(sma|inc)"
+          "api_player_camera.@(sma|inc)",
+          "api_navsystem.@(sma|inc)",
+          "api_navsystem_const.inc",
+          "cellstruct.inc"
         ]
       }
     ]
