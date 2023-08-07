@@ -135,6 +135,7 @@ public Native_Register(iPluginId, iArgc) {
     }
 
     CE_RegisterHook(CEFunction_Killed, szClassName, "@Boss_Killed");
+    CE_RegisterHook(CEFunction_Remove, szClassName, "@Boss_Remove");
 
     return idx;
 }
@@ -236,6 +237,12 @@ public Command_AbortBoss(pPlayer, iLevel, iCId) {
     } else {
         client_cmd(0, "spk %s", g_szSndBossEscape);
         ExecuteForward(g_fwBossEscape, g_fwResult, g_pBoss);
+    }
+}
+
+public @Boss_Remove(this) {
+    if (g_pBoss != this) {
+        return;
     }
 
     ExecuteForward(g_fwBossRemove, _, g_pBoss);
