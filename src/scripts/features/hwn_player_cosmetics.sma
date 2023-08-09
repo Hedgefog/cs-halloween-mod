@@ -654,14 +654,9 @@ CreatePlayerCosmeticMenu(pPlayer) {
 
     new iMenu = menu_create(szMenuTitle, "MenuHandler_PlayerCosmetics");
 
-    new iInvSize = PlayerInventory_Size(pPlayer);
-    if (!iInvSize) {
-        static szEmptyCosmeticText[64];
-        format(szEmptyCosmeticText, charsmax(szEmptyCosmeticText), "\d%L", pPlayer, "HWN_COSMETIC_MENU_EMPTY");
-        menu_addtext2(iMenu, szEmptyCosmeticText);
-    }
+    new iInventorySize = PlayerInventory_Size(pPlayer);
 
-    for (new iSlot = 0; iSlot < iInvSize; ++iSlot) {
+    for (new iSlot = 0; iSlot < iInventorySize; ++iSlot) {
         if (!PlayerInventory_CheckItemType(pPlayer, iSlot, INVENTORY_ITEM_TYPE))  {
             continue;
         }
@@ -676,6 +671,12 @@ CreatePlayerCosmeticMenu(pPlayer) {
         new iItemCallback = menu_makecallback("MenuCallback_PlayerCosmetics_Item");
         menu_additem(iMenu, "", .callback = iItemCallback);
         ArrayPushCell(g_rgirgPlayerMenuSlotRefs[pPlayer], iSlot);
+    }
+
+    if (!ArraySize(g_rgirgPlayerMenuSlotRefs[pPlayer])) {
+        static szEmptyCosmeticText[64];
+        format(szEmptyCosmeticText, charsmax(szEmptyCosmeticText), "\d%L", pPlayer, "HWN_COSMETIC_MENU_EMPTY");
+        menu_addtext2(iMenu, szEmptyCosmeticText);
     }
 
     menu_setprop(iMenu, MPROP_EXIT, MEXIT_ALL);
