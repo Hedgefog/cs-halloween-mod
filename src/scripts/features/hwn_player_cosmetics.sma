@@ -577,6 +577,10 @@ bool:@Player_ActivatePreview(pPlayer, bool:bLight) {
         return false;
     }
 
+    if (~pev(pPlayer, pev_flags) & FL_ONGROUND) {
+        return false;
+    }
+
     if (PlayerCamera_IsActive(pPlayer)) {
         return false;
     }
