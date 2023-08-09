@@ -32,7 +32,6 @@
 #define m_flNextAttack "flNextAttack"
 #define m_flNextPathSearch "flNextPathSearch"
 #define m_flNextLaugh "flNextLaugh"
-#define m_flDieTime "flDieTime"
 #define m_pKiller "pKiller"
 #define m_bSmall "bSmall"
 
@@ -236,26 +235,20 @@ public plugin_init() {
 
     CE_SetMember(this, m_pKiller, pKiller);
 
-    switch (iDeadFlag) {
-        case DEAD_NO: {
-            NPC_StopMovement(this);
+    if (pKiller && iDeadFlag == DEAD_NO) {
+        NPC_StopMovement(this);
 
-            set_pev(this, pev_takedamage, DAMAGE_NO);
-            set_pev(this, pev_deadflag, DEAD_DYING);
+        set_pev(this, pev_takedamage, DAMAGE_NO);
+        set_pev(this, pev_deadflag, DEAD_DYING);
 
-            CE_SetMember(this, m_flNextAIThink, get_gametime() + 0.1);
-            CE_SetMember(this, m_flDieTime, get_gametime() + 0.1);
-
-            // cancel first kill function to play duing animation
-            return PLUGIN_HANDLED;
-        }
-        case DEAD_DYING: {
-            set_pev(this, pev_deadflag, DEAD_DEAD);
-            return PLUGIN_CONTINUE;
-        }
+        CE_SetMember(this, m_flNextAIThink, get_gametime() + 0.1);
+        set_pev(this, pev_nextthink, get_gametime() + 0.1);
+    
+        // cancel first kill function to play duing animation
+        return PLUGIN_HANDLED;
     }
 
-    return PLUGIN_HANDLED;
+    return PLUGIN_CONTINUE;
 }
 
 @Entity_Killed(this) {
@@ -276,10 +269,6 @@ public plugin_init() {
     ArrayDestroy(irgPath);
 
     NPC_Destroy(this);
-
-    new Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
-    UTIL_Message_Dlight(vecOrigin, 32, {HWN_COLOR_PRIMARY}, 10, 32);
 }
 
 @Entity_TakeDamage(this, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
@@ -332,10 +321,11 @@ public plugin_init() {
             }
         }
         case DEAD_DYING: {
-            new Float:flDieTime = CE_GetMember(this, m_flDieTime);
-            if (flDieTime <= flGameTime) {
-                CE_Kill(this, CE_GetMember(this, m_pKiller));
-            }
+            CE_Kill(this, CE_GetMember(this, m_pKiller));
+            return;
+        }
+        case DEAD_DEAD, DEAD_RESPAWNABLE: {
+            return;
         }
     }
 
@@ -347,8 +337,6 @@ public plugin_init() {
 
     set_pev(this, pev_ltime, flGameTime);
     set_pev(this, pev_nextthink, flGameTime + 0.01);
-
-    return HAM_HANDLED;
 }
 
 @Entity_AIThink(this) {

@@ -22,7 +22,6 @@
 #define m_vecGoal "vecGoal"
 #define m_vecTarget "vecTarget"
 #define m_pBuildPathTask "pBuildPathTask"
-#define m_flDieTime "flDieTime"
 #define m_flReleaseHit "flReleaseHit"
 #define m_flTargetArrivalTime "flTargetArrivalTime"
 #define m_flNextAIThink "flNextAIThink"
@@ -292,31 +291,20 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
 
     CE_SetMember(this, m_pKiller, pKiller);
 
-    switch (iDeadFlag) {
-        case DEAD_NO: {
-            if (!pKiller) {
-                set_pev(this, pev_deadflag, DEAD_DEAD);
-                return PLUGIN_CONTINUE;
-            }
+    if (pKiller && iDeadFlag == DEAD_NO) {
+        NPC_EmitVoice(this, g_szSndDying, .supercede = true);
+        @Entity_PlayAction(this, Action_Shake, true);
 
-            NPC_EmitVoice(this, g_szSndDying, .supercede = true);
-            @Entity_PlayAction(this, Action_Shake, true);
+        NPC_StopMovement(this);
 
-            NPC_StopMovement(this);
+        set_pev(this, pev_takedamage, DAMAGE_NO);
+        set_pev(this, pev_deadflag, DEAD_DYING);
+        set_pev(this, pev_nextthink, get_gametime() + 2.0);
 
-            set_pev(this, pev_takedamage, DAMAGE_NO);
-            set_pev(this, pev_deadflag, DEAD_DYING);
+        CE_SetMember(this, m_flNextAIThink, get_gametime() + 2.0);
 
-            CE_SetMember(this, m_flNextAIThink, get_gametime() + 2.0);
-            CE_SetMember(this, m_flDieTime, get_gametime() + 2.0);
-
-            // cancel first kill function to play duing animation
-            return PLUGIN_HANDLED;
-        }
-        case DEAD_DYING: {
-            set_pev(this, pev_deadflag, DEAD_DEAD);
-            return PLUGIN_CONTINUE;
-        }
+        // cancel first kill function to play duing animation
+        return PLUGIN_HANDLED;
     }
 
     return PLUGIN_HANDLED;
@@ -398,10 +386,11 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
             }
         }
         case DEAD_DYING: {
-            new Float:flDieTime = CE_GetMember(this, m_flDieTime);
-            if (flDieTime <= flGameTime) {
-                CE_Kill(this, CE_GetMember(this, m_pKiller));
-            }
+            CE_Kill(this, CE_GetMember(this, m_pKiller));
+            return;
+        }
+        case DEAD_DEAD, DEAD_RESPAWNABLE: {
+            return;
         }
     }
 
@@ -413,8 +402,6 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
 
     set_pev(this, pev_ltime, flGameTime);
     set_pev(this, pev_nextthink, flGameTime + 0.01);
-
-    return HAM_HANDLED;
 }
 
 @Entity_AIThink(this) {
