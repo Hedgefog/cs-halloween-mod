@@ -1,0 +1,85 @@
+{
+    "_version": 1,
+    "items": [
+        {
+            "name": "Coffin Pack",
+            "groups": ["back"],
+            "model": "models/hwn/cosmetics/coffinpack.mdl",
+            "effectColor": [120, 0, 200],
+            "body": 0,
+            "skin": 0
+        },
+        {
+            "name": "Devil Horns",
+            "groups": ["mask"],
+            "model": "models/hwn/cosmetics/devil_horns.mdl",
+            "effectColor": [120, 0, 200],
+            "body": 0,
+            "skin": 0
+        },
+        {
+            "name": "Devil Tail",
+            "groups": ["fanny"],
+            "model": "models/hwn/cosmetics/devil_tail.mdl",
+            "effectColor": [120, 0, 200],
+            "body": 0,
+            "skin": 0
+        },
+        {
+            "name": "Devil Wings",
+            "groups": ["back"],
+            "model": "models/hwn/cosmetics/devil_wings.mdl",
+            "effectColor": [120, 0, 200],
+            "body": 0,
+            "skin": 0
+        },
+        {
+            "name": "Garlik Flank Stake",
+            "groups": ["legs"],
+            "model": "models/hwn/cosmetics/garlic_flank_stake.mdl",
+            "effectColor": [120, 0, 200],
+            "body": 0,
+            "skin": 0
+        },
+        {
+            "name": "Holy Hunter",
+            "groups": ["hat"],
+            "model": "models/hwn/cosmetics/holy_hunter.mdl",
+            "effectColor": [120, 0, 200],
+            "body": 0,
+            "skin": 0
+        },
+        {
+            "name": "Pumpkin",
+            "groups": ["hat", "mask"],
+            "model": "models/hwn/cosmetics/pumpkin_hat.mdl",
+            "effectColor": [120, 0, 200],
+            "body": 0,
+            "skin": 0
+        },
+        {
+            "name": "Silver Bullets",
+            "groups": ["body"],
+            "model": "models/hwn/cosmetics/silver_bullets.mdl",
+            "effectColor": [120, 0, 200],
+            "body": 0,
+            "skin": 0
+        },
+        {
+            "name": "Skull",
+            "groups": ["mask"],
+            "model": "models/hwn/cosmetics/skull.mdl",
+            "effectColor": [120, 0, 200],
+            "body": 0,
+            "skin": 0
+        },
+        {
+            "name": "Spookyhood",
+            "groups": ["hat"],
+            "model": "models/hwn/cosmetics/spookyhood.mdl",
+            "effectColor": [120, 0, 200],
+            "body": 0,
+            "skin": 0
+        }
+    ]
+}

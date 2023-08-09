@@ -6,7 +6,6 @@
 #include <reapi>
 
 #include <api_rounds>
-#include <menu_player_cosmetic>
 
 #include <hwn>
 
@@ -88,5 +87,5 @@ public ChooseTeam(pPlayer) {
 }
 
 public MenuItemCosmeticCallback(pPlayer) {
-    PCosmetic_Menu_Open(pPlayer);
+    client_cmd(pPlayer, "hwn_cosmetics");
 }

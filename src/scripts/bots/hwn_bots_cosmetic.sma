@@ -4,19 +4,21 @@
 #include <hamsandwich>
 #include <reapi>
 
-#include <hwn>
 #include <api_player_inventory>
-#include <api_player_cosmetic>
+
+#include <hwn>
+#include <hwn_player_cosmetics>
 
 #define PLUGIN "[Hwn] Bots Cosmetics"
 #define AUTHOR "Hedgehog Fog"
 
-#define COSMETIC_TIME 3600
+#define COSMETIC_TIME 3600.0
 
 new g_pCvarCosmeticsNum;
 
 new g_rgiPlayerFirstSpawnFlag = 0;
-new PInv_ItemType:g_hItemTypeCosmetic;
+
+new g_iCosmeticsPluginId;
 
 public plugin_precache() {
     g_pCvarCosmeticsNum = register_cvar("hwn_bots_cosmetics", "2");
@@ -27,7 +29,7 @@ public plugin_init() {
 
     RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
 
-    g_hItemTypeCosmetic = PInv_GetItemTypeHandler("cosmetic");
+    g_iCosmeticsPluginId = find_plugin_byfile("hwn_player_cosmetics.amxx");
 }
 
 public client_connect(pPlayer) {
@@ -71,17 +73,15 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 
 EquipRandomCosmetics(pPlayer) {
     new iMaxCosmetic = get_pcvar_num(g_pCvarCosmeticsNum);
+    new iInventorySize = PlayerInventory_Size(pPlayer);
 
-    new iInvSize = PInv_Size(pPlayer);
     new iTotal = 0;
-
-    for (new i = 0; i < iInvSize; ++i) {
-        if (PInv_GetItemType(pPlayer, i) != g_hItemTypeCosmetic) {
+    for (new iSlot = 0; iSlot < iInventorySize; ++iSlot) {
+        if (!PlayerInventory_CheckItemType(pPlayer, iSlot, "hwn_cosmetic")) {
             continue;
         }
 
-        new iCosmetic = PCosmetic_GetItemCosmetic(pPlayer, i);
-        if (!PCosmetic_CanBeEquiped(pPlayer, iCosmetic)) {
+        if (!@Player_CanEquipInventorySlot(pPlayer, iSlot)) {
             continue;
         }
     
@@ -89,7 +89,7 @@ EquipRandomCosmetics(pPlayer) {
             continue;
         }
 
-        PCosmetic_Equip(pPlayer, i);
+        @Player_EquipInventorySlot(pPlayer, iSlot);
         iTotal++;
 
         if (iTotal >= iMaxCosmetic) {
@@ -99,22 +99,38 @@ EquipRandomCosmetics(pPlayer) {
 }
 
 GiveAllCosmetic(pPlayer) {
-    new iNum = Hwn_Cosmetic_GetCount();
-    for (new i = 0; i < iNum; ++i) {
-        new iCosmetic = Hwn_Cosmetic_GetCosmetic(i);
-        PCosmetic_Give(pPlayer, iCosmetic, random(2) == 1 ? PCosmetic_Type_Unusual : PCosmetic_Type_Normal, COSMETIC_TIME);
+    new iNum = Hwn_PlayerCosmetic_GetCount();
+    for (new iSlot = 0; iSlot < iNum; ++iSlot) {        
+        static szCosmetic[32];
+        Hwn_PlayerCosmetic_GetIdByIndex(random(iNum), szCosmetic, charsmax(szCosmetic));
+        Hwn_Player_GiveCosmetic(pPlayer, szCosmetic, random(2) == 1 ? Hwn_PlayerCosmetic_Type_Unusual : Hwn_PlayerCosmetic_Type_Normal, COSMETIC_TIME);
     }
 }
 
 TakeAllCosmetic(pPlayer) {
-    new iInvSize = PInv_Size(pPlayer);
+    new iInventorySize = PlayerInventory_Size(pPlayer);
 
-    for (new iSlot = 0; iSlot < iInvSize; ++iSlot) {
-        if (PInv_GetItemType(pPlayer, iSlot) != g_hItemTypeCosmetic) {
+    for (new iSlot = 0; iSlot < iInventorySize; ++iSlot) {
+        if (!PlayerInventory_CheckItemType(pPlayer, iSlot, "hwn_cosmetic")) {
             continue;
         }
 
-        PCosmetic_Unequip(pPlayer, iSlot);
-        PInv_TakeItem(pPlayer, iSlot);
+        PlayerInventory_TakeItem(pPlayer, iSlot);
     }
+}
+
+public bool:@Player_CanEquipInventorySlot(this, iSlot) {
+    new iCanEquipFunctionId = get_func_id("@Player_CanEquipInventorySlot", g_iCosmeticsPluginId);
+    callfunc_begin_i(iCanEquipFunctionId, g_iCosmeticsPluginId);
+    callfunc_push_int(this);
+    callfunc_push_int(iSlot);
+    return bool:callfunc_end();
+}
+
+public bool:@Player_EquipInventorySlot(this, iSlot) {
+    new iCanEquipFunctionId = get_func_id("@Player_EquipInventorySlot", g_iCosmeticsPluginId);
+    callfunc_begin_i(iCanEquipFunctionId, g_iCosmeticsPluginId);
+    callfunc_push_int(this);
+    callfunc_push_int(iSlot);
+    return bool:callfunc_end();
 }

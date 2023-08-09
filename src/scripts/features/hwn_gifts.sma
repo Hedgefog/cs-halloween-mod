@@ -4,7 +4,7 @@
 #include <fakemeta>
 
 #include <api_custom_entities>
-#include <api_player_cosmetic>
+#include <hwn_player_cosmetics>
 
 #include <hwn>
 #include <hwn_utils>
@@ -95,28 +95,33 @@ public client_disconnected(pPlayer) {
 }
 
 public Hwn_Bosses_Fw_Winner(pPlayer) {
-    new iNum = Hwn_Cosmetic_GetCount();
-    new iCosmetic = Hwn_Cosmetic_GetCosmetic(random(iNum));
+    new iNum = Hwn_PlayerCosmetic_GetCount();
+    new iTime = get_pcvar_num(g_pCvarGiftCosmeticMaxTime);
 
-    PCosmetic_Give(pPlayer, iCosmetic, PCosmetic_Type_Unusual, get_pcvar_num(g_pCvarGiftCosmeticMaxTime));
+    static szCosmetic[32];
+    Hwn_PlayerCosmetic_GetIdByIndex(random(iNum), szCosmetic, charsmax(szCosmetic));
+
+    Hwn_Player_GiveCosmetic(pPlayer, szCosmetic, Hwn_PlayerCosmetic_Type_Unusual, float(iTime));
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnGiftPicked(pEntity, pPlayer) {
-    new iNum = Hwn_Cosmetic_GetCount();
-    new iCosmetic = Hwn_Cosmetic_GetCosmetic(random(iNum));
+    new iNum = Hwn_PlayerCosmetic_GetCount();
     new iTime = random_num(
         get_pcvar_num(g_pCvarGiftCosmeticMinTime),
         get_pcvar_num(g_pCvarGiftCosmeticMaxTime)
     );
 
-    new PCosmetic_Type:iType = PCosmetic_Type_Normal;
+    new Hwn_PlayerCosmetic_Type:iType = Hwn_PlayerCosmetic_Type_Normal;
     if (random(100) >= 20 && random(100) <= 40) { //Find random number two times
-        iType = PCosmetic_Type_Unusual;
+        iType = Hwn_PlayerCosmetic_Type_Unusual;
     }
 
-    PCosmetic_Give(pPlayer, iCosmetic, iType, iTime);
+    static szCosmetic[32];
+    Hwn_PlayerCosmetic_GetIdByIndex(random(iNum), szCosmetic, charsmax(szCosmetic));
+
+    Hwn_Player_GiveCosmetic(pPlayer, szCosmetic, iType, float(iTime));
 
     client_cmd(pPlayer, "spk %s", g_szSndGiftPickup);
 

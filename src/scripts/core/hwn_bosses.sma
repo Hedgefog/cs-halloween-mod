@@ -8,7 +8,6 @@
 #include <hamsandwich>
 
 #include <api_custom_entities>
-#include <api_player_cosmetic>
 
 #include <hwn>
 #include <hwn_utils>

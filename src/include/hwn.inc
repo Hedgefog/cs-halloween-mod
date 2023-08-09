@@ -470,12 +470,6 @@ native Hwn_Spell_CastPlayerSpell(pPlayer);
 
 forward Hwn_Spell_Fw_Cast(pPlayer, iSpell);
 
-/*--------------------------------[ Cosmetic ]--------------------------------*/
-
-native Hwn_Cosmetic_GetCount();
-native Hwn_Cosmetic_GetCosmetic(index);
-native Hwn_Cosmetic_Register(PCosmetic:hPCosmetic);
-
 /*--------------------------------[ Bosses ]--------------------------------*/
 
 native Hwn_Bosses_Register(const szCEClassName[], const szName[] = "Boss");

@@ -1,0 +1,45 @@
+{
+    "_version": 1,
+    "items": [
+        {
+            "name": "Ethereal Hood",
+            "groups": ["hat", "mask"],
+            "model": "models/hwn/cosmetics/ethereal_hood.mdl",
+            "effectColor": [47, 95, 15],
+            "body": 0,
+            "skin": 0
+        },
+        {
+            "name": "Hallowed Headcase",
+            "groups": ["mask"],
+            "model": "models/hwn/cosmetics/hallowed_headcase.mdl",
+            "effectColor": [47, 95, 15],
+            "body": 0,
+            "skin": 0
+        },
+        {
+            "name": "Horsemann's Hand-Me-Down",
+            "groups": ["cape"],
+            "model": "models/hwn/cosmetics/hhh_cape.mdl",
+            "effectColor": [47, 95, 15],
+            "body": 0,
+            "skin": 0
+        },
+        {
+            "name": "Nightmare Hunter",
+            "groups": ["hat"],
+            "model": "models/hwn/cosmetics/nightmare_fedora.mdl",
+            "effectColor": [47, 95, 15],
+            "body": 0,
+            "skin": 0
+        },
+        {
+            "name": "Manneater",
+            "groups": ["hat", "mask"],
+            "model": "models/hwn/cosmetics/manneater.mdl",
+            "effectColor": [47, 95, 15],
+            "body": 0,
+            "skin": 0
+        }
+    ]
+}
