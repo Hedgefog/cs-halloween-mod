@@ -225,7 +225,9 @@ public PlayerInventory_Fw_TakeSlot(pPlayer, iSlot) {
         return;
     }
 
-    StructDestroy(sItem);
+    @Player_UnequipInventorySlot(pPlayer, iSlot, true);
+
+    @SlotItem_Destroy(sItem);
 }
 
 public PlayerInventory_Fw_Destroy() {
@@ -346,9 +348,15 @@ Struct:@SlotItem_Create(const szCosmetic[], Hwn_PlayerCosmetic_Type:iCosmeticTyp
         new Float:flGameTime = get_gametime();
         new Float:flTime = StructGetCell(this, SlotItem_Time);
         new Float:flLastThink = StructGetCell(this, SlotItem_LastThink);
-        new Float:flDelta = flGameTime - flLastThink;
-        StructSetCell(this, SlotItem_Time, flTime - flDelta);
+
+        flTime = floatmax(flTime - (flGameTime - flLastThink), 0.0);
+
+        StructSetCell(this, SlotItem_Time, flTime);
         StructSetCell(this, SlotItem_LastThink, flGameTime);
+
+        if (flTime <= 0) {
+            @SlotItem_SetState(this, ItemState_Unequip);
+        }
     }
 }
 
