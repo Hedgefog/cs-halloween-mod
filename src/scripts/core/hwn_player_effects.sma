@@ -48,7 +48,7 @@ public plugin_init() {
     g_rgPEffectData[PEffectData_PlayerEffectEnd] = ArrayCreate(MAX_PLAYERS + 1);
     g_rgPEffectData[PEffectData_PlayerEffectDuration] = ArrayCreate(MAX_PLAYERS + 1);
 
-    register_concmd("hwn_plyer_effect_set", "Command_Set", ADMIN_CVAR);
+    register_concmd("hwn_player_effect_set", "Command_Set", ADMIN_CVAR);
 }
 
 public plugin_end() {
@@ -155,9 +155,6 @@ public Command_Set(pPlayer, iLevel, iCId) {
         return PLUGIN_HANDLED;
     }
 
-    new szArgs[4];
-    read_args(szArgs, charsmax(szArgs));
-
     static szTarget[32];
     read_argv(1, szTarget, charsmax(szTarget));
 
@@ -221,6 +218,12 @@ bool:SetPlayerEffect(pPlayer, iEffectId, bool:bValue, Float:flDuration = -1.0, b
         return false;
     }
 
+    if (bValue) {
+        ArraySetCell(g_rgPEffectData[PEffectData_Players], iEffectId, iPlayers | BIT(pPlayer & 31));
+    } else {
+        ArraySetCell(g_rgPEffectData[PEffectData_Players], iEffectId, iPlayers & ~BIT(pPlayer & 31));
+    }
+
     new bool:bResult = (
         bValue
             ? CallInvokeFunction(pPlayer, iEffectId, flDuration)
@@ -228,13 +231,11 @@ bool:SetPlayerEffect(pPlayer, iEffectId, bool:bValue, Float:flDuration = -1.0, b
     );
 
     if (!bResult) {
+        ArraySetCell(g_rgPEffectData[PEffectData_Players], iEffectId, iPlayers);
         return false;
     }
 
     if (bValue) {
-        ArraySetCell(g_rgPEffectData[PEffectData_Players], iEffectId, iPlayers | BIT(pPlayer & 31));
-
-
         if (bCurrentValue && bExtend && flDuration >= 0.0) {
             new Float:flEndTime = ArrayGetCell(g_rgPEffectData[PEffectData_PlayerEffectEnd], iEffectId, pPlayer);
             if (flEndTime) {
@@ -248,8 +249,6 @@ bool:SetPlayerEffect(pPlayer, iEffectId, bool:bValue, Float:flDuration = -1.0, b
             ArraySetCell(g_rgPEffectData[PEffectData_PlayerEffectDuration], iEffectId, flDuration, pPlayer);
         }
      
-    } else {
-        ArraySetCell(g_rgPEffectData[PEffectData_Players], iEffectId, iPlayers & ~BIT(pPlayer & 31));
     }
 
     static szIcon[32];
