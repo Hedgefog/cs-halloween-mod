@@ -429,6 +429,11 @@ public plugin_init() {
 }
 
 @Entity_UpdateEnemy(this, Float:flMaxDistance, Float:flMinPriority) {
+    new pEnemy = pev(this, pev_enemy);
+    if (!NPC_IsValidEnemy(pEnemy)) {
+        set_pev(this, pev_enemy, 0);
+    }
+
     static Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);
 
