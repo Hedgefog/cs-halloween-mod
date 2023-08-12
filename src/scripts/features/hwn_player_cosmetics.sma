@@ -104,7 +104,7 @@ public plugin_natives() {
     register_library("hwn_player_cosmetics");
     register_native("Hwn_PlayerCosmetic_Register", "Native_Register");
     register_native("Hwn_PlayerCosmetic_GetCount", "Native_GetCount");
-    register_native("Hwn_PlayerCosmetic_GetIdByIndex", "Native_GetIdByHandle");
+    register_native("Hwn_PlayerCosmetic_GetIdByIndex", "Native_GetIdByIndex");
     register_native("Hwn_Player_GiveCosmetic", "Native_Give");
     register_native("Hwn_Player_UpdateCosmetics", "Native_UpdateEquipment");
     register_native("Hwn_Player_Cosmetic_OpenPlayerMenu", "Native_OpenPlayerMenu");
@@ -115,6 +115,17 @@ public plugin_end() {
         if (g_rgirgPlayerMenuSlotRefs[pPlayer] != Invalid_Array) {
             ArrayDestroy(g_rgirgPlayerMenuSlotRefs[pPlayer]);
         }
+    }
+
+    TrieDestroy(g_itCosmetic);
+
+    if (g_iCosmeticsNum)  {
+        ArrayDestroy(g_rgiCosmeticData[CosmeticData_Name]);
+        ArrayDestroy(g_rgiCosmeticData[CosmeticData_Groups]);
+        ArrayDestroy(g_rgiCosmeticData[CosmeticData_ModelIndex]);
+        ArrayDestroy(g_rgiCosmeticData[CosmeticData_Body]);
+        ArrayDestroy(g_rgiCosmeticData[CosmeticData_Skin]);
+        ArrayDestroy(g_rgiCosmeticData[CosmeticData_EffectColor]);
     }
 }
 
@@ -137,7 +148,7 @@ public Native_GetCount(iPluginId, iArgc) {
     return g_iCosmeticsNum;
 }
 
-public Native_GetIdByHandle(iPluginId, iArgc) {
+public Native_GetIdByIndex(iPluginId, iArgc) {
     new iId = get_param(1);
 
     static szId[32]; ArrayGetString(g_rgiCosmeticData[CosmeticData_Name], iId, szId, charsmax(szId));
@@ -215,7 +226,7 @@ public PlayerInventory_Fw_SlotLoaded(pPlayer, iSlot) {
     @SlotItem_SetState(sItem, iItemState);
 }
 
-public PlayerInventory_Fw_TakeSlot(pPlayer, iSlot) {
+public PlayerInventory_Fw_SlotRemoved(pPlayer, iSlot) {
     if (!PlayerInventory_CheckItemType(pPlayer, iSlot, INVENTORY_ITEM_TYPE))  {
         return;
     }
@@ -228,19 +239,6 @@ public PlayerInventory_Fw_TakeSlot(pPlayer, iSlot) {
     @Player_UnequipInventorySlot(pPlayer, iSlot, true);
 
     @SlotItem_Destroy(sItem);
-}
-
-public PlayerInventory_Fw_Destroy() {
-    TrieDestroy(g_itCosmetic);
-
-    if (g_iCosmeticsNum)  {
-        ArrayDestroy(g_rgiCosmeticData[CosmeticData_Name]);
-        ArrayDestroy(g_rgiCosmeticData[CosmeticData_Groups]);
-        ArrayDestroy(g_rgiCosmeticData[CosmeticData_ModelIndex]);
-        ArrayDestroy(g_rgiCosmeticData[CosmeticData_Body]);
-        ArrayDestroy(g_rgiCosmeticData[CosmeticData_Skin]);
-        ArrayDestroy(g_rgiCosmeticData[CosmeticData_EffectColor]);
-    }
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
