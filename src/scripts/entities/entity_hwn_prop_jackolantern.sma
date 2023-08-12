@@ -21,7 +21,7 @@ public plugin_init() {
 public plugin_precache() {
     CE_Register(
         ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/props/jackolantern.mdl"),
+        .szModel = "models/hwn/props/jackolantern.mdl",
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 48.0},
         .preset = CEPreset_Prop

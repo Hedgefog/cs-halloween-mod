@@ -34,7 +34,7 @@ public plugin_precache() {
     
     CE_Register(
         ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/props/pumpkin_explode_v2.mdl"),
+        .szModel = "models/hwn/props/pumpkin_explode_v2.mdl",
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
         .fRespawnTime = 30.0,

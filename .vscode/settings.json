@@ -4,7 +4,13 @@
   "amxxpawn.compiler.includePaths": [
     "${workspaceRoot}/.compiler/include",
     "${workspaceRoot}/.thirdparty/reapi/addons/amxmodx/scripting/include",
-    "${workspaceRoot}/.thirdparty/cs-modding-kit/include",
+    "${workspaceRoot}/.thirdparty/cs-modding-kit/util",
+    "${workspaceRoot}/.thirdparty/cs-modding-kit/api/custom-entities/include",
+    "${workspaceRoot}/.thirdparty/cs-modding-kit/api/navsystem/include",
+    "${workspaceRoot}/.thirdparty/cs-modding-kit/api/player-camera/include",
+    "${workspaceRoot}/.thirdparty/cs-modding-kit/api/player-cosmetics/include",
+    "${workspaceRoot}/.thirdparty/cs-modding-kit/api/player-inventory/include",
+    "${workspaceRoot}/.thirdparty/cs-modding-kit/api/rounds/include",
     "${workspaceRoot}/src/include"
   ]
 }

@@ -14,13 +14,14 @@
         "url": "https://github.com/Hedgefog/cs-modding-kit/archive/refs/heads/next.zip",
         "strip": 1,
         "filter": [
-          "*.inc",
-          "api_custom_entities.sma",
-          "api_rounds.sma",
-          "api_player_camera.sma",
-          "api_navsystem.sma",
-          "api_player_inventory.sma",
-          "api_player_cosmetics.sma"
+          "util/**",
+          "entities/entity_fire.sma",
+          "api/custom-entities/**",
+          "api/rounds/**",
+          "api/player-camera/**",
+          "api/navsystem/**",
+          "api/player-inventory/**",
+          "api/player-cosmetics/**"
         ]
       }
     ]
@@ -35,13 +36,13 @@
       "./src/scripts"
     ],
     "include": [
-      "./.thirdparty/cs-modding-kit/include",
+      "./.thirdparty/cs-modding-kit",
       "./src/include"
     ],
     "assets": "./assets"
   },
   "output": {
-    "base": "C:/Program Files (x86)/Steam/steamapps/common/Half-Life/cstrike",
+    "base": "./dist/build",
     "plugins": "./addons/amxmodx/plugins",
     "scripts": "./addons/amxmodx/scripting",
     "include": "./addons/amxmodx/scripting/include",

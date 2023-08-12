@@ -106,7 +106,7 @@ public plugin_precache() {
 
     g_iCeHandler = CE_Register(
         ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/props/cauldron.mdl"),
+        .szModel = "models/hwn/props/cauldron.mdl",
         .vMins = Float:{-28.0, -28.0, 0.0},
         .vMaxs = Float:{28.0, 28.0, 56.0},
         .preset = CEPreset_Prop
@@ -114,7 +114,7 @@ public plugin_precache() {
 
     CE_Register(
         LIQUID_ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/props/cauldron_liquid.mdl"),
+        .szModel = "models/hwn/props/cauldron_liquid.mdl",
         .vMins = Float:{-28.0, -28.0, 0.0},
         .vMaxs = Float:{28.0, 28.0, 56.0},
         .preset = CEPreset_Prop
@@ -453,9 +453,11 @@ bool:@Entity_DropEntity(this, pEntity) {
     xs_vec_normalize(vecVelocity, vecVelocity);
     xs_vec_mul_scalar(vecVelocity, 1024.0, vecVelocity);
 
-    static iModelIndex;
+    static iModelIndex = 0;
     if (!iModelIndex) {
-        iModelIndex = CE_GetModelIndex("hwn_item_pumpkin");
+        static szModel[MAX_RESOURCE_PATH_LENGTH];
+        CE_GetModel("hwn_item_pumpkin", szModel, charsmax(szModel));
+        iModelIndex = engfunc(EngFunc_ModelIndex, szModel);
     }
 
     UTILS_Message_Projectile(vecUserOrigin, vecVelocity, iModelIndex, 10, pPlayer);

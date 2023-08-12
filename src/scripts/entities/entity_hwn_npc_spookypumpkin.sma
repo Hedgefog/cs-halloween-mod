@@ -84,7 +84,7 @@ public plugin_precache() {
 
     g_ceHandlerSp = CE_Register(
         ENTITY_NAME_SP,
-        .modelIndex = precache_model("models/hwn/npc/spookypumpkin.mdl"),
+        .szModel = "models/hwn/npc/spookypumpkin.mdl",
         .vMins = Float:{-12.0, -12.0, 0.0},
         .vMaxs = Float:{12.0, 12.0, 24.0},
         .fLifeTime = NPC_LifeTime,
@@ -94,7 +94,7 @@ public plugin_precache() {
 
     g_ceHandlerSpBig = CE_Register(
         ENTITY_NAME_SP_BIG,
-        .modelIndex = precache_model("models/hwn/npc/spookypumpkin_big.mdl"),
+        .szModel = "models/hwn/npc/spookypumpkin_big.mdl",
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
         .fLifeTime = NPC_LifeTime,

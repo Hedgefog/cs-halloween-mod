@@ -53,9 +53,7 @@ public plugin_precache() {
 
     CE_Register(
         ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/npc/ghost_v3.mdl"),
-        .vMins = Float:{-12.0, -12.0, -32.0},
-        .vMaxs = Float:{12.0, 12.0, 32.0},
+        .szModel = "models/hwn/npc/ghost_v3.mdl",
         .fLifeTime = 30.0,
         .fRespawnTime = 30.0,
         .preset = CEPreset_NPC
@@ -92,7 +90,9 @@ public HamHook_Player_Killed_Post(pPlayer, pKiller) {
     set_pev(this, pev_renderamt, 1.0);
     set_pev(this, pev_rendercolor, {HWN_COLOR_PRIMARY_F});
     set_pev(this, pev_health, 1);
-    
+
+    engfunc(EngFunc_SetSize, this, {-12.0, -12.0, -32.0}, {12.0, 12.0, 32.0});
+
     new pEnemy = NPC_GetEnemy(this);
     if (!pEnemy) {
         NPC_FindEnemy(this, _, .reachableOnly = false, .visibleOnly = false, .allowMonsters = false);

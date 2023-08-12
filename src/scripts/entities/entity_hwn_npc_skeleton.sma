@@ -66,7 +66,7 @@ const Float:NPC_Damage = 24.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.35;
 const Float:NPC_LifeTime = 30.0;
-const Float:NPC_RespawnTime = 15.0;
+const Float:NPC_RespawnTime = 60.0;
 const Float:NPC_ViewRange = 4096.0;
 const Float:NPC_PathSearchDelay = 5.0;
 const Float:NPC_TargetUpdateRate = 1.0;
@@ -132,12 +132,13 @@ public plugin_precache() {
 
     g_iCeHandler = CE_Register(
         ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/npc/skeleton_v2.mdl"),
+        .szModel = "models/hwn/npc/skeleton_v2.mdl",
         .vMins = Float:{-12.0, -12.0, -32.0},
         .vMaxs = Float:{12.0, 12.0, 32.0},
         .fLifeTime = NPC_LifeTime,
         .fRespawnTime = NPC_RespawnTime,
-        .preset = CEPreset_NPC
+        .preset = CEPreset_NPC,
+        .bloodColor = 242
     );
 
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
@@ -150,12 +151,13 @@ public plugin_precache() {
 
     g_ceHandlerSmall = CE_Register(
         ENTITY_NAME_SMALL,
-        .modelIndex = precache_model("models/hwn/npc/skeleton_small_v3.mdl"),
+        .szModel = "models/hwn/npc/skeleton_small_v3.mdl",
         .vMins = Float:{-8.0, -8.0, -16.0},
         .vMaxs = Float:{8.0, 8.0, 16.0},
         .fLifeTime = NPC_LifeTime,
         .fRespawnTime = NPC_RespawnTime,
-        .preset = CEPreset_NPC
+        .preset = CEPreset_NPC,
+        .bloodColor = 242
     );
 
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME_SMALL, "@Entity_Init");
@@ -170,7 +172,6 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "HamHook_Base_TraceAttack_Post", .Post = 1);
     RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "HamHook_Base_TakeDamage_Post", .Post = 1);
 
     g_pCvarUseAstar = register_cvar("hwn_npc_skeleton_use_astar", "1");
@@ -725,15 +726,6 @@ Float:@Entity_GetPathCost(this, NavArea:newArea, NavArea:prevArea) {
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
-
-public HamHook_Base_TraceAttack_Post(pEntity, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
-    if (g_iCeHandler == CE_GetHandlerByEntity(pEntity)) {
-        @Entity_TraceAttack(pEntity, pAttacker, flDamage, vecDirection, pTrace, iDamageBits);
-        return HAM_HANDLED;
-    }
-
-    return HAM_IGNORED;
-}
 
 public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
     if (g_iCeHandler == CE_GetHandlerByEntity(pEntity)) {

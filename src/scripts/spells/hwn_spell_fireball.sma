@@ -6,7 +6,6 @@
 #include <xs>
 
 #include <api_custom_entities>
-#include <api_player_burn>
 
 #include <hwn>
 #include <hwn_utils>
@@ -14,6 +13,8 @@
 
 #define PLUGIN "[Hwn] Fireball Spell"
 #define AUTHOR "Hedgehog Fog"
+
+#define SPELL_NAME "Fireball"
 
 const Float:FireballDamage = 60.0;
 const FireballSpeed = 720;
@@ -27,9 +28,6 @@ new const g_szSprFireball[] = "sprites/xsmoke1.spr";
 
 new g_iEffectModelIndex;
 
-new g_hSpell;
-new g_hCeSpellball;
-
 public plugin_precache() {
     g_iEffectModelIndex = precache_model("sprites/plasma.spr");
     precache_model(g_szSprFireball);
@@ -37,81 +35,71 @@ public plugin_precache() {
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
 
-    g_hSpell = Hwn_Spell_Register(
-        "Fireball",
+    Hwn_Spell_Register(
+        SPELL_NAME,
         Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Radius,
-        "Cast"
+        "@Player_CastSpell"
     );
 }
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "HamHook_Base_Touch_Post", .Post = 1);
-
-    g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
-
+    CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
+    CE_RegisterHook(CEFunction_Touch, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Touch");
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Killed");
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
-
-public HamHook_Base_Touch_Post(pEntity, pTarget) {
-    if (!pev_valid(pEntity)) {
-        return;
-    }
-
-    if (g_hCeSpellball != CE_GetHandlerByEntity(pEntity)) {
-        return;
-    }
-
-    if (pev(pEntity, pev_iuser1) != g_hSpell) {
-        return;
-    }
-
-    if (pTarget == pev(pEntity, pev_owner)) {
-        return;
-    }
-
-    CE_Kill(pEntity);
+@Player_CastSpell(pPlayer) {
+    new pSpellBall = UTIL_HwnSpawnPlayerSpellball(pPlayer, EffectColor, FireballSpeed, g_szSprFireball, _, 0.5, 10.0);
+    @SpellBall_InitFireBall(pSpellBall);
+    emit_sound(pPlayer, CHAN_STATIC, g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
-public @SpellBall_Killed(pEntity) {
-    new iSpell = pev(pEntity, pev_iuser1);
+@SpellBall_Touch(this, pTarget) {
+    if (@SpellBall_IsFireBall(this)) {
+        @FireBall_Touch(this, pTarget);
+    }
+}
 
-    if (iSpell != g_hSpell) {
+@SpellBall_Killed(this) {
+    if (@SpellBall_IsFireBall(this)) {
+        @FireBall_Detonate(this);
+    }
+}
+
+bool:@SpellBall_IsFireBall(this) {
+    return pev(this, pev_iuser1) == Hwn_Spell_GetHandler(SPELL_NAME);
+}
+
+@SpellBall_InitFireBall(this) {
+    set_pev(this, pev_iuser1, Hwn_Spell_GetHandler(SPELL_NAME));
+    set_pev(this, pev_movetype, MOVETYPE_FLYMISSILE);
+}
+
+@FireBall_Touch(this, pTarget) {
+    if (pTarget == pev(this, pev_owner)) {
         return;
     }
 
-    Detonate(pEntity);
-}
-
-/*--------------------------------[ Methods ]--------------------------------*/
-
-public Cast(pPlayer) {
-    new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, EffectColor, FireballSpeed, g_szSprFireball, _, 0.5, 10.0);
-    if (!pEntity) {
-        return PLUGIN_HANDLED;
+    if (pev(pTarget, pev_solid) <= SOLID_TRIGGER) {
+        return;
     }
 
-    set_pev(pEntity, pev_iuser1, g_hSpell);
-    set_pev(pEntity, pev_movetype, MOVETYPE_FLYMISSILE);
-
-    emit_sound(pPlayer, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-
-    return PLUGIN_CONTINUE;
+    CE_Kill(this);
 }
 
-Detonate(pEntity) {
-    new pOwner = pev(pEntity, pev_owner);
-    new iTeam = get_member(pOwner, m_iTeam);
+@FireBall_Detonate(this) {
+    new pOwner = pev(this, pev_owner);
 
     new Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
+
+    new Array:irgTargets = ArrayCreate();
 
     new pTarget = 0;
     while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EffectRadius * 2)) != 0) {
-        if (pEntity == pTarget) {
+        if (this == pTarget) {
             continue;
         }
 
@@ -119,33 +107,56 @@ Detonate(pEntity) {
             continue;
         }
 
-        if (pTarget != pOwner && UTIL_IsTeammate(pTarget, iTeam)) {
+        if (!UTIL_CanTakeDamage(pTarget, pOwner)) {
             continue;
         }
 
-        if (pTarget != pOwner && IS_PLAYER(pTarget)) {
-            burn_player(pTarget, pOwner, 15);
-        }
+        ArrayPushCell(irgTargets, pTarget);
+    }
 
-        if (IS_PLAYER(pTarget) || pev(pTarget, pev_flags) & FL_MONSTER) {
-            UTIL_PushFromOrigin(vecOrigin, pTarget, 512.0);
-        }
+    new iTargetsNum = ArraySize(irgTargets);
+    for (new i = 0; i < iTargetsNum; ++i) {
+        pTarget = ArrayGetCell(irgTargets, i);
+
+        new pTarget = ArrayGetCell(irgTargets, i);
 
         static Float:vecTargetOrigin[3];
         pev(pTarget, pev_origin, vecTargetOrigin);
 
         new Float:flDamage = UTIL_CalculateRadiusDamage(vecOrigin, vecTargetOrigin, EffectRadius, FireballDamage);
 
-        ExecuteHamB(Ham_TakeDamage, pTarget, pEntity, pOwner, flDamage, DMG_BURN);
+        ExecuteHamB(Ham_TakeDamage, pTarget, this, pOwner, flDamage, DMG_BURN);
+
+        static Float:flDuration; flDuration = pOwner == pTarget ? 1.0 : 15.0;
+
+        new pFire = CE_Create("fire", vecTargetOrigin);
+        dllfunc(DLLFunc_Spawn, pFire);
+        set_pev(pFire, pev_owner, pOwner);
+        CE_SetMember(pFire, CE_MEMBER_NEXTKILL, get_gametime() + flDuration);
+        dllfunc(DLLFunc_Touch, pFire, pTarget);
+
+        if (pev(pFire, pev_aiment) != pTarget) {
+            CE_Kill(pFire);
+        }
+
+        if (IS_PLAYER(pTarget) || UTIL_IsMonster(pTarget)) {
+            if (IS_PLAYER(pTarget)) {
+                set_ent_data_float(pTarget, "CBasePlayer", "m_flVelocityModifier", 1.0);
+            }
+
+            UTIL_PushFromOrigin(vecOrigin, pTarget, 512.0);
+        }
     }
 
-    DetonateEffect(pEntity);
+    ArrayDestroy(irgTargets);
+
+    @FireBall_DetonateEffect(this);
 }
 
-DetonateEffect(pEntity) {
+@FireBall_DetonateEffect(this) {
     new Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
 
     UTIL_Message_BeamCylinder(vecOrigin, EffectRadius * 3, g_iEffectModelIndex, 0, 3, 32, 255, EffectColor, 100, 0);
-    emit_sound(pEntity, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(this, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

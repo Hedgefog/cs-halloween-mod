@@ -146,7 +146,7 @@ public plugin_precache() {
 
     g_iCeHandler = CE_Register(
         ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/npc/headless_hatman.mdl"),
+        .szModel = "models/hwn/npc/headless_hatman.mdl",
         .vMins = Float:{-16.0, -16.0, -48.0},
         .vMaxs = Float:{16.0, 16.0, 48.0},
         .preset = CEPreset_NPC

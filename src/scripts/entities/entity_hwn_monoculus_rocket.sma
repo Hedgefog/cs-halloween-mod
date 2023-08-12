@@ -39,7 +39,7 @@ public plugin_precache() {
 
     CE_Register(
         ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/props/monoculus_rocket.mdl"),
+        .szModel = "models/hwn/props/monoculus_rocket.mdl",
         .vMins = Float:{-8.0, -8.0, -8.0},
         .vMaxs = Float:{8.0, 8.0, 8.0},
         .preset = CEPreset_Prop

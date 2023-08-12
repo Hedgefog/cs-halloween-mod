@@ -138,7 +138,7 @@ new g_iLevel = 0;
 public plugin_precache() {
     g_iCeHandler = CE_Register(
         ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/npc/monoculus.mdl"),
+        .szModel = "models/hwn/npc/monoculus.mdl",
         .vMins = Float:{-48.0, -48.0, -48.0},
         .vMaxs = Float:{48.0, 48.0, 48.0},
         .preset = CEPreset_NPC

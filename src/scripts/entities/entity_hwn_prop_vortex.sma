@@ -22,7 +22,7 @@ public plugin_init() {
 public plugin_precache() {
     CE_Register(
         ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/props/vortex.mdl"),
+        .szModel = "models/hwn/props/vortex.mdl",
         .vMins = Float:{-256.0, -256.0, -32.0},
         .vMaxs = Float:{256.0, 256.0, 32.0},
         .preset = CEPreset_Prop

@@ -23,7 +23,7 @@ public plugin_init() {
 public plugin_precache() {
     g_iCeHandler = CE_Register(
         ENTITY_NAME,
-        .modelIndex = precache_model("models/hwn/items/gift_v2.mdl"),
+        .szModel = "models/hwn/items/gift_v2.mdl",
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
         .fLifeTime = 120.0,
