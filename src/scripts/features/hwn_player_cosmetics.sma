@@ -246,13 +246,18 @@ public PlayerInventory_Fw_Destroy() {
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public FMHook_AddToFullPack_Post(es, e, pEntity, pHost, iHostFlags, iPlayer, pSet) {
-    if (pEntity == pHost && g_rbPlayerInPreview[pEntity]) {
-        set_es(es, ES_Sequence, 64);
-        set_es(es, ES_GaitSequence, 1);
-        set_es(es, ES_RenderMode, kRenderNormal);
-        set_es(es, ES_RenderFx, kRenderFxNone);
-        set_es(es, ES_RenderAmt, 255.0);
-        set_es(es, ES_MoveType, MOVETYPE_NONE); // disable blending
+    if (g_rbPlayerInPreview[pHost]) {
+        if (pEntity == pHost) {
+            set_es(es, ES_Sequence, 64);
+            set_es(es, ES_GaitSequence, 1);
+            set_es(es, ES_MoveType, MOVETYPE_NONE); // disable blending
+            set_es(es, ES_RenderFx, kRenderFxNone);
+            set_es(es, ES_RenderAmt, 255.0);
+        }
+
+        if (pEntity == pHost || (pev_valid(pEntity) && pev(pEntity, pev_aiment) == pHost)) {
+            set_es(es, ES_RenderMode, kRenderNormal);
+        }
 
         return FMRES_HANDLED;
     }
