@@ -307,7 +307,7 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
         return PLUGIN_HANDLED;
     }
 
-    return PLUGIN_HANDLED;
+    return PLUGIN_CONTINUE;
 }
 
 @Entity_Killed(this, pKiller) {
