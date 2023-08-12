@@ -76,9 +76,9 @@ public plugin_init() {
     register_clcmd("joinclass", "Command_JoinClass");
     register_clcmd("menuselect", "Command_JoinClass");
 
-    g_pCvarRespawnTime = register_cvar("hwn_iGamemode_respawn_time", "5.0");
-    g_pCvarSpawnProtectionTime = register_cvar("hwn_iGamemode_spawn_protection_time", "3.0");
-    g_pCvarNewRoundDelay = register_cvar("hwn_iGamemode_new_round_delay", "10.0");
+    g_pCvarRespawnTime = register_cvar("hwn_gamemode_respawn_time", "5.0");
+    g_pCvarSpawnProtectionTime = register_cvar("hwn_gamemode_spawn_protection_time", "3.0");
+    g_pCvarNewRoundDelay = register_cvar("hwn_gamemode_new_round_delay", "10.0");
 
     register_forward(FM_SetModel, "FMHook_SetModel");
 

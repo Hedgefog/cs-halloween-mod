@@ -125,7 +125,6 @@ public CvarHook_ChangeLighting(pCvar) {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 UpdateLighting() {
-    log_amx("UpdateLighting");
     new bool:bChangeLighting = get_pcvar_bool(g_pCvarChangeLighting);
 
     new bool:bUseCustom = (
