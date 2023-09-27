@@ -181,7 +181,7 @@ public HamHook_Player_Killed_Post(pPlayer, pKiller) {
         }
     }
 
-    NPC_SetEnemy(this, pKiller);
+    set_pev(this, pev_enemy, pKiller);
 }
 
 @Entity_CreateParticles(this) {

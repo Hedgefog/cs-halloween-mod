@@ -40,8 +40,6 @@ public plugin_precache() {
     CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/props/monoculus_rocket.mdl",
-        .vMins = Float:{-8.0, -8.0, -8.0},
-        .vMaxs = Float:{8.0, 8.0, 8.0},
         .preset = CEPreset_Prop
     );
 
@@ -58,6 +56,9 @@ public plugin_precache() {
     set_pev(this, pev_renderfx, kRenderFxGlowShell);
     set_pev(this, pev_renderamt, 4.0);
     set_pev(this, pev_rendercolor, {HWN_COLOR_PRIMARY_F});
+
+    engfunc(EngFunc_SetSize, this, Float:{-8.0, -8.0, -8.0}, Float:{8.0, 8.0, 8.0});
+
     set_pev(this, pev_nextthink, get_gametime());
 }
 

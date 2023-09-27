@@ -215,7 +215,7 @@ Attack(pEntity, pTarget, &Action:action) {
                 }
             }
         } else {
-            NPC_SetEnemy(pEntity, 0);
+            set_pev(this, pev_enemy, 0);
         }
     }
 }

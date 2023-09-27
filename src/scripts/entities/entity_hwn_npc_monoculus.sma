@@ -17,14 +17,6 @@
 #define ENTITY_NAME "hwn_npc_monoculus"
 #define PORTAL_ENTITY_NAME "hwn_monoculus_portal"
 
-#define TASKID_SUM_FLOAT            1000
-#define TASKID_SUM_SHOT             2000
-#define TASKID_SUM_CALM_DOWN        3000
-#define TASKID_SUM_REMOVE_STUN      4000
-#define TASKID_SUM_PUSH_BACK_END    5000
-#define TASKID_SUM_JUMP_TO_PORTAL   6000
-#define TASKID_SUM_TELEPORT         7000
-
 #define ZERO_VECTOR_F Float:{0.0, 0.0, 0.0}
 
 #define MONOCULUS_ROCKET_SPEED 720.0
@@ -32,6 +24,29 @@
 #define MONOCULUS_MIN_HEIGHT 128.0
 #define MONOCULUS_MAX_HEIGHT 256.0
 #define MONOCULUS_SPAWN_ROCKET_DISTANCE 80.0
+
+#define m_flNextAIThink "flNextAIThink"
+#define m_bIsStunned "bIsStunned"
+#define m_bIsAngry "bIsAngry"
+#define m_flDamageToStun "flDamageToStun"
+#define m_flNextAction "flNextAction"
+// #define m_flNextVoice "flNextVoice"
+#define m_flNextSmokeEmit "flNextSmokeEmit"
+// #define m_iNextPortal "iNextPortal"
+#define m_flNextFloat "flNextFloat"
+#define m_flNextAttack "flNextAttack"
+#define m_flNextShot "flNextShot"
+#define m_flReleaseAngry "flReleaseAngry"
+#define m_flReleaseStun "flReleaseStun"
+#define m_flLastDamage "flLastDamage"
+#define m_flDamageCounter "flDamageCounter"
+// #define m_flNextJumpToPortal "flNextJumpToPortal"
+// #define m_flReleaseTeleport "flReleaseTeleport"
+// #define m_flReleasePushBack "flReleasePushBack"
+#define m_iCharge "iCharge"
+// #define m_vecGoal "vecGoal"
+// #define m_vecTarget "vecTarget"
+#define m_pKiller "pKiller"
 
 enum _:Sequence {
     Sequence_Idle = 0,
@@ -61,16 +76,6 @@ enum Action {
     Action_TeleportOut,
     Action_Death,
     Action_LookAround
-};
-
-enum _:Monoculus {
-    Float:Monoculus_DamageToStun,
-    bool:Monoculus_IsAngry,
-    bool:Monoculus_IsStunned,
-    bool:Monoculus_NextPortal,
-    bool:Monoculus_LastAction,
-    bool:Monoculus_NextAction,
-    bool:Monoculus_NextSmokeEmit
 };
 
 new const g_szSndAttack[][128] = {
@@ -119,8 +124,6 @@ const Float:NPC_Speed = 16.0;
 const Float:NPC_HitRange = 3072.0;
 const Float:NPC_AttackDelay = 0.33;
 
-new g_iBloodModelIndex;
-new g_iBloodSprayModelIndex;
 new g_iSmokeModelIndex;
 
 new g_pCvarAngryTime;
@@ -129,7 +132,6 @@ new g_pCvarJumpTimeMin;
 new g_pCvarJumpTimeMax;
 
 new g_iCeHandler;
-new g_iBossHandler;
 
 new Array:g_irgPortals;
 new Array:g_irgPortalAngles;
@@ -139,15 +141,11 @@ public plugin_precache() {
     g_iCeHandler = CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/npc/monoculus.mdl",
-        .vMins = Float:{-48.0, -48.0, -48.0},
-        .vMaxs = Float:{48.0, 48.0, 48.0},
-        .preset = CEPreset_NPC
+        .preset = CEPreset_NPC,
+        .bloodColor = 212
     );
 
-    g_iBossHandler = Hwn_Bosses_Register(ENTITY_NAME, "Monoculus");
-
-    g_iBloodModelIndex = precache_model("sprites/blood.spr");
-    g_iBloodSprayModelIndex = precache_model("sprites/bloodspray.spr");
+    Hwn_Bosses_Register(ENTITY_NAME, "Monoculus");
 
     for (new i = 0; i < sizeof(g_szSndAttack); ++i) {
         precache_sound(g_szSndAttack[i]);
@@ -171,13 +169,15 @@ public plugin_precache() {
 
     g_iSmokeModelIndex = precache_model("sprites/hwn/magic_smoke.spr");
 
-    CE_RegisterHook(CEFunction_Spawn, PORTAL_ENTITY_NAME, "OnPortalSpawn");
+    CE_RegisterHook(CEFunction_Spawn, PORTAL_ENTITY_NAME, "@Portal_Spawn");
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "OnSpawn");
-    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "OnRemove");
-    CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "OnKill");
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
+    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
+    CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
+    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
+    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 
-    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "HamHook_Base_TraceAttack_Post", .Post = 1);
     RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "HamHook_Base_TakeDamage_Post", .Post = 1);
 
     RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed_Post", .Post = 1);
@@ -199,17 +199,25 @@ public plugin_end() {
     }
 }
 
-/*--------------------------------[ Forwards ]--------------------------------*/
+/*--------------------------------[ Hooks ]--------------------------------*/
 
-public Hwn_Bosses_Fw_BossTeleport(pEntity, handler) {
-    if (handler != g_iBossHandler) {
-        return;
+public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
+    if (g_iCeHandler == CE_GetHandlerByEntity(pEntity)) {
+        @Entity_TakeDamage(pEntity, pInflictor, pAttacker, Float:flDamage, iDamageBits);
     }
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
+public HamHook_Player_Killed_Post(pPlayer, pKiller) {
+    if (pKiller && g_iCeHandler == CE_GetHandlerByEntity(pKiller)) {
+        if (random_num(0, 100) < 30) {
+            @Entity_Laugh(pKiller);
+        }
+    }
+}
 
-public OnPortalSpawn(pEntity) {
+/*--------------------------------[ Methods ]--------------------------------*/
+
+@Portal_Spawn(pEntity) {
     if (g_irgPortals == Invalid_Array) {
         g_irgPortals = ArrayCreate(3);
         g_irgPortalAngles = ArrayCreate(3);
@@ -226,371 +234,431 @@ public OnPortalSpawn(pEntity) {
     CE_Remove(pEntity);
 }
 
-public OnSpawn(pEntity) {
-    new Float:flHealth = NPC_Health + (g_iLevel * NPC_HealthPerLevel);
+@Entity_Init(this) {
+    // NPC_Create(this, 0.0);
+}
 
-    new Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+@Entity_Remove(this) {
+    // NPC_Destroy(this);
+}
 
-    UTIL_Message_Dlight(vecOrigin, 32, {HWN_COLOR_PRIMARY}, 60, 4);
+@Entity_Spawn(this) {
+    new Float:flGameTime = get_gametime();
 
-    set_pev(pEntity, pev_health, flHealth);
-    set_pev(pEntity, pev_movetype, MOVETYPE_FLY);
+    CE_SetMember(this, m_flNextAIThink, flGameTime);
+    CE_SetMember(this, m_bIsStunned, false);
+    CE_SetMember(this, m_bIsAngry, false);
+    CE_SetMember(this, m_flDamageToStun, get_pcvar_float(g_pCvarDamageToStun));
+    // CE_SetMember(this, m_flLastAction, flGameTime);
+    CE_SetMember(this, m_flNextSmokeEmit, flGameTime);
+    // CE_SetMember(this, m_iNextPortal, flGameTime);
+    CE_SetMember(this, m_flNextFloat, flGameTime);
+    CE_SetMember(this, m_flNextAttack, flGameTime);
+    CE_SetMember(this, m_flNextShot, flGameTime);
+    // CE_SetMember(this, m_flNextVoice, flGameTime);
+    CE_SetMember(this, m_flNextAction, flGameTime);
+    // CE_SetMember(this, m_flNextJumpToPortal, flGameTime + 5.0);
+    // CE_SetMember(this, m_flReleaseTeleport, 0.0);
+    CE_SetMember(this, m_flReleaseAngry, 0.0);
+    CE_SetMember(this, m_flReleaseStun, 0.0);
+    // CE_SetMember(this, m_flReleasePushBack, 0.0);
+    CE_SetMember(this, m_iCharge, 0);
+    CE_SetMember(this, m_flDamageCounter, 0.0);
+    CE_SetMember(this, m_flLastDamage, 0.0);
 
     new Float:flRenderColor[3] = {HWN_COLOR_PRIMARY_F};
     for (new i = 0; i < 3; ++i) {
         flRenderColor[i] *= 0.2;
     }
 
-    set_pev(pEntity, pev_rendermode, kRenderNormal);
-    set_pev(pEntity, pev_renderfx, kRenderFxGlowShell);
-    set_pev(pEntity, pev_renderamt, 4.0);
-    set_pev(pEntity, pev_rendercolor, flRenderColor);
+    set_pev(this, pev_health, NPC_Health + (g_iLevel * NPC_HealthPerLevel));
+    set_pev(this, pev_solid, SOLID_BBOX);
+    set_pev(this, pev_movetype, MOVETYPE_FLY);
+    set_pev(this, pev_rendermode, kRenderNormal);
+    set_pev(this, pev_renderfx, kRenderFxGlowShell);
+    set_pev(this, pev_renderamt, 4.0);
+    set_pev(this, pev_rendercolor, flRenderColor);
+    set_pev(this, pev_takedamage, DAMAGE_NO);
+    set_pev(this, pev_maxspeed, NPC_Speed);
 
-    NPC_Create(pEntity, 0.0);
-    new Array:irgData = Monoculus_Create(pEntity);
+    engfunc(EngFunc_SetSize, this, {-48.0, -48.0, -48.0}, {48.0, 48.0, 48.0});
 
-    engfunc(EngFunc_DropToFloor, pEntity);
+    new Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+    UTIL_Message_Dlight(vecOrigin, 32, {HWN_COLOR_PRIMARY}, 60, 4);
 
-    set_pev(pEntity, pev_takedamage, DAMAGE_NO);
-    NPC_EmitVoice(pEntity, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 1.0);
-    NPC_PlayAction(pEntity, g_actions[Action_Spawn]);
+    @Entity_EmitVoice(this, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 1.0);
+    @Entity_PlayAction(this, Action_Spawn, true);
 
-    ArraySetCell(irgData, Monoculus_IsStunned, false);
-    ArraySetCell(irgData, Monoculus_DamageToStun, get_pcvar_float(g_pCvarDamageToStun));
-    ArraySetCell(irgData, Monoculus_IsAngry, false);
-    ArraySetCell(irgData, Monoculus_LastAction, get_gametime());
-    ArraySetCell(irgData, Monoculus_NextAction, get_gametime() + g_actions[Action_Spawn][NPC_Action_Time]);
-    ArraySetCell(irgData, Monoculus_NextSmokeEmit, get_gametime());
-
-    ClearTasks(pEntity);
-    CreateJumpToPortalTask(pEntity);
-
-    set_task(Hwn_GetUpdateRate(), "Task_Think", pEntity, _, _, "b");
-    set_task(1.0, "Task_Float", pEntity + TASKID_SUM_FLOAT, _, _, "b");
+    set_pev(this, pev_nextthink, flGameTime + g_actions[Action_Spawn][NPC_Action_Time]);
 }
 
-public OnRemove(pEntity) {
-    ClearTasks(pEntity);
-    remove_task(pEntity);
+@Entity_Kill(this, pKiller) {
+    new iDeadFlag = pev(this, pev_deadflag);
 
-    {
-        new Float:vecOrigin[3];
-        pev(pEntity, pev_origin, vecOrigin);
-        TeleportEffect(vecOrigin);
+    CE_SetMember(this, m_pKiller, pKiller);
+
+    if (pKiller && iDeadFlag == DEAD_NO) {
+        NPC_StopMovement(this);
+
+        set_pev(this, pev_takedamage, DAMAGE_NO);
+        set_pev(this, pev_deadflag, DEAD_DYING);
+
+        // cancel first kill function to play duing animation
+        return PLUGIN_HANDLED;
     }
 
-    NPC_Destroy(pEntity);
-    Monoculus_Destroy(pEntity);
-}
-
-public OnKill(pEntity) {
-    new iDeadFlag = pev(pEntity, pev_deadflag);
-
-    if (iDeadFlag == DEAD_NO) {
-        new Array:irgData = Monoculus_Get(pEntity);
-
-        NPC_PlayAction(pEntity, g_actions[Action_Death], .supercede = true);
-
-        set_pev(pEntity, pev_takedamage, DAMAGE_NO);
-        set_pev(pEntity, pev_velocity, ZERO_VECTOR_F);
-        set_pev(pEntity, pev_deadflag, DEAD_DYING);
-
-        ClearTasks(pEntity);
-        ArraySetCell(irgData, Monoculus_NextAction, get_gametime() + g_actions[Action_Death][NPC_Action_Time]);
-    } else if (iDeadFlag == DEAD_DEAD) {
+    if (pKiller) {
         g_iLevel++;
-        return PLUGIN_CONTINUE;
+    } else {
+        g_iLevel = max(g_iLevel - 1, 0);
     }
 
-    return PLUGIN_HANDLED;
+    return PLUGIN_CONTINUE;
 }
 
-public HamHook_Base_TraceAttack_Post(pEntity, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
-    if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) {
-        return HAM_IGNORED;
+@Entity_Killed(this) {
+    new Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+    TeleportEffect(vecOrigin);
+}
+
+@Entity_Think(this) {
+    static Float:flLastThink; pev(this, pev_ltime, flLastThink);
+    static Float:flGameTime; flGameTime = get_gametime();
+    new Float:flNextAIThink = CE_GetMember(this, m_flNextAIThink);
+    new bool:bShouldUpdateAI = flNextAIThink <= flGameTime;
+    new iDeadFlag = pev(this, pev_deadflag);
+
+    switch (iDeadFlag) {
+        case DEAD_NO: {
+            if (bShouldUpdateAI) {
+                @Entity_AIThink(this);
+                CE_SetMember(this, m_flNextAIThink, flGameTime + Hwn_GetNpcUpdateRate());
+            }
+
+            new pEnemy = NPC_GetEnemy(this);
+            if (pEnemy) {
+                static Float:flTurnSpeed; flTurnSpeed = 180.0 * floatmax(flGameTime - flLastThink, 0.1);
+                static Float:vecTarget[3]; pev(pEnemy, pev_origin, vecTarget);
+                UTIL_TurnTo(this, vecTarget, bool:{false, false, true}, flTurnSpeed);
+            }
+        }
+        case DEAD_DYING: {
+            CE_Kill(this, CE_GetMember(this, m_pKiller));
+            return;
+        }
+        case DEAD_DEAD, DEAD_RESPAWNABLE: {
+            return;
+        }
     }
 
-    static Float:vecEnd[3];
-    get_tr2(pTrace, TR_vecEndPos, vecEnd);
+    if (bShouldUpdateAI) {
+        @Entity_PlayAction(this, Action_Idle, false);
+    }
 
-    UTIL_Message_BloodSprite(vecEnd, g_iBloodSprayModelIndex, g_iBloodModelIndex, 212, floatround(flDamage/4));
-
-    return HAM_HANDLED;
+    set_pev(this, pev_ltime, flGameTime);
+    set_pev(this, pev_nextthink, flGameTime + 0.01);
 }
 
-public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDamage) {
-    if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) {
+@Entity_AIThink(this) {
+    static Float:flGameTime; flGameTime = get_gametime();
+
+    if (pev(this, pev_deadflag) == DEAD_DYING) {
+        @Entity_EmitVoice(this, g_szSndDeath, 1.0);
+        set_pev(this, pev_deadflag, DEAD_DEAD);
+        CE_Kill(this);
         return;
     }
 
-    new Array:irgData = Monoculus_Get(pEntity);
-
-    new Float:flDamageToStun = ArrayGetCell(irgData, Monoculus_DamageToStun);
-    flDamageToStun -= flDamage;
-
-    if (random(100) < 10) {
-        NPC_EmitVoice(pEntity, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
+    static Float:flReleaseStun; flReleaseStun = CE_GetMember(this, m_flReleaseStun);
+    if (flReleaseStun && flReleaseStun <= flGameTime) {
+        CE_SetMember(this, m_bIsStunned, false);
+        CE_SetMember(this, m_flReleaseStun, 0.0);
     }
 
-    if (flDamageToStun <= 0) {
-        flDamageToStun = get_pcvar_float(g_pCvarDamageToStun);
-        Stun(pEntity);
+    new bool:bIsStunned = CE_GetMember(this, m_bIsStunned);
+    if (bIsStunned) {
+        return;
     }
 
-    ArraySetCell(irgData, Monoculus_DamageToStun, flDamageToStun);
+    if (pev(this, pev_takedamage) == DAMAGE_NO) {
+        set_pev(this, pev_takedamage, DAMAGE_AIM);
+    }
 
-    if (random_num(0, 100) < 5) {
-        MakeAngry(pEntity);
+    new pEnemy = NPC_GetEnemy(this);
+    if (pEnemy) {
+        static Float:flNextAttack; flNextAttack = CE_GetMember(this, m_flNextAttack);
+        if (flNextAttack <= flGameTime) {
+            static Float:vecTarget[3];
+            pev(pEnemy, pev_origin, vecTarget);
+
+            if (NPC_IsVisible(this, vecTarget) && NPC_IsInViewCone(this, vecTarget, 10.0)) {
+                @Entity_Attack(this);
+                CE_SetMember(this, m_flNextAttack, flGameTime + 1.25);
+            }
+        }
+    } else {
+        @Entity_PlayAction(this, Action_LookAround, false);
+        @Entity_UpdateEnemy(this, NPC_HitRange, 0.0);
+    }
+
+    static Float:flNextFloat; flNextFloat = CE_GetMember(this, m_flNextFloat);
+    if (flNextFloat < flGameTime) {
+        @Entity_Float(this);
+        CE_SetMember(this, m_flNextFloat, flGameTime + 1.0);
+    }
+
+    if (CE_GetMember(this, m_iCharge) > 0) {
+        static Float:flNextShot; flNextShot = CE_GetMember(this, m_flNextShot);
+        if (flNextShot <= flGameTime) {
+            @Entity_Shot(this);
+            CE_SetMember(this, m_flNextShot, flGameTime + NPC_AttackDelay);
+        }
+    }
+
+    static Float:flNextSmokeEmit; flNextSmokeEmit = CE_GetMember(this, m_flNextSmokeEmit);
+    if (flNextSmokeEmit <= flGameTime) {
+        @Entity_EmitSmoke(this);
+        CE_SetMember(this, m_flNextSmokeEmit, flGameTime + 0.1);
+    }
+
+    static Float:flReleaseAngry; flReleaseAngry = CE_GetMember(this, m_flReleaseAngry);
+    if (flReleaseAngry && flReleaseAngry <= flGameTime) {
+        @Entity_CalmDown(this);
+        CE_SetMember(this, m_flReleaseAngry, 0.0);
+    }
+
+
+
+    // static Float:flReleasePushBack; flReleasePushBack = CE_GetMember(this, m_flReleasePushBack);
+    // if (flReleasePushBack) {
+    //     if (flReleasePushBack > flGameTime) {
+    //         static Float:vecVelocity[3];
+    //         UTIL_GetDirectionVector(this, vecVelocity, -MONOCULUS_PUSHBACK_SPEED);
+    //         set_pev(this, pev_velocity, vecVelocity);
+    //     } else {
+    //         CE_SetMember(this, m_flReleasePushBack, 0.0);
+    //     }
+    // }
+
+    // new Float:flLastAction = CE_GetMember(this, m_flLastAction);
+    // if (get_gametime() - flLastAction > 5.0) {
+    //     @Entity_JumpToPortal(this);
+    // }
+
+    // static Float:flNextJumpToPortal; flNextJumpToPortal= CE_GetMember(this, m_flNextJumpToPortal);
+    // if (flNextJumpToPortal < flGameTime) {
+    //     @Entity_JumpToPortal(this);
+
+    //     new Float:flMinTime = get_pcvar_float(g_pCvarJumpTimeMin);
+    //     new Float:flMaxTime = get_pcvar_float(g_pCvarJumpTimeMax);
+    //     CE_SetMember(this, m_flNextJumpToPortal, random_float(flMinTime, flMaxTime));
+    // }
+
+    // static Float:flReleaseTeleport; flReleaseTeleport = CE_GetMember(this, m_flReleaseTeleport);
+    // if (flReleaseTeleport && flReleaseTeleport <= flGameTime) {
+    //     @Entity_Teleport(this);
+    //     CE_SetMember(this, m_flReleaseTeleport, 0.0);
+    // }
+}
+
+@Entity_UpdateEnemy(this, Float:flMaxDistance, Float:flMinPriority) {
+    new pEnemy = pev(this, pev_enemy);
+    if (!NPC_IsValidEnemy(pEnemy)) {
+        set_pev(this, pev_enemy, 0);
+    }
+
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+
+    static iTeam; iTeam = pev(this, pev_team);
+    static pClosestTarget; pClosestTarget = 0;
+    static Float:flClosestTargetPriority; flClosestTargetPriority = 0.0;
+
+    new pTarget = 0;
+    while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, flMaxDistance)) > 0) {
+        if (this == pTarget) {
+            continue;
+        }
+
+        if (!IS_PLAYER(pTarget)) {
+            continue;
+        }
+
+        if (!NPC_IsValidEnemy(pTarget, iTeam)) {
+            continue;
+        }
+
+        static Float:vecTarget[3];
+        pev(pTarget, pev_origin, vecTarget);
+
+        static Float:flDistance; flDistance = xs_vec_distance(vecOrigin, vecTarget);
+        static Float:flTargetPriority; flTargetPriority = 1.0 - (flDistance / flMaxDistance);
+
+        if (flTargetPriority >= flMinPriority && flTargetPriority > flClosestTargetPriority) {
+            pClosestTarget = pTarget;
+            flClosestTargetPriority = flTargetPriority;
+        }
+    }
+
+    if (pClosestTarget) {
+        set_pev(this, pev_enemy, pClosestTarget);
+    }
+
+    return pClosestTarget;
+}
+
+@Entity_TakeDamage(this, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
+    static Float:flGameTime; flGameTime = get_gametime();
+    static Float:flDamageCounter; flDamageCounter = CE_GetMember(this, m_flDamageCounter);
+    static Float:flLastDamage; flLastDamage = CE_GetMember(this, m_flLastDamage);
+    static Float:flDamageToStun; flDamageToStun = CE_GetMember(this, m_flDamageToStun);
+
+    if (flDamage > flDamageToStun) {
+        @Entity_Stun(this);
+        CE_SetMember(this, m_flDamageToStun, get_pcvar_float(g_pCvarDamageToStun));
+    } else {
+        CE_SetMember(this, m_flDamageToStun, flDamageToStun - flDamage);
+    }
+
+    if (flDamageCounter > 300.0) {
+        @Entity_MakeAngry(this);
+        CE_SetMember(this, m_flDamageCounter, 0.0);
+    } else {
+        if (flGameTime - flLastDamage < 1.0) {
+            CE_SetMember(this, m_flDamageCounter, flDamageCounter + flDamage);
+        } else {
+            CE_SetMember(this, m_flDamageCounter, 0.0);
+        }
     }
 
     if (IS_PLAYER(pAttacker) && NPC_IsValidEnemy(pAttacker)) {
         static Float:vecOrigin[3];
-        pev(pEntity, pev_origin, vecOrigin);
+        pev(this, pev_origin, vecOrigin);
 
         static Float:vecTarget[3];
         pev(pAttacker, pev_origin, vecTarget);
 
-        if (get_distance_f(vecOrigin, vecTarget) <= NPC_HitRange && NPC_IsVisible(pEntity, vecTarget)) {
-            if (get_gametime() - NPC_GetEnemyTime(pEntity) > 6.0) {
-                NPC_SetEnemy(pEntity, pAttacker);
+        if (get_distance_f(vecOrigin, vecTarget) <= NPC_HitRange && NPC_IsVisible(this, vecTarget)) {
+            if (random(100) < 10) {
+                set_pev(this, pev_enemy, pAttacker);
             }
         }
     }
+
+    if (random(100) < 10) {
+        @Entity_EmitVoice(this, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
+    }
+
+    CE_SetMember(this, m_flLastDamage, flGameTime);
 }
 
-public HamHook_Player_Killed_Post(pPlayer, pKiller) {
-    if (!pKiller || g_iCeHandler != CE_GetHandlerByEntity(pKiller)) {
+@Entity_Attack(this) {
+    log_amx("Entity_Attack");
+    static Float:flGameTime; flGameTime = get_gametime();
+    CE_SetMember(this, m_iCharge, CE_GetMember(this, m_bIsAngry) ? 3 : 1);
+    CE_SetMember(this, m_flNextShot, flGameTime + NPC_AttackDelay);
+    @Entity_PlayAction(this, CE_GetMember(this, m_bIsAngry) ? Action_AngryAttack : Action_Attack, true);
+}
+
+@Entity_Laugh(this) {
+    @Entity_PlayAction(this, Action_Laugh, true);
+    @Entity_EmitVoice(this, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
+}
+
+@Entity_Stun(this) {
+    set_pev(this, pev_velocity, ZERO_VECTOR_F);
+    CE_SetMember(this, m_bIsStunned, true);
+    @Entity_EmitVoice(this, g_szSndStunned[random(sizeof(g_szSndStunned))], 1.0);
+    CE_SetMember(this, m_flReleaseStun, get_gametime() + g_actions[Action_Stunned][NPC_Action_Time]);
+    @Entity_PlayAction(this, Action_Stunned, true);
+}
+
+@Entity_PlayAction(this, Action:iAction, bool:bSupercede) {
+    static Float:flGameTime; flGameTime = get_gametime();
+    if (!bSupercede && CE_GetMember(this, m_flNextAction) > flGameTime) {
         return;
     }
 
-    if (random_num(0, 100) < 30) {
-        Laugh(pKiller);
-    }
-}
-
-/*--------------------------------[ Methods ]--------------------------------*/
-
-Array:Monoculus_Create(pEntity) {
-    new Array:irgData = ArrayCreate(1, Monoculus);
-    for (new i = 0; i < Monoculus; ++i) {
-        ArrayPushCell(irgData, 0);
-    }
-
-    set_pev(pEntity, pev_iuser2, irgData);
-
-    return irgData;
-}
-
-Monoculus_Destroy(pEntity) {
-    new Array:irgData = any:pev(pEntity, pev_iuser2);
-
-    ArrayDestroy(irgData);
-}
-
-Array:Monoculus_Get(pEntity) {
-    return Array:pev(pEntity, pev_iuser2);
-}
-
-/*--------------------------------[ Tasks ]--------------------------------*/
-
-public Task_Think(pEntity) {
-    if (!pev_valid(pEntity)) {
+    new iSequence = random_num(g_actions[iAction][NPC_Action_StartSequence], g_actions[iAction][NPC_Action_EndSequence]);
+    if (!UTIL_SetSequence(this, iSequence)) {
         return;
     }
 
+    log_amx("@Entity_PlayAction(%d, %d, %d)", this, iAction, bSupercede);
+
+    CE_SetMember(this, m_flNextAction, flGameTime + g_actions[iAction][NPC_Action_Time]);
+}
+
+
+@Entity_EmitVoice(this, const szSound[], Float:flDuration) {
+    emit_sound(this, CHAN_VOICE, szSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    // CE_SetMember(this, m_flNextVoice, flGameTime + flDuration);
+}
+
+@Entity_MakeAngry(this) {
+    new bool:bIsAngry = CE_GetMember(this, m_bIsAngry);
+    if (bIsAngry) {
+        return;
+    }
+
+    CE_SetMember(this, m_bIsAngry, true);
+    CE_SetMember(this, m_flReleaseAngry, get_gametime() + get_pcvar_float(g_pCvarAngryTime));
+}
+
+@Entity_SetHeight(this, Float:flHeight) {
     static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
 
-    new Array:irgData = Monoculus_Get(pEntity);
-    new Float:flNextAction = ArrayGetCell(irgData, Monoculus_NextAction);
-    if (flNextAction < get_gametime()) {
-        if (pev(pEntity, pev_deadflag) == DEAD_DYING) {
-            NPC_EmitVoice(pEntity, g_szSndDeath, .supercede = true);
-            set_pev(pEntity, pev_deadflag, DEAD_DEAD);
-            CE_Kill(pEntity);
-
-            return;
-        }
-
-        if (pev(pEntity, pev_takedamage) == DAMAGE_NO) {
-            set_pev(pEntity, pev_takedamage, DAMAGE_AIM);
-            ArraySetCell(irgData, Monoculus_LastAction, get_gametime());
-        }
-
-        new bool:bIsStunned = ArrayGetCell(irgData, Monoculus_IsStunned);
-
-        if (!bIsStunned) {
-            new pEnemy = NPC_GetEnemy(pEntity);
-            if (!pEnemy || !Attack(pEntity, pEnemy)) {
-                if (random_num(0, 100) < 5) {
-                    LookAround(pEntity);
-                }
-
-                NPC_FindEnemy(pEntity, .allowMonsters = false);
-                NPC_PlayAction(pEntity, g_actions[Action_Idle]);
-            }
-
-            new Float:flLastAction = ArrayGetCell(irgData, Monoculus_LastAction);
-            if (get_gametime() - flLastAction > 5.0) {
-                JumpToPortal(pEntity);
-            }
-        }
-    }
-
-    EmitSmoke(pEntity);
-}
-
-bool:Attack(pEntity, pTarget) {
-    new Array:irgData = Monoculus_Get(pEntity);
-
-    static Float:vecTarget[3];
-    pev(pTarget, pev_origin, vecTarget);
-
-    if (!NPC_IsVisible(pEntity, vecTarget)) {
-        return false;
-    }
-
-    if (NPC_CanHit(pEntity, pTarget, NPC_HitRange)) {
-        new bool:bIsAngry = ArrayGetCell(irgData, Monoculus_IsAngry);
-
-        if (bIsAngry) {
-            AngryShot(pEntity);
-        } else {
-            Shot(pEntity);
-        }
-    } else {
-        if (task_exists(pEntity + TASKID_SUM_PUSH_BACK_END)) {
-            NPC_MoveToTarget(pEntity, vecTarget, 0.0);
-        } else {
-            NPC_MoveToTarget(pEntity, vecTarget, NPC_Speed, 90.0);
-        }
-
-        NPC_PlayAction(pEntity, g_actions[Action_Idle]);
-    }
-
-    ArraySetCell(irgData, Monoculus_LastAction, get_gametime());
-
-    return true;
-}
-
-BaseShot(pEntity, Float:attackDelay) {
-    set_pev(pEntity, pev_velocity, ZERO_VECTOR_F);
-
-    new Array:npcData = NPC_GetData(pEntity);
-    ArraySetCell(npcData, NPC_NextAttack, get_gametime() + attackDelay);
-}
-
-Shot(pEntity) {
-    set_task(NPC_AttackDelay, "Task_Shot", pEntity+TASKID_SUM_SHOT, _, _, "a", 1);
-
-    NPC_PlayAction(pEntity, g_actions[Action_Attack]);
-    BaseShot(pEntity, g_actions[Action_Attack][NPC_Action_Time] + 0.1);
-}
-
-AngryShot(pEntity) {
-    set_task(NPC_AttackDelay, "Task_Shot", pEntity+TASKID_SUM_SHOT, _, _, "a", 3);
-
-    NPC_PlayAction(pEntity, g_actions[Action_AngryAttack]);
-    BaseShot(pEntity, g_actions[Action_AngryAttack][NPC_Action_Time] + 0.1);
-}
-
-Laugh(pEntity) {
-    NPC_PlayAction(pEntity, g_actions[Action_Laugh]);
-    NPC_EmitVoice(pEntity, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
-}
-
-LookAround(pEntity) {
-    NPC_PlayAction(pEntity, g_actions[Action_LookAround]);
-}
-
-Stun(pEntity) {
-    set_pev(pEntity, pev_velocity, ZERO_VECTOR_F);
-
-    new Array:irgData = Monoculus_Get(pEntity);
-    ArraySetCell(irgData, Monoculus_IsStunned, true);
-
-    NPC_EmitVoice(pEntity, g_szSndStunned[random(sizeof(g_szSndStunned))], 1.0);
-    NPC_PlayAction(pEntity, g_actions[Action_Stunned], .supercede = true);
-
-    remove_task(pEntity+TASKID_SUM_SHOT);
-    remove_task(pEntity+TASKID_SUM_JUMP_TO_PORTAL);
-    set_task(g_actions[Action_Stunned][NPC_Action_Time], "Task_RemoveStun", pEntity+TASKID_SUM_REMOVE_STUN);
-    ArraySetCell(irgData, Monoculus_LastAction, get_gametime());
-}
-
-MakeAngry(pEntity) {
-    new Array:irgData = Monoculus_Get(pEntity);
-
-    new bool:bIsAngry = ArrayGetCell(irgData, Monoculus_IsAngry);
-
-    if (!bIsAngry) {
-        ArraySetCell(irgData, Monoculus_IsAngry, true);
-        set_task(get_pcvar_float(g_pCvarAngryTime), "Task_CalmDown", pEntity+TASKID_SUM_CALM_DOWN);
-    }
-
-    ArraySetCell(irgData, Monoculus_LastAction, get_gametime());
-}
-
-SetHeight(pEntity, Float:flHeight, Float:flSpeed = NPC_Speed) {
-    static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
-
-    new Float:flDistanceToFloor = UTIL_GetDistanceToFloor(pEntity, vecOrigin);
+    new Float:flDistanceToFloor = UTIL_GetDistanceToFloor(this, vecOrigin);
     if (flDistanceToFloor == -1.0) {
-        set_pev(pEntity, pev_velocity, ZERO_VECTOR_F);
+        set_pev(this, pev_velocity, ZERO_VECTOR_F);
         return;
     }
 
     static Float:vecVelocity[3];
-    pev(pEntity, pev_velocity, vecVelocity);
+    pev(this, pev_velocity, vecVelocity);
 
     new iDirection = (flDistanceToFloor > flHeight) ? -1 : 1;
-    vecVelocity[2] = flSpeed * iDirection;
+    vecVelocity[2] = NPC_Speed * iDirection;
 
-    set_pev(pEntity, pev_velocity, vecVelocity);
+    set_pev(this, pev_velocity, vecVelocity);
 }
 
-AlignHeight(pEntity, const Float:vecTarget[3]) {
+@Entity_AlignHeight(this, const Float:vecTarget[3]) {
     static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
  
     new Float:flHeightDiff = vecOrigin[2] - vecTarget[2];
     vecOrigin[2] -= flHeightDiff;
 
-    new Float:flDistanceToFloor = UTIL_GetDistanceToFloor(pEntity, vecOrigin);
+    new Float:flDistanceToFloor = UTIL_GetDistanceToFloor(this, vecOrigin);
     if (flDistanceToFloor == -1.0) {
         return;
     }
 
-    SetHeight(pEntity, flDistanceToFloor < MONOCULUS_MIN_HEIGHT ? MONOCULUS_MIN_HEIGHT : flDistanceToFloor);
+    @Entity_SetHeight(this, flDistanceToFloor < MONOCULUS_MIN_HEIGHT ? MONOCULUS_MIN_HEIGHT : flDistanceToFloor);
 }
 
-SpawnRocket(pEntity) {
-    static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
-
+@Entity_SpawnRocket(this) {
     static Float:vecDirection[3];
-    UTIL_GetDirectionVector(pEntity, vecDirection);
+    UTIL_GetDirectionVector(this, vecDirection);
 
-    {
-        static Float:vecTmp[3];
-        xs_vec_mul_scalar(vecDirection, MONOCULUS_SPAWN_ROCKET_DISTANCE, vecTmp);
-        xs_vec_add(vecOrigin, vecTmp, vecOrigin);
-    }
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+    xs_vec_add_scaled(vecOrigin, vecDirection, MONOCULUS_SPAWN_ROCKET_DISTANCE, vecOrigin);
 
-    // todo: add spawn rocket logic
     new pRocket = CE_Create("hwn_monoculus_rocket", vecOrigin);
-
     if (!pRocket) {
         return;
     }
 
-    static Float:vecAngles[3];
-    pev(pEntity, pev_angles, vecAngles);
+    set_pev(pRocket, pev_owner, this);
 
+    static Float:vecAngles[3];
+    pev(this, pev_angles, vecAngles);
     set_pev(pRocket, pev_angles, vecAngles);
-    set_pev(pRocket, pev_owner, pEntity);
 
     static Float:vecVelocity[3];
     xs_vec_mul_scalar(vecDirection, MONOCULUS_ROCKET_SPEED, vecVelocity);
@@ -599,153 +667,96 @@ SpawnRocket(pEntity) {
     dllfunc(DLLFunc_Spawn, pRocket);
 }
 
-PushBack(pEntity) {
-    static Float:vecVelocity[3];
-    UTIL_GetDirectionVector(pEntity, vecVelocity, -MONOCULUS_PUSHBACK_SPEED);
-    set_pev(pEntity, pev_velocity, vecVelocity);
+// @Entity_PushBack(this) {
+//     CE_SetMember(this, m_flReleasePushBack, get_gametime() + 0.25);
+// }
 
-    set_task(0.25, "Task_PushBackEnd", pEntity+TASKID_SUM_PUSH_BACK_END);
+// @Entity_JumpToPortal(this) {
+//     if (g_irgPortals == Invalid_Array) {
+//         return;
+//     }
+
+//     new iProtalsNum = ArraySize(g_irgPortals);
+//     if (!iProtalsNum) {
+//         return;
+//     }
+
+//     new bool:bIsStunned = CE_GetMember(this, m_bIsStunned);
+//     if (bIsStunned) {
+//         return;
+//     }
+
+//     new iPortal = random(iProtalsNum);
+//     if (iPortal == CE_GetMember(this, m_iNextPortal)) {
+//         return;
+//     }
+
+//     CE_SetMember(this, m_iNextPortal, iPortal);
+//     CE_SetMember(this, m_flReleaseTeleport, get_gametime() + g_actions[Action_TeleportIn][NPC_Action_Time]);
+// }
+
+@Entity_EmitSmoke(this) {
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+    UTIL_Message_FireField(vecOrigin, 16, g_iSmokeModelIndex, 2, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
 }
 
-JumpToPortal(pEntity) {
-    if (g_irgPortals == Invalid_Array) {
-        return;
+@Entity_Float(this) {
+    new pEnemy = NPC_GetEnemy(this);
+    if (pEnemy) {
+        static Float:vecTarget[3];
+        pev(pEnemy, pev_origin, vecTarget);
+        @Entity_AlignHeight(this, vecTarget);
+    } else {
+        new Float:flHeight = random_float(MONOCULUS_MIN_HEIGHT, MONOCULUS_MAX_HEIGHT);
+        @Entity_SetHeight(this, flHeight);
     }
-
-    new iSize = ArraySize(g_irgPortals);
-
-    if (!iSize) {
-        return;
-    }
-
-    new Array:irgData = Monoculus_Get(pEntity);
-
-    new bool:bIsStunned = ArrayGetCell(irgData, Monoculus_IsStunned);
-    if (bIsStunned) {
-        return;
-    }
-
-    new iPortal = random(iSize);
-    if (iPortal == ArrayGetCell(irgData, Monoculus_NextPortal)) {
-        return;
-    }
-
-    ArraySetCell(irgData, Monoculus_NextPortal, iPortal);
-
-    NPC_PlayAction(pEntity, g_actions[Action_TeleportIn]);
-    remove_task(pEntity+TASKID_SUM_TELEPORT);
-    set_task(g_actions[Action_TeleportIn][NPC_Action_Time], "Task_Teleport", pEntity+TASKID_SUM_TELEPORT);
-    ArraySetCell(irgData, Monoculus_LastAction, get_gametime());
 }
 
-CreateJumpToPortalTask(pEntity) {
-    new Float:flMinTime = get_pcvar_float(g_pCvarJumpTimeMin);
-    new Float:flMaxTime = get_pcvar_float(g_pCvarJumpTimeMax);
-    set_task(random_float(flMinTime, flMaxTime), "Task_JumpToPortal", pEntity+TASKID_SUM_JUMP_TO_PORTAL);
+@Entity_Shot(this) {
+    new iCharge = CE_GetMember(this, m_iCharge);
+    if (!iCharge) {
+        return;
+    }
+
+    log_amx("Entity_Shot");
+    
+    CE_SetMember(this, m_iCharge, iCharge - 1);
+
+    // @Entity_PushBack(this);
+    @Entity_SpawnRocket(this);
+    @Entity_EmitVoice(this, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.3);
 }
+
+@Entity_CalmDown(this) {
+    CE_SetMember(this, m_bIsAngry, false);
+}
+
+// @Entity_Teleport(this) {
+//     static iPortal; iPortal = CE_GetMember(this, m_iNextPortal);
+
+//     static Float:vecOrigin[3];
+//     pev(this, pev_origin, vecOrigin);
+
+//     static Float:vecTargetOrigin[3];
+//     ArrayGetArray(g_irgPortals, iPortal, vecTargetOrigin);
+
+//     static Float:vecTargetAngles[3];
+//     ArrayGetArray(g_irgPortalAngles, iPortal, vecTargetAngles);
+    
+//     engfunc(EngFunc_SetOrigin, this, vecTargetOrigin);
+//     set_pev(this, pev_angles, vecTargetAngles);
+
+//     TeleportEffect(vecOrigin);
+//     TeleportEffect(vecTargetOrigin);
+
+//     @Entity_PlayAction(this, Action_TeleportOut, false);
+
+//     client_cmd(0, "spk %s", g_szSndMoved);
+//     NPC_EmitVoice(this, g_szSndSpawn, 1.0);
+// }
 
 TeleportEffect(const Float:vecOrigin[3]) {
     UTIL_Message_FireField(vecOrigin, 64, g_iSmokeModelIndex, 10, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 20);
     UTIL_Message_Dlight(vecOrigin, 48, {HWN_COLOR_PRIMARY}, 5, 32);
-}
-
-EmitSmoke(pEntity) {
-    new Array:irgData = Monoculus_Get(pEntity);
-
-    new Float:flNextSmokeEmit = ArrayGetCell(irgData, Monoculus_NextSmokeEmit);
-
-    if (get_gametime() < flNextSmokeEmit) {
-        return;
-    }
-
-    static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
-    UTIL_Message_FireField(vecOrigin, 16, g_iSmokeModelIndex, 2, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
-
-    ArraySetCell(irgData, Monoculus_NextSmokeEmit, get_gametime() + 0.1);
-}
-
-ClearTasks(pEntity) {
-    remove_task(pEntity + TASKID_SUM_FLOAT);
-    remove_task(pEntity + TASKID_SUM_SHOT);
-    remove_task(pEntity + TASKID_SUM_CALM_DOWN);
-    remove_task(pEntity + TASKID_SUM_REMOVE_STUN);
-    remove_task(pEntity + TASKID_SUM_PUSH_BACK_END);
-    remove_task(pEntity + TASKID_SUM_JUMP_TO_PORTAL);
-    remove_task(pEntity + TASKID_SUM_TELEPORT);
-}
-
-/*--------------------------------[ Tasks ]--------------------------------*/
-
-public Task_Float(iTaskId) {
-    new pEntity = iTaskId - TASKID_SUM_FLOAT;
-
-    new pEnemy = NPC_GetEnemy(pEntity);
-    if (pEnemy) {
-        static Float:vecTarget[3];
-        pev(pEnemy, pev_origin, vecTarget);
-        AlignHeight(pEntity, vecTarget);
-    } else {
-        new Float:flHeight = random_float(MONOCULUS_MIN_HEIGHT, MONOCULUS_MAX_HEIGHT);
-        SetHeight(pEntity, flHeight);
-    }
-}
-
-public Task_Shot(iTaskId) {
-    new pEntity = iTaskId - TASKID_SUM_SHOT;
-
-    PushBack(pEntity);
-    SpawnRocket(pEntity);
-    NPC_EmitVoice(pEntity, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.3);
-}
-
-public Task_CalmDown(iTaskId) {
-    new pEntity = iTaskId - TASKID_SUM_CALM_DOWN;
-
-    new Array:irgData = Monoculus_Get(pEntity);
-    ArraySetCell(irgData, Monoculus_IsAngry, false);
-}
-
-public Task_RemoveStun(iTaskId) {
-    new pEntity = iTaskId - TASKID_SUM_REMOVE_STUN;
-
-    new Array:irgData = Monoculus_Get(pEntity);
-    ArraySetCell(irgData, Monoculus_IsStunned, false);
-    CreateJumpToPortalTask(pEntity);
-}
-
-public Task_PushBackEnd(iTaskId) {
-    new pEntity = iTaskId - TASKID_SUM_PUSH_BACK_END;
-    set_pev(pEntity, pev_velocity, ZERO_VECTOR_F);
-}
-
-public Task_JumpToPortal(iTaskId) {
-    new pEntity = iTaskId - TASKID_SUM_JUMP_TO_PORTAL;
-    JumpToPortal(pEntity);
-    CreateJumpToPortalTask(pEntity);
-}
-
-public Task_Teleport(iTaskId) {
-    new pEntity = iTaskId - TASKID_SUM_TELEPORT;
-
-    client_cmd(0, "spk %s", g_szSndMoved);
-    NPC_EmitVoice(pEntity, g_szSndSpawn, 1.0);
-
-    new Array:irgData = Monoculus_Get(pEntity);
-    new iPortal = ArrayGetCell(irgData, Monoculus_NextPortal);
-
-    new Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
-    TeleportEffect(vecOrigin);
-
-    new Float:vecTargetOrigin[3];
-    ArrayGetArray(g_irgPortals, iPortal, vecTargetOrigin);
-    engfunc(EngFunc_SetOrigin, pEntity, vecTargetOrigin);
-    TeleportEffect(vecTargetOrigin);
-
-    new Float:vecTargetAngles[3];
-    ArrayGetArray(g_irgPortalAngles, iPortal, vecTargetAngles);
-    set_pev(pEntity, pev_angles, vecTargetAngles);
-
-    NPC_PlayAction(pEntity, g_actions[Action_TeleportOut]);
 }

@@ -197,8 +197,12 @@ stock bool:UTIL_TurnTo(pEntity, const Float:vecTarget[3], const bool:rgbLockAxis
         }
     }
 
+    static Float:vecViewAngles[3];
+    xs_vec_copy(vecNewAngles, vecViewAngles);
+    vecViewAngles[0] = -vecViewAngles[0];
+
     set_pev(pEntity, pev_angles, vecNewAngles);
-    set_pev(pEntity, pev_v_angle, vecNewAngles);
+    set_pev(pEntity, pev_v_angle, vecViewAngles);
     set_pev(pEntity, pev_ideal_yaw, vecNewAngles[1]);
 
     return true;

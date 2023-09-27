@@ -284,8 +284,8 @@ public plugin_init() {
         new Float:flHitRange = bSmall ? NPC_Small_HitRange : NPC_HitRange;
 
         if (get_distance_f(vecOrigin, vecTarget) <= flHitRange && NPC_IsVisible(this, vecTarget)) {
-            if (get_gametime() - NPC_GetEnemyTime(this) > 6.0) {
-                NPC_SetEnemy(this, pAttacker);
+            if (random(100) < 10) {
+                set_pev(this, pev_enemy, pAttacker);
             }
         }
     }

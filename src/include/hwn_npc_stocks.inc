@@ -13,8 +13,7 @@ enum _:NPC
     Float:NPC_NextFootStep,
     Float:NPC_LastReachablePoint[3],
     Float:NPC_ReachTime,
-    Float:NPC_ViewZOffset,
-    Float:NPC_EnemyTime
+    Float:NPC_ViewZOffset
 }
 
 enum NPC_Action
@@ -367,7 +366,7 @@ stock NPC_FindEnemy(pEntity, Float:flMaxDistance = 3072.0, bool:reachableOnly = 
     }
 
     if (nearestEnemy) {
-        NPC_SetEnemy(pEntity, nearestEnemy);
+        set_pev(this, pev_enemy, nearestEnemy);
     }
 
     return nearestEnemy;
@@ -512,7 +511,8 @@ stock bool:NPC_IsValidEnemy(pEnemy, iTeam = 0, bool:allowMonsters = true) {
 
 stock NPC_IsVisible(pEntity, const Float:vecTarget[3], pIgnoreEnt = 0) {
     static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+    ExecuteHamB(Ham_EyePosition, pEntity, vecOrigin);
+    // pev(pEntity, pev_origin, vecOrigin);
 
     new ignoreEntSolidType = SOLID_NOT;
     if (pIgnoreEnt) {
@@ -520,8 +520,8 @@ stock NPC_IsVisible(pEntity, const Float:vecTarget[3], pIgnoreEnt = 0) {
         set_pev(pIgnoreEnt, pev_solid, SOLID_NOT);
     }
 
-    new Array:npcData = NPC_GetData(pEntity);
-    vecOrigin[2] += Float:ArrayGetCell(npcData, NPC_ViewZOffset);
+    // new Array:npcData = NPC_GetData(pEntity);
+    // vecOrigin[2] += Float:ArrayGetCell(npcData, NPC_ViewZOffset);
 
     new bool:isOpen = UTIL_IsOpen(vecOrigin, vecTarget, pEntity);
 
@@ -542,20 +542,6 @@ stock NPC_GetEnemy(pEntity) {
     return pEnemy;
 }
 
-stock NPC_SetEnemy(pEntity, pEnemy) {
-    set_pev(pEntity, pev_enemy, pEnemy);
-
-    if (pEnemy) {
-        new Array:npcData = NPC_GetData(pEntity);
-        ArraySetCell(npcData, NPC_EnemyTime, get_gametime());
-    }
-}
-
-stock Float:NPC_GetEnemyTime(pEntity) {
-    new Array:npcData = NPC_GetData(pEntity);
-    return ArrayGetCell(npcData, NPC_EnemyTime);
-}
-
 stock bool:NPC_IsInViewCone(pEntity, const Float:vecTarget[3], Float:fMaxAngle) {
     static Float:vecOrigin[3];
     ExecuteHamB(Ham_EyePosition, pEntity, vecOrigin);
@@ -568,7 +554,7 @@ stock bool:NPC_IsInViewCone(pEntity, const Float:vecTarget[3], Float:fMaxAngle) 
     pev(pEntity, pev_v_angle, vecForward);
     angle_vector(vecForward, ANGLEVECTOR_FORWARD, vecForward);
 
-    new Float:flAngle = xs_rad2deg(xs_acos((vecDir[0] * vecForward[0]) + (vecDir[1] * vecForward[1]), radian));
+    static Float:flAngle; flAngle = xs_vec_dot(vecDir, vecForward);
 
     return flAngle < fMaxAngle;
 }
