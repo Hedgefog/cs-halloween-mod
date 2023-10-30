@@ -25,6 +25,7 @@
 #define m_flReleaseHit "flReleaseHit"
 #define m_flTargetArrivalTime "flTargetArrivalTime"
 #define m_flNextAIThink "flNextAIThink"
+#define m_flNextAction "flNextAction"
 #define m_flNextAttack "flNextAttack"
 #define m_flNextPathSearch "flNextPathSearch"
 #define m_flNextEffectEmit "flNextEffectEmit"
@@ -81,7 +82,7 @@ new const g_szSndSpawn[] = "hwn/npc/hhh/hhh_spawn.wav";
 new const g_szSndDying[] = "hwn/npc/hhh/hhh_dying.wav";
 new const g_szSndDeath[] = "hwn/npc/hhh/hhh_death.wav";
 
-new const g_actions[Action][NPC_Action] = {
+new const g_rgActions[Action][NPC_Action] = {
     { Sequence_Idle, Sequence_Idle, 0.0 },
     { Sequence_Run, Sequence_Run, 0.0 },
     { Sequence_Attack, Sequence_Attack, 0.75 },
@@ -231,8 +232,6 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
 @Entity_Init(this) {
     CE_SetMember(this, m_pBuildPathTask, Invalid_NavBuildPathTask);
     CE_SetMember(this, m_irgPath, ArrayCreate(3));
-
-    NPC_Create(this);
 }
 
 @Entity_Restart(this) {
@@ -245,6 +244,7 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     CE_SetMember(this, m_flNextAttack, 0.0);
     CE_SetMember(this, m_flReleaseHit, 0.0);
     CE_SetMember(this, m_flNextAIThink, flGameTime);
+    CE_SetMember(this, m_flNextAction, flGameTime);
     CE_SetMember(this, m_flNextSmokeEmit, flGameTime);
     CE_SetMember(this, m_flNextLaugh, flGameTime);
     CE_SetMember(this, m_flNextPathSearch, flGameTime);
@@ -274,34 +274,36 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
 
     engfunc(EngFunc_DropToFloor, this);
 
-    NPC_EmitVoice(this, g_szSndSpawn);
+    @Entity_EmitVoice(this, g_szSndSpawn, 1.0);
 
     new Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);
     UTIL_Message_Dlight(vecOrigin, 32, {HWN_COLOR_PRIMARY}, 60, 4);
 
     @Entity_PlayAction(this, Action_Spawn, false);
-    // CE_SetMember(this, "flNextUpdate", get_gametime() + g_actions[Action_Spawn][NPC_Action_Time]);
+    // CE_SetMember(this, "flNextUpdate", get_gametime() + g_rgActions[Action_Spawn][NPC_Action_Time]);
 
-    set_pev(this, pev_nextthink, flGameTime + g_actions[Action_Spawn][NPC_Action_Time]);
+    set_pev(this, pev_nextthink, flGameTime + g_rgActions[Action_Spawn][NPC_Action_Time]);
 }
 
 @Entity_Kill(this, pKiller) {
+    new Float:flGameTime = get_gametime();
+
     new iDeadFlag = pev(this, pev_deadflag);
 
     CE_SetMember(this, m_pKiller, pKiller);
 
     if (pKiller && iDeadFlag == DEAD_NO) {
-        NPC_EmitVoice(this, g_szSndDying, .supercede = true);
+        @Entity_EmitVoice(this, g_szSndDying, 1.0);
         @Entity_PlayAction(this, Action_Shake, true);
 
         NPC_StopMovement(this);
 
         set_pev(this, pev_takedamage, DAMAGE_NO);
         set_pev(this, pev_deadflag, DEAD_DYING);
-        set_pev(this, pev_nextthink, get_gametime() + 2.0);
+        set_pev(this, pev_nextthink, flGameTime + 2.0);
 
-        CE_SetMember(this, m_flNextAIThink, get_gametime() + 2.0);
+        CE_SetMember(this, m_flNextAIThink, flGameTime + 2.0);
 
         // cancel first kill function to play duing animation
         return PLUGIN_HANDLED;
@@ -318,7 +320,7 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
         pev(this, pev_origin, vecOrigin);
 
         UTIL_Message_ExplodeModel(vecOrigin, random_float(-512.0, 512.0), g_iGibsModelIndex, 5, 25);
-        NPC_EmitVoice(this, g_szSndDeath, .supercede = true);
+        @Entity_EmitVoice(this, g_szSndDeath, 1.0);
     }
 }
 
@@ -327,8 +329,6 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
 
     new Array:irgPath = CE_GetMember(this, m_irgPath);
     ArrayDestroy(irgPath);
-
-    NPC_Destroy(this);
 
     new Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);
@@ -351,7 +351,7 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     }
 
     if (random(100) < 50) {
-        NPC_EmitVoice(this, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
+        @Entity_EmitVoice(this, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
     }
 }
 
@@ -382,7 +382,7 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
 
                 static Float:flMaxSpeed;
                 pev(this, pev_maxspeed, flMaxSpeed);
-                NPC_MoveToTarget(this, vecTarget, flMaxSpeed);
+                @Entity_MoveTo(this, vecTarget);
             }
         }
         case DEAD_DYING: {
@@ -429,7 +429,7 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
         if (flNextAttack <= get_gametime()) {
             static pEnemy; pEnemy = NPC_GetEnemy(this);
             if (pEnemy && NPC_CanHit(this, pEnemy, NPC_HitRange, NPC_TargetHitOffset)) {
-                NPC_EmitVoice(this, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.5);
+                @Entity_EmitVoice(this, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.5);
                 CE_SetMember(this, m_flReleaseHit, flGameTime + NPC_HitDelay);
 
                 static Float:vecTargetVelocity[3];
@@ -443,7 +443,7 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
         static Float:flDamage;
         pev(this, pev_dmg, flDamage);
 
-        if (NPC_Hit(this, NPC_Damage, NPC_HitRange, 0.0, NPC_TargetHitOffset)) {
+        if (NPC_Hit(this, NPC_Damage, NPC_HitRange, NPC_TargetHitOffset)) {
             emit_sound(this, CHAN_WEAPON, g_szSndHit, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
         }
 
@@ -460,13 +460,13 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     if (xs_vec_len(vecVelocity) > 50.0) {
         static Float:flNextLaugh; flNextLaugh = CE_GetMember(this, m_flNextLaugh);
         if (flNextLaugh <= flGameTime) {
-            NPC_EmitVoice(this, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
+            @Entity_EmitVoice(this, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
             CE_SetMember(this, m_flNextLaugh, flGameTime + random_float(1.0, 2.0));
         }
 
         static Float:flNextFootStep; flNextFootStep = CE_GetMember(this, m_flNextFootStep);
         if (flNextFootStep <= flGameTime) {
-            NPC_EmitFootStep(this, g_szSndStep[random(sizeof(g_szSndStep))]);
+            @Entity_EmitFootStep(this);
             @Entity_ScareAway(this);
             CE_SetMember(this, m_flNextFootStep, flGameTime + 0.25);
         }
@@ -474,6 +474,18 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
 
     static Action:iAction; iAction = @Entity_GetAction(this);
     @Entity_PlayAction(this, iAction, false);
+}
+
+@Entity_MoveTo(this, const Float:vecTarget[3]) {
+    NPC_MoveTo(this, vecTarget);
+}
+
+@Entity_EmitFootStep(this) {
+    emit_sound(this, CHAN_BODY, g_szSndStep[random(sizeof(g_szSndStep))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+}
+
+@Entity_EmitVoice(this, const szSound[], Float:flDuration) {
+    emit_sound(this, CHAN_VOICE, szSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
 @Entity_UpdateGoal(this) {
@@ -489,57 +501,7 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
 }
 
 @Entity_UpdateEnemy(this, Float:flMaxDistance, Float:flMinPriority) {
-    new pEnemy = pev(this, pev_enemy);
-    if (!NPC_IsValidEnemy(pEnemy)) {
-        set_pev(this, pev_enemy, 0);
-    }
-
-    static Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
-
-    static iTeam; iTeam = pev(this, pev_team);
-    static pClosestTarget; pClosestTarget = 0;
-    static Float:flClosestTargetPriority; flClosestTargetPriority = 0.0;
-
-    new pTarget = 0;
-    while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, flMaxDistance)) > 0) {
-        if (this == pTarget) {
-            continue;
-        }
-
-        if (!NPC_IsValidEnemy(pTarget, iTeam)) {
-            continue;
-        }
-
-        static Float:vecTarget[3];
-        pev(pTarget, pev_origin, vecTarget);
-
-        static Float:flDistance; flDistance = xs_vec_distance(vecOrigin, vecTarget);
-        static Float:flTargetPriority; flTargetPriority = 1.0 - (flDistance / flMaxDistance);
-
-        if (IS_PLAYER(pTarget)) {
-            flTargetPriority *= 1.0;
-        } else if (UTIL_IsMonster(pTarget)) {
-            flTargetPriority *= 0.075;
-        } else {
-            flTargetPriority *= 0.0;
-        }
-
-        if (flTargetPriority >= flMinPriority && !NPC_IsReachable(this, vecTarget, pTarget)) {
-            flTargetPriority *= 0.1;
-        }
-
-        if (flTargetPriority >= flMinPriority && flTargetPriority > flClosestTargetPriority) {
-            pClosestTarget = pTarget;
-            flClosestTargetPriority = flTargetPriority;
-        }
-    }
-
-    if (pClosestTarget) {
-        set_pev(this, pev_enemy, pClosestTarget);
-    }
-
-    return pClosestTarget;
+    return NPC_UpdateEnemy(this, flMaxDistance, flMinPriority);
 }
 
 @Entity_UpdateTarget(this) {
@@ -600,9 +562,21 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     CE_SetMember(this, m_flTargetArrivalTime, get_gametime() + flDuration);
 }
 
-@Entity_PlayAction(this, Action:iAction, bool:bSupercede) {
-    NPC_PlayAction(this, g_actions[iAction], bSupercede);
-    // CE_SetMember(this, "flNextUpdate", get_gametime() + g_actions[iAction][NPC_Action_Time]);
+bool:@Entity_PlayAction(this, Action:iAction, bool:bSupercede) {
+    new Float:flGametime = get_gametime();
+    if (!bSupercede && flGametime < CE_GetMember(this, m_flNextAction)) {
+        return false;
+    }
+
+    new iSequence = random_num(g_rgActions[iAction][NPC_Action_StartSequence], g_rgActions[iAction][NPC_Action_EndSequence]);
+
+    if (!UTIL_SetSequence(this, iSequence)) {
+        return false;
+    }
+
+    CE_SetMember(this, m_flNextAction, flGametime + g_rgActions[iAction][NPC_Action_Time]);
+
+    return true;
 }
 
 Action:@Entity_GetAction(this) {
@@ -616,7 +590,7 @@ Action:@Entity_GetAction(this) {
                 iAction = Action_Attack;
             }
 
-            if (pev(this, pev_flags) | FL_ONGROUND) {
+            if (pev(this, pev_flags) & FL_ONGROUND) {
                 static Float:vecVelocity[3];
                 pev(this, pev_velocity, vecVelocity);
 
@@ -682,55 +656,7 @@ bool:@Entity_ProcessPath(this) {
 }
 
 Float:@Entity_GetPathCost(this, NavArea:newArea, NavArea:prevArea) {
-    new NavAttributeType:iAttributes = Nav_Area_GetAttributes(newArea);
-
-    // NPC can't jump or crouch
-    if (iAttributes & NAV_JUMP || iAttributes & NAV_CROUCH) {
-        return -1.0;
-    }
-
-    static Float:vecTarget[3];
-    Nav_Area_GetCenter(newArea, vecTarget);
-
-    static Float:vecSrc[3];
-    if (prevArea != Invalid_NavArea) {
-        Nav_Area_GetCenter(prevArea, vecSrc);
-    } else {
-        pev(this, pev_origin, vecSrc);
-    }
-
-    new pTrace = create_tr2();
-    engfunc(EngFunc_TraceLine, vecSrc, vecTarget, IGNORE_MONSTERS, 0, pTrace);
-    new pHit = get_tr2(pTrace, TR_pHit);
-    free_tr2(pTrace);
-
-    // cancel if there is a wall
-    if (!pHit) {
-        return -1.0;
-    }
-
-    // cancel path if there is a obstacle
-    if (pHit != -1 && !IS_PLAYER(pHit) && !UTIL_IsMonster(pHit)) {
-        return -1.0;
-    }
-
-    new pTarget = 0;
-    while ((pTarget = engfunc(EngFunc_FindEntityInSphere, pTarget, vecTarget, 64.0)) > 0) {
-        static szClassName[32];
-        pev(pTarget, pev_classname, szClassName, charsmax(szClassName));
-
-        // don't go through the hurt entities
-        if (equal(szClassName, "trigger_hurt")) {
-            return -1.0;
-        }
-
-        // path cost penalty for going through the spawn area
-        if (equal(szClassName, "info_player_start") || equal(szClassName, "info_player_deathmatch")) {
-            return 100.0;
-        }
-    }
-
-    return 1.0;
+    return NPC_GetPathCost(this, newArea, prevArea);
 }
 
 @Entity_HandlePath(this, NavPath:pPath) {

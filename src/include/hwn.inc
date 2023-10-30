@@ -433,6 +433,7 @@ native Hwn_Gamemode_Activate();
 native Hwn_Gamemode_DispatchWin(iTeam);
 native Hwn_Gamemode_GetCurrent();
 native bool:Hwn_Gamemode_IsPlayerOnSpawn(pPlayer, bool:bIgnoreTeam = false);
+native Hwn_Gamemode_GetSpawnAreaTeam(const Float:vecOrigin[3]);
 native Hwn_Gamemode_GetHandler(const szName[]);
 native Hwn_GamemodeFlags:Hwn_Gamemode_GetFlags();
 

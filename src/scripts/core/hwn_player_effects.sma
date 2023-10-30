@@ -7,6 +7,7 @@
 #include <reapi>
 
 #include <api_rounds>
+#include <command_util>
 
 #include <hwn>
 #include <hwn_utils>
@@ -167,31 +168,23 @@ public Command_Set(pPlayer, iLevel, iCId) {
     static szDuration[32];
     read_argv(4, szDuration, charsmax(szDuration));
 
-    new pTarget = 0;
-    if (szTarget[0] == '@') {
-        if (equal(szTarget[1], "me")) {
-            pTarget = pPlayer;
-        }
-    } else if (szTarget[0] == '#') {
-        pTarget = find_player("k", str_to_num(szTarget[1]));
-    } else {
-        pTarget = find_player("b", szTarget);
-    }
-
-    if (!pTarget) {
-        return PLUGIN_HANDLED;
-    }
-
-    new bool:bValue = equal(szValue, NULL_STRING) ? true : bool:str_to_num(szValue);
-
     new iEffectId = -1;
     if (!TrieGetCell(g_itEffectsIds, szEffectId, iEffectId)) {
         return PLUGIN_HANDLED;
     }
 
+    new bool:bValue = equal(szValue, NULL_STRING) ? true : bool:str_to_num(szValue);
     new Float:flDuration = equal(szDuration, NULL_STRING) ? -1.0 : str_to_float(szDuration);
 
-    SetPlayerEffect(pTarget, iEffectId, bValue, flDuration, false);
+    new iTarget = CMD_RESOLVE_TARGET(pPlayer, szTarget);
+
+    for (new pTarget = 1; pTarget <= MaxClients; ++pTarget) {
+        if (!CMD_SHOULD_TARGET_PLAYER(pTarget, iTarget)) {
+            continue;
+        }
+
+        SetPlayerEffect(pTarget, iEffectId, bValue, flDuration, false);
+    }
 
     return PLUGIN_HANDLED;
 }

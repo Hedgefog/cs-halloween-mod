@@ -159,7 +159,7 @@ public OnBackpackPickup(pEntity, pPlayer) {
         return;
     }
 
-    new iPoints = GetPlayerPoints(pPlayer) + pev(pEntity, pev_iuser2);
+    new iPoints = GetPlayerPoints(pPlayer) + CE_GetMember(pEntity, "iAmount");
     SetPlayerPoints(pPlayer, iPoints);
 }
 
@@ -256,8 +256,8 @@ public Round_Fw_RoundExpired() {
     if (iTTeamPoints == iCtTeamPoints) {
         new iOvertime = get_pcvar_num(g_pCvarRoundTimeOvertime);
         if (iTTeamPoints > 0 && iOvertime > 0) {
-            new roundTime = Round_GetTime() + iOvertime;
-            Round_SetTime(roundTime);
+            new iRoundTime = Round_GetTime() + iOvertime;
+            Round_SetTime(iRoundTime);
 
             g_bOvertime = true;
 
@@ -271,6 +271,10 @@ public Round_Fw_RoundExpired() {
 }
 
 public Hwn_Bosses_Fw_BossSpawn(pEntity, Float:flLifeTime) {
+    if (!Round_IsRoundStarted()) {
+        return;
+    }
+
     new iRoundTime = Round_GetTime() + floatround(flLifeTime);
     Round_SetTime(iRoundTime);
     g_iTeamPointsToSpawnBoss = 0;
@@ -300,7 +304,7 @@ bool:ExtractPlayerPoints(pPlayer) {
     }
 
     if (bIsBackpack) {
-        set_pev(pBackpack, pev_iuser2, iPoints);
+        CE_SetMember(pBackpack, "iAmount", iPoints);
     }
 
     set_pev(pBackpack, pev_iuser1, Hwn_PumpkinType_Default);

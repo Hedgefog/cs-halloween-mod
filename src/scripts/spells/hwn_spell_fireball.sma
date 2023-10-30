@@ -130,13 +130,13 @@ bool:@SpellBall_IsFireBall(this) {
         static Float:flDuration; flDuration = pOwner == pTarget ? 1.0 : 15.0;
 
         new pFire = CE_Create("fire", vecTargetOrigin);
-        dllfunc(DLLFunc_Spawn, pFire);
-        set_pev(pFire, pev_owner, pOwner);
-        CE_SetMember(pFire, CE_MEMBER_NEXTKILL, get_gametime() + flDuration);
-        dllfunc(DLLFunc_Touch, pFire, pTarget);
-
-        if (pev(pFire, pev_aiment) != pTarget) {
-            CE_Kill(pFire);
+        if (pFire) {
+            dllfunc(DLLFunc_Spawn, pFire);
+            set_pev(pFire, pev_owner, pOwner);
+            set_pev(pFire, pev_aiment, pTarget);
+            set_pev(pFire, pev_movetype, MOVETYPE_FOLLOW);
+            CE_SetMember(pFire, CE_MEMBER_NEXTKILL, get_gametime() + flDuration);
+            CE_SetMember(pFire, "bAllowSpread", false);
         }
 
         if (IS_PLAYER(pTarget) || UTIL_IsMonster(pTarget)) {

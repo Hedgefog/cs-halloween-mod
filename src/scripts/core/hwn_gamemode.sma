@@ -111,6 +111,7 @@ public plugin_natives() {
     register_native("Hwn_Gamemode_GetCurrent", "Native_GetCurrent");
     register_native("Hwn_Gamemode_GetHandler", "Native_GetHandler");
     register_native("Hwn_Gamemode_IsPlayerOnSpawn", "Native_IsPlayerOnSpawn");
+    register_native("Hwn_Gamemode_GetSpawnAreaTeam", "Native_GetSpawnAreaTeam");
     register_native("Hwn_Gamemode_GetFlags", "Native_GetFlags");
 }
 
@@ -210,6 +211,13 @@ public Native_IsPlayerOnSpawn(iPluginId, iArgc) {
     new bool:bIgnoreTeam = bool:get_param(2);
 
     return IsPlayerOnSpawn(pPlayer, bIgnoreTeam);
+}
+
+public Native_GetSpawnAreaTeam(iPluginId, iArgc) {
+    new Float:vecOrigin[3];
+    get_array_f(1, vecOrigin, sizeof(vecOrigin));
+
+    return GetSpawnAreaTeam(vecOrigin);
 }
 
 public Hwn_GamemodeFlags:Native_GetFlags(iPluginId, iArgc) {
@@ -476,17 +484,33 @@ bool:IsPlayerOnSpawn(pPlayer, bool:bIgnoreTeam = false) {
         return false;
     }
 
-    return bIgnoreTeam
-        ? IsPlayerOnTeamSpawn(pPlayer, 1) || IsPlayerOnTeamSpawn(pPlayer, 2)
-        : IsPlayerOnTeamSpawn(pPlayer, iTeam);
+    return IsPlayerOnTeamSpawn(pPlayer, bIgnoreTeam ? 0 : iTeam);
 }
 
 bool:IsPlayerOnTeamSpawn(pPlayer, iTeam) {
-    new Array:spawnPoints = iTeam == 1 ? g_iTSpawnPoints : g_iCtSpawnPoints;
-    new iSpawnPointsNum = ArraySize(spawnPoints);
-
     static Float:vecOrigin[3];
     pev(pPlayer, pev_origin, vecOrigin);
+
+    return IsSpawn(vecOrigin, iTeam);
+}
+
+GetSpawnAreaTeam(const Float:vecOrigin[3]) {
+    for (new iTeam = 1; iTeam <= 2; ++iTeam) {
+        if (IsSpawn(vecOrigin, iTeam)) {
+            return iTeam;
+        }
+    }
+
+    return 0;
+}
+
+bool:IsSpawn(const Float:vecOrigin[3], iTeam) {
+    if (!iTeam) {
+        return IsSpawn(vecOrigin, 1) || IsSpawn(vecOrigin, 2);
+    }
+
+    new Array:spawnPoints = iTeam == 1 ? g_iTSpawnPoints : g_iCtSpawnPoints;
+    new iSpawnPointsNum = ArraySize(spawnPoints);
 
     static Float:vecSpawnOrigin[3];
     for (new i = 0; i < iSpawnPointsNum; ++i) {

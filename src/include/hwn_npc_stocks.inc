@@ -5,101 +5,13 @@
 #define STEP_HEIGHT 18.0
 #define HEAD_TO_MAXS_RATIO 0.21875
 
-enum _:NPC
-{
-    Float:NPC_NextAttack,
-    Float:NPC_NextAction,
-    Float:NPC_NextVoice,
-    Float:NPC_NextFootStep,
-    Float:NPC_LastReachablePoint[3],
-    Float:NPC_ReachTime,
-    Float:NPC_ViewZOffset
-}
-
-enum NPC_Action
-{
+enum NPC_Action {
     NPC_Action_StartSequence,
     NPC_Action_EndSequence,
     Float:NPC_Action_Time
 };
 
-stock NPC_Create(pEntity, Float:flViewZOffset = -1.0) {
-    new Array:npcData = ArrayCreate(1, _:NPC);
-    for (new i = 0; i < _:NPC; ++i) {
-        ArrayPushCell(npcData, 0);
-    }
-
-    ArraySetArray(npcData, NPC_LastReachablePoint, Float:{0.0, 0.0, 0.0});
-
-    if (flViewZOffset == -1.0) {
-        new Float:vecMaxs[3];
-        pev(pEntity, pev_maxs, vecMaxs);
-
-        ArraySetCell(npcData, NPC_ViewZOffset, vecMaxs[2] * (1.0 - HEAD_TO_MAXS_RATIO));
-    } 
-
-    set_pev(pEntity, pev_iuser1, npcData);
-}
-
-stock NPC_Destroy(pEntity) {
-    new Array:npcData = NPC_GetData(pEntity);
-    ArrayDestroy(npcData);
-}
-
-stock Array:NPC_GetData(pEntity) {
-    return any:pev(pEntity, pev_iuser1);
-}
-
-stock NPC_PlayAction(pEntity, action[NPC_Action], bool:supercede = false) {
-    new Array:npcData = NPC_GetData(pEntity);
-
-    new Float:flGametime = get_gametime();
-    if (!supercede && flGametime < ArrayGetCell(npcData, NPC_NextAction)) {
-        return;
-    }
-
-    new iSequence = random_num(action[NPC_Action_StartSequence], action[NPC_Action_EndSequence]);
-
-    if (!UTIL_SetSequence(pEntity, iSequence)) {
-        return;
-    }
-
-    ArraySetCell(npcData, NPC_NextAction, flGametime + action[NPC_Action_Time]);
-}
-
-stock NPC_EmitVoice(pEntity, const szSound[], Float:flPlayTime = 1.0, bool:supercede = false, Float:flVolume = VOL_NORM) {
-    new Array:npcData = NPC_GetData(pEntity);
-
-    new Float:flGametime = get_gametime();
-    if (!supercede && flGametime < ArrayGetCell(npcData, NPC_NextVoice)) {
-        return;
-    }
-
-    emit_sound(pEntity, CHAN_VOICE, szSound, flVolume, ATTN_NORM, 0, PITCH_NORM);
-
-    ArraySetCell(npcData, NPC_NextVoice, flGametime + flPlayTime);
-}
-
-stock NPC_EmitFootStep(pEntity, const szSound[]) {
-    new Array:npcData = NPC_GetData(pEntity);
-
-    new Float:flGametime = get_gametime();
-    if (flGametime < ArrayGetCell(npcData, NPC_NextFootStep)) {
-        return;
-    }
-
-    emit_sound(pEntity, CHAN_BODY, szSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-
-    ArraySetCell(npcData, NPC_NextFootStep, flGametime + 0.25);
-}
-
-stock bool:NPC_Hit(
-    pEntity,
-    Float:flDamage,
-    Float:flRange,
-    Float:flAttackDelay,
-    const Float:vecOffset[3] = {0.0, 0.0, 0.0}
-) {
+stock bool:NPC_Hit(pEntity, Float:flDamage, Float:flRange, const Float:vecOffset[3] = {0.0, 0.0, 0.0}) {
     static Float:vecOrigin[3];
     pev(pEntity, pev_origin, vecOrigin);
 
@@ -136,9 +48,6 @@ stock bool:NPC_Hit(
     }
 
     free_tr2(pTrace);
-
-    new Array:npcData = NPC_GetData(pEntity);
-    ArraySetCell(npcData, NPC_NextAttack, get_gametime() + flAttackDelay);
 
     return bHit;
 }
@@ -281,122 +190,6 @@ stock bool:NPC_TestStep(pEntity, const Float:vecOrigin[3], const Float:vecStep[3
     return true;
 }
 
-stock bool:NPC_GetTarget(pEntity, Float:flSpeed, Float:vecTarget[3], bool:reachableOnly = true, bool:visibleOnly = true) {
-    new pEnemy = NPC_GetEnemy(pEntity);
-    if (!pEnemy) {
-        return false;
-    }
-
-    static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
-
-    static Float:vecMins[3];
-    pev(pEntity, pev_mins, vecMins);
-
-    static Float:vecEnemyMins[3];
-    pev(pEnemy, pev_mins, vecEnemyMins);
-
-    pev(pEnemy, pev_origin, vecTarget);
-
-    vecTarget[2] = vecTarget[2] + vecEnemyMins[2] - vecMins[2];
-
-    new Array:npcData = NPC_GetData(pEntity);
-
-    new Float:flGameTime = get_gametime();
-    if ((!visibleOnly || NPC_IsVisible(pEntity, vecTarget, pEnemy)) && (!reachableOnly || NPC_IsReachable(pEntity, vecTarget, pEnemy))) {
-        new Float:flDistance = get_distance_f(vecOrigin, vecTarget);
-        new Float:flReachTime = flGameTime + flDistance/flSpeed;
-
-        ArraySetCell(npcData, NPC_ReachTime, flReachTime);
-        ArraySetArray(npcData, NPC_LastReachablePoint, vecTarget);
-    } else {
-        new Float:flReachTime = ArrayGetCell(npcData, NPC_ReachTime);
-        if (flGameTime < flReachTime) {
-            ArrayGetArray(npcData, NPC_LastReachablePoint, vecTarget);
-        } else {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-stock NPC_FindEnemy(pEntity, Float:flMaxDistance = 3072.0, bool:reachableOnly = true, bool:visibleOnly = true,  bool:allowMonsters = true) {
-    new nearestEnemy = 0;
-    new Float:flNearestEnemyDistance = -1.0;
-
-    new iTeam = pev(pEntity, pev_team);
-
-    static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
-
-    static Float:vecMins[3];
-    pev(pEntity, pev_mins, vecMins);
-
-    new pTarget = 0;
-    while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, flMaxDistance)) > 0) {
-        if (pEntity == pTarget) {
-            continue;
-        }
-
-        if (!NPC_IsValidEnemy(pTarget, iTeam, allowMonsters)) {
-            continue;
-        }
-
-        static Float:vecTarget[3];
-        pev(pTarget, pev_origin, vecTarget);
-
-        if (visibleOnly && !NPC_IsVisible(pEntity, vecTarget, pTarget)) {
-            continue;
-        }
-
-        static Float:vecEnemyMins[3];
-        pev(pTarget, pev_mins, vecEnemyMins);
-        vecTarget[2] = vecTarget[2] + vecEnemyMins[2] - vecMins[2];
-
-        if (reachableOnly && !NPC_IsReachable(pEntity, vecTarget, pTarget)) {
-            continue;
-        }
-
-        new Float:flDistance = get_distance_f(vecOrigin, vecTarget);
-        if (flNearestEnemyDistance < 0 || flDistance < flNearestEnemyDistance) {
-            nearestEnemy = pTarget;
-            flNearestEnemyDistance = flDistance;
-        }
-    }
-
-    if (nearestEnemy) {
-        set_pev(this, pev_enemy, nearestEnemy);
-    }
-
-    return nearestEnemy;
-}
-
-stock NPC_MoveToTarget(pEntity, const Float:vecTarget[3], Float:flSpeed, Float:flAngleSpeed = 180.0) {
-    new bool:rgbLockAxis[3] = {true, false, true};
-    rgbLockAxis[0] = pev(pEntity, pev_movetype) != MOVETYPE_FLY;
-
-    new Float:flGameTime = get_gametime();
-
-    static Float:flLastThink;
-    pev(pEntity, pev_ltime, flLastThink);
-
-    new Float:flDelta = flGameTime - flLastThink;
-    new Float:flMaxAngle = flAngleSpeed * floatmin(flDelta, 0.1);
-
-    UTIL_TurnTo(pEntity, vecTarget, rgbLockAxis, flMaxAngle);
-
-    if (NPC_IsInViewCone(pEntity, vecTarget, 45.0)) {
-        static Float:vecOrigin[3];
-        pev(pEntity, pev_origin, vecOrigin);
-
-        if (flSpeed > 0.0 && get_distance_f(vecOrigin, vecTarget) > 1.0) {
-            set_pev(pEntity, pev_speed, flSpeed);
-            NPC_MoveForward(pEntity, flSpeed);
-        }
-    }
-}
-
 stock NPC_StopMovement(pEntity) {
     static Float:vecVelocity[3];
     pev(pEntity, pev_velocity, vecVelocity);
@@ -408,11 +201,6 @@ stock NPC_StopMovement(pEntity) {
 }
 
 stock NPC_MoveForward(pEntity, Float:flSpeed) {
-    new Float:flGameTime = get_gametime();
-
-    static Float:flLastThink;
-    pev(pEntity, pev_ltime, flLastThink);
-
     static Float:vecDirection[3];
     UTIL_GetDirectionVector(pEntity, vecDirection, flSpeed);
 
@@ -439,11 +227,6 @@ stock NPC_MoveForward(pEntity, Float:flSpeed) {
 }
 
 stock bool:NPC_CanHit(pEntity, pEnemy, Float:flHitRange, const Float:vecOffset[3] = {0.0, 0.0, 0.0}) {
-    new Array:npcData = NPC_GetData(pEntity);
-    if (get_gametime() < ArrayGetCell(npcData, NPC_NextAttack)) {
-        return false;
-    }
-
     static Float:vecOrigin[3];
     pev(pEntity, pev_origin, vecOrigin);
 
@@ -451,25 +234,28 @@ stock bool:NPC_CanHit(pEntity, pEnemy, Float:flHitRange, const Float:vecOffset[3
     pev(pEnemy, pev_origin, vecTarget);
     xs_vec_add(vecTarget, vecOffset, vecTarget);
 
+    if (!NPC_IsInViewCone(pEntity, vecTarget, 5.0)) {
+        return false;
+    }
+
     new pTrace = create_tr2();
     engfunc(EngFunc_TraceLine, vecOrigin, vecTarget, DONT_IGNORE_MONSTERS, pEntity, pTrace);
 
     static Float:flFraction;
     get_tr2(pTrace, TR_flFraction, flFraction);
 
-    if (flFraction == 1.0 && get_distance_f(vecOrigin, vecTarget) <= flHitRange) {
-        return true;
-    }
+    new bool:bResult = flFraction == 1.0 && get_distance_f(vecOrigin, vecTarget) <= flHitRange;
 
-    new bool:result = false;
-    if (get_tr2(pTrace, TR_pHit) == pEnemy) {
-        get_tr2(pTrace, TR_vecEndPos, vecTarget);
-        result = (get_distance_f(vecOrigin, vecTarget) <= flHitRange);
+    if (!bResult) {
+        if (get_tr2(pTrace, TR_pHit) == pEnemy) {
+            get_tr2(pTrace, TR_vecEndPos, vecTarget);
+            bResult = (get_distance_f(vecOrigin, vecTarget) <= flHitRange);
+        }
     }
 
     free_tr2(pTrace);
 
-    return result;
+    return bResult;
 }
 
 stock bool:NPC_IsValidEnemy(pEnemy, iTeam = 0, bool:allowMonsters = true) {
@@ -520,9 +306,6 @@ stock NPC_IsVisible(pEntity, const Float:vecTarget[3], pIgnoreEnt = 0) {
         set_pev(pIgnoreEnt, pev_solid, SOLID_NOT);
     }
 
-    // new Array:npcData = NPC_GetData(pEntity);
-    // vecOrigin[2] += Float:ArrayGetCell(npcData, NPC_ViewZOffset);
-
     new bool:isOpen = UTIL_IsOpen(vecOrigin, vecTarget, pEntity);
 
     if (pIgnoreEnt) {
@@ -557,4 +340,140 @@ stock bool:NPC_IsInViewCone(pEntity, const Float:vecTarget[3], Float:fMaxAngle) 
     static Float:flAngle; flAngle = xs_vec_dot(vecDir, vecForward);
 
     return flAngle < fMaxAngle;
+}
+
+stock Float:NPC_GetPathCost(pEntity, NavArea:newArea, NavArea:prevArea) {
+    new NavAttributeType:iAttributes = Nav_Area_GetAttributes(newArea);
+
+    // NPC can't jump or crouch
+    if (iAttributes & NAV_JUMP || iAttributes & NAV_CROUCH) {
+        return -1.0;
+    }
+
+    static Float:vecTarget[3];
+    Nav_Area_GetCenter(newArea, vecTarget);
+
+    static Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
+
+    static Float:vecSrc[3];
+    if (prevArea != Invalid_NavArea) {
+        Nav_Area_GetCenter(prevArea, vecSrc);
+    } else {
+        xs_vec_copy(vecOrigin, vecSrc);
+    }
+
+    new pTrace = create_tr2();
+    engfunc(EngFunc_TraceLine, vecSrc, vecTarget, IGNORE_MONSTERS, 0, pTrace);
+    new pHit = get_tr2(pTrace, TR_pHit);
+    free_tr2(pTrace);
+
+    // cancel if there is a wall
+    if (!pHit) {
+        return -1.0;
+    }
+
+    // cancel path if there is a obstacle
+    if (pHit != -1 && !IS_PLAYER(pHit) && !UTIL_IsMonster(pHit)) {
+        return -1.0;
+    }
+
+    // don't go through spawn area, path cost penalty for going through the spawn area in case we already in the spawn area
+    new iSpawnAreaTeam = Hwn_Gamemode_GetSpawnAreaTeam(vecTarget);
+    if (iSpawnAreaTeam) {
+        return iSpawnAreaTeam == Hwn_Gamemode_GetSpawnAreaTeam(vecOrigin) ? 100.0 : -1.0;
+    }
+
+    new pTarget = 0;
+    while ((pTarget = engfunc(EngFunc_FindEntityInSphere, pTarget, vecTarget, 4.0)) > 0) {
+        static szClassName[32];
+        pev(pTarget, pev_classname, szClassName, charsmax(szClassName));
+
+        // don't go through the hurt entities
+        if (equal(szClassName, "trigger_hurt")) {
+            return -1.0;
+        }
+    }
+
+    return 1.0;
+}
+
+stock NPC_UpdateEnemy(pEntity, Float:flMaxDistance, Float:flMinPriority) {
+    new pEnemy = pev(pEntity, pev_enemy);
+    if (!NPC_IsValidEnemy(pEnemy)) {
+        set_pev(pEntity, pev_enemy, 0);
+    }
+
+    static Float:vecOrigin[3];
+    pev(pEntity, pev_origin, vecOrigin);
+
+    static iTeam; iTeam = pev(pEntity, pev_team);
+    static pClosestTarget; pClosestTarget = 0;
+    static Float:flClosestTargetPriority; flClosestTargetPriority = 0.0;
+
+    new pTarget = 0;
+    while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, flMaxDistance)) > 0) {
+        if (pEntity == pTarget) {
+            continue;
+        }
+
+        if (!NPC_IsValidEnemy(pTarget, iTeam)) {
+            continue;
+        }
+
+        static Float:vecTarget[3];
+        pev(pTarget, pev_origin, vecTarget);
+
+        static Float:flDistance; flDistance = xs_vec_distance(vecOrigin, vecTarget);
+        static Float:flTargetPriority; flTargetPriority = 1.0 - (flDistance / flMaxDistance);
+
+        if (IS_PLAYER(pTarget)) {
+            flTargetPriority *= 1.0;
+        } else if (UTIL_IsMonster(pTarget)) {
+            flTargetPriority *= 0.075;
+        } else {
+            flTargetPriority *= 0.0;
+        }
+
+        if (flTargetPriority >= flMinPriority && !NPC_IsReachable(pEntity, vecTarget, pTarget)) {
+            flTargetPriority *= 0.1;
+        }
+
+        if (flTargetPriority >= flMinPriority && flTargetPriority > flClosestTargetPriority) {
+            pClosestTarget = pTarget;
+            flClosestTargetPriority = flTargetPriority;
+        }
+    }
+
+    if (pClosestTarget) {
+        set_pev(pEntity, pev_enemy, pClosestTarget);
+    }
+
+    return pClosestTarget;
+}
+
+stock NPC_MoveTo(pEntity, const Float:vecTarget[3]) {
+    static Float:flGameTime; flGameTime = get_gametime();
+    static Float:flMaxSpeed; pev(pEntity, pev_maxspeed, flMaxSpeed);
+    static Float:flLastThink; pev(pEntity, pev_ltime, flLastThink);
+    static iMoveType; iMoveType = pev(pEntity, pev_movetype);
+    static Float:flDelta; flDelta = flGameTime - flLastThink;
+    static Float:flMaxAngle; flMaxAngle = 180.0 * floatmin(flDelta, 0.1);
+    static bool:rgbLockAxis[3]; rgbLockAxis = bool:{true, false, true};
+
+    if (iMoveType == MOVETYPE_FLY) {
+        rgbLockAxis[0] = false;
+    }
+
+    UTIL_TurnTo(pEntity, vecTarget, rgbLockAxis, flMaxAngle);
+
+    if (NPC_IsInViewCone(pEntity, vecTarget, 15.0)) {
+        static Float:vecOrigin[3];
+        pev(pEntity, pev_origin, vecOrigin);
+
+        if (flMaxSpeed > 0.0 && get_distance_f(vecOrigin, vecTarget) > 1.0) {
+            set_pev(pEntity, pev_speed, flMaxSpeed);
+            NPC_MoveForward(pEntity, flMaxSpeed);
+        }
+    }
 }
