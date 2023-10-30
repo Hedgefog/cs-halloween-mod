@@ -6,6 +6,7 @@
 #include <hamsandwich>
 
 #include <api_custom_entities>
+#include <command_util>
 
 #include <hwn>
 #include <hwn_utils>
@@ -158,20 +159,31 @@ public Command_Give(pPlayer, iLevel, iCId) {
         return PLUGIN_HANDLED;
     }
     
-    new szArgs[4];
-    read_args(szArgs, charsmax(szArgs));
+    static szTarget[32];
+    read_argv(1, szTarget, charsmax(szTarget));
 
-    if (equal(szArgs, NULL_STRING)) {
+    static szSpellId[32];
+    read_argv(2, szSpellId, charsmax(szSpellId));
+
+    static szAmount[32];
+    read_argv(3, szAmount, charsmax(szAmount));
+
+    new iSpell = -1;
+    if (!TrieGetCell(g_itSpells, szSpellId, iSpell)) {
         return PLUGIN_HANDLED;
     }
 
-    new iSpell = str_to_num(szArgs);
+    new iAmount = equal(szAmount, NULL_STRING) ? 1 : str_to_num(szAmount);
 
-    if (iSpell < 0 || iSpell >= g_iSpellsNum) {
-        return PLUGIN_HANDLED;
+    new iTarget = CMD_RESOLVE_TARGET(pPlayer, szTarget);
+
+    for (new pTarget = 1; pTarget <= MaxClients; ++pTarget) {
+        if (!CMD_SHOULD_TARGET_PLAYER(pTarget, iTarget)) {
+            continue;
+        }
+
+        SetPlayerSpell(pPlayer, iSpell, iAmount);
     }
-
-    SetPlayerSpell(pPlayer, iSpell, 1);
 
     return PLUGIN_HANDLED;
 }
