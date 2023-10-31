@@ -262,4 +262,17 @@ CastPlayerSpell(pPlayer) {
             ExecuteForward(g_fwCast, _, pPlayer, iSpell);
         }
     }
+
+    @Player_PlayCastAnimation(pPlayer);
+    set_member(pPlayer, m_flNextAttack, 0.5);
+}
+
+@Player_PlayCastAnimation(this) {
+    static szAnimExtention[32];
+    get_member(this, m_szAnimExtention, szAnimExtention, charsmax(szAnimExtention));
+
+    set_member(this, m_szAnimExtention, "grenade");
+    rg_set_animation(this, PLAYER_ATTACK1);
+
+    set_member(this, m_szAnimExtention, szAnimExtention);
 }
