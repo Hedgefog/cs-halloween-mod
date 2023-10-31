@@ -286,9 +286,12 @@ public plugin_end() {
 
         set_pev(this, pev_takedamage, DAMAGE_NO);
         set_pev(this, pev_deadflag, DEAD_DYING);
-        set_pev(this, pev_nextthink, flGameTime + 2.0);
+        set_pev(this, pev_movetype, MOVETYPE_TOSS);
+        set_pev(this, pev_nextthink, flGameTime + g_rgActions[Action_Death][NPC_Action_Time]);
 
-        CE_SetMember(this, m_flNextAIThink, flGameTime + 2.0);
+        CE_SetMember(this, m_flNextAIThink, flGameTime + g_rgActions[Action_Death][NPC_Action_Time]);
+
+        @Entity_PlayAction(this, Action_Death, true);
     
         // cancel first kill function to play duing animation
         return PLUGIN_HANDLED;
@@ -322,7 +325,7 @@ public plugin_end() {
     set_pev(this, pev_controller_3, 125);
     
     set_pev(this, pev_gamestate, 1);
-    set_pev(this, pev_gravity, 1.0);
+    set_pev(this, pev_gravity, 0.01);
     set_pev(this, pev_fixangle, 1);
     set_pev(this, pev_friction, 0.25);
 }
