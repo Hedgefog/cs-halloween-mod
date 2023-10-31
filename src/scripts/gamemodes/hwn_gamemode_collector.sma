@@ -159,7 +159,7 @@ public OnBackpackPickup(pEntity, pPlayer) {
         return;
     }
 
-    new iPoints = GetPlayerPoints(pPlayer) + CE_GetMember(pEntity, "iAmount");
+    new iPoints = GetPlayerPoints(pPlayer) + CE_GetMember(pEntity, "iSize");
     SetPlayerPoints(pPlayer, iPoints);
 }
 
@@ -304,10 +304,10 @@ bool:ExtractPlayerPoints(pPlayer) {
     }
 
     if (bIsBackpack) {
-        CE_SetMember(pBackpack, "iAmount", iPoints);
+        CE_SetMember(pBackpack, "iSize", iPoints);
     }
 
-    set_pev(pBackpack, pev_iuser1, Hwn_PumpkinType_Default);
+    CE_SetMember(pBackpack, "iType", Hwn_PumpkinType_Default);
     dllfunc(DLLFunc_Spawn, pBackpack);
 
     static Float:vecVelocity[3];

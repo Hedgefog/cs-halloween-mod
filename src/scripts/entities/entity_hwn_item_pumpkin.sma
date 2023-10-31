@@ -17,6 +17,9 @@
 #define ENTITY_NAME "hwn_item_pumpkin"
 #define ENTITY_NAME_BIG "hwn_item_pumpkin_big"
 
+#define m_bBig "bBig"
+#define m_iType "iType"
+
 #define FLASH_RADIUS 16
 #define FLASH_LIFETIME 10
 #define FLASH_DECAY_RATE 16
@@ -74,28 +77,28 @@ public plugin_init() {
     g_pCvarPumpkinFlash = register_cvar("hwn_pumpkin_pickup_flash", "1");
 }
 
-@Entity_Spawn(pEntity) {
-    set_pev(pEntity, pev_rendermode, kRenderNormal);
-    set_pev(pEntity, pev_renderfx, kRenderFxGlowShell);
-    set_pev(pEntity, pev_renderamt, 4.0);
+@Entity_Spawn(this) {
+    set_pev(this, pev_rendermode, kRenderNormal);
+    set_pev(this, pev_renderfx, kRenderFxGlowShell);
+    set_pev(this, pev_renderamt, 4.0);
 
-    new iType = pev(pEntity, pev_iuser1);
+    new iType = CE_GetMember(this, m_iType);
     if (iType == Hwn_PumpkinType_Uninitialized) {
         new iMinType = Hwn_PumpkinType_Default + 1;
         iType = iMinType + random(Hwn_PumpkinType - iMinType);
     }
 
-    set_pev(pEntity, pev_iuser1, iType);
-    set_pev(pEntity, pev_rendercolor, g_rgflLootTypeColor[iType]);
-    set_pev(pEntity, pev_framerate, 1.0);
+    CE_SetMember(this, m_iType, iType);
+    set_pev(this, pev_rendercolor, g_rgflLootTypeColor[iType]);
+    set_pev(this, pev_framerate, 1.0);
 
-    CE_SetMember(pEntity, "bBig", CE_GetHandlerByEntity(pEntity) == CE_GetHandler(ENTITY_NAME_BIG));
+    CE_SetMember(this, m_bBig, CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_BIG));
 
-    emit_sound(pEntity, CHAN_BODY, g_szSndItemSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(this, CHAN_BODY, g_szSndItemSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
-@Entity_Pickup(pEntity, pPlayer) {
-    new iType = pev(pEntity, pev_iuser1);
+@Entity_Pickup(this, pPlayer) {
+    new iType = CE_GetMember(this, m_iType);
 
     switch (iType) {
         case Hwn_PumpkinType_Crits: {
@@ -116,17 +119,17 @@ public plugin_init() {
     static Float:vecPlayerOrigin[3];
     pev(pPlayer, pev_origin, vecPlayerOrigin);
 
-    emit_sound(pEntity, CHAN_BODY, g_szSndItemPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(this, CHAN_BODY, g_szSndItemPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
     if (get_pcvar_num(g_pCvarPumpkinFlash) > 0) {
-        @Entity_FlashEffect(pEntity, vecPlayerOrigin, iType);
+        @Entity_FlashEffect(this, vecPlayerOrigin, iType);
     }
 
     return PLUGIN_HANDLED;
 }
 
 @Entity_FlashEffect(pEntity, const Float:vecOrigin[3], type) {
-    if (CE_GetMember(pEntity, "bBig")) {
+    if (CE_GetMember(pEntity, m_bBig)) {
         UTIL_Message_Dlight(vecOrigin, FLASH_RADIUS_BIG, {HWN_COLOR_SECONDARY}, FLASH_LIFETIME, FLASH_DECAY_RATE_BIG);
     } else {
         new rgiColor[3];

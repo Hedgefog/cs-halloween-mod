@@ -16,6 +16,9 @@
 
 #define ENTITY_NAME "hwn_item_spellbook"
 
+#define m_iSpell "iSpell"
+#define m_iAmount "iAmount"
+
 new g_iSparkleModelIndex;
 new g_iSparklePurpleModelIndex;
 new g_iSmokeModelIndex;
@@ -31,8 +34,6 @@ new bool:g_bIsPrecaching;
 new g_pCvarMaxSpellsNum;
 new g_pCvarMaxRareSpellsNum;
 new g_pCvarRareChance;
-
-new g_iCeHandler;
 
 public plugin_init() {
     g_bIsPrecaching = false;
@@ -51,7 +52,7 @@ public plugin_precache() {
     precache_sound(g_szSndPickup);
     precache_sound(g_szSndPickupRare);
 
-    g_iCeHandler = CE_Register(
+    CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/items/spellbook_v2.mdl",
         .vMins = Float:{-16.0, -12.0, 0.0},
@@ -83,11 +84,11 @@ public Hwn_Fw_ConfigLoaded() {
     @Entity_RemoveParticles(pEntity);
     @Entity_CreateParticles(pEntity);
 
-    if (!CE_HasMember(pEntity, "iSpell")) {
-        CE_SetMember(pEntity, "iSpell", GetRandomSpell());
+    if (!CE_HasMember(pEntity, m_iSpell)) {
+        CE_SetMember(pEntity, m_iSpell, GetRandomSpell());
     }
 
-    new iSpell = CE_GetMember(pEntity, "iSpell");
+    new iSpell = CE_GetMember(pEntity, m_iSpell);
     if (iSpell == -1) {
         CE_Remove(pEntity);
         return;
@@ -101,8 +102,8 @@ public Hwn_Fw_ConfigLoaded() {
         return;
     }
 
-    if (!CE_HasMember(pEntity, "iAmount")) {
-        CE_SetMember(pEntity, "iAmount", random(iMaxSpellsNum) + 1);
+    if (!CE_HasMember(pEntity, m_iAmount)) {
+        CE_SetMember(pEntity, m_iAmount, random(iMaxSpellsNum) + 1);
     }
 
     set_pev(pEntity, pev_framerate, 1.0);
@@ -118,8 +119,8 @@ public Hwn_Fw_ConfigLoaded() {
 }
 
 @Entity_Killed(pEntity) {
-    CE_DeleteMember(pEntity, "iSpell");
-    CE_DeleteMember(pEntity, "iAmount");
+    CE_DeleteMember(pEntity, m_iSpell);
+    CE_DeleteMember(pEntity, m_iAmount);
     @Entity_RemoveParticles(pEntity);
 }
 
@@ -128,10 +129,10 @@ public Hwn_Fw_ConfigLoaded() {
         return PLUGIN_CONTINUE;
     }
 
-    new iSpell = CE_GetMember(pEntity, "iSpell");
+    new iSpell = CE_GetMember(pEntity, m_iSpell);
     new bool:bIsRare = !!(Hwn_Spell_GetFlags(iSpell) & Hwn_SpellFlag_Rare);
 
-    Hwn_Spell_SetPlayerSpell(pPlayer, iSpell, CE_GetMember(pEntity, "iAmount"));
+    Hwn_Spell_SetPlayerSpell(pPlayer, iSpell, CE_GetMember(pEntity, m_iAmount));
 
     emit_sound(pEntity, CHAN_BODY, bIsRare ? g_szSndPickupRare : g_szSndPickup, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
@@ -153,7 +154,7 @@ public Hwn_Fw_ConfigLoaded() {
 }
 
 @Entity_AppearEffect(pEntity) {
-    new iSpell = CE_GetMember(pEntity, "iSpell");
+    new iSpell = CE_GetMember(pEntity, m_iSpell);
     new bool:bIsRare = !!(Hwn_Spell_GetFlags(iSpell) & Hwn_SpellFlag_Rare);
 
     new Float:vecOrigin[3];
@@ -175,7 +176,7 @@ public Hwn_Fw_ConfigLoaded() {
 }
 
 @Entity_CreateParticles(pEntity) {
-    new iSpell = CE_GetMember(pEntity, "iSpell");
+    new iSpell = CE_GetMember(pEntity, m_iSpell);
     new bool:bIsRare = !!(Hwn_Spell_GetFlags(iSpell) & Hwn_SpellFlag_Rare);
 
     new pParticle = Particles_Spawn(bIsRare ? "magic_glow_purple" : "magic_glow", Float:{0.0, 0.0, 0.0}, 0.0);

@@ -56,7 +56,7 @@ public Cast(pPlayer) {
         return PLUGIN_HANDLED;
     }
 
-    set_pev(pEntity, pev_iuser1, g_hSpell);
+    CE_SetMember(pEntity, "iSpell", g_hSpell);
 
     emit_sound(pPlayer, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
@@ -70,7 +70,7 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 
     new pTarget = -1;
     while ((pTarget = engfunc(EngFunc_FindEntityByString, pTarget, "classname", SPELLBALL_ENTITY_CLASSNAME)) != 0) {
-        if (pev(pTarget, pev_iuser1) != g_hSpell) {
+        if (CE_GetMember(pTarget, "iSpell") != g_hSpell) {
             continue;
         }
 
@@ -81,7 +81,7 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 @SpellBall_Kill(this) {
-    if (pev(this, pev_iuser1) != g_hSpell) {
+    if (CE_GetMember(this, "iSpell") != g_hSpell) {
         return;
     }
 
@@ -132,7 +132,7 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 }
 
 @SpellBall_Touch(this, pToucher) {
-    if (pev(this, pev_iuser1) != g_hSpell) {
+    if (CE_GetMember(this, "iSpell") != g_hSpell) {
         return;
     }
 
@@ -144,7 +144,7 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 }
 
 @SpellBall_Think(this) {
-    if (pev(this, pev_iuser1) != g_hSpell) {
+    if (CE_GetMember(this, "iSpell") != g_hSpell) {
         return;
     }
 

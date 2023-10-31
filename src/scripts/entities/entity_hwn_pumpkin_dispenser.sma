@@ -10,6 +10,9 @@
 #define VERSION "1.0.0"
 #define AUTHOR "Hedgehog Fog"
 
+#define m_flImpulse "flImpulse"
+#define m_flDelay "flDelay"
+
 #define ENTITY_NAME "hwn_pumpkin_dispenser"
 #define LOOT_ENTITY_CLASSNAME "hwn_item_pumpkin"
 
@@ -27,27 +30,27 @@ public plugin_init() {
 }
 
 @Entity_Spawn(this) {
-    if (!CE_HasMember(this, "flImpulse")) {
-        CE_SetMember(this, "flImpulse", 0.0);
+    if (!CE_HasMember(this, m_flImpulse)) {
+        CE_SetMember(this, m_flImpulse, 0.0);
     }
 
-    if (!CE_HasMember(this, "flDelay")) {
-        CE_SetMember(this, "flDelay", 1.0);
+    if (!CE_HasMember(this, m_flDelay)) {
+        CE_SetMember(this, m_flDelay, 1.0);
     }
 
-    set_pev(this, pev_nextthink, get_gametime() + Float:CE_GetMember(this, "flDelay"));
+    set_pev(this, pev_nextthink, get_gametime() + Float:CE_GetMember(this, m_flDelay));
 }
 
 @Entity_Think(this) {
     @Entity_Drop(this);
-    set_pev(this, pev_nextthink, get_gametime() + Float:CE_GetMember(this, "flDelay"));
+    set_pev(this, pev_nextthink, get_gametime() + Float:CE_GetMember(this, m_flDelay));
 }
 
 @Entity_KeyValue(this, const szKey[], const szValue[]) {
     if (equal(szKey, "impulse")) {
-        CE_SetMember(this, "flImpulse", str_to_float(szValue));
+        CE_SetMember(this, m_flImpulse, str_to_float(szValue));
     } else if (equal(szKey, "delay")) {
-        CE_SetMember(this, "flDelay", str_to_float(szValue));
+        CE_SetMember(this, m_flDelay, str_to_float(szValue));
     }
 }
 
@@ -60,7 +63,7 @@ public plugin_init() {
         return;
     }
 
-    new Float:flImpulse = CE_GetMember(this, "flImpulse");
+    new Float:flImpulse = CE_GetMember(this, m_flImpulse);
     if (flImpulse > 0.0) {
         static Float:vecVelocity[3];
 

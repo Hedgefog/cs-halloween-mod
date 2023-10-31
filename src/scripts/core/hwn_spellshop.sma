@@ -179,17 +179,17 @@ DropPlayerSpell(pPlayer) {
     static Float:vecOrigin[3];
     pev(pPlayer, pev_origin, vecOrigin);
 
-    new pEntity = CE_Create("hwn_item_spellbook", vecOrigin);
-    set_pev(pEntity, pev_iuser1, iSpell);
-    set_pev(pEntity, pev_iuser2, iSpellAmount);
+    new pSpellBook = CE_Create("hwn_item_spellbook", vecOrigin);
+    CE_SetMember(pSpellBook, "iSpell", iSpell);
+    CE_SetMember(pSpellBook, "iAmount", iSpellAmount);
 
-    if (pEntity) {
-        dllfunc(DLLFunc_Spawn, pEntity);
+    if (pSpellBook) {
+        dllfunc(DLLFunc_Spawn, pSpellBook);
     }
 
     static Float:vecVelocity[3];
     UTIL_GetDirectionVector(pPlayer, vecVelocity, 250.0);
-    set_pev(pEntity, pev_velocity, vecVelocity);
+    set_pev(pSpellBook, pev_velocity, vecVelocity);
 }
 
 bool:Open(pPlayer)  {

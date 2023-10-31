@@ -198,7 +198,7 @@ public OnPumpkinPicked(pEntity, pPlayer) {
     }
 
     new iPoints = Hwn_Collector_GetPlayerPoints(pPlayer);
-    new iBucketPoints = pev(pEntity, pev_iuser1) == -1 ? CE_GetMember(pEntity, "iAmount") : 1;
+    new iBucketPoints = CE_GetMember(pEntity, "iType") == -1 ? CE_GetMember(pEntity, "iSize") : 1;
 
     if (iPoints == iBucketPoints) {
         SetupNotificatiMessage(HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED);

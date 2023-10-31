@@ -103,7 +103,7 @@ public OnSkeletonEggSpawn(pEntity) {
 }
 
 public OnPumpkinSpawn(pEntity) {
-    set_pev(pEntity, pev_iuser1, 2);
+    CE_SetMember(pEntity, "iType", 2);
     set_pev(pEntity, pev_rendercolor, {HWN_COLOR_RED_F});
 }
 

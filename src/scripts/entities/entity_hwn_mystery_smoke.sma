@@ -13,6 +13,8 @@
 #define PLUGIN "[Custom Entity] Hwn Mystery Smoke"
 #define AUTHOR "Hedgehog Fog"
 
+#define m_iTeam "iTeam"
+
 #define ENTITY_NAME "hwn_mystery_smoke"
 
 #define SMOKE_DENSITY 0.016
@@ -51,14 +53,14 @@ public plugin_precache() {
     set_pev(this, pev_effects, EF_NODRAW);
     set_pev(this, pev_modelindex, g_iNullModelIndex);
     set_pev(this, pev_fuser1, 0.0);
-    set_pev(this, pev_team, CE_GetMember(this, "team"));
+    set_pev(this, pev_team, CE_GetMember(this, m_iTeam));
 
     set_pev(this, pev_nextthink, get_gametime());
 }
 
 @Entity_KeyValue(this, const szKey[], const szValue[]) {
     if (equal(szKey, "team")) {
-        CE_SetMember(this, "team", str_to_num(szValue));
+        CE_SetMember(this, m_iTeam, str_to_num(szValue));
     }
 }
 

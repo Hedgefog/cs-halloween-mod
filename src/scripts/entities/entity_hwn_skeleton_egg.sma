@@ -14,6 +14,7 @@
 
 #define ENTITY_NAME "hwn_skeleton_egg"
 #define ENTITY_NAME_BIG "hwn_skeleton_egg_big"
+#define m_bBig "bBig"
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -30,7 +31,7 @@ public plugin_precache() {
 }
 
 @Entity_Spawn(this) {
-    CE_SetMember(this, "bBig", CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_BIG));
+    CE_SetMember(this, m_bBig, CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_BIG));
     
     set_pev(this, pev_solid, SOLID_NOT);
     set_pev(this, pev_movetype, MOVETYPE_BOUNCE);
@@ -47,7 +48,7 @@ public plugin_precache() {
     pev(this, pev_origin, vecOrigin);
 
     new pSkeleton = CE_Create(
-        CE_GetMember(this, "bBig") ? "hwn_npc_skeleton" : "hwn_npc_skeleton_small",
+        CE_GetMember(this, m_bBig) ? "hwn_npc_skeleton" : "hwn_npc_skeleton_small",
         vecOrigin
     );
 

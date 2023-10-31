@@ -33,6 +33,7 @@
 #define m_pKiller "pKiller"
 #define m_flReleaseJump "flReleaseJump"
 #define m_bBig "bBig"
+#define m_iType "iType"
 
 enum _:Sequence {
     Sequence_Idle = 0,
@@ -153,6 +154,10 @@ public plugin_init() {
 @Entity_Init(this) {
     CE_SetMember(this, m_pBuildPathTask, Invalid_NavBuildPathTask);
     CE_SetMember(this, m_irgPath, ArrayCreate(3));
+
+    if (!CE_HasMember(this, m_iType)) {
+        CE_SetMember(this, m_iType, Hwn_PumpkinType_Default);
+    }
 }
 
 @Entity_Restart(this) {

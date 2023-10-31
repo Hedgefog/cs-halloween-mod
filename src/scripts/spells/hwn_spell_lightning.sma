@@ -72,50 +72,50 @@ public plugin_init() {
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public OnCast(pPlayer) {
-    new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, EffectColor, floatround(SpellballSpeed), g_szSprSpellBall, _, _, 10.0);
-    if (!pEntity) {
+    new pSpellBall = UTIL_HwnSpawnPlayerSpellball(pPlayer, EffectColor, floatround(SpellballSpeed), g_szSprSpellBall, _, _, 10.0);
+    if (!pSpellBall) {
         return PLUGIN_HANDLED;
     }
 
     new Float:vecVelocity[3];
-    pev(pEntity, pev_velocity, vecVelocity);
+    pev(pSpellBall, pev_velocity, vecVelocity);
 
-    set_pev(pEntity, pev_vuser1, vecVelocity);
-    set_pev(pEntity, pev_iuser1, g_hSpell);
-    set_pev(pEntity, pev_groupinfo, 128);
+    set_pev(pSpellBall, pev_vuser1, vecVelocity);
+    CE_SetMember(pSpellBall, "iSpell", g_hSpell);
+    set_pev(pSpellBall, pev_groupinfo, 128);
 
-    set_task(SpellballLifeTime, "Task_Kill", pEntity+TASKID_SUM_KILL);
-    set_task(Hwn_GetUpdateRate(), "Task_Think", pEntity, _, _, "b");
-    set_task(EffectDamageDelay, "Task_Damage", pEntity+TASKID_SUM_DAMAGE, _, _, "b");
-    set_task(EffectLightningDelay, "Task_LightningEffect", pEntity+TASKID_SUM_LIGHTNING_EFFECT, _, _, "b");
+    set_task(SpellballLifeTime, "Task_Kill", pSpellBall+TASKID_SUM_KILL);
+    set_task(Hwn_GetUpdateRate(), "Task_Think", pSpellBall, _, _, "b");
+    set_task(EffectDamageDelay, "Task_Damage", pSpellBall+TASKID_SUM_DAMAGE, _, _, "b");
+    set_task(EffectLightningDelay, "Task_LightningEffect", pSpellBall+TASKID_SUM_LIGHTNING_EFFECT, _, _, "b");
 
     emit_sound(pPlayer, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
-    dllfunc(DLLFunc_Think, pEntity);
+    dllfunc(DLLFunc_Think, pSpellBall);
 
     return PLUGIN_CONTINUE;
 }
 
-public @Spellball_Remove(pEntity) {
-    remove_task(pEntity);
-    remove_task(pEntity+TASKID_SUM_DAMAGE);
-    remove_task(pEntity+TASKID_SUM_KILL);
-    remove_task(pEntity+TASKID_SUM_LIGHTNING_EFFECT);
+@Spellball_Remove(this) {
+    remove_task(this);
+    remove_task(this+TASKID_SUM_DAMAGE);
+    remove_task(this+TASKID_SUM_KILL);
+    remove_task(this+TASKID_SUM_LIGHTNING_EFFECT);
 }
 
-public @SpellBall_Killed(pEntity) {
-    new iSpell = pev(pEntity, pev_iuser1);
+@SpellBall_Killed(this) {
+    new iSpell = CE_GetMember(this, "iSpell");
     if (iSpell != g_hSpell) {
         return;
     }
 
     for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
-        if (g_rgpPlayerFocalPoint[pPlayer] == pEntity) {
+        if (g_rgpPlayerFocalPoint[pPlayer] == this) {
             g_rgpPlayerFocalPoint[pPlayer] = 0;
         }
     }
 
-    Detonate(pEntity);
+    Detonate(this);
 }
 
 public HamHook_Player_PreThink_Post(pPlayer) {

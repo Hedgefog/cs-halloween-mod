@@ -49,7 +49,7 @@ public OnCast(pPlayer) {
         return PLUGIN_HANDLED;
     }
 
-    set_pev(pEntity, pev_iuser1, g_iSpell);
+    CE_SetMember(pEntity, "iSpell", g_iSpell);
     set_pev(pEntity, pev_team, get_member(pPlayer, m_iTeam));
 
     emit_sound(pPlayer, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
@@ -58,7 +58,7 @@ public OnCast(pPlayer) {
 }
 
 @SpellBall_Kill(this) {
-    if (pev(this, pev_iuser1) != g_iSpell) {
+    if (CE_GetMember(this, "iSpell") != g_iSpell) {
         return;
     }
 
@@ -66,7 +66,7 @@ public OnCast(pPlayer) {
 }
 
 @SpellBall_Touch(this, pToucher) {
-    if (pev(this, pev_iuser1) != g_iSpell) {
+    if (CE_GetMember(this, "iSpell") != g_iSpell) {
         return;
     }
 
@@ -86,7 +86,7 @@ public OnCast(pPlayer) {
 }
 
 @SpellBall_Think(this) {
-    if (pev(this, pev_iuser1) != g_iSpell) {
+    if (CE_GetMember(this, "iSpell") != g_iSpell) {
         return;
     }
 
@@ -131,7 +131,7 @@ public OnCast(pPlayer) {
             continue;
         }
 
-        new iTargetStackSize = pev(pTarget, pev_iuser4);
+        new iTargetStackSize = CE_GetMember(pTarget, "iStackSize");
 
         static Float:vecTargetOrigin[3];
         pev(pTarget, pev_origin, vecTargetOrigin);
@@ -190,7 +190,7 @@ public OnCast(pPlayer) {
     }
 
     new pSmoke = CreateSmoke(vecOrigin, vecSize, flLifeTime, pev(this, pev_team), pev(this, pev_owner));
-    set_pev(pSmoke, pev_iuser4, iStackSize);
+    CE_SetMember(pSmoke, "iStackSize", iStackSize);
 }
 
 CreateSmoke(const Float:vecOrigin[3], const Float:vecSize[3], Float:flLifeTime, iTeam, pOwner) {

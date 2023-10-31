@@ -69,11 +69,11 @@ public plugin_init() {
 }
 
 bool:@SpellBall_IsFireBall(this) {
-    return pev(this, pev_iuser1) == Hwn_Spell_GetHandler(SPELL_NAME);
+    return CE_GetMember(this, "iSpell") == Hwn_Spell_GetHandler(SPELL_NAME);
 }
 
 @SpellBall_InitFireBall(this) {
-    set_pev(this, pev_iuser1, Hwn_Spell_GetHandler(SPELL_NAME));
+    CE_SetMember(this, "iSpell", Hwn_Spell_GetHandler(SPELL_NAME));
     set_pev(this, pev_movetype, MOVETYPE_FLYMISSILE);
 }
 

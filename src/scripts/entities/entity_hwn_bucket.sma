@@ -46,6 +46,12 @@
 #define ENTITY_NAME "hwn_bucket"
 #define LIQUID_ENTITY_NAME "hwn_bucket_liquid"
 
+#define m_flNextBoil "flNextBoil"
+#define m_flNextAction "flNextAction"
+#define m_flNextRemoveLid "flNextRemoveLid"
+#define m_iBonusChance "iBonusChance"
+#define m_pLiquid "pLiquid"
+
 enum _:Sequence {
     Sequence_Idle = 0,
     Sequence_Bubbling,
@@ -182,7 +188,7 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
     new pLiquid = CE_Create(LIQUID_ENTITY_NAME, Float:{0.0, 0.0, 0.0}, false);
     set_pev(pLiquid, pev_owner, this);
     dllfunc(DLLFunc_Spawn, pLiquid);
-    CE_SetMember(this, "pLiquid", pLiquid);
+    CE_SetMember(this, m_pLiquid, pLiquid);
 
     ArrayPushCell(g_irgBuckets, this);
 }
@@ -201,10 +207,10 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
 
     engfunc(EngFunc_DropToFloor, this);
 
-    CE_SetMember(this, "flNextBoil", 0.0);
-    CE_SetMember(this, "flNextAction", 0.0);
-    CE_SetMember(this, "flNextRemoveLid", 0.0);
-    CE_SetMember(this, "iBonusChance", 0);
+    CE_SetMember(this, m_flNextBoil, 0.0);
+    CE_SetMember(this, m_flNextAction, 0.0);
+    CE_SetMember(this, m_flNextRemoveLid, 0.0);
+    CE_SetMember(this, m_iBonusChance, 0);
 
     set_pev(this, pev_nextthink, get_gametime());
 }
@@ -226,8 +232,8 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
 }
 
 @Entity_Remove(this) {
-    new pLiquid = CE_GetMember(this, "pLiquid");
-    CE_SetMember(this, "pLiquid", 0);
+    new pLiquid = CE_GetMember(this, m_pLiquid);
+    CE_SetMember(this, m_pLiquid, 0);
     CE_Remove(pLiquid);
 
     new iGlobalId = ArrayFindValue(g_irgBuckets, this);
@@ -239,7 +245,7 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
 @Entity_Think(this) {
     new Float:flGameTime = get_gametime();
 
-    new pLiquid = CE_GetMember(this, "pLiquid");
+    new pLiquid = CE_GetMember(this, m_pLiquid);
     if (pLiquid) {
         new Float:vecOrigin[3];
         pev(this, pev_origin, vecOrigin);
@@ -254,15 +260,15 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
         @Entity_PlayActionSequence(this, iSequence, 0.0);
     }
 
-    new Float:flNextRemoveLid = CE_GetMember(this, "flNextRemoveLid");
+    new Float:flNextRemoveLid = CE_GetMember(this, m_flNextRemoveLid);
     if (flNextRemoveLid && flNextRemoveLid <= flGameTime) {
         set_pev(this, pev_body, 1);
     }
 
-    new Float:flNextBoil = CE_GetMember(this, "flNextBoil");
+    new Float:flNextBoil = CE_GetMember(this, m_flNextBoil);
     if (flNextBoil <= flGameTime) {
         emit_sound(this, CHAN_STATIC, g_szSndBoil, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-        CE_SetMember(this, "flNextBoil", get_gametime() + BOIL_SOUND_DURATION);
+        CE_SetMember(this, m_flNextBoil, get_gametime() + BOIL_SOUND_DURATION);
     }
 
     set_pev(this, pev_nextthink, flGameTime + Hwn_GetNpcUpdateRate());
@@ -337,13 +343,13 @@ bool:@Entity_TakePlayerPoint(this, pPlayer) {
 }
 
 bool:@Entity_LuckyDrop(this) {
-    new iBonusChance = CE_GetMember(this, "iBonusChance");
+    new iBonusChance = CE_GetMember(this, m_iBonusChance);
 
     if (random(100) < iBonusChance) {
         @Entity_DropSpellbook(this);
-        CE_SetMember(this, "iBonusChance", 0);
+        CE_SetMember(this, m_iBonusChance, 0);
     } else {
-        CE_SetMember(this, "iBonusChance", get_pcvar_num(g_pCvarBucketBonusChance));
+        CE_SetMember(this, m_iBonusChance, get_pcvar_num(g_pCvarBucketBonusChance));
     }
 }
 
@@ -429,13 +435,13 @@ bool:@Entity_DropEntity(this, pEntity) {
 @Entity_PlayActionSequence(this, iSequence, Float:flDuration) {
     new Float:flGameTime = get_gametime();
 
-    if (CE_GetMember(this, "flNextAction") > flGameTime) {
+    if (CE_GetMember(this, m_flNextAction) > flGameTime) {
         return false;
     }
 
     UTIL_SetSequence(this, iSequence);
 
-    CE_SetMember(this, "flNextAction", flGameTime + flDuration);
+    CE_SetMember(this, m_flNextAction, flGameTime + flDuration);
 
     return true;
 }
