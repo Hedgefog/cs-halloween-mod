@@ -56,8 +56,8 @@ public plugin_precache() {
         .szModel = "models/hwn/items/spellbook_v2.mdl",
         .vMins = Float:{-16.0, -12.0, 0.0},
         .vMaxs = Float:{16.0, 12.0, 24.0},
-        .fLifeTime = 30.0,
-        .fRespawnTime = 30.0,
+        .fLifeTime = HWN_NPC_LIFE_TIME,
+        .fRespawnTime = HWN_ITEM_RESPAWN_TIME,
         .preset = CEPreset_Item
     );
 

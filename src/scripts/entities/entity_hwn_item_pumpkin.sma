@@ -47,7 +47,7 @@ public plugin_precache() {
         .vMins = Float:{-12.0, -12.0, 0.0},
         .vMaxs = Float:{12.0, 12.0, 24.0},
         .fLifeTime = 10.0,
-        .fRespawnTime = 30.0,
+        .fRespawnTime = HWN_ITEM_RESPAWN_TIME,
         .preset = CEPreset_Item
     );
 
@@ -60,7 +60,7 @@ public plugin_precache() {
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
         .fLifeTime = 30.0,
-        .fRespawnTime = 30.0,
+        .fRespawnTime = HWN_ITEM_RESPAWN_TIME,
         .preset = CEPreset_Item
     );
 

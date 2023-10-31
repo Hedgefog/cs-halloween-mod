@@ -56,8 +56,6 @@ const Float:NPC_Damage = 20.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.5;
 const Float:NPC_ViewRange = 1024.0;
-const Float:NPC_LifeTime = 30.0;
-const Float:NPC_RespawnTime = 15.0;
 const Float:NPC_PathSearchDelay = 5.0;
 const Float:NPC_TargetUpdateRate = 1.0;
 
@@ -104,8 +102,8 @@ public plugin_precache() {
         .szModel = "models/hwn/npc/spookypumpkin.mdl",
         .vMins = Float:{-12.0, -12.0, 0.0},
         .vMaxs = Float:{12.0, 12.0, 24.0},
-        .fLifeTime = NPC_LifeTime,
-        .fRespawnTime = NPC_RespawnTime,
+        .fLifeTime = HWN_NPC_LIFE_TIME,
+        .fRespawnTime = HWN_NPC_RESPAWN_TIME,
         .preset = CEPreset_NPC,
         .bloodColor = 103
     );
@@ -123,8 +121,8 @@ public plugin_precache() {
         .szModel = "models/hwn/npc/spookypumpkin_big.mdl",
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
-        .fLifeTime = NPC_LifeTime,
-        .fRespawnTime = NPC_RespawnTime,
+        .fLifeTime = HWN_NPC_LIFE_TIME,
+        .fRespawnTime = HWN_NPC_RESPAWN_TIME,
         .preset = CEPreset_NPC,
         .bloodColor = 103
     );

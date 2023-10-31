@@ -38,8 +38,6 @@ const Float:NPC_Damage = 20.0;
 const Float:NPC_HitRange = 32.0;
 const Float:NPC_HitDelay = 0.25;
 const Float:NPC_ViewRange = 1024.0;
-const Float:NPC_LifeTime = 30.0;
-const Float:NPC_RespawnTime = 30.0;
 const Float:NPC_TargetUpdateRate = 1.0;
 
 new const Float:NPC_TargetHitOffset[3] = {0.0, 0.0, 16.0};
@@ -77,8 +75,8 @@ public plugin_precache() {
     CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/npc/ghost_v3.mdl",
-        .fLifeTime = NPC_LifeTime,
-        .fRespawnTime = NPC_RespawnTime,
+        .fLifeTime = HWN_NPC_LIFE_TIME,
+        .fRespawnTime = HWN_NPC_RESPAWN_TIME,
         .preset = CEPreset_NPC
     );
 

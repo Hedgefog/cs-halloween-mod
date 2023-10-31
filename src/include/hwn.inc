@@ -377,6 +377,10 @@
 #define HWN_COLOR_SECONDARY_F           HWN_COLOR_GREEN_DARK_F
 #define HWN_COLOR_SECONDARY             HWN_COLOR_GREEN_DARK
 
+#define HWN_NPC_RESPAWN_TIME 45.0
+#define HWN_NPC_LIFE_TIME 30.0
+#define HWN_ITEM_RESPAWN_TIME 30.0
+
 #define HWN_TITLE "Halloween Mod"
 #define HWN_VERSION "7.0.0"
 

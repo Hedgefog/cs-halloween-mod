@@ -27,7 +27,7 @@ public plugin_precache() {
         ENTITY_NAME,
         .vMins = Float:{-8.0, -8.0, -8.0},
         .vMaxs = Float:{8.0, 8.0, 8.0},
-        .fLifeTime = 30.0,
+        .fLifeTime = HWN_NPC_LIFE_TIME,
         .preset = CEPreset_None
     );
 

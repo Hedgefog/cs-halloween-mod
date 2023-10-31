@@ -66,8 +66,6 @@ const Float:NPC_Speed = 230.0;
 const Float:NPC_Damage = 24.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.35;
-const Float:NPC_LifeTime = 30.0;
-const Float:NPC_RespawnTime = 60.0;
 const Float:NPC_ViewRange = 4096.0;
 const Float:NPC_PathSearchDelay = 5.0;
 const Float:NPC_TargetUpdateRate = 1.0;
@@ -133,8 +131,8 @@ public plugin_precache() {
         .szModel = "models/hwn/npc/skeleton_v2.mdl",
         .vMins = Float:{-12.0, -12.0, -32.0},
         .vMaxs = Float:{12.0, 12.0, 32.0},
-        .fLifeTime = NPC_LifeTime,
-        .fRespawnTime = NPC_RespawnTime,
+        .fLifeTime = HWN_NPC_LIFE_TIME,
+        .fRespawnTime = HWN_NPC_RESPAWN_TIME,
         .preset = CEPreset_NPC,
         .bloodColor = 242
     );
@@ -152,8 +150,8 @@ public plugin_precache() {
         .szModel = "models/hwn/npc/skeleton_small_v3.mdl",
         .vMins = Float:{-8.0, -8.0, -16.0},
         .vMaxs = Float:{8.0, 8.0, 16.0},
-        .fLifeTime = NPC_LifeTime,
-        .fRespawnTime = NPC_RespawnTime,
+        .fLifeTime = HWN_NPC_LIFE_TIME,
+        .fRespawnTime = HWN_NPC_RESPAWN_TIME,
         .preset = CEPreset_NPC,
         .bloodColor = 242
     );

@@ -37,7 +37,7 @@ public plugin_precache() {
         .szModel = "models/hwn/props/pumpkin_explode_v2.mdl",
         .vMins = Float:{-16.0, -16.0, 0.0},
         .vMaxs = Float:{16.0, 16.0, 32.0},
-        .fRespawnTime = 30.0,
+        .fRespawnTime = HWN_NPC_RESPAWN_TIME,
         .preset = CEPreset_Prop
     );
 
