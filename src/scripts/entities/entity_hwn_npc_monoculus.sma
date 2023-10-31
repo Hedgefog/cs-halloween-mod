@@ -242,7 +242,7 @@ public plugin_end() {
     CE_DeleteMember(this, m_vecTarget);
     CE_SetMember(this, m_flHeight, 0.0);
     CE_SetMember(this, m_pKiller, 0);
-    CE_SetMember(this, m_flNextTeleportation, flGameTime + 5.0);
+    CE_SetMember(this, m_flNextTeleportation, 0.0);
     CE_SetMember(this, m_flReleaseTeleportion, 0.0);
     CE_SetMember(this, m_flReleaseAngry, 0.0);
     CE_SetMember(this, m_flReleaseStun, 0.0);
@@ -501,14 +501,16 @@ public plugin_end() {
 
     static Float:flNextTeleportation; flNextTeleportation = CE_GetMember(this, m_flNextTeleportation);
     if (flNextTeleportation <= flGameTime) {
+        if (flNextTeleportation > 0.0) {
+            CE_SetMember(this, m_iNextPortal, @Entity_FindPortal(this));
+            CE_SetMember(this, m_flReleaseTeleportion, flGameTime + g_rgActions[Action_TeleportIn][NPC_Action_Time]);
+
+            @Entity_PlayAction(this, Action_TeleportIn, true);
+        }
+
         new Float:flMinTime = get_pcvar_float(g_pCvarJumpTimeMin);
         new Float:flMaxTime = get_pcvar_float(g_pCvarJumpTimeMax);
-
-        CE_SetMember(this, m_iNextPortal, @Entity_FindPortal(this));
-        CE_SetMember(this, m_flReleaseTeleportion, flGameTime + g_rgActions[Action_TeleportIn][NPC_Action_Time]);
         CE_SetMember(this, m_flNextTeleportation, flGameTime + random_float(flMinTime, flMaxTime));
-
-        @Entity_PlayAction(this, Action_TeleportIn, true);
     }
 
     static Action:iAction; iAction = @Entity_GetAction(this);
