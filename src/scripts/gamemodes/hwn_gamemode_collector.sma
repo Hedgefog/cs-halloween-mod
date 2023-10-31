@@ -163,7 +163,7 @@ public OnBackpackPickup(pEntity, pPlayer) {
     SetPlayerPoints(pPlayer, iPoints);
 }
 
-public Message_StatusIcon(msg, dest, pPlayer) {
+public Message_StatusIcon(iMsgId, iDest, pPlayer) {
     if (g_iGamemode != Hwn_Gamemode_GetCurrent()) {
         return PLUGIN_CONTINUE;
     }
