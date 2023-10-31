@@ -34,6 +34,7 @@
 #define m_flReleaseJump "flReleaseJump"
 #define m_bBig "bBig"
 #define m_iType "iType"
+#define m_iSize "iSize"
 
 enum _:Sequence {
     Sequence_Idle = 0,
@@ -49,6 +50,15 @@ enum Action {
     Action_JumpFloat,
     Action_Why,
     Action_Attack,
+};
+
+new const Float:g_rgflPumpkinTypeColor[Hwn_PumpkinType][3] = {
+    {HWN_COLOR_ORANGE_DIRTY_F},
+    {HWN_COLOR_SECONDARY_F},
+    {HWN_COLOR_PRIMARY_F},
+    {HWN_COLOR_YELLOW_F},
+    {HWN_COLOR_RED_F},
+    {50.0, 50.0, 50.0},
 };
 
 const Float:NPC_Health = 100.0;
@@ -156,7 +166,11 @@ public plugin_init() {
     CE_SetMember(this, m_irgPath, ArrayCreate(3));
 
     if (!CE_HasMember(this, m_iType)) {
-        CE_SetMember(this, m_iType, Hwn_PumpkinType_Default);
+        CE_SetMember(this, m_iType, Hwn_PumpkinType_Uninitialized);
+    }
+
+    if (!CE_HasMember(this, m_iSize)) {
+        CE_SetMember(this, m_iSize, 1);
     }
 }
 
@@ -168,6 +182,7 @@ public plugin_init() {
     new Float:flGameTime = get_gametime();
 
     new bool:bBig = CE_GetHandlerByEntity(this) == g_iCeHandlerBig;
+    new iType = CE_GetMember(this, m_iType);
 
     CE_SetMember(this, m_bBig, bBig);
     CE_SetMember(this, m_flNextAttack, 0.0);
@@ -185,7 +200,9 @@ public plugin_init() {
     set_pev(this, pev_rendermode, kRenderNormal);
     set_pev(this, pev_renderfx, kRenderFxGlowShell);
     set_pev(this, pev_renderamt, 4.0);
-    set_pev(this, pev_rendercolor, {HWN_COLOR_ORANGE_DIRTY_F});
+    
+    set_pev(this, pev_rendercolor, g_rgflPumpkinTypeColor[iType]);
+
     set_pev(this, pev_health, bBig ? NPC_Big_Health : NPC_Health);
     set_pev(this, pev_takedamage, DAMAGE_AIM);
     set_pev(this, pev_view_ofs, Float:{0.0, 0.0, 12.0});
@@ -205,6 +222,7 @@ public plugin_init() {
     }
 
     @Entity_Laugh(this);
+    @Entity_ApplyType(this);
 
     set_pev(this, pev_nextthink, flGameTime);
 }
@@ -242,6 +260,40 @@ public plugin_init() {
 
     new Array:irgPath = CE_GetMember(this, m_irgPath);
     ArrayDestroy(irgPath);
+}
+
+@Entity_ApplyType(this) {
+    new iType = CE_GetMember(this, m_iType);
+    if (iType == Hwn_PumpkinType_Uninitialized) {
+        return;
+    }
+
+    static Float:flSpeed; pev(this, pev_maxspeed, flSpeed);
+    static Float:flHealth; pev(this, pev_health, flHealth);
+    static Float:flDamage; pev(this, pev_dmg, flDamage);
+
+    switch (iType) {
+        case Hwn_PumpkinType_Crits: {
+            new Float:flDamageMultiplier = get_cvar_float("hwn_crits_damage_multiplier");
+            set_pev(this, pev_dmg, flDamage * flDamageMultiplier);
+        }
+        case Hwn_PumpkinType_Equipment: {
+            set_pev(this, pev_maxspeed, flSpeed * 1.5);
+        }
+        case Hwn_PumpkinType_Health: {
+            set_pev(this, pev_health, flHealth * 1.5);
+        }
+        case Hwn_PumpkinType_Gravity: {
+            set_pev(this, pev_gravity, MOON_GRAVIY);
+        }
+        case Hwn_PumpkinType_Default: {
+            new iSize = CE_GetMember(this, m_iSize);
+
+            set_pev(this, pev_maxspeed, flSpeed + (iSize * 0.375));
+            set_pev(this, pev_health, flHealth + (iSize * 10));
+            set_pev(this, pev_dmg, flDamage + (iSize * 5));
+        }
+    }
 }
 
 @Entity_Laugh(this) {
@@ -630,12 +682,12 @@ Float:@Entity_GetPathCost(this, NavArea:newArea, NavArea:prevArea) {
 }
 
 @Pumpkin_Mutate(this, bool:bBig) {
-    new chance = get_pcvar_num(g_pCvarPumpkinMutateChance);
-    if (!chance) {
+    new iChance = get_pcvar_num(g_pCvarPumpkinMutateChance);
+    if (!iChance) {
         return;
     }
 
-    if (random(100) > chance) {
+    if (random(100) > iChance) {
         return;
     }
 
@@ -654,6 +706,12 @@ Float:@Entity_GetPathCost(this, NavArea:newArea, NavArea:prevArea) {
 
     vecAngles[1] = random_float(0.0, 360.0);
     set_pev(pMonster, pev_angles, vecAngles);
+
+    CE_SetMember(pMonster, m_iType, CE_GetMember(this, "iType"));
+
+    if (bBig) {
+        CE_SetMember(pMonster, m_iSize, CE_GetMember(this, "iSize"));
+    }
 
     dllfunc(DLLFunc_Spawn, pMonster);
 }
