@@ -1,5 +1,6 @@
 #include <amxmodx>
 #include <fakemeta>
+#include <hamsandwich>
 #include <reapi>
 
 #include <screenfade_util>
@@ -13,16 +14,17 @@
 
 #define EFFECT_ID "invisibility"
 
-const Float:EffectTime = 9.9;
 const Float:EffectRadius = 16.0;
 new const EffectColor[3] = {255, 255, 255};
 
-const Float:FadeEffectMaxTime = 10.0;
+const Float:FadeEffectMaxTime = 9.9;
 new FadeEffectColor[3] = {128, 128, 128};
 
 new const g_szSndDetonate[] = "hwn/spells/spell_stealth.wav";
 
 new g_iEffectTraceModelIndex;
+
+new Float:g_rgflPlayerNextFixFade[MAX_PLAYERS + 1];
 
 public plugin_precache() {
     g_iEffectTraceModelIndex = precache_model("sprites/xbeam4.spr");
@@ -33,7 +35,14 @@ public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
     Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "hostage", {90, 90, 90});
+
+    RegisterHamPlayer(Ham_Player_PostThink, "HamHook_Player_PostThink_Post", .Post = 1);
+
     register_message(get_user_msgid("ScreenFade"), "Message_ScreenFade");
+}
+
+public client_connect(pPlayer) {
+    g_rgflPlayerNextFixFade[pPlayer] = 0.0;
 }
 
 @Player_EffectInvoke(this, Float:flDuration) {
@@ -47,50 +56,53 @@ public plugin_init() {
 
 @Player_EffectRevoke(this) {
     @Player_RemoveFadeEffect(this);
+
     set_pev(this, pev_rendermode, kRenderNormal);
     set_pev(this, pev_renderamt, 0.0);
+
+    g_rgflPlayerNextFixFade[this] = 0.0;
 }
 
-@Player_FadeEffect(this, Float:flTime, bool:external) {
-    UTIL_ScreenFade(this, FadeEffectColor, -1.0, flTime > FadeEffectMaxTime ? (FadeEffectMaxTime + 0.1) : flTime, 128, FFADE_IN, .bExternal = external);
-
-    if (external) {
-        new iIterationsNum = floatround(flTime / FadeEffectMaxTime, floatround_ceil);
-        for (new i = 1; i < iIterationsNum; ++i) {
-            set_task(i * FadeEffectMaxTime, "Task_FixInvisibleEffect", this);
-        }
-    }
+@Player_FadeEffect(this, Float:flDuration, bool:bExternal) {
+    new Float:flFadeDuration = floatmin(flDuration + 0.1, FadeEffectMaxTime);
+    UTIL_ScreenFade(this, FadeEffectColor, -1.0, flFadeDuration, 128, FFADE_IN, .bExternal = bExternal);
+    g_rgflPlayerNextFixFade[this] = get_gametime() + flFadeDuration;
 }
 
 @Player_RemoveFadeEffect(this) {
     UTIL_ScreenFade(this);
 }
 
-@Player_DetonateEffect(pEntity) {
+@Player_DetonateEffect(this) {
     new Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
 
     new Float:vecMins[3];
-    pev(pEntity, pev_mins, vecMins);
+    pev(this, pev_mins, vecMins);
 
     vecOrigin[2] += vecMins[2];
 
     UTIL_Message_BeamCylinder(vecOrigin, EffectRadius * 3, g_iEffectTraceModelIndex, 0, 3, 90, 255, EffectColor, 100, 0);
-    emit_sound(pEntity, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(this, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
-public Message_ScreenFade(msg, type, pPlayer) {
+public HamHook_Player_PostThink_Post(pPlayer) {
+    static Float:flGameTime; flGameTime = get_gametime();
+    
+    if (Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) {
+        if (g_rgflPlayerNextFixFade[pPlayer] <= flGameTime) {
+            new Float:flDuration = Hwn_Player_GetEffectDuration(pPlayer, EFFECT_ID);
+            new Float:flTimeLeft = flDuration > 0.0 ? Hwn_Player_GetEffectEndtime(pPlayer, EFFECT_ID) - flGameTime : FadeEffectMaxTime;
+            @Player_FadeEffect(pPlayer, flTimeLeft, false);
+        }
+    }
+}
+
+public Message_ScreenFade(iMsgId, iDest, pPlayer) {
     if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) {
         return;
     }
 
-    set_task(0.25, "Task_FixInvisibleEffect", pPlayer);
-}
-
-public Task_FixInvisibleEffect(pPlayer) {
-    new Float:flTimeleft =  1.0;
-
-    if (flTimeleft > 0.0) {
-        @Player_FadeEffect(pPlayer, flTimeleft, false);
-    }
+    new Float:flDuration = (float(get_msg_arg_int(1)) / (1<<12)) + (float(get_msg_arg_int(2)) / (1<<12));
+    g_rgflPlayerNextFixFade[pPlayer] = get_gametime() + flDuration;
 }
