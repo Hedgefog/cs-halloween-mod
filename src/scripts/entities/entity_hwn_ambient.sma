@@ -37,11 +37,11 @@ public plugin_precache() {
     }
 
     CE_Register(ENTITY_NAME);
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     set_pev(this, pev_nextthink, get_gametime());
 }
 

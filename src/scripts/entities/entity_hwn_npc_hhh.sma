@@ -104,8 +104,6 @@ new const Float:NPC_TargetHitOffset[3] = {0.0, 0.0, 16.0};
 
 new gmsgScreenShake;
 
-new g_iBloodModelIndex;
-new g_iBloodSprayModelIndex;
 new g_iSmokeModelIndex;
 new g_iGibsModelIndex;
 
@@ -119,8 +117,6 @@ new Float:g_flStartHealth = NPC_Health;
 public plugin_precache() {
     Nav_Precache();
 
-    g_iBloodModelIndex = precache_model("sprites/blood.spr");
-    g_iBloodSprayModelIndex = precache_model("sprites/bloodspray.spr");
     g_iSmokeModelIndex = precache_model("sprites/hwn/magic_smoke_tiny.spr");
     g_iGibsModelIndex = precache_model("models/hwn/npc/headless_hatman_gibs.mdl");
 
@@ -148,14 +144,15 @@ public plugin_precache() {
     g_iCeHandler = CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/npc/headless_hatman.mdl",
-        .vMins = Float:{-16.0, -16.0, -48.0},
-        .vMaxs = Float:{16.0, 16.0, 48.0},
-        .preset = CEPreset_NPC
+        .vecMins = Float:{-16.0, -16.0, -48.0},
+        .vecMaxs = Float:{16.0, 16.0, 48.0},
+        .iPreset = CEPreset_NPC,
+        .iBloodColor = 212
     );
 
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Restart, ENTITY_NAME, "@Entity_Restart");
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
@@ -167,46 +164,11 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "HamHook_Base_TraceAttack_Post", .Post = 1);
     RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "HamHook_Base_TakeDamage_Post", .Post = 1);
 
     g_pCvarUseAstar = register_cvar("hwn_npc_hhh_use_astar", "1");
 
     gmsgScreenShake = get_user_msgid("ScreenShake");
-
-    register_clcmd("nav", "Command_Nav");
-    register_clcmd("navstart", "Command_Start");
-    register_clcmd("navend", "Command_End");
-}
-
-new Float:g_vecStart[3];
-new Float:g_vecEnd[3];
-
-stock GetAimDir(pPlayer, Float:vecOut[3]) {
-    static Float:vecOrigin[3];
-    pev(pPlayer, pev_origin, vecOrigin);
-
-    UTIL_GetDirectionVector(pPlayer, vecOut, 8192.0);
-    xs_vec_add(vecOrigin, vecOut, vecOut);
-
-    new pTrace = create_tr2();
-    engfunc(EngFunc_TraceLine, vecOrigin, vecOut, DONT_IGNORE_MONSTERS, pPlayer, pTrace);
-    get_tr2(pTrace, TR_vecEndPos, vecOut);
-    free_tr2(pTrace);
-}
-
-public Command_Start(pPlayer) {
-    GetAimDir(pPlayer, g_vecStart);
-    UTIL_Message_BeamCylinder(g_vecStart, 32.0, g_iSmokeModelIndex, 0, 10, 8, 0, {255, 0, 0}, 255, 0);
-}
-
-public Command_End(pPlayer) {
-    GetAimDir(pPlayer, g_vecEnd);
-    UTIL_Message_BeamCylinder(g_vecEnd, 32.0, g_iSmokeModelIndex, 0, 10, 8, 0, {0, 0, 255}, 255, 0);
-}
-
-public Command_Nav(pPlayer) {
-    Nav_Path_Find(g_vecStart, g_vecEnd, "", 0, 0, "NavPathCost");
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
@@ -238,18 +200,18 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     @Entity_ResetPath(this);
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     new Float:flGameTime = get_gametime();
 
     CE_SetMember(this, m_flNextAttack, 0.0);
     CE_SetMember(this, m_flReleaseHit, 0.0);
     CE_SetMember(this, m_flNextAIThink, flGameTime);
     CE_SetMember(this, m_flNextAction, flGameTime);
-    CE_SetMember(this, m_flNextSmokeEmit, flGameTime);
     CE_SetMember(this, m_flNextLaugh, flGameTime);
     CE_SetMember(this, m_flNextPathSearch, flGameTime);
-    CE_SetMember(this, m_flNextEffectEmit, flGameTime);
     CE_SetMember(this, m_flNextFootStep, flGameTime);
+    CE_SetMember(this, m_flNextEffectEmit, flGameTime);
+    CE_SetMember(this, m_flNextSmokeEmit, flGameTime);
     CE_SetMember(this, m_flTargetArrivalTime, 0.0);
     CE_DeleteMember(this, m_vecGoal);
     CE_DeleteMember(this, m_vecTarget);
@@ -281,7 +243,6 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     UTIL_Message_Dlight(vecOrigin, 32, {HWN_COLOR_PRIMARY}, 60, 4);
 
     @Entity_PlayAction(this, Action_Spawn, false);
-    // CE_SetMember(this, "flNextUpdate", get_gametime() + g_rgActions[Action_Spawn][NPC_Action_Time]);
 
     set_pev(this, pev_nextthink, flGameTime + g_rgActions[Action_Spawn][NPC_Action_Time]);
 }
@@ -355,18 +316,11 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     }
 }
 
-@Entity_TraceAttack(this, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
-    static Float:vecEnd[3];
-    get_tr2(pTrace, TR_vecEndPos, vecEnd);
-
-    UTIL_Message_BloodSprite(vecEnd, g_iBloodSprayModelIndex, g_iBloodModelIndex, 212, floatround(flDamage / 4));
-}
-
 @Entity_Think(this) {
-    new Float:flGameTime = get_gametime();
-    new Float:flNextAIThink = CE_GetMember(this, m_flNextAIThink);
-    new bool:bShouldUpdateAI = flNextAIThink <= flGameTime;
-    new iDeadFlag = pev(this, pev_deadflag);
+    static Float:flGameTime; flGameTime = get_gametime();
+    static Float:flNextAIThink; flNextAIThink = CE_GetMember(this, m_flNextAIThink);
+    static bool:bShouldUpdateAI; bShouldUpdateAI = flNextAIThink <= flGameTime;
+    static iDeadFlag; iDeadFlag = pev(this, pev_deadflag);
 
     switch (iDeadFlag) {
         case DEAD_NO: {
@@ -405,28 +359,17 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
 }
 
 @Entity_AIThink(this) {
-    static Float:flLastThink;
-    pev(this, pev_ltime, flLastThink);
-
     static Float:flGameTime; flGameTime = get_gametime();
-    // new Float:flRate = Hwn_GetNpcUpdateRate();
-    // new Float:flDelta = flGameTime - flLastThink;
+    static Float:flLastThink; pev(this, pev_ltime, flLastThink);
 
     if (pev(this, pev_takedamage) == DAMAGE_NO) {
         set_pev(this, pev_takedamage, DAMAGE_AIM);
     }
 
-    static Float:flNextEffectEmit; flNextEffectEmit = CE_GetMember(this, m_flNextEffectEmit);
-    if (flNextEffectEmit <= flGameTime) {
-        @Entity_EmitLight(this);
-        @Entity_EmitSmoke(this);
-        CE_SetMember(this, m_flNextEffectEmit, flGameTime + 0.1);
-    }
-
     static Float:flReleaseHit; flReleaseHit = CE_GetMember(this, m_flReleaseHit);
     if (!flReleaseHit) {
         static Float:flNextAttack; flNextAttack = CE_GetMember(this, m_flNextAttack);
-        if (flNextAttack <= get_gametime()) {
+        if (flNextAttack <= flGameTime) {
             static pEnemy; pEnemy = NPC_GetEnemy(this);
             if (pEnemy && NPC_CanHit(this, pEnemy, NPC_HitRange, NPC_TargetHitOffset)) {
                 @Entity_EmitVoice(this, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.5);
@@ -470,6 +413,13 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
             @Entity_ScareAway(this);
             CE_SetMember(this, m_flNextFootStep, flGameTime + 0.25);
         }
+    }
+
+    static Float:flNextEffectEmit; flNextEffectEmit = CE_GetMember(this, m_flNextEffectEmit);
+    if (flNextEffectEmit <= flGameTime) {
+        @Entity_EmitLight(this);
+        @Entity_EmitSmoke(this);
+        CE_SetMember(this, m_flNextEffectEmit, flGameTime + 0.1);
     }
 
     static Action:iAction; iAction = @Entity_GetAction(this);
@@ -745,15 +695,6 @@ Float:@Entity_GetPathCost(this, NavArea:newArea, NavArea:prevArea) {
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
-
-public HamHook_Base_TraceAttack_Post(pEntity, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
-    if (g_iCeHandler == CE_GetHandlerByEntity(pEntity)) {
-        @Entity_TraceAttack(pEntity, pAttacker, flDamage, vecDirection, pTrace, iDamageBits);
-        return HAM_HANDLED;
-    }
-
-    return HAM_IGNORED;
-}
 
 public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
     if (g_iCeHandler == CE_GetHandlerByEntity(pEntity)) {

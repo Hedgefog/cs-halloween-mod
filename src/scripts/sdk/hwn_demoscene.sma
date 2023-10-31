@@ -1,15 +1,15 @@
-// Output GIF: 960x256, 24 iFps
+// Output GIF: 960x256, 24 fps
 
 /*
     1. Set resolution to 1920x1080
     2. Launch hwn_demoscene map
     3. Start recording
-    4. Join iTeam
+    4. Join team
     5. Stop the video at end of the scene
     6. Open recorded video in Photoshop
     7. Cut video
     8. Set canvas size to 1920x512
-    9. Set video iFps to 24
+    9. Set video fps to 24
     10. Open Save for Web (Legacy)
     11. Set image size to 50%
     12. Set Looping Options to "Forever"
@@ -62,8 +62,8 @@ public plugin_precache() {
         return;
     }
 
-    CE_RegisterHook(CEFunction_Spawn, "hwn_skeleton_egg", "OnSkeletonEggSpawn");
-    CE_RegisterHook(CEFunction_Spawn, "hwn_item_pumpkin", "OnPumpkinSpawn");
+    CE_RegisterHook(CEFunction_Spawned, "hwn_skeleton_egg", "OnSkeletonEggSpawn");
+    CE_RegisterHook(CEFunction_Spawned, "hwn_item_pumpkin", "OnPumpkinSpawn");
 
     precache_model(CAMERA_MODEL);
 }

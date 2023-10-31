@@ -75,14 +75,16 @@ public plugin_precache() {
     CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/npc/ghost_v3.mdl",
-        .fLifeTime = HWN_NPC_LIFE_TIME,
-        .fRespawnTime = HWN_NPC_RESPAWN_TIME,
-        .preset = CEPreset_NPC
+        .vecMins = Float:{-12.0, -12.0, -32.0},
+        .vecMaxs = Float:{12.0, 12.0, 32.0},
+        .flLifeTime = HWN_NPC_LIFE_TIME,
+        .flRespawnTime = HWN_NPC_RESPAWN_TIME,
+        .iPreset = CEPreset_NPC
     );
 
     CE_RegisterHook(CEFunction_InitPhysics, ENTITY_NAME, "@Entity_InitPhysics");
     CE_RegisterHook(CEFunction_Restart, ENTITY_NAME, "@Entity_Restart");
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
@@ -105,7 +107,7 @@ public Hwn_Fw_ConfigLoaded() {
     @Entity_ResetPath(this);
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     new Float:flGameTime = get_gametime();
 
     CE_SetMember(this, m_flNextAttack, 0.0);
@@ -134,11 +136,11 @@ public Hwn_Fw_ConfigLoaded() {
     @Entity_FindEnemy(this);
 
     set_pev(this, pev_nextthink, flGameTime);
-
-    UTIL_SetSequence(this, Sequence_Idle);
 }
 
 @Entity_Kill(this, pKiller) {
+    new Float:flGameTime = get_gametime();
+
     new iDeadFlag = pev(this, pev_deadflag);
 
     CE_SetMember(this, m_pKiller, pKiller);
@@ -148,10 +150,10 @@ public Hwn_Fw_ConfigLoaded() {
 
         set_pev(this, pev_takedamage, DAMAGE_NO);
         set_pev(this, pev_deadflag, DEAD_DYING);
+        set_pev(this, pev_nextthink, flGameTime + 0.1);
 
-        CE_SetMember(this, m_flNextAIThink, get_gametime() + 0.1);
-        set_pev(this, pev_nextthink, get_gametime() + 0.1);
-    
+        CE_SetMember(this, m_flNextAIThink, flGameTime + 0.1);
+
         // cancel first kill function to play duing animation
         return PLUGIN_HANDLED;
     }
@@ -168,32 +170,14 @@ public Hwn_Fw_ConfigLoaded() {
 }
 
 @Entity_Killed(this) {
-    @Entity_RemoveParticles(this);
     @Entity_ResetPath(this);
     @Entity_DisappearEffect(this);
+    @Entity_RemoveParticles(this);
 }
 
 @Entity_Remove(this) {
-    @Entity_RemoveParticles(this);
     @Entity_ResetPath(this);
-}
-
-@Entity_TakeDamage(this, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
-    if (IS_PLAYER(pAttacker) && NPC_IsValidEnemy(pAttacker)) {
-        static Float:vecOrigin[3];
-        pev(this, pev_origin, vecOrigin);
-
-        static Float:vecTarget[3];
-        pev(pAttacker, pev_origin, vecTarget);
-
-        new Float:flHitRange = NPC_HitRange;
-
-        if (get_distance_f(vecOrigin, vecTarget) <= flHitRange && NPC_IsVisible(this, vecTarget)) {
-            if (random(100) < 10) {
-                set_pev(this, pev_enemy, pAttacker);
-            }
-        }
-    }
+    @Entity_RemoveParticles(this);
 }
 
 @Entity_Think(this) {
@@ -201,10 +185,10 @@ public Hwn_Fw_ConfigLoaded() {
         @Entity_RemoveParticles(this);
     }
 
-    new Float:flGameTime = get_gametime();
-    new Float:flNextAIThink = CE_GetMember(this, m_flNextAIThink);
-    new bool:bShouldUpdateAI = flNextAIThink <= flGameTime;
-    new iDeadFlag = pev(this, pev_deadflag);
+    static Float:flGameTime; flGameTime = get_gametime();
+    static Float:flNextAIThink; flNextAIThink = CE_GetMember(this, m_flNextAIThink);
+    static bool:bShouldUpdateAI; bShouldUpdateAI = flNextAIThink <= flGameTime;
+    static iDeadFlag; iDeadFlag = pev(this, pev_deadflag);
 
     switch (iDeadFlag) {
         case DEAD_NO: {
@@ -229,18 +213,20 @@ public Hwn_Fw_ConfigLoaded() {
         }
     }
 
+    UTIL_SetSequence(this, Sequence_Idle);
+
     set_pev(this, pev_ltime, flGameTime);
     set_pev(this, pev_nextthink, flGameTime + 0.01);
 }
 
 @Entity_AIThink(this) {
-    static pEnemy; pEnemy = NPC_GetEnemy(this);
+    static pEnemy; pEnemy = pev(this, pev_enemy);
 
-    if (!pEnemy) {
+    if (!NPC_IsValidEnemy(pEnemy)) {
         if (IS_PLAYER(pEnemy) && !is_user_alive(pEnemy)) {
             @Entity_Revenge(this, pEnemy);
         } else {
-            CE_Kill(this);
+            set_pev(this, pev_deadflag, DEAD_DYING);
         }
     }
 
@@ -253,13 +239,13 @@ public Hwn_Fw_ConfigLoaded() {
         set_pev(this, pev_takedamage, DAMAGE_AIM);
     }
 
-    static Float:flHitRange = NPC_HitRange;
-    static Float:flHitDelay = NPC_HitDelay;
+    static Float:flHitRange; flHitRange = NPC_HitRange;
+    static Float:flHitDelay; flHitDelay = NPC_HitDelay;
 
     static Float:flReleaseHit; flReleaseHit = CE_GetMember(this, m_flReleaseHit);
     if (!flReleaseHit) {
         static Float:flNextAttack; flNextAttack = CE_GetMember(this, m_flNextAttack);
-        if (flNextAttack <= get_gametime()) {
+        if (flNextAttack <= flGameTime) {
             static pEnemy; pEnemy = NPC_GetEnemy(this);
             if (pEnemy && NPC_CanHit(this, pEnemy, flHitRange, NPC_TargetHitOffset)) {
                 CE_SetMember(this, m_flReleaseHit, flGameTime + flHitDelay);
@@ -380,6 +366,10 @@ public Hwn_Fw_ConfigLoaded() {
         if (pKiller == pBoss) {
             pKiller = 0;
         }
+    }
+
+    if (!NPC_IsValidEnemy(pKiller)) {
+        pKiller = 0;
     }
 
     set_pev(this, pev_enemy, pKiller);

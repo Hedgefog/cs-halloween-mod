@@ -22,16 +22,16 @@ public plugin_precache() {
     CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/props/jackolantern.mdl",
-        .vMins = Float:{-16.0, -16.0, 0.0},
-        .vMaxs = Float:{16.0, 16.0, 48.0},
-        .preset = CEPreset_Prop
+        .vecMins = Float:{-16.0, -16.0, 0.0},
+        .vecMaxs = Float:{16.0, 16.0, 48.0},
+        .iPreset = CEPreset_Prop
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     set_pev(this, pev_body, random(2));
 
     engfunc(EngFunc_DropToFloor, this);

@@ -32,9 +32,9 @@ public plugin_init() {
 }
 
 public plugin_precache() {
-    CE_Register(ENTITY_NAME, .vMins = Float:{-64.0, -64.0, 0.0}, .vMaxs = Float:{64.0, 64.0, 64.0});
+    CE_Register(ENTITY_NAME, .vecMins = Float:{-64.0, -64.0, 0.0}, .vecMaxs = Float:{64.0, 64.0, 64.0});
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_KVD, ENTITY_NAME, "@Entity_KeyValue");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
     CE_RegisterHook(CEFunction_Touch, ENTITY_NAME, "@Entity_Touch");
@@ -47,7 +47,7 @@ public plugin_precache() {
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     set_pev(this, pev_solid, SOLID_TRIGGER);
     set_pev(this, pev_movetype, MOVETYPE_FLY);
     set_pev(this, pev_effects, EF_NODRAW);

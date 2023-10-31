@@ -10,7 +10,7 @@
 #include <hwn>
 #include <hwn_utils>
 
-#define PLUGIN "[Custom Entity] Hwn Prop Jack'O'Lantern"
+#define PLUGIN "[Custom Entity] Hwn Prop Explosive Pumpkin"
 #define AUTHOR "Hedgehog Fog"
 
 #define ENTITY_NAME "hwn_prop_explosive_pumpkin"
@@ -35,13 +35,13 @@ public plugin_precache() {
     CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/props/pumpkin_explode_v2.mdl",
-        .vMins = Float:{-16.0, -16.0, 0.0},
-        .vMaxs = Float:{16.0, 16.0, 32.0},
-        .fRespawnTime = HWN_NPC_RESPAWN_TIME,
-        .preset = CEPreset_Prop
+        .vecMins = Float:{-16.0, -16.0, 0.0},
+        .vecMaxs = Float:{16.0, 16.0, 32.0},
+        .flRespawnTime = HWN_NPC_RESPAWN_TIME,
+        .iPreset = CEPreset_Prop
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
 }
 
@@ -49,7 +49,7 @@ public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     set_pev(this, pev_takedamage, DAMAGE_AIM);
     set_pev(this, pev_health, 1.0);
     engfunc(EngFunc_DropToFloor, this);

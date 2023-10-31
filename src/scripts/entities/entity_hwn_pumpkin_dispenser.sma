@@ -20,7 +20,7 @@
 
 public plugin_precache() {
     CE_Register(ENTITY_NAME);
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
     CE_RegisterHook(CEFunction_KVD, ENTITY_NAME, "@Entity_KeyValue");
 }
@@ -29,7 +29,7 @@ public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     if (!CE_HasMember(this, m_flImpulse)) {
         CE_SetMember(this, m_flImpulse, 0.0);
     }

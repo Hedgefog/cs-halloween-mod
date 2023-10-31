@@ -151,12 +151,21 @@ public Native_GetCount(iPluginId, iArgc) {
 public Native_GetIdByIndex(iPluginId, iArgc) {
     new iId = get_param(1);
 
+    if (!g_iCosmeticsNum) {
+        set_string(2, "", get_param(3));
+        return;
+    }
+
     static szId[32]; ArrayGetString(g_rgiCosmeticData[CosmeticData_Name], iId, szId, charsmax(szId));
 
     set_string(2, szId, get_param(3));
 }
 
 public Native_Give(iPluginId, iArgc) {
+    if (!g_iCosmeticsNum) {
+        return -1;
+    }
+
     new pPlayer = get_param(1);
 
     static szCosmetic[32];

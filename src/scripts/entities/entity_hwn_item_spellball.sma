@@ -25,13 +25,13 @@ public plugin_precache() {
 
     CE_Register(
         ENTITY_NAME,
-        .vMins = Float:{-8.0, -8.0, -8.0},
-        .vMaxs = Float:{8.0, 8.0, 8.0},
-        .fLifeTime = HWN_NPC_LIFE_TIME,
-        .preset = CEPreset_None
+        .vecMins = Float:{-8.0, -8.0, -8.0},
+        .vecMaxs = Float:{8.0, 8.0, 8.0},
+        .flLifeTime = HWN_NPC_LIFE_TIME,
+        .iPreset = CEPreset_None
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
@@ -41,7 +41,7 @@ public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     set_pev(this, pev_gravity, 0.20);
     set_pev(this, pev_health, 1.0);
     set_pev(this, pev_solid, SOLID_TRIGGER);

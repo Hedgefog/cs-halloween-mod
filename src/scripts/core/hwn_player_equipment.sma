@@ -13,8 +13,8 @@
 #include <hwn>
 #include <hwn_utils>
 
-#define PLUGIN    "[Hwn] Player Equipment"
-#define AUTHOR    "Hedgehog Fog"
+#define PLUGIN "[Hwn] Player Equipment"
+#define AUTHOR "Hedgehog Fog"
 
 new const g_rgiWeapons[] = {
     0,

@@ -49,12 +49,12 @@ stock UTIL_HwnSpawnPlayerSpellball(
 
 stock UTIL_HwnSpawnSpellballEffect(spellballEnt, const szSprite[], const Float:flColor[3], Float:flAmt, Float:flScale, Float:flFramerate)
 {
-    static allocClassname;
-    if (!allocClassname) {
-        allocClassname = engfunc(EngFunc_AllocString, "env_sprite");
+    static iszClassName;
+    if (!iszClassName) {
+        iszClassName = engfunc(EngFunc_AllocString, "env_sprite");
     }
 
-    new pEntity = engfunc(EngFunc_CreateNamedEntity, allocClassname);
+    new pEntity = engfunc(EngFunc_CreateNamedEntity, iszClassName);
     set_pev(pEntity, pev_solid, SOLID_NOT);
     set_pev(pEntity, pev_movetype, MOVETYPE_NONE);
     set_pev(pEntity, pev_rendermode, kRenderTransAdd);

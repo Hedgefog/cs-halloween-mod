@@ -102,7 +102,7 @@ HWN_SPELLSHOP_DISABLED = Магазин Заклинаний отключен н
 HWN_SPELLSHOP_NOT_AT_SPAWN = Магазин Заклинаний доступен только на месте возраждения!
 HWN_OBJECTIVE_BLOCKED =  Сейчас цель заблокирована!
 
-[ua]
+[uk]
 HWN_GIFT_SPAWN = Примарний Подарунок таємниче з'явився у випадковому місці!
 HWN_GIFT_DISAPPEARED = Примарний Подарунок зник!
 HWN_GIFT_FOUND = %s знайшов Примарний Подарунок.

@@ -18,6 +18,7 @@
 
 #define m_iSpell "iSpell"
 #define m_iAmount "iAmount"
+#define m_pParticle "pParticle"
 
 new g_iSparkleModelIndex;
 new g_iSparklePurpleModelIndex;
@@ -55,15 +56,14 @@ public plugin_precache() {
     CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/items/spellbook_v2.mdl",
-        .vMins = Float:{-16.0, -12.0, 0.0},
-        .vMaxs = Float:{16.0, 12.0, 24.0},
-        .fLifeTime = HWN_NPC_LIFE_TIME,
-        .fRespawnTime = HWN_ITEM_RESPAWN_TIME,
-        .preset = CEPreset_Item
+        .vecMins = Float:{-16.0, -12.0, 0.0},
+        .vecMaxs = Float:{16.0, 12.0, 24.0},
+        .flLifeTime = HWN_NPC_LIFE_TIME,
+        .flRespawnTime = HWN_ITEM_RESPAWN_TIME,
+        .iPreset = CEPreset_Item
     );
 
-    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "@Entity_Pickup");
@@ -78,11 +78,8 @@ public Hwn_Fw_ConfigLoaded() {
     g_particlesEnabled = get_cvar_num("hwn_enable_particles");
 }
 
-@Entity_Init(pEntity) {}
-
-@Entity_Spawn(pEntity) {
+@Entity_Spawned(pEntity) {
     @Entity_RemoveParticles(pEntity);
-    @Entity_CreateParticles(pEntity);
 
     if (!CE_HasMember(pEntity, m_iSpell)) {
         CE_SetMember(pEntity, m_iSpell, GetRandomSpell());
@@ -110,6 +107,8 @@ public Hwn_Fw_ConfigLoaded() {
 
     @Entity_AppearEffect(pEntity);
     emit_sound(pEntity, CHAN_BODY, g_szSndSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
+    @Entity_CreateParticles(pEntity);
 
     set_pev(pEntity, pev_nextthink, get_gametime());
 }
@@ -181,7 +180,7 @@ public Hwn_Fw_ConfigLoaded() {
 
     new pParticle = Particles_Spawn(bIsRare ? "magic_glow_purple" : "magic_glow", Float:{0.0, 0.0, 0.0}, 0.0);
     if (pParticle) {
-        CE_SetMember(pEntity, "pParticle", pParticle);
+        CE_SetMember(pEntity, m_pParticle, pParticle);
     }
 }
 
@@ -190,7 +189,7 @@ public Hwn_Fw_ConfigLoaded() {
         return;
     } 
 
-    new pParticle = CE_GetMember(pEntity, "pParticle");
+    new pParticle = CE_GetMember(pEntity, m_pParticle);
     if (!pParticle || !pev_valid(pParticle)) {
         if (createIflNotExists) {
             @Entity_CreateParticles(pEntity);
@@ -207,7 +206,7 @@ public Hwn_Fw_ConfigLoaded() {
 }
 
 @Entity_RemoveParticles(pEntity) {
-    new pParticle = CE_GetMember(pEntity, "pParticle");
+    new pParticle = CE_GetMember(pEntity, m_pParticle);
     if (!pParticle) {
         return;
     }
@@ -216,7 +215,7 @@ public Hwn_Fw_ConfigLoaded() {
         Particles_Remove(pParticle);
     }
 
-    CE_SetMember(pEntity, "pParticle", 0);
+    CE_SetMember(pEntity, m_pParticle, 0);
 }
 
 GetRandomSpell() {

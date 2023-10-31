@@ -60,25 +60,25 @@ stock bool:NPC_IsReachable(pEntity, const Float:vecTarget[3], pIgnoreEnt = 0, Fl
     static Float:vecOrigin[3];
     pev(pEntity, pev_origin, vecOrigin);
 
-    static Float:_vTarget[3];
-    xs_vec_copy(vecTarget, _vTarget);
-    if (_vTarget[2] < vecOrigin[2]) {
-        _vTarget[2] = vecOrigin[2];
+    static Float:_vecTarget[3];
+    xs_vec_copy(vecTarget, _vecTarget);
+    if (_vecTarget[2] < vecOrigin[2]) {
+        _vecTarget[2] = vecOrigin[2];
     }
 
-    new ignoreEntSolidType = SOLID_NOT;
+    new iIgnoreEntSolidType = SOLID_NOT;
     if (pIgnoreEnt) {
-        ignoreEntSolidType = pev(pIgnoreEnt, pev_solid);
+        iIgnoreEntSolidType = pev(pIgnoreEnt, pev_solid);
         set_pev(pIgnoreEnt, pev_solid, SOLID_NOT);
     }
 
-    new bool:isReachable = true;
+    new bool:bIsReachable = true;
 
-    if (isReachable) {
-        isReachable = UTIL_IsOpen(vecOrigin, _vTarget, pEntity);
+    if (bIsReachable) {
+        bIsReachable = UTIL_IsOpen(vecOrigin, _vecTarget, pEntity);
     }
 
-    if (isReachable) {
+    if (bIsReachable) {
         static Float:vecMins[3];
         pev(pEntity, pev_mins, vecMins);
 
@@ -88,14 +88,14 @@ stock bool:NPC_IsReachable(pEntity, const Float:vecTarget[3], pIgnoreEnt = 0, Fl
         vecLeftSide[2] = vecOrigin[2];
 
         static Float:vecTargetLeftSide[3];
-        vecTargetLeftSide[0] = _vTarget[0] + vecMins[0];
-        vecTargetLeftSide[1] = _vTarget[1] + vecMins[1];
-        vecTargetLeftSide[2] = _vTarget[2];
+        vecTargetLeftSide[0] = _vecTarget[0] + vecMins[0];
+        vecTargetLeftSide[1] = _vecTarget[1] + vecMins[1];
+        vecTargetLeftSide[2] = _vecTarget[2];
 
-        isReachable = UTIL_IsOpen(vecLeftSide, vecTargetLeftSide, pEntity);
+        bIsReachable = UTIL_IsOpen(vecLeftSide, vecTargetLeftSide, pEntity);
     }
 
-    if (isReachable) {
+    if (bIsReachable) {
         static Float:vecMaxs[3];
         pev(pEntity, pev_maxs, vecMaxs);
 
@@ -105,55 +105,64 @@ stock bool:NPC_IsReachable(pEntity, const Float:vecTarget[3], pIgnoreEnt = 0, Fl
         vecRightSide[2] = vecOrigin[2];
 
         static Float:vecTargetRightSide[3];
-        vecTargetRightSide[0] = _vTarget[0] + vecMaxs[0];
-        vecTargetRightSide[1] = _vTarget[1] + vecMaxs[1];
-        vecTargetRightSide[2] = _vTarget[2];
+        vecTargetRightSide[0] = _vecTarget[0] + vecMaxs[0];
+        vecTargetRightSide[1] = _vecTarget[1] + vecMaxs[1];
+        vecTargetRightSide[2] = _vecTarget[2];
 
-        isReachable = UTIL_IsOpen(vecRightSide, vecTargetRightSide, pEntity);
+        bIsReachable = UTIL_IsOpen(vecRightSide, vecTargetRightSide, pEntity);
     }
 
-    if (isReachable && pev(pEntity, pev_movetype) != MOVETYPE_FLY) {
-        new Float:flDistance = get_distance_f(vecOrigin, _vTarget);
-        new steps = floatround(flDistance / flStepLength);
+    if (pev(pEntity, pev_movetype) != MOVETYPE_FLY) {
+        static Float:vecStepOrigin[3];
 
-        if (steps) {
-            //Get iDirection vetor
-            static Float:vecStep[3];
-            xs_vec_sub(_vTarget, vecOrigin, vecStep);
-            
-            static Float:vecStepOrigin[3];
-            isReachable = NPC_TestStep(pEntity, vecOrigin, vecStep, vecStepOrigin);
+        if (bIsReachable) {
+            new Float:flDistance = get_distance_f(vecOrigin, _vecTarget);
+            new iStepsNum = floatround(flDistance / flStepLength);
 
-            if (isReachable) {
-                xs_vec_normalize(vecStep, vecStep);
-                xs_vec_mul_scalar(vecStep, flStepLength, vecStep);
+            if (iStepsNum) {
+                //Get iDirection vetor
+                static Float:vecStep[3];
+                xs_vec_sub(_vecTarget, vecOrigin, vecStep);
+                
+                bIsReachable = NPC_TestStep(pEntity, vecOrigin, vecStep, vecStepOrigin);
 
-                xs_vec_copy(vecOrigin, vecStepOrigin);
+                if (bIsReachable) {
+                    xs_vec_normalize(vecStep, vecStep);
+                    xs_vec_mul_scalar(vecStep, flStepLength, vecStep);
 
-                for (new i = 0; i < steps; ++i) {
-                    if (!NPC_TestStep(pEntity, vecStepOrigin, vecStep, vecStepOrigin)) {
-                        isReachable = false;
-                        break;
+                    xs_vec_copy(vecOrigin, vecStepOrigin);
+
+                    for (new iStep = 0; iStep < iStepsNum; ++iStep) {
+                        // UTIL_DrawArrow(0, vecStep, vecStepOrigin, {0, 255, 0}, _, _, 16);
+                        if (!NPC_TestStep(pEntity, vecStepOrigin, vecStep, vecStepOrigin)) {
+                            bIsReachable = false;
+                            break;
+                        }
                     }
                 }
             }
         }
+
+        if (bIsReachable) {
+            bIsReachable = (vecTarget[2] - vecStepOrigin[2]) < 72.0;
+        }
     }
+
 
     if (pIgnoreEnt) {
-        set_pev(pIgnoreEnt, pev_solid, ignoreEntSolidType);
+        set_pev(pIgnoreEnt, pev_solid, iIgnoreEntSolidType);
     }
 
-    return isReachable;
+    return bIsReachable;
 }
 
 stock bool:NPC_TestStep(pEntity, const Float:vecOrigin[3], const Float:vecStep[3], Float:vecStepOrigin[3]) {
     static Float:vecMins[3];
     pev(pEntity, pev_mins, vecMins);
     
-    static Float:_vStepOrigin[3];
-    xs_vec_copy(vecStepOrigin, _vStepOrigin);
-    xs_vec_add(vecOrigin, vecStep, _vStepOrigin);
+    static Float:_vecStepOrigin[3];
+    xs_vec_copy(vecStepOrigin, _vecStepOrigin);
+    xs_vec_add(vecOrigin, vecStep, _vecStepOrigin);
 
     // check wall
     static Float:vecStepStart[3];
@@ -161,31 +170,31 @@ stock bool:NPC_TestStep(pEntity, const Float:vecOrigin[3], const Float:vecStep[3
     vecStepStart[2] += vecMins[2] + STEP_HEIGHT;
 
     static Float:vecStepEnd[3];
-    xs_vec_copy(_vStepOrigin, vecStepEnd);
+    xs_vec_copy(_vecStepOrigin, vecStepEnd);
     vecStepEnd[2] += vecMins[2] + STEP_HEIGHT;
 
     if (!UTIL_IsOpen(vecStepStart, vecStepEnd, pEntity)) {
         return false;
     }
 
-    _vStepOrigin[2] += STEP_HEIGHT; // add height to the step
+    _vecStepOrigin[2] += STEP_HEIGHT; // add height to the step
 
-    new Float:flDistanceToFloor = UTIL_GetDistanceToFloor(pEntity, _vStepOrigin);
+    new Float:flDistanceToFloor = UTIL_GetDistanceToFloor(pEntity, _vecStepOrigin);
     if (flDistanceToFloor < 0.0) { // check if falling or solid
         static Float:vecEnd[3];
-        xs_vec_copy(_vStepOrigin, vecEnd);
+        xs_vec_copy(_vecStepOrigin, vecEnd);
         vecEnd[2] -= -vecMins[2] + STEP_HEIGHT;
         return false;
     }
 
     if (flDistanceToFloor >= STEP_HEIGHT) { // subtract step height if not needed
         flDistanceToFloor -= STEP_HEIGHT;
-        _vStepOrigin[2] -= STEP_HEIGHT;
+        _vecStepOrigin[2] -= STEP_HEIGHT;
     }
 
-    _vStepOrigin[2] -= flDistanceToFloor; // apply possible height change
+    _vecStepOrigin[2] -= flDistanceToFloor; // apply possible height change
 
-    xs_vec_copy(_vStepOrigin, vecStepOrigin); // copy result
+    xs_vec_copy(_vecStepOrigin, vecStepOrigin); // copy result
 
     return true;
 }
@@ -201,25 +210,32 @@ stock NPC_StopMovement(pEntity) {
 }
 
 stock NPC_MoveForward(pEntity, Float:flSpeed) {
-    static Float:vecDirection[3];
-    UTIL_GetDirectionVector(pEntity, vecDirection, flSpeed);
+    static iMoveType; iMoveType = pev(pEntity, pev_movetype);
+    new bool:bIsFlying = (iMoveType == MOVETYPE_FLY || iMoveType == MOVETYPE_NOCLIP);
 
-    static Float:vecOrigin[3];
-    pev(pEntity, pev_velocity, vecOrigin);
+    static Float:vecDirection[3];
+    UTIL_GetDirectionVector(pEntity, vecDirection);
+
+    if (!bIsFlying) {
+        vecDirection[2] = 0.0;
+        xs_vec_normalize(vecDirection, vecDirection);
+    }
 
     static Float:vecVelocity[3];
     pev(pEntity, pev_velocity, vecVelocity);
-    vecVelocity[0] = vecDirection[0];
-    vecVelocity[1] = vecDirection[1];
 
-    static Float:vecTarget[3];
-    xs_vec_add(vecOrigin, vecVelocity, vecTarget);
+    vecVelocity[0] = vecDirection[0] * flSpeed;
+    vecVelocity[1] = vecDirection[1] * flSpeed;
+
+    if (bIsFlying) {
+        vecVelocity[2] = vecDirection[2] * flSpeed;
+    }
 
     static Float:vecAngles[3];
     pev(pEntity, pev_angles, vecAngles);
     set_pev(pEntity, pev_ideal_yaw, vecAngles[1]);
 
-    if (pev(pEntity, pev_movetype) != MOVETYPE_FLY) {
+    if (!bIsFlying) {
         engfunc(EngFunc_WalkMove, pEntity, vecAngles[1], 0.5, WALKMOVE_NORMAL);
     }
 
@@ -234,7 +250,11 @@ stock bool:NPC_CanHit(pEntity, pEnemy, Float:flHitRange, const Float:vecOffset[3
     pev(pEnemy, pev_origin, vecTarget);
     xs_vec_add(vecTarget, vecOffset, vecTarget);
 
-    if (!NPC_IsInViewCone(pEntity, vecTarget, 5.0)) {
+    if (get_distance_f(vecOrigin, vecTarget) > flHitRange) {
+        return false;
+    }
+
+    if (!NPC_IsInViewCone(pEntity, vecTarget, 60.0)) {
         return false;
     }
 
@@ -244,9 +264,9 @@ stock bool:NPC_CanHit(pEntity, pEnemy, Float:flHitRange, const Float:vecOffset[3
     static Float:flFraction;
     get_tr2(pTrace, TR_flFraction, flFraction);
 
-    new bool:bResult = flFraction == 1.0 && get_distance_f(vecOrigin, vecTarget) <= flHitRange;
+    new bool:bResult = false;
 
-    if (!bResult) {
+    if (flFraction != 1.0) {
         if (get_tr2(pTrace, TR_pHit) == pEnemy) {
             get_tr2(pTrace, TR_vecEndPos, vecTarget);
             bResult = (get_distance_f(vecOrigin, vecTarget) <= flHitRange);
@@ -263,20 +283,20 @@ stock bool:NPC_IsValidEnemy(pEnemy, iTeam = 0, bool:allowMonsters = true) {
         return false;
     }
 
-    new enemyTeam = 0;
+    new iEnemyTeam = 0;
     if (IS_PLAYER(pEnemy)) {
         if (!is_user_alive(pEnemy)) {
             return false;
         }
 
-        enemyTeam = get_member(pEnemy, m_iTeam);
+        iEnemyTeam = get_member(pEnemy, m_iTeam);
     } else if (allowMonsters && UTIL_IsMonster(pEnemy)) {
-        enemyTeam = pev(pEnemy, pev_team);
+        iEnemyTeam = pev(pEnemy, pev_team);
     } else {
         return false;
     }
 
-    if (iTeam == enemyTeam) {
+    if (iTeam == iEnemyTeam) {
         return false;
     }
 
@@ -300,19 +320,19 @@ stock NPC_IsVisible(pEntity, const Float:vecTarget[3], pIgnoreEnt = 0) {
     ExecuteHamB(Ham_EyePosition, pEntity, vecOrigin);
     // pev(pEntity, pev_origin, vecOrigin);
 
-    new ignoreEntSolidType = SOLID_NOT;
+    new iIgnoreEntSolidType = SOLID_NOT;
     if (pIgnoreEnt) {
-        ignoreEntSolidType = pev(pIgnoreEnt, pev_solid);
+        iIgnoreEntSolidType = pev(pIgnoreEnt, pev_solid);
         set_pev(pIgnoreEnt, pev_solid, SOLID_NOT);
     }
 
-    new bool:isOpen = UTIL_IsOpen(vecOrigin, vecTarget, pEntity);
+    new bool:bIsOpen = UTIL_IsOpen(vecOrigin, vecTarget, pEntity);
 
     if (pIgnoreEnt) {
-        set_pev(pIgnoreEnt, pev_solid, ignoreEntSolidType);
+        set_pev(pIgnoreEnt, pev_solid, iIgnoreEntSolidType);
     }
 
-    return isOpen;
+    return bIsOpen;
 }
 
 stock NPC_GetEnemy(pEntity) {
@@ -337,9 +357,10 @@ stock bool:NPC_IsInViewCone(pEntity, const Float:vecTarget[3], Float:fMaxAngle) 
     pev(pEntity, pev_v_angle, vecForward);
     angle_vector(vecForward, ANGLEVECTOR_FORWARD, vecForward);
 
-    static Float:flAngle; flAngle = xs_vec_dot(vecDir, vecForward);
+    // static Float:flAngle; flAngle = xs_vec_dot(vecDir, vecForward);
+    static Float:flAngle; flAngle = xs_rad2deg(xs_acos((vecDir[0] * vecForward[0]) + (vecDir[1] * vecForward[1]), radian));
 
-    return flAngle < fMaxAngle;
+    return flAngle <= fMaxAngle;
 }
 
 stock Float:NPC_GetPathCost(pEntity, NavArea:newArea, NavArea:prevArea) {
@@ -456,18 +477,18 @@ stock NPC_MoveTo(pEntity, const Float:vecTarget[3]) {
     static Float:flGameTime; flGameTime = get_gametime();
     static Float:flMaxSpeed; pev(pEntity, pev_maxspeed, flMaxSpeed);
     static Float:flLastThink; pev(pEntity, pev_ltime, flLastThink);
-    static iMoveType; iMoveType = pev(pEntity, pev_movetype);
     static Float:flDelta; flDelta = flGameTime - flLastThink;
     static Float:flMaxAngle; flMaxAngle = 180.0 * floatmin(flDelta, 0.1);
     static bool:rgbLockAxis[3]; rgbLockAxis = bool:{true, false, true};
 
-    if (iMoveType == MOVETYPE_FLY) {
+    static iMoveType; iMoveType = pev(pEntity, pev_movetype);
+    if (iMoveType == MOVETYPE_FLY || iMoveType == MOVETYPE_NOCLIP) {
         rgbLockAxis[0] = false;
     }
 
     UTIL_TurnTo(pEntity, vecTarget, rgbLockAxis, flMaxAngle);
 
-    if (NPC_IsInViewCone(pEntity, vecTarget, 15.0)) {
+    if (NPC_IsInViewCone(pEntity, vecTarget, 45.0)) {
         static Float:vecOrigin[3];
         pev(pEntity, pev_origin, vecOrigin);
 

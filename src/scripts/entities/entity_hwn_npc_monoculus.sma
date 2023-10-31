@@ -165,20 +165,20 @@ public plugin_precache() {
     g_iCeHandler = CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/npc/monoculus.mdl",
-        .vMins = Float:{-48.0, -48.0, -48.0},
-        .vMaxs = Float:{48.0, 48.0, 48.0},
-        .bloodColor = 212
+        .vecMins = Float:{-48.0, -48.0, -48.0},
+        .vecMaxs = Float:{48.0, 48.0, 48.0},
+        .iBloodColor = 212
     );
 
     CE_RegisterHook(CEFunction_InitPhysics, ENTITY_NAME, "@Entity_InitPhysics");
     CE_RegisterHook(CEFunction_Restart, ENTITY_NAME, "@Entity_Restart");
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 
-    CE_RegisterHook(CEFunction_Spawn, PORTAL_ENTITY_NAME, "@Portal_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, PORTAL_ENTITY_NAME, "@Portal_Spawn");
 
     Hwn_Bosses_Register(ENTITY_NAME, "Monoculus");
 }
@@ -226,7 +226,7 @@ public plugin_end() {
     @Entity_ResetTarget(this);
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     new Float:flGameTime = get_gametime();
 
     CE_SetMember(this, m_flNextAttack, 0.0);
@@ -376,11 +376,10 @@ public plugin_end() {
 }
 
 @Entity_Think(this) {
-    static Float:flLastThink; pev(this, pev_ltime, flLastThink);
     static Float:flGameTime; flGameTime = get_gametime();
-    new Float:flNextAIThink = CE_GetMember(this, m_flNextAIThink);
-    new bool:bShouldUpdateAI = flNextAIThink <= flGameTime;
-    new iDeadFlag = pev(this, pev_deadflag);
+    static Float:flNextAIThink; flNextAIThink = CE_GetMember(this, m_flNextAIThink);
+    static bool:bShouldUpdateAI; bShouldUpdateAI = flNextAIThink <= flGameTime;
+    static iDeadFlag; iDeadFlag = pev(this, pev_deadflag);
 
     switch (iDeadFlag) {
         case DEAD_NO: {
@@ -748,7 +747,7 @@ Action:@Entity_GetAction(this) {
     CE_SetMember(this, m_iCharge, iCharge - 1);
 
     // @Entity_PushBack(this);
-    @Entity_SpawnRocket(this);
+    @Entity_SpawnedRocket(this);
     @Entity_EmitVoice(this, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.3);
 }
 
@@ -806,7 +805,7 @@ Action:@Entity_GetAction(this) {
     UTIL_Message_Dlight(vecOrigin, 48, {HWN_COLOR_PRIMARY}, 5, 32);
 }
 
-@Entity_SpawnRocket(this) {
+@Entity_SpawnedRocket(this) {
     static Float:vecDirection[3];
     UTIL_GetDirectionVector(this, vecDirection);
 

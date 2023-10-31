@@ -17,11 +17,11 @@ public plugin_init() {
 }
 
 public plugin_precache() {
-    CE_Register(ENTITY_NAME, .vMins = Float:{-48.0, -48.0, -48.0}, .vMaxs = Float:{48.0, 48.0, 48.0});
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_Register(ENTITY_NAME, .vecMins = Float:{-48.0, -48.0, -48.0}, .vecMaxs = Float:{48.0, 48.0, 48.0});
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     new Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);
     Hwn_Bosses_AddTarget(vecOrigin);

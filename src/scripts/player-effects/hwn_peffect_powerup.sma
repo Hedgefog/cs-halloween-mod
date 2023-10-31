@@ -82,8 +82,8 @@ public plugin_cfg() {
 }
 
 @Player_ProcessJump(pPlayer) {
-    new oldButton = pev(pPlayer, pev_oldbuttons);
-    if (oldButton & IN_JUMP) {
+    new iOldButton = pev(pPlayer, pev_oldbuttons);
+    if (iOldButton & IN_JUMP) {
         return;
     }
 

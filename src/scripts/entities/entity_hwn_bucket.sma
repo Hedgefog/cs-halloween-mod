@@ -113,26 +113,26 @@ public plugin_precache() {
     g_iCeHandler = CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/props/cauldron.mdl",
-        .vMins = Float:{-28.0, -28.0, 0.0},
-        .vMaxs = Float:{28.0, 28.0, 56.0},
-        .preset = CEPreset_Prop
+        .vecMins = Float:{-28.0, -28.0, 0.0},
+        .vecMaxs = Float:{28.0, 28.0, 56.0},
+        .iPreset = CEPreset_Prop
     );
 
     CE_Register(
         LIQUID_ENTITY_NAME,
         .szModel = "models/hwn/props/cauldron_liquid.mdl",
-        .vMins = Float:{-28.0, -28.0, 0.0},
-        .vMaxs = Float:{28.0, 28.0, 56.0},
-        .preset = CEPreset_Prop
+        .vecMins = Float:{-28.0, -28.0, 0.0},
+        .vecMaxs = Float:{28.0, 28.0, 56.0},
+        .iPreset = CEPreset_Prop
     );
 
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 
-    CE_RegisterHook(CEFunction_Spawn, LIQUID_ENTITY_NAME, "@Liquid_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, LIQUID_ENTITY_NAME, "@Liquid_Spawn");
 
     g_pCvarBucketHealth = register_cvar("hwn_bucket_health", "300");
     g_pCvarBucketCollectFlash = register_cvar("hwn_bucket_collect_flash", "1");
@@ -193,7 +193,7 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
     ArrayPushCell(g_irgBuckets, this);
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     new iTeam = pev(this, pev_team);
 
     set_pev(this, pev_solid, SOLID_BBOX);
@@ -271,7 +271,7 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
         CE_SetMember(this, m_flNextBoil, get_gametime() + BOIL_SOUND_DURATION);
     }
 
-    set_pev(this, pev_nextthink, flGameTime + Hwn_GetNpcUpdateRate());
+    set_pev(this, pev_nextthink, flGameTime + Hwn_GetUpdateRate());
 }
 
 bool:@Entity_CollectPoints(this) {

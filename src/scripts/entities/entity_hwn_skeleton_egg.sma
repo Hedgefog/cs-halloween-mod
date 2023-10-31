@@ -21,16 +21,16 @@ public plugin_init() {
 }
 
 public plugin_precache() {
-    CE_Register(ENTITY_NAME, .vMins = Float:{-12.0, -12.0, -16.0}, .vMaxs = Float:{12.0, 12.0, 16.0}, .preset = CEPreset_Prop);
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_Register(ENTITY_NAME, .vecMins = Float:{-12.0, -12.0, -16.0}, .vecMaxs = Float:{12.0, 12.0, 16.0}, .iPreset = CEPreset_Prop);
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 
-    CE_Register(ENTITY_NAME_BIG, .vMins = Float:{-12.0, -12.0, -32.0}, .vMaxs = Float:{12.0, 12.0, 32.0}, .preset = CEPreset_Prop);
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_BIG, "@Entity_Spawn");
+    CE_Register(ENTITY_NAME_BIG, .vecMins = Float:{-12.0, -12.0, -32.0}, .vecMaxs = Float:{12.0, 12.0, 32.0}, .iPreset = CEPreset_Prop);
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME_BIG, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME_BIG, "@Entity_Think");
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     CE_SetMember(this, m_bBig, CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_BIG));
     
     set_pev(this, pev_solid, SOLID_NOT);

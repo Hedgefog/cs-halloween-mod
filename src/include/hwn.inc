@@ -1,17 +1,20 @@
 /*
     7.0.0
         Additions and improvements:
-            Added Mystery Smoke iSpell
-            Added iSpell shop
-            Removed transparency for intangibility iSpell effect
-            Added status icon for Intangibility iSpell
+            Added Mystery Smoke spell
+            Added spell shop
+            Added champion versions of spooky pumpkins
+            Added player spell cast animation
+            Removed transparency for intangibility spell effect
+            Added status icon for Intangibility spell
             Increased Small Skeleton NPC hit range
-            Reworked Blink iSpell
-            Fireball iSpell can now push the owner and deals low damage
+            Reworked Blink spell
+            Fireball spell can now push the owner and deals low damage
             Monsters can now attack each other
             Added reward for collecting pumpkins
+            Added path finding based on navigation files
             Optimized client messages
-            Improved some effects
+            Improved visual effects
 
         Cvars:
             Added hwn_spellshop

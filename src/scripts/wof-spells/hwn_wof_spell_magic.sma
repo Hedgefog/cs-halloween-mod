@@ -5,7 +5,7 @@
 #include <hwn>
 #include <hwn_wof>
 
-#define PLUGIN "[Hwn] Magic Spell"
+#define PLUGIN "[Hwn] Magic WoF Spell"
 #define AUTHOR "Hedgehog Fog"
 
 public plugin_init() {

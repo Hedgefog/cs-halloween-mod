@@ -18,10 +18,10 @@ public plugin_init() {
 
 public plugin_precache() {
     CE_Register(ENTITY_NAME);
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     new Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);
 

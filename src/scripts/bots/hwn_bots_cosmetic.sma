@@ -44,6 +44,8 @@ public PlayerInventory_Fw_SlotSave(pPlayer, iSlot) {
             return PLUGIN_HANDLED;
         }
     }
+
+    return PLUGIN_CONTINUE;
 }
 
 @Player_GiveAllCosmetic(pPlayer) {

@@ -47,27 +47,27 @@ public plugin_precache() {
     CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/items/pumpkin_loot_v3.mdl",
-        .vMins = Float:{-12.0, -12.0, 0.0},
-        .vMaxs = Float:{12.0, 12.0, 24.0},
-        .fLifeTime = 10.0,
-        .fRespawnTime = HWN_ITEM_RESPAWN_TIME,
-        .preset = CEPreset_Item
+        .vecMins = Float:{-12.0, -12.0, 0.0},
+        .vecMaxs = Float:{12.0, 12.0, 24.0},
+        .flLifeTime = 10.0,
+        .flRespawnTime = HWN_ITEM_RESPAWN_TIME,
+        .iPreset = CEPreset_Item
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "@Entity_Pickup");
 
     CE_Register(
         ENTITY_NAME_BIG,
         .szModel = "models/hwn/items/pumpkin_loot_big_v2.mdl",
-        .vMins = Float:{-16.0, -16.0, 0.0},
-        .vMaxs = Float:{16.0, 16.0, 32.0},
-        .fLifeTime = 30.0,
-        .fRespawnTime = HWN_ITEM_RESPAWN_TIME,
-        .preset = CEPreset_Item
+        .vecMins = Float:{-16.0, -16.0, 0.0},
+        .vecMaxs = Float:{16.0, 16.0, 32.0},
+        .flLifeTime = 30.0,
+        .flRespawnTime = HWN_ITEM_RESPAWN_TIME,
+        .iPreset = CEPreset_Item
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_BIG, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME_BIG, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME_BIG, "@Entity_Pickup");
 }
 
@@ -77,7 +77,7 @@ public plugin_init() {
     g_pCvarPumpkinFlash = register_cvar("hwn_pumpkin_pickup_flash", "1");
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     set_pev(this, pev_rendermode, kRenderNormal);
     set_pev(this, pev_renderfx, kRenderFxGlowShell);
     set_pev(this, pev_renderamt, 4.0);

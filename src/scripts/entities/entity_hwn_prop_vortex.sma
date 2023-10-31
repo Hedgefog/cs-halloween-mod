@@ -23,15 +23,15 @@ public plugin_precache() {
     CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/props/vortex.mdl",
-        .vMins = Float:{-256.0, -256.0, -32.0},
-        .vMaxs = Float:{256.0, 256.0, 32.0},
-        .preset = CEPreset_Prop
+        .vecMins = Float:{-256.0, -256.0, -32.0},
+        .vecMaxs = Float:{256.0, 256.0, 32.0},
+        .iPreset = CEPreset_Prop
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     set_pev(this, pev_movetype, MOVETYPE_NOCLIP);
     set_pev(this, pev_solid, SOLID_NOT);
     set_pev(this, pev_framerate, 0.25);

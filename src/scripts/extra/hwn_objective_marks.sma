@@ -250,7 +250,7 @@ CalculateMark(pMark, pPlayer) {
     vector_to_angle(vecAngles, vecAngles);
     vecAngles[0] = -vecAngles[0];
 
-    // ANCHOR: Calculate new pTarget
+    // ANCHOR: Calculate new target
     static Float:vecForward[3];
     angle_vector(vecAngles, ANGLEVECTOR_FORWARD, vecForward);
 
@@ -298,7 +298,7 @@ CalculateMark(pMark, pPlayer) {
         }
     }
 
-    // ANCHOR: Get pTarget point
+    // ANCHOR: Get target point
     for (new i = 0; i < 3; ++i) {
         vecTarget[i] = (rgvecFrameEnd[TopLeft][i] + rgvecFrameEnd[BottomRight][i]) * 0.5;
     }

@@ -48,6 +48,14 @@ public FMHook_AddToFullPack_Post(es, e, pEntity, pHost, hostflags, player, pSet)
         return FMRES_IGNORED;
     }
 
+    if (pev(pTargetPlayer, pev_rendermode) != kRenderNormal) {
+        return FMRES_IGNORED;
+    }
+
+    if (pev(pTargetPlayer, pev_renderfx) != kRenderFxNone) {
+        return FMRES_IGNORED;
+    }
+
     if (pev(pTargetPlayer, pev_rendermode) == pev(pEntity, pev_rendermode) && pev(pTargetPlayer, pev_renderfx) == pev(pEntity, pev_renderfx)) {
       set_es(es, ES_RenderMode, kRenderNormal);
       set_es(es, ES_RenderFx, kRenderFxGlowShell);

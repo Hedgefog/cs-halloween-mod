@@ -74,7 +74,7 @@ public Hwn_Gamemode_Fw_Activated(iGamemode) {
         return;
     }
 
-    set_task(15.0, "Task_Event", 0);
+    set_task(15.0, "Task_Event", 0, _, _, "b");
 
     UpdateLighting();
 }

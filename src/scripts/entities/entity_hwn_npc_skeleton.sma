@@ -129,17 +129,17 @@ public plugin_precache() {
     g_iCeHandler = CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/npc/skeleton_v2.mdl",
-        .vMins = Float:{-12.0, -12.0, -32.0},
-        .vMaxs = Float:{12.0, 12.0, 32.0},
-        .fLifeTime = HWN_NPC_LIFE_TIME,
-        .fRespawnTime = HWN_NPC_RESPAWN_TIME,
-        .preset = CEPreset_NPC,
-        .bloodColor = 242
+        .vecMins = Float:{-12.0, -12.0, -32.0},
+        .vecMaxs = Float:{12.0, 12.0, 32.0},
+        .flLifeTime = HWN_NPC_LIFE_TIME,
+        .flRespawnTime = HWN_NPC_RESPAWN_TIME,
+        .iPreset = CEPreset_NPC,
+        .iBloodColor = 242
     );
 
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Restart, ENTITY_NAME, "@Entity_Restart");
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
@@ -148,17 +148,17 @@ public plugin_precache() {
     g_iCeHandlerSmall = CE_Register(
         ENTITY_NAME_SMALL,
         .szModel = "models/hwn/npc/skeleton_small_v3.mdl",
-        .vMins = Float:{-8.0, -8.0, -16.0},
-        .vMaxs = Float:{8.0, 8.0, 16.0},
-        .fLifeTime = HWN_NPC_LIFE_TIME,
-        .fRespawnTime = HWN_NPC_RESPAWN_TIME,
-        .preset = CEPreset_NPC,
-        .bloodColor = 242
+        .vecMins = Float:{-8.0, -8.0, -16.0},
+        .vecMaxs = Float:{8.0, 8.0, 16.0},
+        .flLifeTime = HWN_NPC_LIFE_TIME,
+        .flRespawnTime = HWN_NPC_RESPAWN_TIME,
+        .iPreset = CEPreset_NPC,
+        .iBloodColor = 242
     );
 
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME_SMALL, "@Entity_Init");
     CE_RegisterHook(CEFunction_Restart, ENTITY_NAME_SMALL, "@Entity_Restart");
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_SMALL, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME_SMALL, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME_SMALL, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME_SMALL, "@Entity_Kill");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME_SMALL, "@Entity_Killed");
@@ -173,7 +173,7 @@ public plugin_init() {
     g_pCvarUseAstar = register_cvar("hwn_npc_skeleton_use_astar", "1");
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
+/*--------------------------------[ Methods ]--------------------------------*/
 
 @Entity_Init(this) {
     CE_SetMember(this, m_pBuildPathTask, Invalid_NavBuildPathTask);
@@ -184,7 +184,7 @@ public plugin_init() {
     @Entity_ResetPath(this);
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     new Float:flGameTime = get_gametime();
 
     new bool:bSmall = CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_SMALL);
@@ -237,10 +237,10 @@ public plugin_init() {
 
         set_pev(this, pev_takedamage, DAMAGE_NO);
         set_pev(this, pev_deadflag, DEAD_DYING);
+        set_pev(this, pev_nextthink, flGameTime + 0.1);
 
         CE_SetMember(this, m_flNextAIThink, flGameTime + 0.1);
-        set_pev(this, pev_nextthink, flGameTime + 0.1);
-    
+
         // cancel first kill function to play duing animation
         return PLUGIN_HANDLED;
     }
@@ -253,7 +253,7 @@ public plugin_init() {
 
     new bool:bSmall = CE_GetMember(this, m_bSmall);
     if (!bSmall) {
-        @Entity_SpawnEggs(this);
+        @Entity_SpawnedEggs(this);
     }
 
     @Entity_DisappearEffect(this);
@@ -286,10 +286,10 @@ public plugin_init() {
 }
 
 @Entity_Think(this) {
-    new Float:flGameTime = get_gametime();
-    new Float:flNextAIThink = CE_GetMember(this, m_flNextAIThink);
-    new bool:bShouldUpdateAI = flNextAIThink <= flGameTime;
-    new iDeadFlag = pev(this, pev_deadflag);
+    static Float:flGameTime; flGameTime = get_gametime();
+    static Float:flNextAIThink; flNextAIThink = CE_GetMember(this, m_flNextAIThink);
+    static bool:bShouldUpdateAI; bShouldUpdateAI = flNextAIThink <= flGameTime;
+    static iDeadFlag; iDeadFlag = pev(this, pev_deadflag);
 
     switch (iDeadFlag) {
         case DEAD_NO: {
@@ -327,19 +327,14 @@ public plugin_init() {
 @Entity_AIThink(this) {
     new bool:bSmall = CE_GetMember(this, m_bSmall);
 
-    static Float:flLastThink;
-    pev(this, pev_ltime, flLastThink);
-
     static Float:flGameTime; flGameTime = get_gametime();
-    // new Float:flRate = Hwn_GetNpcUpdateRate();
-    // new Float:flDelta = flGameTime - flLastThink;
 
     if (pev(this, pev_takedamage) == DAMAGE_NO) {
         set_pev(this, pev_takedamage, DAMAGE_AIM);
     }
 
-    new Float:flHitRange = bSmall ? NPC_Small_HitRange : NPC_HitRange;
-    new Float:flHitDelay = bSmall ? NPC_Small_HitDelay : NPC_HitDelay;
+    static Float:flHitRange; flHitRange = bSmall ? NPC_Small_HitRange : NPC_HitRange;
+    static Float:flHitDelay; flHitDelay = bSmall ? NPC_Small_HitDelay : NPC_HitDelay;
 
     static Float:flReleaseHit; flReleaseHit = CE_GetMember(this, m_flReleaseHit);
     if (!flReleaseHit) {
@@ -613,7 +608,7 @@ Float:@Entity_GetPathCost(this, NavArea:newArea, NavArea:prevArea) {
     emit_sound(this, CHAN_BODY, g_szSndBreak, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
-@Entity_SpawnEggs(this) {
+@Entity_SpawnedEggs(this) {
     new Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);
 

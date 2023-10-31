@@ -24,18 +24,18 @@ public plugin_precache() {
     g_iCeHandler = CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/items/gift_v2.mdl",
-        .vMins = Float:{-16.0, -16.0, 0.0},
-        .vMaxs = Float:{16.0, 16.0, 32.0},
-        .fLifeTime = 120.0,
-        .ignoreRounds = true,
-        .preset = CEPreset_Item
+        .vecMins = Float:{-16.0, -16.0, 0.0},
+        .vecMaxs = Float:{16.0, 16.0, 32.0},
+        .flLifeTime = 120.0,
+        .bIgnoreRounds = true,
+        .iPreset = CEPreset_Item
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "@Entity_Pickup");
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     set_pev(this, pev_framerate, 1.0);
     set_pev(this, pev_renderfx, kRenderFxGlowShell);
     set_pev(this, pev_renderamt, 1.0);

@@ -40,16 +40,16 @@ public plugin_precache() {
     CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/props/monoculus_rocket.mdl",
-        .preset = CEPreset_Prop
+        .iPreset = CEPreset_Prop
     );
 
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
     CE_RegisterHook(CEFunction_Touch, ENTITY_NAME, "@Entity_Touch");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     set_pev(this, pev_solid, SOLID_TRIGGER);
     set_pev(this, pev_movetype, MOVETYPE_FLY);
     set_pev(this, pev_rendermode, kRenderNormal);

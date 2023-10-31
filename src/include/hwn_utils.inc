@@ -343,12 +343,12 @@ stock UTIL_FixedUnsigned16(const Float:flValue, const iScale) {
 }
 
 stock UTIL_SetPlayerTeamChange(pPlayer, bool: bValue) {
-    new currentValue = get_pdata_int(pPlayer, 125, 5);
+    new iCurrentValue = get_pdata_int(pPlayer, 125, 5);
 
     if (bValue) {
-        set_pdata_int(pPlayer, 125, currentValue &  ~(1<<8), 5);
+        set_pdata_int(pPlayer, 125, iCurrentValue &  ~(1<<8), 5);
     } else {
-        set_pdata_int(pPlayer, 125, currentValue | (1<<8), 5);
+        set_pdata_int(pPlayer, 125, iCurrentValue | (1<<8), 5);
     }
 }
 
@@ -387,9 +387,9 @@ stock bool:UTIL_FindPlaceToTeleport(pEntity, const Float:vecTarget[3], Float:vec
         { 1.0, 1.0, 1.0 }
     };
     
-    new directionsNum = sizeof(vecDirections);
+    new iDirectionsNum = sizeof(vecDirections);
 
-    for (new i = 0; i < directionsNum; ++i) {
+    for (new i = 0; i < iDirectionsNum; ++i) {
         static Float:vecNewTarget[3];
         xs_vec_copy(vecTarget, vecNewTarget);
 
@@ -418,10 +418,10 @@ stock bool:UTIL_FindPlaceToTeleport(pEntity, const Float:vecTarget[3], Float:vec
 stock bool:UTIL_IsOpenHull(const Float:vecOrigin[3], iHull, pIgnoreEnt = 0, iIgnoreFlags = DONT_IGNORE_MONSTERS) {
     new pTrace = create_tr2();
     engfunc(EngFunc_TraceHull, vecOrigin, vecOrigin, iIgnoreFlags, iHull, pIgnoreEnt, pTrace);
-    new bool:isVacant = !!get_tr2(pTrace, TR_InOpen);
+    new bool:bIsVacant = !!get_tr2(pTrace, TR_InOpen);
     free_tr2(pTrace);
 
-    return isVacant;
+    return bIsVacant;
 }
 
 stock UTIL_GetViewOrigin(pPlayer, Float:vecOut[3]) {
@@ -441,10 +441,10 @@ stock bool:UTIL_IsStuck(pEntity) {
 
     new pTrace = create_tr2();
     engfunc(EngFunc_TraceMonsterHull, pEntity, vecOrigin, vecOrigin, DONT_IGNORE_MONSTERS, pEntity, pTrace);
-    new bool:isStuck = !get_tr2(pTrace, TR_InOpen);
+    new bool:bIsStuck = !get_tr2(pTrace, TR_InOpen);
     free_tr2(pTrace);
 
-    return isStuck;
+    return bIsStuck;
 }
 
 stock UTIL_Message_StatusIcon(pPlayer, iStatus = 0, const szIcon[], const iColor[3]) {

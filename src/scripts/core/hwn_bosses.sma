@@ -241,7 +241,7 @@ public Command_AbortBoss(pPlayer, iLevel, iCId) {
     }
 }
 
-public @Boss_Remove(this) {
+@Boss_Remove(this) {
     if (g_pBoss != this) {
         return;
     }

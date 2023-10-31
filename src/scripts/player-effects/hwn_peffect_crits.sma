@@ -3,7 +3,7 @@
 #include <hwn>
 #include <hwn_crits>
 
-#define PLUGIN "[Hwn] Player Effect"
+#define PLUGIN "[Hwn] Crits Player Effect"
 #define VERSION HWN_VERSION
 #define AUTHOR "Hedgehog Fog"
 

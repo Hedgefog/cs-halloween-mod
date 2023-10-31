@@ -7,7 +7,7 @@
 #include <hwn>
 #include <hwn_utils>
 
-#define PLUGIN "[Hwn] Player Effect"
+#define PLUGIN "[Hwn] Intangibility Player Effect"
 #define VERSION HWN_VERSION
 #define AUTHOR "Hedgehog Fog"
 

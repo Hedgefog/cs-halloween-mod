@@ -48,7 +48,7 @@ new g_pCvarTeamPointsReward;
 public plugin_precache() {
     precache_sound(g_szSndPointCollected);
 
-    CE_RegisterHook(CEFunction_Spawn, BUCKET_ENTITY_CLASSNAME, "OnBucketSpawn");
+    CE_RegisterHook(CEFunction_Spawned, BUCKET_ENTITY_CLASSNAME, "OnBucketSpawn");
     CE_RegisterHook(CEFunction_Picked, LOOT_ENTITY_CLASSNAME, "OnLootPickup");
     CE_RegisterHook(CEFunction_Picked, BACKPACK_ENTITY_CLASSNAME, "OnBackpackPickup");
 

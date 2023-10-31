@@ -111,17 +111,17 @@ public plugin_precache() {
     g_iCeHandler = CE_Register(
         ENTITY_NAME,
         .szModel = "models/hwn/npc/spookypumpkin.mdl",
-        .vMins = Float:{-12.0, -12.0, 0.0},
-        .vMaxs = Float:{12.0, 12.0, 24.0},
-        .fLifeTime = HWN_NPC_LIFE_TIME,
-        .fRespawnTime = HWN_NPC_RESPAWN_TIME,
-        .preset = CEPreset_NPC,
-        .bloodColor = 103
+        .vecMins = Float:{-12.0, -12.0, 0.0},
+        .vecMaxs = Float:{12.0, 12.0, 24.0},
+        .flLifeTime = HWN_NPC_LIFE_TIME,
+        .flRespawnTime = HWN_NPC_RESPAWN_TIME,
+        .iPreset = CEPreset_NPC,
+        .iBloodColor = 103
     );
 
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Restart, ENTITY_NAME, "@Entity_Restart");
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
@@ -130,17 +130,17 @@ public plugin_precache() {
     g_iCeHandlerBig = CE_Register(
         ENTITY_NAME_BIG,
         .szModel = "models/hwn/npc/spookypumpkin_big.mdl",
-        .vMins = Float:{-16.0, -16.0, 0.0},
-        .vMaxs = Float:{16.0, 16.0, 32.0},
-        .fLifeTime = HWN_NPC_LIFE_TIME,
-        .fRespawnTime = HWN_NPC_RESPAWN_TIME,
-        .preset = CEPreset_NPC,
-        .bloodColor = 103
+        .vecMins = Float:{-16.0, -16.0, 0.0},
+        .vecMaxs = Float:{16.0, 16.0, 32.0},
+        .flLifeTime = HWN_NPC_LIFE_TIME,
+        .flRespawnTime = HWN_NPC_RESPAWN_TIME,
+        .iPreset = CEPreset_NPC,
+        .iBloodColor = 103
     );
 
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME_BIG, "@Entity_Init");
     CE_RegisterHook(CEFunction_Restart, ENTITY_NAME_BIG, "@Entity_Restart");
-    CE_RegisterHook(CEFunction_Spawn, ENTITY_NAME_BIG, "@Entity_Spawn");
+    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME_BIG, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME_BIG, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME_BIG, "@Entity_Kill");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME_BIG, "@Entity_Killed");
@@ -159,7 +159,7 @@ public plugin_init() {
     g_pCvarPumpkinMutateChance = register_cvar("hwn_pumpkin_mutate_chance", "20");
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
+/*--------------------------------[ Methods ]--------------------------------*/
 
 @Entity_Init(this) {
     CE_SetMember(this, m_pBuildPathTask, Invalid_NavBuildPathTask);
@@ -178,7 +178,7 @@ public plugin_init() {
     @Entity_ResetPath(this);
 }
 
-@Entity_Spawn(this) {
+@Entity_Spawned(this) {
     new Float:flGameTime = get_gametime();
 
     new bool:bBig = CE_GetHandlerByEntity(this) == g_iCeHandlerBig;
@@ -200,9 +200,7 @@ public plugin_init() {
     set_pev(this, pev_rendermode, kRenderNormal);
     set_pev(this, pev_renderfx, kRenderFxGlowShell);
     set_pev(this, pev_renderamt, 4.0);
-    
     set_pev(this, pev_rendercolor, g_rgflPumpkinTypeColor[iType]);
-
     set_pev(this, pev_health, bBig ? NPC_Big_Health : NPC_Health);
     set_pev(this, pev_takedamage, DAMAGE_AIM);
     set_pev(this, pev_view_ofs, Float:{0.0, 0.0, 12.0});
@@ -239,10 +237,10 @@ public plugin_init() {
 
         set_pev(this, pev_takedamage, DAMAGE_NO);
         set_pev(this, pev_deadflag, DEAD_DYING);
+        set_pev(this, pev_nextthink, flGameTime + 0.1);
 
         CE_SetMember(this, m_flNextAIThink, flGameTime + 0.1);
-        set_pev(this, pev_nextthink, flGameTime + 0.1);
-    
+
         // cancel first kill function to play duing animation
         return PLUGIN_HANDLED;
     }
@@ -320,10 +318,10 @@ public plugin_init() {
 }
 
 @Entity_Think(this) {
-    new Float:flGameTime = get_gametime();
-    new Float:flNextAIThink = CE_GetMember(this, m_flNextAIThink);
-    new bool:bShouldUpdateAI = flNextAIThink <= flGameTime;
-    new iDeadFlag = pev(this, pev_deadflag);
+    static Float:flGameTime; flGameTime = get_gametime();
+    static Float:flNextAIThink; flNextAIThink = CE_GetMember(this, m_flNextAIThink);
+    static bool:bShouldUpdateAI; bShouldUpdateAI = flNextAIThink <= flGameTime;
+    static iDeadFlag; iDeadFlag = pev(this, pev_deadflag);
 
     switch (iDeadFlag) {
         case DEAD_NO: {
@@ -359,14 +357,8 @@ public plugin_init() {
 }
 
 @Entity_AIThink(this) {
-    // new bool:bBig = CE_GetMember(this, m_bBig);
-
-    static Float:flLastThink;
-    pev(this, pev_ltime, flLastThink);
-
     static Float:flGameTime; flGameTime = get_gametime();
-    // new Float:flRate = Hwn_GetNpcUpdateRate();
-    // new Float:flDelta = flGameTime - flLastThink;
+    static Float:flLastThink; pev(this, pev_ltime, flLastThink);
 
     if (pev(this, pev_takedamage) == DAMAGE_NO) {
         set_pev(this, pev_takedamage, DAMAGE_AIM);
@@ -375,16 +367,10 @@ public plugin_init() {
     new Float:flHitRange = NPC_HitRange;
     new Float:flHitDelay = NPC_HitDelay;
 
-    static Float:flReleaseJump; flReleaseJump = CE_GetMember(this, m_flReleaseJump);
-    if (flReleaseJump && flReleaseJump <= flGameTime) {
-        @Entity_Jump(this);
-        CE_SetMember(this, m_flReleaseJump, 0.0);
-    }
-
     static Float:flReleaseHit; flReleaseHit = CE_GetMember(this, m_flReleaseHit);
     if (!flReleaseHit) {
         static Float:flNextAttack; flNextAttack = CE_GetMember(this, m_flNextAttack);
-        if (flNextAttack <= get_gametime()) {
+        if (flNextAttack <= flGameTime) {
             static pEnemy; pEnemy = NPC_GetEnemy(this);
             if (pEnemy && NPC_CanHit(this, pEnemy, flHitRange, NPC_TargetHitOffset)) {
                 CE_SetMember(this, m_flReleaseHit, flGameTime + flHitDelay);
@@ -413,6 +399,12 @@ public plugin_init() {
 
     static Float:vecVelocity[3];
     pev(this, pev_velocity, vecVelocity);
+
+    static Float:flReleaseJump; flReleaseJump = CE_GetMember(this, m_flReleaseJump);
+    if (flReleaseJump && flReleaseJump <= flGameTime) {
+        @Entity_Jump(this);
+        CE_SetMember(this, m_flReleaseJump, 0.0);
+    }
 
     if (xs_vec_len(vecVelocity) > 50.0) {
         static Float:flNextLaugh; flNextLaugh = CE_GetMember(this, m_flNextLaugh);
