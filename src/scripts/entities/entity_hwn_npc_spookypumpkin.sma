@@ -431,15 +431,17 @@ bool:@Entity_Jump(this) {
 }
 
 @Entity_UpdateGoal(this) {
-    new pEnemy = pev(this, pev_enemy);
+    new pEnemy = NPC_GetEnemy(this);
 
     if (@Entity_UpdateEnemy(this, NPC_ViewRange, 0.0)) {
         pEnemy = pev(this, pev_enemy);
     }
 
-    static Float:vecGoal[3];
-    pev(pEnemy, pev_origin, vecGoal);
-    CE_SetMemberVec(this, m_vecGoal, vecGoal);
+    if (pEnemy) {
+        static Float:vecGoal[3];
+        pev(pEnemy, pev_origin, vecGoal);
+        CE_SetMemberVec(this, m_vecGoal, vecGoal);
+    }
 }
 
 @Entity_UpdateEnemy(this, Float:flMaxDistance, Float:flMinPriority) {

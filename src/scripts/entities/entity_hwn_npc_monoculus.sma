@@ -521,20 +521,22 @@ public plugin_end() {
 }
 
 @Entity_UpdateGoal(this) {
-    new pEnemy = pev(this, pev_enemy);
+    new pEnemy = NPC_GetEnemy(this);
 
     if (@Entity_UpdateEnemy(this, NPC_ViewRange, 0.0)) {
         pEnemy = pev(this, pev_enemy);
     }
 
-    static Float:vecMins[3];
-    pev(pEnemy, pev_mins, vecMins);
+    if (pEnemy) {
+        static Float:vecMins[3];
+        pev(pEnemy, pev_mins, vecMins);
 
-    static Float:vecGoal[3];
-    pev(pEnemy, pev_origin, vecGoal);
-    vecGoal[2] += vecMins[2];
+        static Float:vecGoal[3];
+        pev(pEnemy, pev_origin, vecGoal);
+        vecGoal[2] += vecMins[2];
 
-    CE_SetMemberVec(this, m_vecGoal, vecGoal);
+        CE_SetMemberVec(this, m_vecGoal, vecGoal);
+    }
 }
 
 @Entity_UpdateEnemy(this, Float:flMaxDistance, Float:flMinPriority) {
