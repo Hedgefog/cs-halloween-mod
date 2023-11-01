@@ -150,7 +150,6 @@ public plugin_end() {
     while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EffectRadius)) > 0) {
         if (@SpellBall_IsValidVictim(this, pTarget)) {
             ArrayPushCell(irgpVictims, pTarget);
-            log_amx("Add %d to victims", pTarget);
         }
     }
 }
