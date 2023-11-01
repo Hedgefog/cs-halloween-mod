@@ -2125,7 +2125,6 @@
 }
 {
 "classname" "hwn_skeleton_egg"
-"model" "models/hostage.mdl"
 "body" "0"
 "skin" "0"
 "sequence" "27"
