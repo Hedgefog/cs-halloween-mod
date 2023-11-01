@@ -19,12 +19,6 @@
 #define PORTAL_ENTITY_NAME "hwn_monoculus_portal"
 #define ROCKET_ENTITY_NAME "hwn_monoculus_rocket"
 
-#define MONOCULUS_ROCKET_SPEED 720.0
-#define MONOCULUS_PUSHBACK_SPEED 128.0
-#define MONOCULUS_MIN_HEIGHT 128.0
-#define MONOCULUS_MAX_HEIGHT 256.0
-#define MONOCULUS_SPAWN_ROCKET_DISTANCE 80.0
-
 #define m_flReleaseHit "flReleaseHit"
 #define m_flTargetArrivalTime "flTargetArrivalTime"
 #define m_flNextAIThink "flNextAIThink"
@@ -40,7 +34,7 @@
 #define m_flDamageCounter "flDamageCounter"
 #define m_flNextTeleportation "flNextTeleportation"
 #define m_flReleaseTeleportion "flReleaseTeleportion"
-// #define m_flReleasePushBack "flReleasePushBack"
+#define m_flReleasePushBack "flReleasePushBack"
 #define m_iCharge "iCharge"
 #define m_vecTarget "vecTarget"
 #define m_vecGoal "vecGoal"
@@ -105,16 +99,16 @@ new const g_szSndDeath[] = "hwn/npc/monoculus/monoculus_died.wav";
 new const g_szSndMoved[] = "hwn/npc/monoculus/monoculus_moved.wav";
 
 new const g_rgActions[Action][NPC_Action] = {
-    {Sequence_Idle, Sequence_Idle, 0.0},
-    {Sequence_Stunned, Sequence_Stunned, 4.5},
-    {Sequence_Attack1, Sequence_Attack1, 1.0},
-    {Sequence_Attack2, Sequence_Attack3, 2.0},
-    {Sequence_Spawn, Sequence_Spawn, 4.5},
-    {Sequence_Laugh, Sequence_Laugh, 1.3},
-    {Sequence_TeleportIn, Sequence_TeleportIn, 1.0},
-    {Sequence_TeleportOut, Sequence_TeleportOut, 1.0},
-    {Sequence_Death, Sequence_Death, 8.36},
-    {Sequence_LookAround1, Sequence_LookAround3, 1.0}
+    { Sequence_Idle, Sequence_Idle, 0.0 },
+    { Sequence_Stunned, Sequence_Stunned, 4.5 },
+    { Sequence_Attack1, Sequence_Attack1, 1.0 },
+    { Sequence_Attack2, Sequence_Attack3, 2.0 },
+    { Sequence_Spawn, Sequence_Spawn, 4.5 },
+    { Sequence_Laugh, Sequence_Laugh, 1.3 },
+    { Sequence_TeleportIn, Sequence_TeleportIn, 1.0 },
+    { Sequence_TeleportOut, Sequence_TeleportOut, 1.0 },
+    { Sequence_Death, Sequence_Death, 8.36 },
+    { Sequence_LookAround1, Sequence_LookAround3, 1.0}
 };
 
 const Float:NPC_Health = 8000.0;
@@ -124,6 +118,11 @@ const Float:NPC_ViewRange = 512.0;
 const Float:NPC_FindRange = 2048.0;
 const Float:NPC_HitRange = 3072.0;
 const Float:NPC_HitDelay = 0.33;
+const Float:NPC_RocketSpeed = 720.0;
+const Float:NPC_PushBackSpeed = 64.0;
+const Float:NPC_MinFloatHeight = 128.0;
+const Float:NPC_MaxFloatHeight = 256.0;
+const Float:NPC_SpawnRocketDistance = 80.0;
 
 new g_iSmokeModelIndex;
 
@@ -246,7 +245,7 @@ public plugin_end() {
     CE_SetMember(this, m_flReleaseTeleportion, 0.0);
     CE_SetMember(this, m_flReleaseAngry, 0.0);
     CE_SetMember(this, m_flReleaseStun, 0.0);
-    // CE_SetMember(this, m_flReleasePushBack, 0.0);
+    CE_SetMember(this, m_flReleasePushBack, 0.0);
     CE_SetMember(this, m_iCharge, 0);
     CE_SetMember(this, m_flDamageCounter, 0.0);
     CE_SetMember(this, m_flLastDamage, 0.0);
@@ -397,7 +396,8 @@ public plugin_end() {
                 @Entity_MoveTo(this, vecTarget);
             }
 
-            @Entity_Float(this);
+            @Entity_PushBackThink(this);
+            @Entity_FloatThink(this);
         }
         case DEAD_DYING: {
             CE_Kill(this, CE_GetMember(this, m_pKiller));
@@ -668,17 +668,28 @@ Action:@Entity_GetAction(this) {
     CE_SetMember(this, m_flReleaseAngry, get_gametime() + get_pcvar_float(g_pCvarAngryTime));
 }
 
-@Entity_Float(this) {
-    static Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
+@Entity_PushBackThink(this) {
+    static Float:flReleasePushBack; flReleasePushBack = CE_GetMember(this, m_flReleasePushBack);
+    if (!flReleasePushBack) return;
+    if (flReleasePushBack > get_gametime()) return;
 
-    new Float:flDistanceToFloor = UTIL_GetDistanceToFloor(this, vecOrigin);
-    if (flDistanceToFloor == -1.0) {
-        return;
-    }
+    static Float:vecForce[3]; UTIL_GetDirectionVector(this, vecForce, -NPC_PushBackSpeed);
 
-    new Float:flHeight = CE_GetMember(this, m_flHeight);
-    new iDirection = (flDistanceToFloor > flHeight) ? -1 : 1;
+    static Float:vecVelocity[3]; pev(this, pev_velocity, vecVelocity);
+    xs_vec_add(vecVelocity, vecForce, vecVelocity);
+    set_pev(this, pev_velocity, vecVelocity);
+
+    CE_SetMember(this, m_flReleasePushBack, 0.0);
+}
+
+@Entity_FloatThink(this) {
+    static Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
+
+    static Float:flDistanceToFloor; flDistanceToFloor = UTIL_GetDistanceToFloor(this, vecOrigin);
+    if (flDistanceToFloor == -1.0) return;
+
+    static Float:flHeight; flHeight = CE_GetMember(this, m_flHeight);
+    static iDirection; iDirection = (flDistanceToFloor > flHeight) ? -1 : 1;
 
     static Float:vecVelocity[3];
     pev(this, pev_velocity, vecVelocity);
@@ -689,7 +700,7 @@ Action:@Entity_GetAction(this) {
 @Entity_UpdateHeight(this) {
     new pEnemy = NPC_GetEnemy(this);
 
-    new Float:flHeight = random_float(MONOCULUS_MIN_HEIGHT, MONOCULUS_MAX_HEIGHT);
+    new Float:flHeight = random_float(NPC_MinFloatHeight, NPC_MaxFloatHeight);
 
     if (pEnemy) {
         static Float:vecOrigin[3];
@@ -719,8 +730,8 @@ Action:@Entity_GetAction(this) {
     }
     
     CE_SetMember(this, m_iCharge, iCharge - 1);
+    CE_SetMember(this, m_flReleasePushBack, get_gametime() + 0.25);
 
-    // @Entity_PushBack(this);
     @Entity_SpawnedRocket(this);
     @Entity_EmitVoice(this, g_szSndAttack[random(sizeof(g_szSndAttack))], 0.3);
 }
@@ -785,7 +796,7 @@ Action:@Entity_GetAction(this) {
 
     static Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);
-    xs_vec_add_scaled(vecOrigin, vecDirection, MONOCULUS_SPAWN_ROCKET_DISTANCE, vecOrigin);
+    xs_vec_add_scaled(vecOrigin, vecDirection, NPC_SpawnRocketDistance, vecOrigin);
 
     new pRocket = CE_Create(ROCKET_ENTITY_NAME, vecOrigin);
     if (!pRocket) {
@@ -799,7 +810,7 @@ Action:@Entity_GetAction(this) {
     set_pev(pRocket, pev_angles, vecAngles);
 
     static Float:vecVelocity[3];
-    xs_vec_mul_scalar(vecDirection, MONOCULUS_ROCKET_SPEED, vecVelocity);
+    xs_vec_mul_scalar(vecDirection, NPC_RocketSpeed, vecVelocity);
     set_pev(pRocket, pev_velocity, vecVelocity);
 
     dllfunc(DLLFunc_Spawn, pRocket);

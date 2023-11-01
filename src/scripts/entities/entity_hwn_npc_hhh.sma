@@ -550,13 +550,11 @@ Action:@Entity_GetAction(this) {
                 iAction = Action_Attack;
             }
 
-            if (pev(this, pev_flags) & FL_ONGROUND) {
-                static Float:vecVelocity[3];
-                pev(this, pev_velocity, vecVelocity);
+            static Float:vecVelocity[3];
+            pev(this, pev_velocity, vecVelocity);
 
-                if (xs_vec_len(vecVelocity) > 10.0) {
-                    iAction = iAction == Action_Attack ? Action_RunAttack : Action_Run;
-                }
+            if (xs_vec_len_2d(vecVelocity) > 10.0) {
+                iAction = iAction == Action_Attack ? Action_RunAttack : Action_Run;
             }
         }
         case DEAD_DYING: {
