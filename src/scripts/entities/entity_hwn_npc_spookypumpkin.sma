@@ -19,6 +19,7 @@
 #define ENTITY_NAME "hwn_npc_spookypumpkin"
 #define ENTITY_NAME_BIG "hwn_npc_spookypumpkin_big"
 
+#define m_flDamage "flDamage"
 #define m_irgPath "irgPath"
 #define m_vecGoal "vecGoal"
 #define m_vecTarget "vecTarget"
@@ -66,7 +67,8 @@ const Float:NPC_Speed = 200.0; // for jump velocity
 const Float:NPC_Damage = 20.0;
 const Float:NPC_HitRange = 48.0;
 const Float:NPC_HitDelay = 0.5;
-const Float:NPC_ViewRange = 1024.0;
+const Float:NPC_ViewRange = 512.0;
+const Float:NPC_FindRange = 2048.0;
 const Float:NPC_PathSearchDelay = 5.0;
 const Float:NPC_TargetUpdateRate = 1.0;
 
@@ -74,8 +76,6 @@ const Float:NPC_Big_Health = 200.0;
 const Float:NPC_Big_Damage = 40.0;
 const Float:NPC_JumpVelocity = 160.0;
 const Float:NPC_AttackJumpVelocity = 256.0;
-
-new const Float:NPC_TargetHitOffset[3] = {0.0, 0.0, 16.0};
 
 new const g_szSndIdleList[][] = {
     "hwn/npc/spookypumpkin/sp_laugh01.wav",
@@ -185,6 +185,7 @@ public plugin_init() {
     new iType = CE_GetMember(this, m_iType);
 
     CE_SetMember(this, m_bBig, bBig);
+    CE_SetMember(this, m_flDamage, bBig ? NPC_Big_Damage : NPC_Damage);
     CE_SetMember(this, m_flNextAttack, 0.0);
     CE_SetMember(this, m_flReleaseHit, 0.0);
     CE_SetMember(this, m_flNextAIThink, flGameTime);
@@ -205,7 +206,6 @@ public plugin_init() {
     set_pev(this, pev_takedamage, DAMAGE_AIM);
     set_pev(this, pev_view_ofs, Float:{0.0, 0.0, 12.0});
     set_pev(this, pev_maxspeed, NPC_Speed);
-    set_pev(this, pev_dmg, bBig ? NPC_Big_Damage : NPC_Damage);
     set_pev(this, pev_enemy, 0);
 
     engfunc(EngFunc_DropToFloor, this);
@@ -268,12 +268,12 @@ public plugin_init() {
 
     static Float:flSpeed; pev(this, pev_maxspeed, flSpeed);
     static Float:flHealth; pev(this, pev_health, flHealth);
-    static Float:flDamage; pev(this, pev_dmg, flDamage);
+    static Float:flDamage; flDamage = CE_GetMember(this, m_flDamage);
 
     switch (iType) {
         case Hwn_PumpkinType_Crits: {
             new Float:flDamageMultiplier = get_cvar_float("hwn_crits_damage_multiplier");
-            set_pev(this, pev_dmg, flDamage * flDamageMultiplier);
+            CE_SetMember(this, m_flDamage, flDamage * flDamageMultiplier);
         }
         case Hwn_PumpkinType_Equipment: {
             set_pev(this, pev_maxspeed, flSpeed * 1.5);
@@ -289,7 +289,7 @@ public plugin_init() {
 
             set_pev(this, pev_maxspeed, flSpeed + (iSize * 0.375));
             set_pev(this, pev_health, flHealth + (iSize * 10));
-            set_pev(this, pev_dmg, flDamage + (iSize * 5));
+            CE_SetMember(this, m_flDamage, flDamage + (iSize * 5));
         }
     }
 }
@@ -359,36 +359,22 @@ public plugin_init() {
 @Entity_AIThink(this) {
     static Float:flGameTime; flGameTime = get_gametime();
     static Float:flLastThink; pev(this, pev_ltime, flLastThink);
-
-    if (pev(this, pev_takedamage) == DAMAGE_NO) {
-        set_pev(this, pev_takedamage, DAMAGE_AIM);
-    }
-
-    new Float:flHitRange = NPC_HitRange;
-    new Float:flHitDelay = NPC_HitDelay;
+    static Float:flHitRange; flHitRange = NPC_HitRange;
+    static Float:flHitDelay; flHitDelay = NPC_HitDelay;
 
     static Float:flReleaseHit; flReleaseHit = CE_GetMember(this, m_flReleaseHit);
     if (!flReleaseHit) {
         static Float:flNextAttack; flNextAttack = CE_GetMember(this, m_flNextAttack);
         if (flNextAttack <= flGameTime) {
             static pEnemy; pEnemy = NPC_GetEnemy(this);
-            if (pEnemy && NPC_CanHit(this, pEnemy, flHitRange, NPC_TargetHitOffset)) {
+            if (pEnemy && NPC_CanHit(this, pEnemy, flHitRange)) {
+                @Entity_StartJump(this);
                 CE_SetMember(this, m_flReleaseHit, flGameTime + flHitDelay);
-                @Entity_PlayAction(this, Action_Attack, true);
-                @Entity_StartJump(this, 0.0);
-
-                static Float:vecTargetVelocity[3];
-                pev(pEnemy, pev_velocity, vecTargetVelocity);
-                if (xs_vec_len(vecTargetVelocity) < flHitRange) {
-                    NPC_StopMovement(this);
-                }
             }
         }
     } else if (flReleaseHit <= flGameTime) {
-        static Float:flDamage;
-        pev(this, pev_dmg, flDamage);
-
-        NPC_Hit(this, NPC_Damage, flHitRange, NPC_TargetHitOffset);
+        static Float:flDamage; flDamage = CE_GetMember(this, m_flDamage);
+        NPC_Hit(this, flDamage, flHitRange);
 
         CE_SetMember(this, m_flReleaseHit, 0.0);
         CE_SetMember(this, m_flNextAttack, flGameTime + 0.5);
@@ -397,14 +383,14 @@ public plugin_init() {
     @Entity_UpdateGoal(this);
     @Entity_UpdateTarget(this);
 
-    static Float:vecVelocity[3];
-    pev(this, pev_velocity, vecVelocity);
-
     static Float:flReleaseJump; flReleaseJump = CE_GetMember(this, m_flReleaseJump);
     if (flReleaseJump && flReleaseJump <= flGameTime) {
         @Entity_Jump(this);
         CE_SetMember(this, m_flReleaseJump, 0.0);
     }
+
+    static Float:vecVelocity[3];
+    pev(this, pev_velocity, vecVelocity);
 
     if (xs_vec_len(vecVelocity) > 50.0) {
         static Float:flNextLaugh; flNextLaugh = CE_GetMember(this, m_flNextLaugh);
@@ -427,18 +413,11 @@ public plugin_init() {
     UTIL_TurnTo(this, vecTarget, bool:{true, false, true}, flMaxAngle);
 
     if (NPC_IsInViewCone(this, vecTarget, 15.0)) {
-        static Float:vecOrigin[3];
-        pev(this, pev_origin, vecOrigin);
-
-        if (get_distance_f(vecOrigin, vecTarget) > 1.0) {
-            static Float:vecOrigin[3];
-            pev(this, pev_origin, vecOrigin);
-            @Entity_StartJump(this, g_rgActions[Action_JumpStart][NPC_Action_Time]);
-        }
+        @Entity_StartJump(this);
     }
 }
 
-bool:@Entity_StartJump(this, Float:flJumpDelay) {
+bool:@Entity_StartJump(this) {
     if (~pev(this, pev_flags) & FL_ONGROUND) {
         return false;
     }
@@ -449,7 +428,7 @@ bool:@Entity_StartJump(this, Float:flJumpDelay) {
     }
 
     static Float:flGameTime; flGameTime = get_gametime();
-    CE_SetMember(this, m_flReleaseJump, flGameTime + flJumpDelay);
+    CE_SetMember(this, m_flReleaseJump, flGameTime + g_rgActions[Action_JumpStart][NPC_Action_Time]);
     @Entity_PlayAction(this, Action_JumpStart, false);
 
     return true;
@@ -461,7 +440,6 @@ bool:@Entity_Jump(this) {
     }
 
     static Float:flReleaseHit; flReleaseHit = CE_GetMember(this, m_flReleaseHit);
-
     static Float:flMaxSpeed; pev(this, pev_maxspeed, flMaxSpeed);
 
     static Float:vecVelocity[3];
@@ -477,10 +455,22 @@ bool:@Entity_Jump(this) {
     emit_sound(this, CHAN_VOICE, szSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
+@Entity_UpdateEnemy(this) {
+    if (NPC_UpdateEnemy(this, NPC_ViewRange, 0.0, false, true, true)) {
+        return true;
+    }
+
+    if (NPC_UpdateEnemy(this, NPC_FindRange, 0.0, false, false, false)) {
+        return true;
+    }
+
+    return false;
+}
+
 @Entity_UpdateGoal(this) {
     new pEnemy = NPC_GetEnemy(this);
 
-    if (@Entity_UpdateEnemy(this, NPC_ViewRange, 0.0)) {
+    if (@Entity_UpdateEnemy(this)) {
         pEnemy = pev(this, pev_enemy);
     }
 
@@ -489,10 +479,6 @@ bool:@Entity_Jump(this) {
         pev(pEnemy, pev_origin, vecGoal);
         CE_SetMemberVec(this, m_vecGoal, vecGoal);
     }
-}
-
-@Entity_UpdateEnemy(this, Float:flMaxDistance, Float:flMinPriority) {
-    return NPC_UpdateEnemy(this, flMaxDistance, flMinPriority);
 }
 
 @Entity_UpdateTarget(this) {
@@ -571,7 +557,21 @@ bool:@Entity_PlayAction(this, Action:iAction, bool:bSupercede) {
 }
 
 Action:@Entity_GetAction(this) {
-    return Action_Idle;
+    new Action:iAction = Action_Idle;
+
+    new iDeadFlag = pev(this, pev_deadflag);
+
+    switch (iDeadFlag) {
+        case DEAD_NO: {
+            if (CE_GetMember(this, m_flReleaseHit) > 0.0) {
+                iAction = Action_Attack;
+            } if (~pev(this, pev_flags) & FL_ONGROUND) {
+                iAction = Action_JumpFloat;
+            }
+        }
+    }
+
+    return iAction;
 }
 
 @Entity_FindPath(this, Float:vecTarget[3]) {

@@ -27,14 +27,14 @@ new const g_szSndDetonate[] = "hwn/spells/spell_teleport.wav";
 
 new g_szSprSpellBall[] = "sprites/enter1.spr";
 
-new g_hSpell;
+new g_iSpellHandler;
 
 public plugin_precache() {
     precache_model(g_szSprSpellBall);
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
 
-    g_hSpell = Hwn_Spell_Register("Blink", Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage, "Cast");
+    g_iSpellHandler = Hwn_Spell_Register("Blink", Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage, "Cast");
 }
 
 public plugin_init() {
@@ -50,13 +50,13 @@ public plugin_init() {
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public Cast(pPlayer) {
-    new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
+    new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, g_iSpellHandler, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
 
     if (!pEntity) {
         return PLUGIN_HANDLED;
     }
 
-    CE_SetMember(pEntity, "iSpell", g_hSpell);
+    CE_SetMember(pEntity, "iSpell", g_iSpellHandler);
 
     emit_sound(pPlayer, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
@@ -70,7 +70,7 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 
     new pTarget = -1;
     while ((pTarget = engfunc(EngFunc_FindEntityByString, pTarget, "classname", SPELLBALL_ENTITY_CLASSNAME)) != 0) {
-        if (CE_GetMember(pTarget, "iSpell") != g_hSpell) {
+        if (CE_GetMember(pTarget, "iSpell") != g_iSpellHandler) {
             continue;
         }
 
@@ -81,7 +81,7 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 @SpellBall_Kill(this) {
-    if (CE_GetMember(this, "iSpell") != g_hSpell) {
+    if (CE_GetMember(this, "iSpell") != g_iSpellHandler) {
         return;
     }
 
@@ -132,7 +132,7 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 }
 
 @SpellBall_Touch(this, pToucher) {
-    if (CE_GetMember(this, "iSpell") != g_hSpell) {
+    if (CE_GetMember(this, "iSpell") != g_iSpellHandler) {
         return;
     }
 
@@ -144,7 +144,7 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 }
 
 @SpellBall_Think(this) {
-    if (CE_GetMember(this, "iSpell") != g_hSpell) {
+    if (CE_GetMember(this, "iSpell") != g_iSpellHandler) {
         return;
     }
 

@@ -44,7 +44,7 @@ public plugin_init() {
 }
 
 public OnCast(pPlayer) {
-    new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
+    new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, g_iSpell, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
     if (!pEntity) {
         return PLUGIN_HANDLED;
     }

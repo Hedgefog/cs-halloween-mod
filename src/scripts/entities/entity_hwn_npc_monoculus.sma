@@ -120,11 +120,10 @@ new const g_rgActions[Action][NPC_Action] = {
 const Float:NPC_Health = 8000.0;
 const Float:NPC_HealthPerLevel = 3000.0;
 const Float:NPC_Speed = 16.0;
-const Float:NPC_ViewRange = 3072.0;
+const Float:NPC_ViewRange = 512.0;
+const Float:NPC_FindRange = 2048.0;
 const Float:NPC_HitRange = 3072.0;
 const Float:NPC_HitDelay = 0.33;
-
-new const Float:NPC_TargetHitOffset[3] = {0.0, 0.0, 0.0};
 
 new g_iSmokeModelIndex;
 
@@ -167,6 +166,7 @@ public plugin_precache() {
         .szModel = "models/hwn/npc/monoculus.mdl",
         .vecMins = Float:{-48.0, -48.0, -48.0},
         .vecMaxs = Float:{48.0, 48.0, 48.0},
+        .iPreset = CEPreset_NPC,
         .iBloodColor = 212
     );
 
@@ -328,6 +328,8 @@ public plugin_end() {
     set_pev(this, pev_gravity, 0.01);
     set_pev(this, pev_fixangle, 1);
     set_pev(this, pev_friction, 0.25);
+
+    return PLUGIN_HANDLED;
 }
 
 @Entity_TakeDamage(this, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
@@ -361,7 +363,7 @@ public plugin_end() {
         static Float:vecTarget[3];
         pev(pAttacker, pev_origin, vecTarget);
 
-        if (get_distance_f(vecOrigin, vecTarget) <= NPC_HitRange && NPC_IsVisible(this, vecTarget)) {
+        if (get_distance_f(vecOrigin, vecTarget) <= NPC_ViewRange && NPC_IsVisible(this, vecTarget)) {
             if (random(100) < 10) {
                 set_pev(this, pev_enemy, pAttacker);
             }
@@ -457,7 +459,7 @@ public plugin_end() {
         static Float:flNextAttack; flNextAttack = CE_GetMember(this, m_flNextAttack);
         if (flNextAttack <= flGameTime && CE_GetMember(this, m_flNextAction) <= flGameTime) {
             static pEnemy; pEnemy = NPC_GetEnemy(this);
-            if (pEnemy && NPC_CanHit(this, pEnemy, flHitRange, NPC_TargetHitOffset)) {
+            if (pEnemy && NPC_CanHit(this, pEnemy, flHitRange)) {
                 static Float:vecTarget[3];
                 pev(pEnemy, pev_origin, vecTarget);
 
@@ -475,7 +477,6 @@ public plugin_end() {
         }
     } else {
         @Entity_PlayAction(this, Action_LookAround, false);
-        @Entity_UpdateEnemy(this, NPC_HitRange, 0.0);
     }
 
     @Entity_UpdateGoal(this);
@@ -524,10 +525,22 @@ public plugin_end() {
     emit_sound(this, CHAN_VOICE, szSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
+@Entity_UpdateEnemy(this) {
+    if (NPC_UpdateEnemy(this, NPC_ViewRange, 0.0, true, false, true)) {
+        return true;
+    }
+
+    if (NPC_UpdateEnemy(this, NPC_FindRange, 0.0, true, false, false)) {
+        return true;
+    }
+
+    return false;
+}
+
 @Entity_UpdateGoal(this) {
     new pEnemy = NPC_GetEnemy(this);
 
-    if (@Entity_UpdateEnemy(this, NPC_ViewRange, 0.0)) {
+    if (@Entity_UpdateEnemy(this)) {
         pEnemy = pev(this, pev_enemy);
     }
 
@@ -541,45 +554,6 @@ public plugin_end() {
 
         CE_SetMemberVec(this, m_vecGoal, vecGoal);
     }
-}
-
-@Entity_UpdateEnemy(this, Float:flMaxDistance, Float:flMinPriority) {
-    new pEnemy = pev(this, pev_enemy);
-    if (!NPC_IsValidEnemy(pEnemy)) {
-        set_pev(this, pev_enemy, 0);
-    }
-
-    static Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
-
-    static pClosestTarget; pClosestTarget = 0;
-    static Float:flClosestTargetPriority; flClosestTargetPriority = 0.0;
-
-    for (new pTarget = 1; pTarget <= MaxClients; ++pTarget) {
-        if (!NPC_IsValidEnemy(pTarget)) {
-            continue;
-        }
-
-        static Float:vecTarget[3]; pev(pTarget, pev_origin, vecTarget);
-
-        if (!NPC_IsVisible(this, vecTarget, pTarget)) {
-            continue;
-        }
-
-        static Float:flDistance; flDistance = xs_vec_distance(vecOrigin, vecTarget);
-        static Float:flTargetPriority; flTargetPriority = 1.0 - (flDistance / flMaxDistance);
-
-        if (flTargetPriority >= flMinPriority && flTargetPriority > flClosestTargetPriority) {
-            pClosestTarget = pTarget;
-            flClosestTargetPriority = flTargetPriority;
-        }
-    }
-
-    if (pClosestTarget) {
-        set_pev(this, pev_enemy, pClosestTarget);
-    }
-
-    return pClosestTarget;
 }
 
 @Entity_UpdateTarget(this) {

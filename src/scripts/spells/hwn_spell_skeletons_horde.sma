@@ -27,7 +27,7 @@ new const g_szSprSpellBall[] = "sprites/xsmoke1.spr";
 
 new g_iGibsModelIndex;
 
-new g_hSpell;
+new g_iSpellHandler;
 new g_hCeSpellball;
 
 public plugin_precache() {
@@ -37,7 +37,7 @@ public plugin_precache() {
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
 
-    g_hSpell = Hwn_Spell_Register(
+    g_iSpellHandler = Hwn_Spell_Register(
         "Skeletons Horde",
         Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Radius | Hwn_SpellFlag_Rare,
         "Cast"
@@ -65,7 +65,7 @@ public HamHook_Base_Touch_Post(pEntity, pTarget) {
         return;
     }
 
-    if (CE_GetMember(pEntity, "iSpell") != g_hSpell) {
+    if (CE_GetMember(pEntity, "iSpell") != g_iSpellHandler) {
         return;
     }
 
@@ -79,7 +79,7 @@ public HamHook_Base_Touch_Post(pEntity, pTarget) {
 @SpellBall_Killed(this) {
     new iSpell = CE_GetMember(this, "iSpell");
 
-    if (iSpell != g_hSpell) {
+    if (iSpell != g_iSpellHandler) {
         return;
     }
 
@@ -89,12 +89,12 @@ public HamHook_Base_Touch_Post(pEntity, pTarget) {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 public Cast(pPlayer) {
-    new pSpellBall = UTIL_HwnSpawnPlayerSpellball(pPlayer, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.5, 10.0);
+    new pSpellBall = UTIL_HwnSpawnPlayerSpellball(pPlayer, g_iSpellHandler, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.5, 10.0);
     if (!pSpellBall) {
         return PLUGIN_HANDLED;
     }
 
-    CE_SetMember(pSpellBall, "iSpell", g_hSpell);
+    CE_SetMember(pSpellBall, "iSpell", g_iSpellHandler);
 
     emit_sound(pPlayer, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 

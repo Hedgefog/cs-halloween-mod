@@ -18,6 +18,7 @@
 
 #define ENTITY_NAME "hwn_npc_hhh"
 
+#define m_flDamage "flDamage"
 #define m_irgPath "irgPath"
 #define m_vecGoal "vecGoal"
 #define m_vecTarget "vecTarget"
@@ -99,7 +100,8 @@ const Float:NPC_HitRange = 96.0;
 const Float:NPC_HitDelay = 0.75;
 const Float:NPC_PathSearchDelay = 5.0;
 const Float:NPC_TargetUpdateRate = 1.0;
-const Float:NPC_ViewRange = 4096.0;
+const Float:NPC_ViewRange = 512.0;
+const Float:NPC_FindRange = 4096.0;
 new const Float:NPC_TargetHitOffset[3] = {0.0, 0.0, 16.0};
 
 new gmsgScreenShake;
@@ -203,6 +205,7 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
 @Entity_Spawned(this) {
     new Float:flGameTime = get_gametime();
 
+    CE_SetMember(this, m_flDamage, NPC_Damage);
     CE_SetMember(this, m_flNextAttack, 0.0);
     CE_SetMember(this, m_flReleaseHit, 0.0);
     CE_SetMember(this, m_flNextAIThink, flGameTime);
@@ -231,7 +234,6 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     set_pev(this, pev_takedamage, DAMAGE_NO);
     set_pev(this, pev_view_ofs, Flaot:{0.0, 0.0, 32.0});
     set_pev(this, pev_maxspeed, NPC_Speed);
-    set_pev(this, pev_dmg, NPC_Damage);
     set_pev(this, pev_enemy, 0);
 
     engfunc(EngFunc_DropToFloor, this);
@@ -383,10 +385,8 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
             }
         }
     } else if (flReleaseHit <= flGameTime) {
-        static Float:flDamage;
-        pev(this, pev_dmg, flDamage);
-
-        if (NPC_Hit(this, NPC_Damage, NPC_HitRange, NPC_TargetHitOffset)) {
+        static Float:flDamage; flDamage = CE_GetMember(this, m_flDamage);
+        if (NPC_Hit(this, flDamage, NPC_HitRange, NPC_TargetHitOffset)) {
             emit_sound(this, CHAN_WEAPON, g_szSndHit, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
         }
 
@@ -438,10 +438,22 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     emit_sound(this, CHAN_VOICE, szSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
+@Entity_UpdateEnemy(this) {
+    if (NPC_UpdateEnemy(this, NPC_ViewRange, 0.0, false, true, true)) {
+        return true;
+    }
+
+    if (NPC_UpdateEnemy(this, NPC_FindRange, 0.0, false, false, false)) {
+        return true;
+    }
+
+    return false;
+}
+
 @Entity_UpdateGoal(this) {
     new pEnemy = NPC_GetEnemy(this);
 
-    if (@Entity_UpdateEnemy(this, NPC_ViewRange, 0.0)) {
+    if (@Entity_UpdateEnemy(this)) {
         pEnemy = pev(this, pev_enemy);
     }
 
@@ -450,10 +462,6 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
         pev(pEnemy, pev_origin, vecGoal);
         CE_SetMemberVec(this, m_vecGoal, vecGoal);
     }
-}
-
-@Entity_UpdateEnemy(this, Float:flMaxDistance, Float:flMinPriority) {
-    return NPC_UpdateEnemy(this, flMaxDistance, flMinPriority);
 }
 
 @Entity_UpdateTarget(this) {

@@ -18,6 +18,7 @@
 
 #define ENTITY_NAME "hwn_npc_ghost"
 
+#define m_flDamage "flDamage"
 #define m_vecGoal "vecGoal"
 #define m_vecTarget "vecTarget"
 #define m_flReleaseHit "flReleaseHit"
@@ -39,8 +40,6 @@ const Float:NPC_HitRange = 32.0;
 const Float:NPC_HitDelay = 0.25;
 const Float:NPC_ViewRange = 1024.0;
 const Float:NPC_TargetUpdateRate = 1.0;
-
-new const Float:NPC_TargetHitOffset[3] = {0.0, 0.0, 16.0};
 
 new const g_szSndDisappeared[] = "hwn/misc/gotohell.wav";
 
@@ -110,6 +109,7 @@ public Hwn_Fw_ConfigLoaded() {
 @Entity_Spawned(this) {
     new Float:flGameTime = get_gametime();
 
+    CE_SetMember(this, m_flDamage, NPC_Damage);
     CE_SetMember(this, m_flNextAttack, 0.0);
     CE_SetMember(this, m_flReleaseHit, 0.0);
     CE_SetMember(this, m_flNextAIThink, flGameTime);
@@ -127,7 +127,6 @@ public Hwn_Fw_ConfigLoaded() {
     set_pev(this, pev_takedamage, DAMAGE_AIM);
     set_pev(this, pev_view_ofs, Float:{0.0, 0.0, 12.0});
     set_pev(this, pev_maxspeed, NPC_Speed);
-    set_pev(this, pev_dmg, NPC_Damage);
     set_pev(this, pev_enemy, 0);
     set_pev(this, pev_framerate, 1.0);
 
@@ -247,7 +246,7 @@ public Hwn_Fw_ConfigLoaded() {
         static Float:flNextAttack; flNextAttack = CE_GetMember(this, m_flNextAttack);
         if (flNextAttack <= flGameTime) {
             static pEnemy; pEnemy = NPC_GetEnemy(this);
-            if (pEnemy && NPC_CanHit(this, pEnemy, flHitRange, NPC_TargetHitOffset)) {
+            if (pEnemy && NPC_CanHit(this, pEnemy, flHitRange)) {
                 CE_SetMember(this, m_flReleaseHit, flGameTime + flHitDelay);
 
                 static Float:vecTargetVelocity[3];
@@ -263,7 +262,7 @@ public Hwn_Fw_ConfigLoaded() {
         static pEnemy; pEnemy = NPC_GetEnemy(this);
         
         if (pEnemy) {
-            static Float:flDamage; pev(this, pev_dmg, flDamage);
+            static Float:flDamage; flDamage = CE_GetMember(this, m_flDamage);
             ExecuteHamB(Ham_TakeDamage, pEnemy, this, this, flDamage, DMG_GENERIC);
             CE_SetMember(this, m_flReleaseHit, 0.0);
             CE_SetMember(this, m_flNextAttack, flGameTime + 3.0);

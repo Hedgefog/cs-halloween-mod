@@ -176,6 +176,9 @@ public Task_Event() {
             pEntity = CE_Create("hwn_npc_skeleton", vecOrigin);
         }
         case 2: {
+            pEntity = CE_Create("hwn_npc_spookypumpkin", vecOrigin);
+        }
+        case 3: {
             pEntity = CE_Create("hwn_item_spellbook", vecOrigin);
         }
     }

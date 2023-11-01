@@ -4,6 +4,7 @@
 
 stock UTIL_HwnSpawnPlayerSpellball(
     pOwner,
+    iSpell = -1,
     const iColor[3],
     iSpeed = 512,
     const szEffectSprite[] = "",
@@ -20,6 +21,8 @@ stock UTIL_HwnSpawnPlayerSpellball(
     xs_vec_add(vecOrigin, vecOffset, vecOrigin);
 
     new pEntity = CE_Create(SPELLBALL_ENTITY_CLASSNAME, vecOrigin);
+
+    CE_SetMember(pEntity, "iSpell", iSpell);
 
     if (!pEntity) {
         return 0;

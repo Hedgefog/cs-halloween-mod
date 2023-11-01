@@ -254,9 +254,9 @@ stock bool:NPC_CanHit(pEntity, pEnemy, Float:flHitRange, const Float:vecOffset[3
         return false;
     }
 
-    if (!NPC_IsInViewCone(pEntity, vecTarget, 60.0)) {
-        return false;
-    }
+    // if (!NPC_IsInViewCone(pEntity, vecTarget, 60.0)) {
+    //     return false;
+    // }
 
     new pTrace = create_tr2();
     engfunc(EngFunc_TraceLine, vecOrigin, vecTarget, DONT_IGNORE_MONSTERS, pEntity, pTrace);
@@ -419,7 +419,7 @@ stock Float:NPC_GetPathCost(pEntity, NavArea:newArea, NavArea:prevArea) {
     return 1.0;
 }
 
-stock NPC_UpdateEnemy(pEntity, Float:flMaxDistance, Float:flMinPriority) {
+stock NPC_UpdateEnemy(pEntity, Float:flMaxDistance, Float:flMinPriority, bool:bVisibleOnly = false, bool:bReachableOnly = true, bool:bAllowMonsters = true) {
     new pEnemy = pev(pEntity, pev_enemy);
     if (!NPC_IsValidEnemy(pEnemy)) {
         set_pev(pEntity, pev_enemy, 0);
@@ -445,18 +445,22 @@ stock NPC_UpdateEnemy(pEntity, Float:flMaxDistance, Float:flMinPriority) {
         static Float:vecTarget[3];
         pev(pTarget, pev_origin, vecTarget);
 
+        if (bVisibleOnly && !NPC_IsVisible(pEntity, vecTarget, pTarget)) {
+            continue;
+        }
+
         static Float:flDistance; flDistance = xs_vec_distance(vecOrigin, vecTarget);
         static Float:flTargetPriority; flTargetPriority = 1.0 - (flDistance / flMaxDistance);
 
         if (IS_PLAYER(pTarget)) {
             flTargetPriority *= 1.0;
-        } else if (UTIL_IsMonster(pTarget)) {
+        } else if (bAllowMonsters && UTIL_IsMonster(pTarget)) {
             flTargetPriority *= 0.075;
         } else {
             flTargetPriority *= 0.0;
         }
 
-        if (flTargetPriority >= flMinPriority && !NPC_IsReachable(pEntity, vecTarget, pTarget)) {
+        if (flTargetPriority >= flMinPriority && bReachableOnly && !NPC_IsReachable(pEntity, vecTarget, pTarget)) {
             flTargetPriority *= 0.1;
         }
 

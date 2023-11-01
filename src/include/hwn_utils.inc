@@ -64,6 +64,10 @@ stock bool:UTIL_IsTeammate(pEntity, iTeam) {
 }
 
 stock bool:UTIL_CanTakeDamage(pEntity, pAttacker) {
+    if (!IS_PLAYER(pAttacker)) {
+        return true;
+    }
+
     new iAttackerTeam = get_member(pAttacker, m_iTeam);
 
     if (IS_PLAYER(pEntity)) {
@@ -175,7 +179,7 @@ stock bool:UTIL_IsOpen(const Float:vecOrigin1[3], const Float:vecOrigin2[3], pEn
     return isOpen;
 }
 
-stock bool:UTIL_TurnTo(pEntity, const Float:vecTarget[3], const bool:rgbLockAxis[3] = {true, false, false}, const Float:flSpeed = -1.0) {
+stock UTIL_TurnTo(pEntity, const Float:vecTarget[3], const bool:rgbLockAxis[3] = {true, false, false}, const Float:flSpeed = -1.0) {
     new Float:vecOrigin[3];
     pev(pEntity, pev_origin, vecOrigin);
 
@@ -204,8 +208,6 @@ stock bool:UTIL_TurnTo(pEntity, const Float:vecTarget[3], const bool:rgbLockAxis
     set_pev(pEntity, pev_angles, vecNewAngles);
     set_pev(pEntity, pev_v_angle, vecViewAngles);
     set_pev(pEntity, pev_ideal_yaw, vecNewAngles[1]);
-
-    return true;
 }
 
 stock UTIL_Message_BloodSprite(const Float:vecOrigin[3], iBloodSprayModelIndex, iBloodModelIndex, iColor, iScale) {
@@ -830,4 +832,12 @@ stock Float:ApproachAngle(Float:target, Float:value, Float:speed) {
 
 stock Float:anglemod(Float:a) {
   return (360.0/65536) * (floatround(a * (65536.0/360.0), floatround_floor) & 65535);
+}
+
+stock Float:UTIL_GetWeight(pEntity) {
+    static Float:vecMins[3]; pev(pEntity, pev_mins, vecMins);
+    static Float:vecMaxs[3]; pev(pEntity, pev_maxs, vecMaxs);
+    static Float:vecDiff[3]; xs_vec_sub(vecMaxs, vecMins, vecDiff);
+
+    return xs_vec_len(vecDiff) / 86.0;
 }

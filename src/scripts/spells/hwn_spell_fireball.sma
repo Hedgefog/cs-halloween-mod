@@ -27,6 +27,7 @@ new const g_szSndDetonate[] = "hwn/spells/spell_fireball_impact.wav";
 new const g_szSprFireball[] = "sprites/xsmoke1.spr";
 
 new g_iEffectModelIndex;
+new g_iSpellHandler;
 
 public plugin_precache() {
     g_iEffectModelIndex = precache_model("sprites/plasma.spr");
@@ -35,7 +36,7 @@ public plugin_precache() {
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
 
-    Hwn_Spell_Register(
+    g_iSpellHandler = Hwn_Spell_Register(
         SPELL_NAME,
         Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Radius,
         "@Player_CastSpell"
@@ -51,7 +52,7 @@ public plugin_init() {
 }
 
 @Player_CastSpell(pPlayer) {
-    new pSpellBall = UTIL_HwnSpawnPlayerSpellball(pPlayer, EffectColor, FireballSpeed, g_szSprFireball, _, 0.5, 10.0);
+    new pSpellBall = UTIL_HwnSpawnPlayerSpellball(pPlayer, g_iSpellHandler, EffectColor, FireballSpeed, g_szSprFireball, _, 0.5, 10.0);
     @SpellBall_InitFireBall(pSpellBall);
     emit_sound(pPlayer, CHAN_STATIC, g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
@@ -144,7 +145,9 @@ bool:@SpellBall_IsFireBall(this) {
                 set_ent_data_float(pTarget, "CBasePlayer", "m_flVelocityModifier", 1.0);
             }
 
-            UTIL_PushFromOrigin(vecOrigin, pTarget, 512.0);
+            if (UTIL_GetWeight(pTarget) <= 1.0) {
+                UTIL_PushFromOrigin(vecOrigin, pTarget, 512.0);
+            }
         }
     }
 
