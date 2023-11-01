@@ -758,28 +758,6 @@ stock bool:UTIL_IsLocalizationExists(const szKey[]) {
     return !equali(szBuffer, szNotFound, sizeof(szNotFound) - 1);
 }
 
-stock UTIL_PushFromOrigin(const Float:vecOrigin[3], pEntity, Float:flImpulse, const bool:rgbLockAxis[3] = {false, false, false}) {
-    static Float:vecTargetOrigin[3];
-    pev(pEntity, pev_origin, vecTargetOrigin);
-
-    static Float:vecVelocity[3];
-    xs_vec_sub(vecTargetOrigin, vecOrigin, vecVelocity);
-
-    for (new i = 0; i < 3; ++i) {
-        if (rgbLockAxis[i]) {
-            vecVelocity[i] = 0.0;
-        }
-    }
-
-    xs_vec_normalize(vecVelocity, vecVelocity);
-    xs_vec_mul_scalar(vecVelocity, flImpulse, vecVelocity);
-
-    static Float:vecTargetVelocity[3];
-    pev(pEntity, pev_velocity, vecTargetVelocity);
-    xs_vec_add(vecTargetVelocity, vecVelocity, vecTargetVelocity);
-    set_pev(pEntity, pev_velocity, vecTargetVelocity);
-}
-
 stock UTIL_DrawArrow(pPlayer, const Float:vecSrc[3], const Float:vecTarget[3], const irgColor[3] = {255, 255, 255}, iBrightness = 255, iLifeTime = 10, iWidth = 64) {
     new iModelIndex = engfunc(EngFunc_ModelIndex, "sprites/arrow1.spr");
     

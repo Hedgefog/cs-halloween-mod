@@ -6,6 +6,7 @@
 #include <xs>
 
 #include <api_custom_entities>
+#include <api_advanced_pushing_system>
 
 #include <hwn>
 #include <hwn_utils>
@@ -14,6 +15,7 @@
 #define AUTHOR "Hedgehog Fog"
 
 #define m_iTeam "iTeam"
+#define m_flNextSmokeEmit "flNextSmokeEmit"
 
 #define ENTITY_NAME "hwn_mystery_smoke"
 
@@ -26,15 +28,16 @@ const Float:EffectPushForce = 100.0;
 
 new g_iTeamSmokeModelIndex[3];
 new g_iNullModelIndex;
+new Float:g_flPlayerReleaseClimbBlock[MAX_PLAYERS + 1];
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
 public plugin_precache() {
-    CE_Register(ENTITY_NAME, .vecMins = Float:{-64.0, -64.0, 0.0}, .vecMaxs = Float:{64.0, 64.0, 64.0});
-
+    CE_Register(ENTITY_NAME);
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
+    CE_RegisterHook(CEFunction_InitSize, ENTITY_NAME, "@Entity_InitSize");
     CE_RegisterHook(CEFunction_KVD, ENTITY_NAME, "@Entity_KeyValue");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
     CE_RegisterHook(CEFunction_Touch, ENTITY_NAME, "@Entity_Touch");
@@ -52,10 +55,20 @@ public plugin_precache() {
     set_pev(this, pev_movetype, MOVETYPE_FLY);
     set_pev(this, pev_effects, EF_NODRAW);
     set_pev(this, pev_modelindex, g_iNullModelIndex);
-    set_pev(this, pev_fuser1, 0.0);
     set_pev(this, pev_team, CE_GetMember(this, m_iTeam));
 
+    CE_SetMember(this, m_flNextSmokeEmit, 0.0);
+
     set_pev(this, pev_nextthink, get_gametime());
+}
+
+@Entity_InitSize(this) {
+    static szModel[32];
+    CE_GetMemberString(this, CE_MEMBER_MODEL, szModel, charsmax(szModel));
+
+    if (equal(szModel, NULL_STRING) || szModel[0] != '*') {
+        engfunc(EngFunc_SetSize, this, Float:{-64.0, -64.0, 0.0}, Float:{64.0, 64.0, 64.0});
+    }
 }
 
 @Entity_KeyValue(this, const szKey[], const szValue[]) {
@@ -65,14 +78,13 @@ public plugin_precache() {
 }
 
 @Entity_Think(this) {
-    static Float:flNextSmokeEmit;
-    pev(this, pev_fuser1, flNextSmokeEmit);
+    static Float:flNextSmokeEmit; flNextSmokeEmit = CE_GetMember(this, m_flNextSmokeEmit); 
 
     if (get_gametime() >= flNextSmokeEmit) {
         new Float:flLocalDensity = @Entity_EmitSmoke(this);
         new Float:flDelayRatio = 1.0 / floatclamp(flLocalDensity, SMOKE_EMIT_FREQUENCY, 1.0);
         new Float:flDelay = SMOKE_EMIT_FREQUENCY * flDelayRatio;
-        set_pev(this, pev_fuser1, get_gametime() + flDelay);
+        CE_SetMember(this, m_flNextSmokeEmit, get_gametime() + flDelay);
     }
 
     set_pev(this, pev_nextthink, get_gametime() + Hwn_GetUpdateRate());
@@ -88,121 +100,13 @@ public plugin_precache() {
         return;
     }
 
-    static Float:vecToucherOrigin[3];
-    pev(pToucher, pev_origin, vecToucherOrigin);
-
     static Float:vecAbsMin[3];
     pev(this, pev_absmin, vecAbsMin);
 
     static Float:vecAbsMax[3];
     pev(this, pev_absmax, vecAbsMax);
 
-    static Float:vecToucherAbsMin[3];
-    pev(pToucher, pev_absmin, vecToucherAbsMin);
-
-    static Float:vecToucherAbsMax[3];
-    pev(pToucher, pev_absmax, vecToucherAbsMax);
-
-    // find and check intersection point
-    for (new iAxis = 0; iAxis < 3; ++iAxis) {
-        if (vecToucherOrigin[iAxis] < vecAbsMin[iAxis]) {
-            vecToucherOrigin[iAxis] = vecToucherAbsMax[iAxis];
-        } else if (vecToucherOrigin[iAxis] > vecAbsMax[iAxis]) {
-            vecToucherOrigin[iAxis] = vecToucherAbsMin[iAxis];
-        }
-
-        if (vecAbsMin[iAxis] >= vecToucherOrigin[iAxis]) {
-            return;
-        }
-
-        if (vecAbsMax[iAxis] <= vecToucherOrigin[iAxis]) {
-            return;
-        }
-    }
-
-    new pTrace = create_tr2();
-
-    static Float:vecOffset[3];
-    xs_vec_copy(Float:{0.0, 0.0, 0.0}, vecOffset);
-
-    new iClosestAxis = -1;
-
-    for (new iAxis = 0; iAxis < 3; ++iAxis) {
-        // calculates the pToucher's offset relative to the current iAxis
-        static Float:flSideOffsets[2];
-        flSideOffsets[0] = vecAbsMin[iAxis] - vecToucherOrigin[iAxis];
-        flSideOffsets[1] = vecAbsMax[iAxis] - vecToucherOrigin[iAxis];
-
-        if (iAxis == 2 && iClosestAxis != -1) {
-            break;
-        }
-
-        for (new side = 0; side < 2; ++side) {
-            // check exit from current side
-            static Float:vecTarget[3];
-            xs_vec_copy(vecToucherOrigin, vecTarget);
-            vecTarget[iAxis] += flSideOffsets[side];
-            engfunc(EngFunc_TraceMonsterHull, pToucher, vecToucherOrigin, vecTarget, IGNORE_MONSTERS | IGNORE_GLASS, pToucher, pTrace);
-
-            static Float:flFraction;
-            get_tr2(pTrace, TR_flFraction, flFraction);
-
-            // no exit, cannot push this way
-            if (flFraction != 1.0) {
-                flSideOffsets[side] = 0.0;
-            }
-
-            if (iAxis != 2) {
-                // save minimum offset, but ignore zero offsets
-                if (!vecOffset[iAxis] || (flSideOffsets[side] && floatabs(flSideOffsets[side]) < floatabs(vecOffset[iAxis]))) {
-                    vecOffset[iAxis] = flSideOffsets[side];
-                }
-            } else {
-                // priority on bottom side
-                if (flSideOffsets[0]) {
-                    vecOffset[iAxis] = flSideOffsets[0];
-                }
-            }
-
-            // find closest iAxis to push
-            if (vecOffset[iAxis]) {
-                if (iClosestAxis == -1 || floatabs(vecOffset[iAxis]) < floatabs(vecOffset[iClosestAxis])) {
-                    iClosestAxis = iAxis;
-                }
-            }
-        }
-    }
-
-    free_tr2(pTrace);
-
-    // push player by closest iAxis
-    if (iClosestAxis != -1) {
-        static Float:vecSize[3];
-        xs_vec_sub(vecAbsMax, vecAbsMin, vecSize);
-
-        new iPushDir = vecOffset[iClosestAxis] > 0.0 ? 1 : -1;
-        new Float:flDepthRatio = floatabs(vecOffset[iClosestAxis]) / (vecSize[iClosestAxis] / 2);
-
-        static Float:vecVelocity[3];
-        pev(pToucher, pev_velocity, vecVelocity);
-
-        if (flDepthRatio > 0.8) {
-            vecVelocity[iClosestAxis] = EffectPushForce * iPushDir;
-        } else {
-            vecVelocity[iClosestAxis] += EffectPushForce * flDepthRatio * iPushDir;
-        }
-
-        set_pev(pToucher, pev_velocity, vecVelocity);
-
-        if (IS_PLAYER(pToucher)) {
-            // fix for player on ladder
-            if (pev(pToucher, pev_movetype) == MOVETYPE_FLY) {
-                set_pev(pToucher, pev_movetype, MOVETYPE_WALK);
-            }
-
-            set_pev(pToucher, pev_flags, pev(pToucher, pev_flags) | FL_ONTRAIN);
-        }
-    }
+    APS_PushFromBBox(pToucher, EffectPushForce, vecAbsMin, vecAbsMax, _, _, _, 0.8, APS_Flag_AddForce | APS_Flag_AddForceInfluenceMode | APS_Flag_OverlapMode);
 }
 
 Float:@Entity_EmitSmoke(this) {

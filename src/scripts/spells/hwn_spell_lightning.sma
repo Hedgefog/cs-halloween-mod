@@ -6,6 +6,7 @@
 #include <xs>
 
 #include <api_custom_entities>
+#include <api_advanced_pushing_system>
 
 #include <hwn>
 #include <hwn_utils>
@@ -166,7 +167,7 @@ bool:@SpellBall_Magnetize(pEntity, pTarget) {
     if (flDistance > EffectRadius) return false;
 
     if (flDistance > EffectRadius * EffectImpactRadiusMultiplier) {
-        UTIL_PushFromOrigin(vecOrigin, pTarget, -SpellballMagnetism);
+        APS_PushFromOrigin(pTarget, -SpellballMagnetism, vecOrigin);
     } else {
         static Float:vecVelocity[3];
         pev(pEntity, pev_velocity, vecVelocity);
@@ -192,7 +193,7 @@ bool:@SpellBall_Magnetize(pEntity, pTarget) {
         if (@SpellBall_IsValidVictim(this, pTarget)) {
             if (bPush) {
                 if (IS_PLAYER(pTarget) || pev(pTarget, pev_flags) & FL_MONSTER) {
-                    UTIL_PushFromOrigin(vecOrigin, pTarget, SpellballMagnetism);
+                    APS_PushFromOrigin(pTarget, SpellballMagnetism, vecOrigin);
                 }
             }
 

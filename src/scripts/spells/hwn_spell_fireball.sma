@@ -6,6 +6,7 @@
 #include <xs>
 
 #include <api_custom_entities>
+#include <api_advanced_pushing_system>
 
 #include <hwn>
 #include <hwn_utils>
@@ -146,7 +147,7 @@ bool:@SpellBall_IsFireBall(this) {
             }
 
             if (UTIL_GetWeight(pTarget) <= 1.0) {
-                UTIL_PushFromOrigin(vecOrigin, pTarget, 512.0);
+                APS_PushFromOrigin(pTarget, 512.0, vecOrigin);
             }
         }
     }
