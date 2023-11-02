@@ -108,11 +108,8 @@ public plugin_natives() {
 /*--------------------------------[ Natives ]--------------------------------*/
 
 public Native_Register(iPluginId, iArgc) {
-    new szClassName[32];
-    get_string(1, szClassName, charsmax(szClassName));
-
-    new szName[32];
-    get_string(2, szName, charsmax(szName));
+    new szClassName[32]; get_string(1, szClassName, charsmax(szClassName));
+    new szName[32]; get_string(2, szName, charsmax(szName));
 
     if (!g_irgpBosses) {
         g_irgpBosses = ArrayCreate(32, 8);
@@ -120,27 +117,23 @@ public Native_Register(iPluginId, iArgc) {
         g_irgszBossesDictKeys = ArrayCreate(48, 8);
     }
 
-    new idx = ArraySize(g_irgpBosses);
+    new iBoss = ArraySize(g_irgpBosses);
     ArrayPushString(g_irgpBosses, szClassName);
     ArrayPushString(g_irgszBossesNames, szName);
 
     new szDictKey[48];
     UTIL_CreateDictKey(szName, "HWN_BOSS_", szDictKey, charsmax(szDictKey));
-
-    if (UTIL_IsLocalizationExists(szDictKey)) {
-        ArrayPushString(g_irgszBossesDictKeys, szDictKey);
-    } else {
-        ArrayPushString(g_irgszBossesDictKeys, "");
-    }
+    ArrayPushString(g_irgszBossesDictKeys, UTIL_IsLocalizationExists(szDictKey) ? szDictKey : "");
 
     CE_RegisterHook(CEFunction_Killed, szClassName, "@Boss_Killed");
     CE_RegisterHook(CEFunction_Remove, szClassName, "@Boss_Remove");
 
-    return idx;
+    return iBoss;
 }
 
 public Native_GetCurrent(iPluginId, iArgc) {
     set_param_byref(1, g_pBoss);
+
     return g_iBossIdx;
 }
 
@@ -151,9 +144,7 @@ public Native_Spawn(iPluginId, iArgc) {
 public Native_GetName(iPluginId, iArgc) {
     new iBossIdx = get_param(1);
     new iLen = get_param(3);
-
-    new szName[32];
-    ArrayGetString(g_irgszBossesNames, iBossIdx, szName, charsmax(szName));
+    new szName[32]; ArrayGetString(g_irgszBossesNames, iBossIdx, szName, charsmax(szName));
 
     set_string(2, szName, iLen);
 }
@@ -161,16 +152,13 @@ public Native_GetName(iPluginId, iArgc) {
 public Native_GetDictionaryKey(iPluginId, iArgc) {
     new iBossIdx = get_param(1);
     new iLen = get_param(3);
-
-    static szDictKey[48];
-    ArrayGetString(g_irgszBossesDictKeys, iBossIdx, szDictKey, charsmax(szDictKey));
+    static szDictKey[48]; ArrayGetString(g_irgszBossesDictKeys, iBossIdx, szDictKey, charsmax(szDictKey));
 
     set_string(2, szDictKey, iLen);
 }
 
 public Native_AddTarget(iPluginId, iArgc) {
-    new Float:vecOrigin[3];
-    get_array_f(1, vecOrigin, sizeof(vecOrigin));
+    new Float:vecOrigin[3]; get_array_f(1, vecOrigin, sizeof(vecOrigin));
 
     if (!g_irgBossSpawnPoints) {
         g_irgBossSpawnPoints = ArrayCreate(3);
@@ -185,9 +173,7 @@ public Native_GetTarget(iPluginId, iArgc) {
 
 public Native_GetTargetCount(iPluginId, iArgc) {
     new iTarget = get_param(1);
-
-    new Float:vecOrigin[3];
-    ArrayGetArray(g_irgBossSpawnPoints, iTarget, vecOrigin);
+    new Float:vecOrigin[3]; ArrayGetArray(g_irgBossSpawnPoints, iTarget, vecOrigin);
 
     set_array_f(2, vecOrigin, sizeof(vecOrigin));
 }
@@ -201,9 +187,7 @@ public client_connect(pPlayer) {
 /*--------------------------------[ Commands ]--------------------------------*/
 
 public Command_SpawnBoss(pPlayer, iLevel, iCId) {
-    if (!cmd_access(pPlayer, iLevel, iCId, 1)) {
-        return PLUGIN_HANDLED;
-    }
+    if (!cmd_access(pPlayer, iLevel, iCId, 1)) return PLUGIN_HANDLED;
 
     SpawnBoss();
 
@@ -211,13 +195,10 @@ public Command_SpawnBoss(pPlayer, iLevel, iCId) {
 }
 
 public Command_AbortBoss(pPlayer, iLevel, iCId) {
-    if (!cmd_access(pPlayer, iLevel, iCId, 1)) {
-        return PLUGIN_HANDLED;
-    }
+    if (!cmd_access(pPlayer, iLevel, iCId, 1)) return PLUGIN_HANDLED;
+    if (g_pBoss == -1) return PLUGIN_HANDLED;
 
-    if (g_pBoss != -1) {
-        CE_Remove(g_pBoss);
-    }
+    CE_Remove(g_pBoss);
 
     return PLUGIN_HANDLED;
 }
@@ -225,9 +206,7 @@ public Command_AbortBoss(pPlayer, iLevel, iCId) {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 @Boss_Killed(this, pKiller) {
-    if (g_pBoss != this) {
-        return;
-    }
+    if (g_pBoss != this) return;
 
     if (pKiller) {
         client_cmd(0, "spk %s", g_szSndBossDefeat);
@@ -240,9 +219,7 @@ public Command_AbortBoss(pPlayer, iLevel, iCId) {
 }
 
 @Boss_Remove(this) {
-    if (g_pBoss != this) {
-        return;
-    }
+    if (g_pBoss != this) return;
 
     ExecuteForward(g_fwBossRemove, _, g_pBoss);
 
@@ -302,24 +279,20 @@ SpawnBoss() {
 
     new iBossesNum = ArraySize(g_irgpBosses);
     new iBossIdx = random(iBossesNum);
-
-    static szClassName[32];
-    ArrayGetString(g_irgpBosses, iBossIdx, szClassName, charsmax(szClassName));
-
+    new szClassName[32]; ArrayGetString(g_irgpBosses, iBossIdx, szClassName, charsmax(szClassName));
     new iPointsNum = ArraySize(g_irgBossSpawnPoints);
     new iPointIdx = random(iPointsNum);
+    new Float:vecOrigin[3]; ArrayGetArray(g_irgBossSpawnPoints, iPointIdx, vecOrigin);
 
-    new Float:vecOrigin[3];
-    ArrayGetArray(g_irgBossSpawnPoints, iPointIdx, vecOrigin);
+    new pBoss = CE_Create(szClassName, vecOrigin);
+    if (!pBoss) return;
 
-    g_pBoss = CE_Create(szClassName, vecOrigin);
-
-    if (g_pBoss == -1) return;
-
+    g_pBoss = pBoss;
     g_iBossIdx = iBossIdx;
     g_iBossSpawnPoint = iPointIdx;
 
     dllfunc(DLLFunc_Spawn, g_pBoss);
+
     client_cmd(0, "spk %s", g_szSndBossSpawn);
 
     RadiusKill(vecOrigin);
@@ -358,9 +331,7 @@ ResetPlayersTotalDamage() {
 
 SelectWinners() {
     for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
-        if (!is_user_connected(pPlayer)) {
-            continue;
-        }
+        if (!is_user_connected(pPlayer)) continue;
 
         new iTotalDamage = g_rgiPlayerTotalDamage[pPlayer];
         if (iTotalDamage >= get_pcvar_num(g_pCvarBossMinDamageToWin)) {

@@ -62,6 +62,7 @@ public plugin_natives() {
 
 public bool:Native_Open(iPluginId, iArgc) {
     new pPlayer = get_param(1);
+
     return @Player_OpenMenu(pPlayer);
 }
 
@@ -88,39 +89,28 @@ public Native_GetSpellPrice(iPluginId, iArgc) {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 bool:@Player_CanBuySpell(this, iSpell) {
-    if (!is_user_alive(this)) {
-        return false;
-    }
+    if (!is_user_alive(this)) return false;
 
     new iPrice = GetSpellPrice(iSpell);
-
-    if (cs_get_user_money(this) < iPrice) {
-        return false;
-    }
+    if (cs_get_user_money(this) < iPrice) return false;
 
     return true;
 }
 
 bool:@Player_BuySpell(this, iSpell) {
-    if (!@Player_CanBuySpell(this, iSpell)) {
-        return false;
-    }
+    if (!@Player_CanBuySpell(this, iSpell)) return false;
 
     new iResult = 0;
     ExecuteForward(g_fwBuySpell, iResult, this, iSpell);
-    if (iResult != PLUGIN_CONTINUE) {
-        return false;
-    }
+    if (iResult != PLUGIN_CONTINUE) return false;
 
     new iPrice = GetSpellPrice(iSpell);
     new iSpellAmount = 0;
     new iPlayerSpell = Hwn_Spell_GetPlayerSpell(this, iSpellAmount);
-
+    
     iSpellAmount = iSpell == iPlayerSpell ? iSpellAmount + 1 : 1;
 
-    if (iSpell != iPlayerSpell) {
-        @Player_DropSpell(this);
-    }
+    if (iSpell != iPlayerSpell) @Player_DropSpell(this);
 
     new iMoney = cs_get_user_money(this);
     cs_set_user_money(this, iMoney - iPrice);
@@ -133,20 +123,17 @@ bool:@Player_BuySpell(this, iSpell) {
     new iSpellAmount = 0;
     new iSpell = Hwn_Spell_GetPlayerSpell(this, iSpellAmount);
 
-    if (iSpell == -1) {
-        return;
-    }
+    if (iSpell == -1) return;
 
-    static Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
+    static Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
 
     new pSpellBook = CE_Create("hwn_item_spellbook", vecOrigin);
+    if (!pSpellBook) return;
+    
     CE_SetMember(pSpellBook, "iSpell", iSpell);
     CE_SetMember(pSpellBook, "iAmount", iSpellAmount);
 
-    if (pSpellBook) {
-        dllfunc(DLLFunc_Spawn, pSpellBook);
-    }
+    dllfunc(DLLFunc_Spawn, pSpellBook);
 
     static Float:vecVelocity[3];
     UTIL_GetDirectionVector(this, vecVelocity, 250.0);
@@ -154,9 +141,7 @@ bool:@Player_BuySpell(this, iSpell) {
 }
 
 bool:@Player_OpenMenu(this)  {
-    if (!is_user_alive(this)) {
-        return false;
-    }
+    if (!is_user_alive(this)) return false;
 
     if (!get_pcvar_num(g_pCvarEnabled)) {
         client_print(this, print_center, "%L", this, "HWN_SPELLSHOP_DISABLED");
@@ -165,9 +150,7 @@ bool:@Player_OpenMenu(this)  {
 
     new iResult = 0;
     ExecuteForward(g_fwOpen, iResult, this);
-    if (iResult != PLUGIN_CONTINUE) {
-        return false;
-    }
+    if (iResult != PLUGIN_CONTINUE) return false;
 
     new iMenu = CreateShopMenu(this);
     menu_display(this, iMenu);

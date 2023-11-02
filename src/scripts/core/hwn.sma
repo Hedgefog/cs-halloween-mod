@@ -3,7 +3,6 @@
 #include <amxmodx>
 #include <amxmisc>
 #include <fakemeta>
-#include <hamsandwich>
 
 #include <hwn>
 #include <hwn_utils>
@@ -87,6 +86,6 @@ LoadConfig() {
 
     server_cmd("exec %s/hwn.cfg", szConfigDir);
     server_exec();
-    
+
     ExecuteForward(g_fwConfigLoaded);
 }

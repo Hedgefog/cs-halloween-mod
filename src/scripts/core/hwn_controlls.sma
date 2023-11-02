@@ -2,7 +2,6 @@
 
 #include <amxmodx>
 #include <engine>
-#include <fakemeta>
 #include <reapi>
 
 #include <api_rounds>
@@ -46,14 +45,13 @@ public Command_ChooseTeam(pPlayer) {
     }
 
     g_iPlayerTeamMenuOverrideFlags |= BIT(pPlayer & 31);
+
     return PLUGIN_CONTINUE;
 }
 
 public Command_Drop(pPlayer) {
     new Hwn_GamemodeFlags:iFlags = Hwn_Gamemode_GetFlags();
-    if (!(iFlags & Hwn_GamemodeFlag_SpecialEquip)) {
-        return PLUGIN_CONTINUE;
-    }
+    if (!(iFlags & Hwn_GamemodeFlag_SpecialEquip)) return PLUGIN_CONTINUE;
 
     Hwn_PEquipment_ShowMenu(pPlayer);
 
@@ -62,9 +60,7 @@ public Command_Drop(pPlayer) {
 
 public Command_SpellsShop(pPlayer) {
     new Hwn_GamemodeFlags:iFlags = Hwn_Gamemode_GetFlags();
-    if (!(iFlags & Hwn_GamemodeFlag_SpellShop)) {
-        return PLUGIN_CONTINUE;
-    }
+    if (!(iFlags & Hwn_GamemodeFlag_SpellShop)) return PLUGIN_CONTINUE;
 
     Hwn_SpellShop_Open(pPlayer);
 
@@ -72,9 +68,7 @@ public Command_SpellsShop(pPlayer) {
 }
 
 public OnImpulse_100(pPlayer) {
-    if (!Round_IsRoundStarted()) {
-        return PLUGIN_HANDLED;
-    }
+    if (!Round_IsRoundStarted()) return PLUGIN_HANDLED;
 
     Hwn_Spell_CastPlayerSpell(pPlayer);
 

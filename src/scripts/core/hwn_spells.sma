@@ -3,9 +3,7 @@
 #include <amxmodx>
 #include <amxmisc>
 #include <fakemeta>
-#include <hamsandwich>
 
-#include <api_custom_entities>
 #include <command_util>
 
 #include <hwn>
@@ -83,9 +81,7 @@ public Native_GetHandler(iPluginId, iArgc) {
     get_string(1, szName, charsmax(szName));
 
     static iSpell;
-    if (!TrieGetCell(g_itSpells, szName, iSpell)) {
-        return -1;
-    }
+    if (!TrieGetCell(g_itSpells, szName, iSpell)) return -1;
 
     return iSpell;
 }
@@ -114,13 +110,9 @@ public Native_GetPlayerSpell(iPluginId, iArgc) {
     new pPlayer = get_param(1);
 
     new iAmount = g_rgiPlayeriSpellAmount[pPlayer];
-    if (iAmount <= 0) {
-        return -1;
-    }
+    if (iAmount <= 0) return -1;
 
-    if (iArgc > 1) {
-        set_param_byref(2, iAmount);
-    }
+    if (iArgc > 1) set_param_byref(2, iAmount);
 
     return g_rgiPlayerSpell[pPlayer];
 }
@@ -157,33 +149,20 @@ public client_disconnected(pPlayer) {
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public Command_Give(pPlayer, iLevel, iCId) {
-    if (!cmd_access(pPlayer, iLevel, iCId, 1)) {
-        return PLUGIN_HANDLED;
-    }
+    if (!cmd_access(pPlayer, iLevel, iCId, 1)) return PLUGIN_HANDLED;
     
-    static szTarget[32];
-    read_argv(1, szTarget, charsmax(szTarget));
-
-    static szSpellId[32];
-    read_argv(2, szSpellId, charsmax(szSpellId));
-
-    static szAmount[32];
-    read_argv(3, szAmount, charsmax(szAmount));
+    static szTarget[32]; read_argv(1, szTarget, charsmax(szTarget));
+    static szSpellId[32]; read_argv(2, szSpellId, charsmax(szSpellId));
+    static szAmount[32]; read_argv(3, szAmount, charsmax(szAmount));
 
     new iSpell = -1;
-    if (!TrieGetCell(g_itSpells, szSpellId, iSpell)) {
-        return PLUGIN_HANDLED;
-    }
-
-    new iAmount = equal(szAmount, NULL_STRING) ? 1 : str_to_num(szAmount);
+    if (!TrieGetCell(g_itSpells, szSpellId, iSpell)) return PLUGIN_HANDLED;
 
     new iTarget = CMD_RESOLVE_TARGET(pPlayer, szTarget);
+    new iAmount = equal(szAmount, NULL_STRING) ? 1 : str_to_num(szAmount);
 
     for (new pTarget = 1; pTarget <= MaxClients; ++pTarget) {
-        if (!CMD_SHOULD_TARGET_PLAYER(pTarget, iTarget)) {
-            continue;
-        }
-
+        if (!CMD_SHOULD_TARGET_PLAYER(pTarget, iTarget)) continue;
         @Player_SetSpell(pPlayer, iSpell, iAmount);
     }
 
@@ -198,25 +177,16 @@ public Command_Give(pPlayer, iLevel, iCId) {
 }
 
 @Player_CastPlayerSpell(this) {
-    if (!is_user_alive(this)) {
-        return;
-    }
-
-    if (pev(this, pev_flags) & FL_FROZEN) {
-        return;
-    }
+    if (!is_user_alive(this)) return;
+    if (pev(this, pev_flags) & FL_FROZEN) return;
 
     new iSpellAmount = g_rgiPlayeriSpellAmount[this];
-    if (iSpellAmount <= 0) {
-        return;
-    }
+    if (iSpellAmount <= 0) return;
 
     new Float:flGameTime = get_gametime();
     new Float:flNextCast = g_rgflPlayerflNextCast[this];
 
-    if (flGameTime < flNextCast) {
-        return;
-    }
+    if (flGameTime < flNextCast) return;
 
     new iSpell = g_rgiPlayerSpell[this];
     new iPluginId = ArrayGetCell(g_irgSpelliPluginId, iSpell);
@@ -242,6 +212,7 @@ public Command_Give(pPlayer, iLevel, iCId) {
     get_member(this, m_szAnimExtention, szAnimExtention, charsmax(szAnimExtention));
 
     set_member(this, m_szAnimExtention, "grenade");
+
     rg_set_animation(this, PLAYER_ATTACK1);
 
     set_member(this, m_szAnimExtention, szAnimExtention);
@@ -269,12 +240,7 @@ Register(const szName[], Hwn_SpellFlags:iFlags, iPluginId, iCastFuncId) {
 
     new szDictKey[48];
     UTIL_CreateDictKey(szName, "HWN_SPELL_", szDictKey, charsmax(szDictKey));
-
-    if (UTIL_IsLocalizationExists(szDictKey)) {
-        ArrayPushString(g_irgSpellDictKey, szDictKey);
-    } else {
-        ArrayPushString(g_irgSpellDictKey, "");
-    }
+    ArrayPushString(g_irgSpellDictKey, UTIL_IsLocalizationExists(szDictKey) ? szDictKey : "");
 
     g_iSpellsNum++;
 

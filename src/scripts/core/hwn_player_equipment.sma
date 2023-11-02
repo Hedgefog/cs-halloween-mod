@@ -138,9 +138,7 @@ Struct:@Equipment_Create() {
         new iWeaponId = get_weaponid(szItem);
         if (iWeaponId) {
             new iMaxRounds = cs_get_weapon_info(iWeaponId, CS_WEAPONINFO_MAX_ROUNDS);
-            if (iMaxRounds) {
-                cs_set_user_bpammo(this, iWeaponId, iMaxRounds);
-            }
+            if (iMaxRounds) cs_set_user_bpammo(this, iWeaponId, iMaxRounds);
         }
     }
 
@@ -231,7 +229,7 @@ LoadEquipment() {
             ArrayPushString(irgItems, szItem);
         }
 
-        log_amx("Equipment ^"%s^" loaded!", szTitle);
+        log_amx("[Hwn Player Equipment] Equipment ^"%s^" loaded.", szTitle);
 
         ArrayPushCell(g_rgsEquipments, sEquipment);
     }
@@ -259,9 +257,7 @@ public MenuHandler_Equipment(pPlayer, iMenu, iItem) {
         ExecuteForward(g_fwEquipmentChanged, _, pPlayer);
     }
 
-    if (is_user_connected(pPlayer)) {
-        menu_cancel(pPlayer);
-    }
+    if (is_user_connected(pPlayer)) menu_cancel(pPlayer);
 
     return PLUGIN_HANDLED;
 }
