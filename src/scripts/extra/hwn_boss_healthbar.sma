@@ -44,9 +44,7 @@ public plugin_precache() {
 }
 
 public Hwn_Bosses_Fw_BossSpawn(pEntity) {
-    if (!get_pcvar_bool(g_pCvarEnabled)) {
-        return;
-    }
+    if (!get_pcvar_bool(g_pCvarEnabled)) return;
 
     g_pBoss = pEntity;
     pev(g_pBoss, pev_health, g_flBossHealth);

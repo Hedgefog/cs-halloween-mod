@@ -14,18 +14,14 @@ public plugin_init() {
     Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke");
 }
 
-@Player_EffectInvoke(pPlayer) {
+@Player_EffectInvoke(this) {
     new iSpellsNum = Hwn_Spell_GetCount();
-    if (!iSpellsNum) {
-        return;
-    }
+    if (!iSpellsNum) return;
 
-    new iSpell = Hwn_Spell_GetPlayerSpell(pPlayer);
-    if (iSpell >= 0) {
-        return;
-    }
+    new iSpell = Hwn_Spell_GetPlayerSpell(this);
+    if (iSpell >= 0) return;
 
-    Hwn_Spell_SetPlayerSpell(pPlayer, random(iSpellsNum), 1);
+    Hwn_Spell_SetPlayerSpell(this, random(iSpellsNum), 1);
 }
 
-@Player_EffectRevoke(pPlayer) {}
+@Player_EffectRevoke(this) {}

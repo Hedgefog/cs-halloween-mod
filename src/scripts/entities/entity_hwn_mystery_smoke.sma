@@ -2,7 +2,6 @@
 
 #include <amxmodx>
 #include <fakemeta>
-#include <hamsandwich>
 #include <xs>
 
 #include <api_custom_entities>
@@ -28,7 +27,6 @@ const Float:EffectPushForce = 100.0;
 
 new g_iTeamSmokeModelIndex[3];
 new g_iNullModelIndex;
-new Float:g_flPlayerReleaseClimbBlock[MAX_PLAYERS + 1];
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -79,11 +77,11 @@ public plugin_precache() {
 
 @Entity_Think(this) {
     static Float:flNextSmokeEmit; flNextSmokeEmit = CE_GetMember(this, m_flNextSmokeEmit); 
-
-    if (get_gametime() >= flNextSmokeEmit) {
+    if (flNextSmokeEmit >= get_gametime()) {
         new Float:flLocalDensity = @Entity_EmitSmoke(this);
         new Float:flDelayRatio = 1.0 / floatclamp(flLocalDensity, SMOKE_EMIT_FREQUENCY, 1.0);
         new Float:flDelay = SMOKE_EMIT_FREQUENCY * flDelayRatio;
+
         CE_SetMember(this, m_flNextSmokeEmit, get_gametime() + flDelay);
     }
 
@@ -91,14 +89,10 @@ public plugin_precache() {
 }
 
 @Entity_Touch(this, pToucher) {
-    if (!IS_PLAYER(pToucher) && !UTIL_IsMonster(pToucher)) {
-        return;
-    }
+    if (!IS_PLAYER(pToucher) && !UTIL_IsMonster(pToucher)) return;
 
     new iTeam = pev(this, pev_team);
-    if (UTIL_IsTeammate(pToucher, iTeam)) {
-        return;
-    }
+    if (UTIL_IsTeammate(pToucher, iTeam)) return;
 
     static Float:vecAbsMin[3];
     pev(this, pev_absmin, vecAbsMin);
@@ -110,22 +104,17 @@ public plugin_precache() {
 }
 
 Float:@Entity_EmitSmoke(this) {
-    static Float:vecAbsMin[3];
-    pev(this, pev_absmin, vecAbsMin);
-
-    static Float:vecAbsMax[3];
-    pev(this, pev_absmax, vecAbsMax);
-
-    static Float:vecSize[3];
-    xs_vec_sub(vecAbsMax, vecAbsMin, vecSize);
+    static Float:vecAbsMin[3]; pev(this, pev_absmin, vecAbsMin);
+    static Float:vecAbsMax[3]; pev(this, pev_absmax, vecAbsMax);
+    static Float:vecSize[3]; xs_vec_sub(vecAbsMax, vecAbsMin, vecSize);
 
     static Float:vecOrigin[3];
     for (new iAxis = 0; iAxis < 2; ++iAxis) {
         vecOrigin[iAxis] = vecAbsMin[iAxis] + (vecSize[iAxis] / 2);
     }
 
-    new Float:flSpreadRadius = vecSize[0] < vecSize[1] ? (vecSize[0] / 2) : (vecSize[1] / 2);
-    new Float:flDiff = floatabs(vecSize[0] - vecSize[1]);
+    static Float:flSpreadRadius; flSpreadRadius = vecSize[0] < vecSize[1] ? (vecSize[0] / 2) : (vecSize[1] / 2);
+    static Float:flDiff; flDiff = floatabs(vecSize[0] - vecSize[1]);
 
     if (vecSize[0] > vecSize[1]) {
         vecOrigin[0] += random_float(-flDiff / 2, flDiff / 2);
@@ -137,15 +126,15 @@ Float:@Entity_EmitSmoke(this) {
 
     flSpreadRadius = floatmax(flSpreadRadius - (SMOKE_PARTICLE_WIDTH / 4), 0.0);
 
-    new iTeam = pev(this, pev_team);
-    new iSmokeTeam = max(iTeam < sizeof(g_iTeamSmokeModelIndex) ? iTeam : 0, 0);
-    new iModelIndex = g_iTeamSmokeModelIndex[iSmokeTeam];
+    static iTeam; iTeam = pev(this, pev_team);
+    static iSmokeTeam; iSmokeTeam = max(iTeam < sizeof(g_iTeamSmokeModelIndex) ? iTeam : 0, 0);
+    static iModelIndex; iModelIndex = g_iTeamSmokeModelIndex[iSmokeTeam];
     
     // calculate density based on box perimeter
     // using square area creates extreme thick smoke for large areas
     // the main goal is to make smoke looks thick enough for players outside the smoke
-    new Float:flLocalDensity = ((2 * vecSize[0]) + (2 * vecSize[1])) * SMOKE_DENSITY * SMOKE_EMIT_FREQUENCY;
-    new particlesNum = max(floatround(flLocalDensity), 1);
+    static Float:flLocalDensity; flLocalDensity = ((2 * vecSize[0]) + (2 * vecSize[1])) * SMOKE_DENSITY * SMOKE_EMIT_FREQUENCY;
+    static particlesNum; particlesNum = max(floatround(flLocalDensity), 1);
 
     engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vecOrigin, 0);
     write_byte(TE_FIREFIELD);

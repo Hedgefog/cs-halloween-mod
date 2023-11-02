@@ -25,16 +25,16 @@ public plugin_init() {
     Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "item_longjump", {200, 200, 200});
 }
 
-@Player_EffectInvoke(pPlayer) {
-    set_pev(pPlayer, pev_gravity, MOON_GRAVIY);
+@Player_EffectInvoke(this) {
+    set_pev(this, pev_gravity, MOON_GRAVIY);
 
     new Float:vecOrigin[3];
-    pev(pPlayer, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
 
     UTIL_Message_Dlight(vecOrigin, EffectRadius, EffectColor, 5, 80);
-    emit_sound(pPlayer, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(this, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
-@Player_EffectRevoke(pPlayer) {
-    set_pev(pPlayer, pev_gravity, 1.0);
+@Player_EffectRevoke(this) {
+    set_pev(this, pev_gravity, 1.0);
 }

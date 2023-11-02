@@ -22,9 +22,7 @@ public plugin_precache() {
 }
 
 @Entity_Spawned(this) {
-    new Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
-
+    new Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
     Hwn_Gifts_AddTarget(vecOrigin);
     CE_Remove(this);
 }

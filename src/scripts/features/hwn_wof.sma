@@ -303,9 +303,7 @@ CallInvoke(pPlayer) {
     new iPluginId = ArrayGetCell(g_irgSpelliPluginId, g_iSpell);
     new iFunctionId = ArrayGetCell(g_irgSpellInvokeFuncId, g_iSpell);
 
-    if (iFunctionId < 0) {
-        return;
-    }
+    if (iFunctionId < 0) return;
 
     if (callfunc_begin_i(iFunctionId, iPluginId) == 1) {
         callfunc_push_int(pPlayer);
@@ -321,9 +319,7 @@ CallRevoke(pPlayer) {
     new iPluginId = ArrayGetCell(g_irgSpelliPluginId, g_iSpell);
     new iFunctionId = ArrayGetCell(g_irgSpellRevokeFuncId, g_iSpell);
 
-    if (iFunctionId < 0) {
-        return;
-    }
+    if (iFunctionId < 0) return;
 
     if (callfunc_begin_i(iFunctionId, iPluginId) == 1) {
         callfunc_push_int(pPlayer);

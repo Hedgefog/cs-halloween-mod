@@ -66,17 +66,9 @@ public plugin_init() {
 
     new pTarget = 0;
     while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EXPLOSION_RADIUS * 2)) > 0) {
-        if (this == pTarget) {
-            continue;
-        }
-
-        if (pev(pTarget, pev_deadflag) != DEAD_NO) {
-            continue;
-        }
-
-        if (pev(pTarget, pev_takedamage) == DAMAGE_NO) {
-            continue;
-        }
+        if (this == pTarget) continue;
+        if (pev(pTarget, pev_deadflag) != DEAD_NO) continue;
+        if (pev(pTarget, pev_takedamage) == DAMAGE_NO) continue;
 
         static Float:vecTargetOrigin[3];
         pev(pTarget, pev_origin, vecTargetOrigin);
@@ -105,9 +97,7 @@ public plugin_init() {
 
     UTIL_Message_FireField(vecOrigin, 32, g_iExplodeSmokeModelIndex, 4, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
 
-    new Float:vecVelocity[3];
-    UTIL_RandomVector(-128.0, 128.0, vecVelocity);
-
+    new Float:vecVelocity[3]; UTIL_RandomVector(-128.0, 128.0, vecVelocity);
     UTIL_Message_BreakModel(vecOrigin, Float:{16.0, 16.0, 16.0}, vecVelocity, 32, g_iGibsModelIndex, 4, 25, 0);
 
     emit_sound(this, CHAN_BODY, g_szSndExplode, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);

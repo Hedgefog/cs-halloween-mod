@@ -23,8 +23,9 @@
 #define JUMP_DELAY 0.175
 #define JUMP_EFFECT_BRIGHTNESS 255
 #define JUMP_EFFECT_LIFETIME 5
+
 #define SPEED_BOOST 2.0
-#define WEAPON_SPEED_BOOST 1.25
+#define ATTACK_SPEED_BOOST 1.25
 
 const EffectRadius = 48;
 new const EffectColor[3] = {HWN_COLOR_PRIMARY};
@@ -52,9 +53,7 @@ public plugin_init() {
     RegisterHamPlayer(Ham_TakeDamage, "HamHook_Player_TakeDamage", .Post = 0);
 
     for (new i = CSW_NONE + 1; i <= CSW_LAST_WEAPON; ++i) {
-        if ((1 << i) & ~(CSW_ALL_GUNS | (1 << CSW_KNIFE))) {
-            continue;
-        }
+        if ((1 << i) & ~(CSW_ALL_GUNS | (1 << CSW_KNIFE))) continue;
 
         new szWeaponName[32];
         get_weaponname(i, szWeaponName, charsmax(szWeaponName));
@@ -68,79 +67,114 @@ public plugin_cfg() {
     server_cmd("sv_maxspeed 9999");
 }
 
-@Player_EffectInvoke(pPlayer) {
-    @Player_Heal(pPlayer);
-    @Player_JumpEffect(pPlayer);
-    ExecuteHamB(Ham_Item_PreFrame, pPlayer);
-    emit_sound(pPlayer, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+/*--------------------------------[ Hooks ]--------------------------------*/
+
+public HamHook_Weapon_Attack_Post(pEntity) {
+    new pPlayer = get_member(pEntity, m_pPlayer);
+
+    if (!is_user_alive(pPlayer)) return HAM_IGNORED;
+    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return HAM_IGNORED;
+
+    @Weapon_BoostShootSpeed(pEntity);
+
+    return HAM_HANDLED;
 }
 
-@Player_EffectRevoke(pPlayer) {
-    if (is_user_connected(pPlayer)) {
-        ExecuteHamB(Ham_Item_PreFrame, pPlayer);
-    }
+public HamHook_Player_Jump_Post(pPlayer) {
+    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return HAM_IGNORED;
+
+    @Player_ProcessJump(pPlayer);
+
+    return HAM_HANDLED;
 }
 
-@Player_ProcessJump(pPlayer) {
-    new iOldButton = pev(pPlayer, pev_oldbuttons);
-    if (iOldButton & IN_JUMP) {
-        return;
-    }
+public HamHook_Player_ItemPreFrame_Post(pPlayer) {
+    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return HAM_IGNORED;
 
-    new iFlags = pev(pPlayer, pev_flags);
+    @Player_BoostSpeed(pPlayer);
+
+    return HAM_HANDLED;
+}
+
+public HamHook_Player_TakeDamage(pPlayer, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
+    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return HAM_IGNORED;
+
+    if (~iDamageBits & DMG_FALL) return HAM_IGNORED;
+
+    SetHamParamFloat(4, 0.0);
+
+    return HAM_OVERRIDE;
+}
+
+/*--------------------------------[ Methods ]--------------------------------*/
+
+@Player_EffectInvoke(this) {
+    @Player_Heal(this);
+    @Player_JumpEffect(this);
+    ExecuteHamB(Ham_Item_PreFrame, this);
+    emit_sound(this, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+}
+
+@Player_EffectRevoke(this) {
+    if (!is_user_connected(this)) return;
+
+    ExecuteHamB(Ham_Item_PreFrame, this);
+}
+
+@Player_ProcessJump(this) {
+    new iOldButton = pev(this, pev_oldbuttons);
+    if (iOldButton & IN_JUMP) return;
+
+    new iFlags = pev(this, pev_flags);
     if (~iFlags & FL_ONGROUND) {
-        if (get_gametime() - g_rgPlayerLastJump[pPlayer] < JUMP_DELAY) {
+        if (get_gametime() - g_rgPlayerLastJump[this] < JUMP_DELAY) {
             return;
         }
 
-        @Player_Jump(pPlayer);
+        @Player_Jump(this);
     }
 
-    @Player_JumpEffect(pPlayer);
-    g_rgPlayerLastJump[pPlayer] = get_gametime();
+    @Player_JumpEffect(this);
+    g_rgPlayerLastJump[this] = get_gametime();
 }
 
-@Player_Jump(pPlayer) {
+@Player_Jump(this) {
     static Float:flMaxSpeed;
-    pev(pPlayer, pev_maxspeed, flMaxSpeed);
+    pev(this, pev_maxspeed, flMaxSpeed);
 
     static Float:vecVelocity[3];
-    GetMoveVector(pPlayer, vecVelocity);
+    GetMoveVector(this, vecVelocity);
     xs_vec_mul_scalar(vecVelocity, flMaxSpeed, vecVelocity);
     vecVelocity[2] = JUMP_SPEED;
     
-    set_pev(pPlayer, pev_velocity, vecVelocity);
-    set_pev(pPlayer, pev_gaitsequence, 6);
+    set_pev(this, pev_velocity, vecVelocity);
+    set_pev(this, pev_gaitsequence, 6);
 
-
-    new Float:flDuration = Hwn_Player_GetEffectDuration(pPlayer, EFFECT_ID);
-    new Float:flTimeLeft = Hwn_Player_GetEffectEndtime(pPlayer, EFFECT_ID) - get_gametime();
+    new Float:flDuration = Hwn_Player_GetEffectDuration(this, EFFECT_ID);
+    new Float:flTimeLeft = Hwn_Player_GetEffectEndtime(this, EFFECT_ID) - get_gametime();
     new Float:flTimeRatio = floatclamp(1.0 - (flTimeLeft / flDuration), 0.0, 1.0);
     new iPitch = PITCH_NORM + floatround(80 * flTimeRatio);
-    emit_sound(pPlayer, CHAN_STATIC, g_szSndJump, VOL_NORM, ATTN_NORM, 0, iPitch);
+    emit_sound(this, CHAN_STATIC, g_szSndJump, VOL_NORM, ATTN_NORM, 0, iPitch);
 }
 
-@Player_Heal(pPlayer) {
-    new Float:flHealth;
-    pev(pPlayer, pev_health, flHealth);
-
+@Player_Heal(this) {
+    new Float:flHealth; pev(this, pev_health, flHealth);
     if (flHealth < 100.0) {
-        set_pev(pPlayer, pev_health, 100.0);
+        set_pev(this, pev_health, 100.0);
     }
 }
 
-@Player_BoostSpeed(pPlayer) {
-    new Float:flMaxSpeed = get_user_maxspeed(pPlayer);
-    set_user_maxspeed(pPlayer, flMaxSpeed * SPEED_BOOST);
+@Player_BoostSpeed(this) {
+    new Float:flMaxSpeed = get_user_maxspeed(this);
+    set_user_maxspeed(this, flMaxSpeed * SPEED_BOOST);
 }
 
-@Player_JumpEffect(pPlayer) {
-    static Float:vecOrigin[3];
-    pev(pPlayer, pev_origin, vecOrigin);
-
+@Player_JumpEffect(this) {
     static Float:vecMins[3];
-    pev(pPlayer, pev_mins, vecMins);
+    pev(this, pev_mins, vecMins);
 
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
     vecOrigin[2] += vecMins[2] + 1.0;
 
     UTIL_Message_BeamDisk(
@@ -156,97 +190,33 @@ public plugin_cfg() {
     );
 }
 
-@Weapon_BoostShootSpeed(pEntity) {
-    new Float:flMultiplier =  1.0 / WEAPON_SPEED_BOOST;
+@Weapon_BoostShootSpeed(this) {
+    static Float:flMultiplier; flMultiplier =  1.0 / ATTACK_SPEED_BOOST;
 
-    new Float:flNextPrimaryAttack = get_member(pEntity, m_Weapon_flNextPrimaryAttack);
-    new Float:flNextSecondaryAttack = get_member(pEntity, m_Weapon_flNextSecondaryAttack);
+    static Float:flNextPrimaryAttack; flNextPrimaryAttack = get_member(this, m_Weapon_flNextPrimaryAttack);
+    set_member(this, m_Weapon_flNextPrimaryAttack, flNextPrimaryAttack * flMultiplier);
 
-    set_member(pEntity, m_Weapon_flNextPrimaryAttack, flNextPrimaryAttack * flMultiplier);
-    set_member(pEntity, m_Weapon_flNextSecondaryAttack, flNextSecondaryAttack * flMultiplier);
+    static Float:flNextSecondaryAttack; flNextSecondaryAttack = get_member(this, m_Weapon_flNextSecondaryAttack);
+    set_member(this, m_Weapon_flNextSecondaryAttack, flNextSecondaryAttack * flMultiplier);
 }
+
+/*--------------------------------[ Functions ]--------------------------------*/
 
 GetMoveVector(pPlayer, Float:vecOut[3]) {
     xs_vec_copy(Float:{0.0, 0.0, 0.0}, vecOut);
 
-    new iButton = pev(pPlayer, pev_button);
+    static Float:vecAngles[3]; pev(pPlayer, pev_angles, vecAngles);
+    static Float:vecDirectionForward[3]; angle_vector(vecAngles, ANGLEVECTOR_FORWARD, vecDirectionForward);
+    static Float:vecDirectionRight[3]; angle_vector(vecAngles, ANGLEVECTOR_RIGHT, vecDirectionRight);
 
-    static Float:vecAngles[3];
-    pev(pPlayer, pev_angles, vecAngles);
+    static iButton; iButton = pev(pPlayer, pev_button);
 
-    static Float:vecDirectionForward[3];
-    angle_vector(vecAngles, ANGLEVECTOR_FORWARD, vecDirectionForward);
-
-    static Float:vecDirectionRight[3];
-    angle_vector(vecAngles, ANGLEVECTOR_RIGHT, vecDirectionRight);
-
-    if (iButton & IN_FORWARD) {
-        xs_vec_add(vecOut, vecDirectionForward, vecOut);
-    }
-
-    if (iButton & IN_BACK) {
-        xs_vec_sub(vecOut, vecDirectionForward, vecOut);
-    }
-    
-    if (iButton & IN_MOVERIGHT) {
-        xs_vec_add(vecOut, vecDirectionRight, vecOut);
-    }
-
-    if (iButton & IN_MOVELEFT) {
-        xs_vec_sub(vecOut, vecDirectionRight, vecOut);
-    }
+    if (iButton & IN_FORWARD) xs_vec_add(vecOut, vecDirectionForward, vecOut);
+    if (iButton & IN_BACK) xs_vec_sub(vecOut, vecDirectionForward, vecOut);
+    if (iButton & IN_MOVERIGHT) xs_vec_add(vecOut, vecDirectionRight, vecOut);
+    if (iButton & IN_MOVELEFT) xs_vec_sub(vecOut, vecDirectionRight, vecOut);
 
     vecOut[2] = 0.0;
 
     xs_vec_normalize(vecOut, vecOut);
-}
-
-public HamHook_Weapon_Attack_Post(pEntity) {
-    new pPlayer = get_member(pEntity, m_pPlayer);
-
-    if (!is_user_alive(pPlayer)) {
-        return HAM_IGNORED;
-    }
-
-    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) {
-        return HAM_IGNORED;
-    }
-
-    @Weapon_BoostShootSpeed(pEntity);
-
-    return HAM_HANDLED;
-}
-
-public HamHook_Player_Jump_Post(pPlayer) {
-    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) {
-        return HAM_IGNORED;
-    }
-
-    @Player_ProcessJump(pPlayer);
-
-    return HAM_HANDLED;
-}
-
-public HamHook_Player_ItemPreFrame_Post(pPlayer) {
-    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) {
-        return HAM_IGNORED;
-    }
-
-    @Player_BoostSpeed(pPlayer);
-
-    return HAM_HANDLED;
-}
-
-public HamHook_Player_TakeDamage(pPlayer, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
-    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) {
-        return HAM_IGNORED;
-    }
-
-    if (~iDamageBits & DMG_FALL) {
-        return HAM_IGNORED;
-    }
-
-    SetHamParamFloat(4, 0.0);
-
-    return HAM_OVERRIDE;
 }

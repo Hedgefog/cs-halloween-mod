@@ -131,11 +131,7 @@ public plugin_init() {
         UTIL_Message_Dlight(vecOrigin, FLASH_RADIUS_BIG, {HWN_COLOR_SECONDARY}, FLASH_LIFETIME, FLASH_DECAY_RATE_BIG);
     } else {
         new rgiColor[3];
-        for (new i = 0; i < 3; ++i) {
-            rgiColor[i] = floatround(g_rgflLootTypeColor[type][i]);
-        }
-
+        for (new i = 0; i < 3; ++i) rgiColor[i] = floatround(g_rgflLootTypeColor[type][i]);
         UTIL_Message_Dlight(vecOrigin, FLASH_RADIUS, rgiColor, FLASH_LIFETIME, FLASH_DECAY_RATE);
     }
 }
-

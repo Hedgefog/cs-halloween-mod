@@ -78,9 +78,7 @@ public Hwn_Fw_ConfigLoaded() {
 }
 
 public HamHook_Player_Spawn_Post(pPlayer) {
-    if (!is_user_alive(pPlayer)) {
-        return;
-    }
+    if (!is_user_alive(pPlayer)) return;
 
     ResetAll(pPlayer);
 
@@ -109,9 +107,7 @@ public OnPumpkinSpawn(pEntity) {
 
 public HamHook_Camera_Think(pEntity) {
     new pOwner = pev(pEntity, pev_owner);
-    if (!pOwner) {
-        return;
-    }
+    if (!pOwner) return;
 
     static Float:vecPlayerOrigin[3];
     UTIL_GetViewOrigin(pOwner, vecPlayerOrigin);

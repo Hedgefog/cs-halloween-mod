@@ -2,7 +2,6 @@
 
 #include <amxmodx>
 #include <fakemeta>
-#include <reapi>
 
 #include <api_custom_entities>
 
@@ -44,8 +43,8 @@ public plugin_precache() {
 @Entity_Think(this) {
     static const iRadius = 8;
 
-    new Float:flRate = Hwn_GetUpdateRate();
-    new iLifeTime = min(floatround(flRate * 10), 1);
+    static Float:flRate; flRate = Hwn_GetUpdateRate();
+    static iLifeTime; iLifeTime = min(floatround(flRate * 10), 1);
 
     static Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);

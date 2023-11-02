@@ -14,6 +14,7 @@
 
 #define ENTITY_NAME "hwn_skeleton_egg"
 #define ENTITY_NAME_BIG "hwn_skeleton_egg_big"
+
 #define m_bBig "bBig"
 
 public plugin_init() {
@@ -32,7 +33,7 @@ public plugin_precache() {
 
 @Entity_Spawned(this) {
     CE_SetMember(this, m_bBig, CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_BIG));
-    
+
     set_pev(this, pev_solid, SOLID_NOT);
     set_pev(this, pev_movetype, MOVETYPE_BOUNCE);
     set_pev(this, pev_nextthink, get_gametime() + 2.0);
@@ -52,13 +53,11 @@ public plugin_precache() {
         vecOrigin
     );
 
-    if (pSkeleton) {
-        set_pev(pSkeleton, pev_team, pev(this, pev_team));
-        set_pev(pSkeleton, pev_owner, pev(this, pev_owner));
-        dllfunc(DLLFunc_Spawn, pSkeleton);
+    if (!pSkeleton) return;
 
-        if (UTIL_IsStuck(pSkeleton)) {
-            CE_Kill(pSkeleton);
-        }
-    }
+    set_pev(pSkeleton, pev_team, pev(this, pev_team));
+    set_pev(pSkeleton, pev_owner, pev(this, pev_owner));
+    dllfunc(DLLFunc_Spawn, pSkeleton);
+
+    if (UTIL_IsStuck(pSkeleton)) CE_Kill(pSkeleton);
 }

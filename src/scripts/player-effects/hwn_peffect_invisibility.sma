@@ -74,12 +74,11 @@ public client_connect(pPlayer) {
 }
 
 @Player_DetonateEffect(this) {
-    new Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
-
     new Float:vecMins[3];
     pev(this, pev_mins, vecMins);
 
+    new Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
     vecOrigin[2] += vecMins[2];
 
     UTIL_Message_BeamCylinder(vecOrigin, EffectRadius * 3, g_iEffectTraceModelIndex, 0, 3, 90, 255, EffectColor, 100, 0);
@@ -99,9 +98,7 @@ public HamHook_Player_PostThink_Post(pPlayer) {
 }
 
 public Message_ScreenFade(iMsgId, iDest, pPlayer) {
-    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) {
-        return;
-    }
+    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return;
 
     new Float:flDuration = (float(get_msg_arg_int(1)) / (1<<12)) + (float(get_msg_arg_int(2)) / (1<<12));
     g_rgflPlayerNextFixFade[pPlayer] = get_gametime() + flDuration;

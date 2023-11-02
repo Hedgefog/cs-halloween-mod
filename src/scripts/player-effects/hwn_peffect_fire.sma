@@ -26,6 +26,8 @@ public plugin_init() {
 
 @Player_EffectInvoke(pPlayer) {
     new pFire = CE_Create("fire");
+    if (!pFire) return PLUGIN_HANDLED;
+
     dllfunc(DLLFunc_Spawn, pFire);
     set_pev(pFire, pev_movetype, MOVETYPE_FOLLOW);
     set_pev(pFire, pev_aiment, pPlayer);
@@ -44,7 +46,7 @@ public plugin_init() {
 @Fire_Remove(this) {
     new pAimEnt = pev(this, pev_aiment);
 
-    // if something removes fire entity of the current effect
+    // If something removes fire entity of the current effect
     if (IS_PLAYER(pAimEnt) && g_pPlayerFire[pAimEnt] == this) {
         g_pPlayerFire[pAimEnt] = 0;
         Hwn_Player_SetEffect(pAimEnt, "fire", false);

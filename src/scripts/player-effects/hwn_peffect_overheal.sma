@@ -31,29 +31,27 @@ public plugin_init() {
     Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "cross", EffectColor);
 }
 
-@Player_EffectInvoke(pPlayer) {
-    new iTeam = get_member(pPlayer, m_iTeam);
+@Player_EffectInvoke(this) {
+    new iTeam = get_member(this, m_iTeam);
 
     new Float:vecOrigin[3];
-    pev(pPlayer, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
 
     new pTarget = 0;
     while ((pTarget = UTIL_FindUsersNearby(pTarget, vecOrigin, EffectRadius, .iTeam = iTeam)) != 0) {
-        if (iTeam != get_member(pTarget, m_iTeam)) {
-            continue;
-        }
+        if (iTeam != get_member(pTarget, m_iTeam)) continue;
 
         set_pev(pTarget, pev_health, 150.0);
         UTIL_ScreenFade(pTarget, {255, 0, 0}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
-        UTIL_Message_BeamEnts(pPlayer, pTarget, g_iEffectModelIndex, .iLifeTime = 10, .iColor = EffectColor, .iWidth = 8, .iNoise = 120);
+        UTIL_Message_BeamEnts(this, pTarget, g_iEffectModelIndex, .iLifeTime = 10, .iColor = EffectColor, .iWidth = 8, .iNoise = 120);
     }
 
-    DetonateEffect(pPlayer);
+    DetonateEffect(this);
 
     return PLUGIN_HANDLED;
 }
 
-@Player_EffectRevoke(pPlayer) {}
+@Player_EffectRevoke(this) {}
 
 DetonateEffect(pEntity) {
     new Float:vecOrigin[3];

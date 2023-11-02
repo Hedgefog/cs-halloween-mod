@@ -19,9 +19,9 @@
 #define VERSION HWN_VERSION
 #define AUTHOR "Hedgehog Fog"
 
-#define COSMETICS_DOCUMENT_VERSION 2
-
 #define INVENTORY_ITEM_TYPE "hwn_cosmetic"
+
+#define COSMETICS_DOCUMENT_VERSION 2
 
 #define UNUSUAL_ENTITY_RENDER_AMT 1.0
 
@@ -47,8 +47,6 @@ enum SlotItem {
     ItemState:SlotItem_State
 };
 
-new g_szCosmeticsDir[MAX_RESOURCE_PATH_LENGTH];
-
 enum CosmeticData {
     Array:CosmeticData_Name,
     Array:CosmeticData_Groups,
@@ -57,6 +55,13 @@ enum CosmeticData {
     Array:CosmeticData_Skin,
     Array:CosmeticData_EffectColor
 };
+
+new g_pCvarPreview;
+new g_pCvarPreviewLight;
+
+new g_fwEquipmentChanged;
+
+new g_szCosmeticsDir[MAX_RESOURCE_PATH_LENGTH];
 
 new Trie:g_itCosmetic;
 new g_rgiCosmeticData[CosmeticData];
@@ -67,11 +72,6 @@ new Array:g_rgirgPlayerMenuSlotRefs[MAX_PLAYERS + 1] = { Invalid_Array, ... };
 new bool:g_rbPlayerInPreview[MAX_PLAYERS + 1];
 new Float:g_rgflPlayerNextHighlight[MAX_PLAYERS + 1];
 new g_rgiPlayerEquipedGroups[MAX_PLAYERS + 1];
-
-new g_pCvarPreview;
-new g_pCvarPreviewLight;
-
-new g_fwEquipmentChanged;
 
 public plugin_precache() {
     get_configsdir(g_szCosmeticsDir, charsmax(g_szCosmeticsDir));
@@ -162,9 +162,7 @@ public Native_GetIdByIndex(iPluginId, iArgc) {
 }
 
 public Native_Give(iPluginId, iArgc) {
-    if (!g_iCosmeticsNum) {
-        return -1;
-    }
+    if (!g_iCosmeticsNum) return -1;
 
     new pPlayer = get_param(1);
 
@@ -185,6 +183,7 @@ public Native_UpdateEquipment(iPluginId, iArgc) {
 
 public Native_OpenPlayerMenu(iPluginId, iArgc) {
     new pPlayer = get_param(1);
+
     @Player_OpenCosmeticMenu(pPlayer, 0);
 }
 
@@ -202,9 +201,7 @@ public client_connect(pPlayer) {
 public client_disconnected(pPlayer) {
     new iSize = PlayerInventory_Size(pPlayer);
     for (new iSlot = 0; iSlot < iSize; ++iSlot) {
-        if (!PlayerInventory_CheckItemType(pPlayer, iSlot, INVENTORY_ITEM_TYPE))  {
-            continue;
-        }
+        if (!PlayerInventory_CheckItemType(pPlayer, iSlot, INVENTORY_ITEM_TYPE)) continue;
 
         @Player_UnequipInventorySlot(pPlayer, iSlot, .bChangeState = false);
     }
@@ -213,9 +210,7 @@ public client_disconnected(pPlayer) {
 }
 
 public PlayerInventory_Fw_SlotLoaded(pPlayer, iSlot) {
-    if (!PlayerInventory_CheckItemType(pPlayer, iSlot, INVENTORY_ITEM_TYPE))  {
-        return;
-    }
+    if (!PlayerInventory_CheckItemType(pPlayer, iSlot, INVENTORY_ITEM_TYPE)) return;
 
     new Struct:sItem = PlayerInventory_GetItem(pPlayer, iSlot);
 
@@ -236,14 +231,10 @@ public PlayerInventory_Fw_SlotLoaded(pPlayer, iSlot) {
 }
 
 public PlayerInventory_Fw_SlotRemoved(pPlayer, iSlot) {
-    if (!PlayerInventory_CheckItemType(pPlayer, iSlot, INVENTORY_ITEM_TYPE))  {
-        return;
-    }
+    if (!PlayerInventory_CheckItemType(pPlayer, iSlot, INVENTORY_ITEM_TYPE)) return;
 
     new Struct:sItem = PlayerInventory_GetItem(pPlayer, iSlot);
-    if (sItem == Invalid_Struct) {
-        return;
-    }
+    if (sItem == Invalid_Struct) return;
 
     @Player_UnequipInventorySlot(pPlayer, iSlot, true);
 
@@ -315,9 +306,7 @@ public HamHook_Player_PostThink_Post(pPlayer) {
         if (g_rgflPlayerNextSlotsUpdate[pPlayer] <= flGameTime) {
             new iSize = PlayerInventory_Size(pPlayer);
             for (new iSlot = 0; iSlot < iSize; ++iSlot) {
-                if (!PlayerInventory_CheckItemType(pPlayer, iSlot, INVENTORY_ITEM_TYPE))  {
-                    continue;
-                }
+                if (!PlayerInventory_CheckItemType(pPlayer, iSlot, INVENTORY_ITEM_TYPE)) continue;
 
                 static Struct:sItem; sItem = PlayerInventory_GetItem(pPlayer, iSlot);
                 @SlotItem_Think(sItem);
@@ -329,9 +318,7 @@ public HamHook_Player_PostThink_Post(pPlayer) {
 }
 
 public HamHook_Target_Think_Post(pEntity) {
-    static szClassName[32];
-    pev(pEntity, pev_classname, szClassName, charsmax(szClassName));
-
+    static szClassName[32]; pev(pEntity, pev_classname, szClassName, charsmax(szClassName));
     if (equal(szClassName, "_cosmetic")) {
         @PlayerCosmetic_Think(pEntity);
     }
@@ -393,14 +380,12 @@ ItemState:@SlotItem_GetState(const &Struct:this) {
     }
 }
 
-/*--------------------------------[ Player Methods ]--------------------------------*/
+/*--------------------------------[ Player Cosmetic Methods ]--------------------------------*/
 
 @PlayerCosmetic_Think(this) {
     static Struct:sItem; sItem = Struct:pev(this, pev_iuser1);
 
-    if (!sItem) {
-        return;
-    }
+    if (!sItem) return;
 
     if (StructGetCell(sItem, SlotItem_CosmeticType) == Hwn_PlayerCosmetic_Type_Unusual) {
         static szId[32]; StructGetString(sItem, SlotItem_Id, szId, charsmax(szId));
@@ -425,9 +410,7 @@ ItemState:@SlotItem_GetState(const &Struct:this) {
 
     new iSize = PlayerInventory_Size(this);
     for (new i = 0; i < iSize; ++i) {
-        if (!PlayerInventory_CheckItemType(this, i, INVENTORY_ITEM_TYPE))  {
-            continue;
-        }
+        if (!PlayerInventory_CheckItemType(this, i, INVENTORY_ITEM_TYPE)) continue;
 
         sItem = PlayerInventory_GetItem(this, i);
 
@@ -451,6 +434,7 @@ ItemState:@SlotItem_GetState(const &Struct:this) {
 
 bool:@Player_IsInventorySlotEquiped(this, iSlot) {
     new Struct:sItem = PlayerInventory_GetItem(this, iSlot);
+
     return @SlotItem_IsEquiped(sItem);
 }
 
@@ -460,9 +444,7 @@ bool:@Player_CanEquipInventorySlot(this, iSlot) {
     static szId[32]; StructGetString(sItem, SlotItem_Id, szId, charsmax(szId));
 
     new iCosmetic;
-    if (!TrieGetCell(g_itCosmetic, szId, iCosmetic)) {
-        return false;
-    }
+    if (!TrieGetCell(g_itCosmetic, szId, iCosmetic)) return false;
 
     new iGroups = ArrayGetCell(g_rgiCosmeticData[CosmeticData_Groups], iCosmetic);
 
@@ -470,19 +452,13 @@ bool:@Player_CanEquipInventorySlot(this, iSlot) {
 }
 
 @Player_EquipInventorySlot(this, iSlot) {
-    if (!PlayerInventory_CheckItemType(this, iSlot, INVENTORY_ITEM_TYPE))  {
-        return;
-    }
+    if (!PlayerInventory_CheckItemType(this, iSlot, INVENTORY_ITEM_TYPE)) return;
 
     new Struct:sItem = PlayerInventory_GetItem(this, iSlot);
 
-    if (@SlotItem_IsEquiped(sItem)) {
-        return;
-    }
+    if (@SlotItem_IsEquiped(sItem)) return;
 
-    if (!@Player_CanEquipInventorySlot(this, iSlot)) {
-        return;
-    }
+    if (!@Player_CanEquipInventorySlot(this, iSlot)) return;
 
     static szId[32]; StructGetString(sItem, SlotItem_Id, szId, charsmax(szId));
     new iCosmetic; TrieGetCell(g_itCosmetic, szId, iCosmetic);
@@ -499,16 +475,12 @@ bool:@Player_CanEquipInventorySlot(this, iSlot) {
 }
 
 @Player_UnequipInventorySlot(this, iSlot, bool:bChangeState) {
-    if (!PlayerInventory_CheckItemType(this, iSlot, INVENTORY_ITEM_TYPE))  {
-        return;
-    }
+    if (!PlayerInventory_CheckItemType(this, iSlot, INVENTORY_ITEM_TYPE)) return;
 
     new Struct:sItem = PlayerInventory_GetItem(this, iSlot);
 
     new ItemState:iItemState = @SlotItem_GetState(sItem);
-    if (iItemState == ItemState_None) {
-        return;
-    }
+    if (iItemState == ItemState_None) return;
 
     static szId[32]; StructGetString(sItem, SlotItem_Id, szId, charsmax(szId));
     new iCosmetic; TrieGetCell(g_itCosmetic, szId, iCosmetic);
@@ -531,15 +503,11 @@ bool:@Player_CanEquipInventorySlot(this, iSlot) {
 }
 
 @Player_UpdateEquipment(this) {
-    if (!g_iCosmeticsNum) {
-        return;
-    }
+    if (!g_iCosmeticsNum) return;
 
     new iSize = PlayerInventory_Size(this);
     for (new iSlot = 0; iSlot < iSize; ++iSlot) {
-        if (!PlayerInventory_CheckItemType(this, iSlot, INVENTORY_ITEM_TYPE))  {
-            continue;
-        }
+        if (!PlayerInventory_CheckItemType(this, iSlot, INVENTORY_ITEM_TYPE)) continue;
 
         new Struct:sItem = PlayerInventory_GetItem(this, iSlot);
         new ItemState:iItemState = @SlotItem_GetState(sItem);
@@ -568,14 +536,10 @@ bool:@Player_CanEquipInventorySlot(this, iSlot) {
 
     new iSize = PlayerInventory_Size(this);
     for (new iSlot = 0; iSlot < iSize; ++iSlot) {
-        if (!PlayerInventory_CheckItemType(this, iSlot, INVENTORY_ITEM_TYPE))  {
-            continue;
-        }
+        if (!PlayerInventory_CheckItemType(this, iSlot, INVENTORY_ITEM_TYPE)) continue;
 
         new Struct:sItem = PlayerInventory_GetItem(this, iSlot);
-        if (!@SlotItem_IsEquiped(sItem)) {
-            continue;
-        }
+        if (!@SlotItem_IsEquiped(sItem)) continue;
 
         static szId[32]; StructGetString(sItem, SlotItem_Id, szId, charsmax(szId));
         new iCosmetic; TrieGetCell(g_itCosmetic, szId, iCosmetic);
@@ -585,17 +549,9 @@ bool:@Player_CanEquipInventorySlot(this, iSlot) {
 }
 
 bool:@Player_ActivatePreview(pPlayer, bool:bLight) {
-    if (!is_user_alive(pPlayer)) {
-        return false;
-    }
-
-    if (~pev(pPlayer, pev_flags) & FL_ONGROUND) {
-        return false;
-    }
-
-    if (PlayerCamera_IsActive(pPlayer)) {
-        return false;
-    }
+    if (!is_user_alive(pPlayer)) return false;
+    if (~pev(pPlayer, pev_flags) & FL_ONGROUND) return false;
+    if (PlayerCamera_IsActive(pPlayer)) return false;
 
     set_pev(pPlayer, pev_velocity, Float:{0.0, 0.0, 0.0});
     set_pev(pPlayer, pev_avelocity, Float:{0.0, 0.0, 0.0});
@@ -614,9 +570,7 @@ bool:@Player_ActivatePreview(pPlayer, bool:bLight) {
 }
 
 @Player_DeactivatePreview(pPlayer) {
-    if (!g_rbPlayerInPreview[pPlayer]) {
-        return;
-    }
+    if (!g_rbPlayerInPreview[pPlayer]) return;
 
     PlayerCamera_Deactivate(pPlayer);
     g_rbPlayerInPreview[pPlayer] = false;
@@ -669,16 +623,12 @@ CreatePlayerCosmeticMenu(pPlayer) {
     new iInventorySize = PlayerInventory_Size(pPlayer);
 
     for (new iSlot = 0; iSlot < iInventorySize; ++iSlot) {
-        if (!PlayerInventory_CheckItemType(pPlayer, iSlot, INVENTORY_ITEM_TYPE))  {
-            continue;
-        }
+        if (!PlayerInventory_CheckItemType(pPlayer, iSlot, INVENTORY_ITEM_TYPE)) continue;
 
         new Struct:sItem = PlayerInventory_GetItem(pPlayer, iSlot);
         new Floa:flTime = StructGetCell(sItem, SlotItem_Time);
 
-        if (!flTime) {
-            continue;
-        }
+        if (!flTime) continue;
 
         new iItemCallback = menu_makecallback("MenuCallback_PlayerCosmetics_Item");
         menu_additem(iMenu, "", .callback = iItemCallback);
@@ -702,14 +652,10 @@ LoadCosmetics() {
     new FileType:iFileType;
     new iDir = open_dir(g_szCosmeticsDir, szFileName, charsmax(szFileName), iFileType);
 
-    if (!iDir) {
-        return;
-    }
+    if (!iDir) return;
 
     do {
-        if (iFileType != FileType_File) {
-            continue;
-        }
+        if (iFileType != FileType_File) continue;
 
         new iLen = strlen(szFileName);
         if (iLen > 5 && equal(szFileName[iLen - 5], ".json")) {
@@ -842,9 +788,7 @@ public MenuCallback_PlayerCosmetics_Item(pPlayer, iMenu, iItem) {
         return ITEM_DISABLED;
     }
 
-    if (!flTime) {
-        return ITEM_DISABLED;
-    }
+    if (!flTime) return ITEM_DISABLED;
 
     return ITEM_ENABLED;
 }

@@ -28,21 +28,16 @@ public plugin_init() {
 }
 
 public client_connect(pPlayer) {
-    if (get_pcvar_num(g_pCvarCosmeticsNum) <= 0) {
-        return;
-    }
+    if (get_pcvar_num(g_pCvarCosmeticsNum) <= 0) return;
+    if (!is_user_bot(pPlayer)) return;
 
-    if (is_user_bot(pPlayer)) {
-        @Player_GiveAllCosmetic(pPlayer);
-        @Player_EquipRandomCosmetics(pPlayer);
-    }
+    @Player_GiveAllCosmetic(pPlayer);
+    @Player_EquipRandomCosmetics(pPlayer);
 }
 
 public PlayerInventory_Fw_SlotSave(pPlayer, iSlot) {
     if (PlayerInventory_CheckItemType(pPlayer, iSlot, "hwn_cosmetic")) {
-        if (is_user_bot(pPlayer)) {
-            return PLUGIN_HANDLED;
-        }
+        if (is_user_bot(pPlayer)) return PLUGIN_HANDLED;
     }
 
     return PLUGIN_CONTINUE;
@@ -63,24 +58,14 @@ public PlayerInventory_Fw_SlotSave(pPlayer, iSlot) {
 
     new iTotal = 0;
     for (new iSlot = 0; iSlot < iInventorySize; ++iSlot) {
-        if (!PlayerInventory_CheckItemType(pPlayer, iSlot, "hwn_cosmetic")) {
-            continue;
-        }
-
-        if (!@Player_CanEquipInventorySlot(pPlayer, iSlot)) {
-            continue;
-        }
-    
-        if (random(100) > 30) {
-            continue;
-        }
+        if (!PlayerInventory_CheckItemType(pPlayer, iSlot, "hwn_cosmetic")) continue;
+        if (!@Player_CanEquipInventorySlot(pPlayer, iSlot)) continue;
+        if (random(100) > 30) continue;
 
         @Player_EquipInventorySlot(pPlayer, iSlot);
         iTotal++;
 
-        if (iTotal >= iMaxCosmetic) {
-            break;
-        }
+        if (iTotal >= iMaxCosmetic) break;
     }
 }
 
@@ -89,6 +74,7 @@ bool:@Player_CanEquipInventorySlot(this, iSlot) {
     callfunc_begin_i(iCanEquipFunctionId, g_iCosmeticsPluginId);
     callfunc_push_int(this);
     callfunc_push_int(iSlot);
+
     return bool:callfunc_end();
 }
 
@@ -97,5 +83,6 @@ bool:@Player_EquipInventorySlot(this, iSlot) {
     callfunc_begin_i(iCanEquipFunctionId, g_iCosmeticsPluginId);
     callfunc_push_int(this);
     callfunc_push_int(iSlot);
+
     return bool:callfunc_end();
 }

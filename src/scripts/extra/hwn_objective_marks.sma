@@ -96,32 +96,16 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 }
 
 public FMHook_AddToFullPack(es, e, pEntity, pHost, pHostFlags, pPlayer, pSet) {
-    if (!IS_PLAYER(pHost)) {
-        return FMRES_IGNORED;
-    }
-
-    if (is_user_bot(pHost)) {
-        return FMRES_IGNORED;
-    }
-
-    if (!pev_valid(pEntity)) {
-        return FMRES_IGNORED;
-    }
+    if (!IS_PLAYER(pHost)) return FMRES_IGNORED;
+    if (is_user_bot(pHost)) return FMRES_IGNORED;
+    if (!pev_valid(pEntity)) return FMRES_IGNORED;
 
     static szClassName[32];
     pev(pEntity, pev_classname, szClassName, charsmax(szClassName));
+    if (!equal(szClassName, MARK_CLASSNAME)) return FMRES_IGNORED;
 
-    if (!equal(szClassName, MARK_CLASSNAME)) {
-        return FMRES_IGNORED;
-    }
-
-    if (get_pcvar_num(g_pCvarEnabled) <= 0) {
-        return FMRES_SUPERCEDE;
-    }
-
-    if (!is_user_alive(pHost)) {
-        return FMRES_SUPERCEDE;
-    }
+    if (get_pcvar_num(g_pCvarEnabled) <= 0) return FMRES_SUPERCEDE;
+    if (!is_user_alive(pHost)) return FMRES_SUPERCEDE;
 
     new pBucket = pev(pEntity, pev_owner);
     new iBucketTeam = pev(pBucket, pev_team);

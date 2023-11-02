@@ -206,13 +206,9 @@ UpdateVisibleFlag(pEntity) {
 
     new playerVisibleFlags = 0;
     for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
-        if (!is_user_connected(pPlayer)) {
-            continue;
-        }
+        if (!is_user_connected(pPlayer)) continue;
 
-        if (!is_in_viewcone(pPlayer, vecOrigin, 1)) {
-            continue;
-        }
+        if (!is_in_viewcone(pPlayer, vecOrigin, 1)) continue;
 
         static Float:vecPlayerOrigin[3];
         pev(pPlayer, pev_origin, vecPlayerOrigin);

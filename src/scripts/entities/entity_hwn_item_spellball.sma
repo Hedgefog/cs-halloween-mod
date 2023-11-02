@@ -65,36 +65,30 @@ public plugin_init() {
 }
 
 @Entity_Think(this) {
-    new Float:flRate = Hwn_GetUpdateRate();
-    new iLifeTime = max(floatround(flRate * 10), 1);
+    static Float:flRate; flRate = Hwn_GetUpdateRate();
+    static iLifeTime; iLifeTime = max(floatround(flRate * 10), 1);
 
     static Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);
 
     static rgiColor[3];
-    {
-        pev(this, pev_rendercolor, rgiColor);
-        for (new i = 0; i < 3; ++i) {
-            rgiColor[i] = floatround(Float:rgiColor[i]);
-        }
-    }
+    pev(this, pev_rendercolor, rgiColor);
+    for (new i = 0; i < 3; ++i) rgiColor[i] = floatround(Float:rgiColor[i]);
 
     UTIL_Message_Dlight(vecOrigin, 16, rgiColor, iLifeTime, 0);
 
     // Fix for smoke origin
-    {
-        static Float:vecVelocity[3];
-        pev(this, pev_velocity, vecVelocity);
+    static Float:vecVelocity[3];
+    pev(this, pev_velocity, vecVelocity);
 
-        new Float:flSpeed = xs_vec_len(vecVelocity);
+    static Float:flSpeed; flSpeed = xs_vec_len(vecVelocity);
 
-        static Float:vecSub[3];
-        xs_vec_normalize(vecVelocity, vecSub);
-        xs_vec_mul_scalar(vecSub, flSpeed / 16.0, vecSub); // origin prediction
-        vecSub[2] += 20.0;
+    static Float:vecSub[3];
+    xs_vec_normalize(vecVelocity, vecSub);
+    xs_vec_mul_scalar(vecSub, flSpeed / 16.0, vecSub); // origin prediction
+    vecSub[2] += 20.0;
 
-        xs_vec_sub(vecOrigin, vecSub, vecOrigin);
-    }
+    xs_vec_sub(vecOrigin, vecSub, vecOrigin);
 
     engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vecOrigin, 0);
     write_byte(TE_SMOKE);

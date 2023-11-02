@@ -612,9 +612,7 @@ Float:@Entity_GetPathCost(this, NavArea:newArea, NavArea:prevArea) {
 
     for (new i = 0; i < SKELETON_EGG_COUNT; ++i) {
         new pEgg = CE_Create(SKELETON_EGG_ENTITY_NAME, vecOrigin);
-        if (!pEgg) {
-            continue;
-        }
+        if (!pEgg) continue;
 
         set_pev(pEgg, pev_team, pev(this, pev_team));
         set_pev(pEgg, pev_owner, pev(this, pev_owner));

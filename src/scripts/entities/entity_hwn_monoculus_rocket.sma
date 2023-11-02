@@ -44,22 +44,29 @@ public plugin_precache() {
     );
 
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
+    CE_RegisterHook(CEFunction_InitPhysics, ENTITY_NAME, "@Entity_InitPhysics");
+    CE_RegisterHook(CEFunction_InitSize, ENTITY_NAME, "@Entity_InitSize");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
     CE_RegisterHook(CEFunction_Touch, ENTITY_NAME, "@Entity_Touch");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 }
 
 @Entity_Spawned(this) {
-    set_pev(this, pev_solid, SOLID_TRIGGER);
-    set_pev(this, pev_movetype, MOVETYPE_FLY);
     set_pev(this, pev_rendermode, kRenderNormal);
     set_pev(this, pev_renderfx, kRenderFxGlowShell);
     set_pev(this, pev_renderamt, 4.0);
     set_pev(this, pev_rendercolor, {HWN_COLOR_PRIMARY_F});
 
-    engfunc(EngFunc_SetSize, this, Float:{-8.0, -8.0, -8.0}, Float:{8.0, 8.0, 8.0});
-
     set_pev(this, pev_nextthink, get_gametime());
+}
+
+@Entity_InitPhysics(this) {
+    set_pev(this, pev_solid, SOLID_TRIGGER);
+    set_pev(this, pev_movetype, MOVETYPE_FLY);
+}
+
+@Entity_InitSize(this) {
+    engfunc(EngFunc_SetSize, this, Float:{-8.0, -8.0, -8.0}, Float:{8.0, 8.0, 8.0});
 }
 
 @Entity_Killed(this) {
@@ -72,17 +79,13 @@ public plugin_precache() {
 }
 
 @Entity_Think(this) {
+    static Float:vecOffset[3];
+    UTIL_GetDirectionVector(this, vecOffset, 32.0);
+    vecOffset[2] += 18.0;
+
     static Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);
-
-    //Fix for smoke origin
-    {
-        static Float:vecSub[3];
-        UTIL_GetDirectionVector(this, vecSub, 32.0);
-        vecSub[2] += 18.0;
-
-        xs_vec_sub(vecOrigin, vecSub, vecOrigin);
-    }
+    xs_vec_sub(vecOrigin, vecOffset, vecOrigin);
 
     engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vecOrigin, 0);
     write_byte(TE_SMOKE);
@@ -109,23 +112,14 @@ public plugin_precache() {
 
     new pTarget = 0;
     while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EXPLOSION_RADIUS * 2)) != 0) {
-        if (this == pTarget) {
-            continue;
-        }
-
-        if (pev(pTarget, pev_deadflag) != DEAD_NO) {
-            continue;
-        }
-
-        if (pev(pTarget, pev_takedamage) == DAMAGE_NO) {
-            continue;
-        }
+        if (this == pTarget) continue;
+        if (pev(pTarget, pev_deadflag) != DEAD_NO) continue;
+        if (pev(pTarget, pev_takedamage) == DAMAGE_NO) continue;
 
         static Float:vecTargetOrigin[3];
         pev(pTarget, pev_origin, vecTargetOrigin);
 
         new Float:flDamage = UTIL_CalculateRadiusDamage(vecOrigin, vecTargetOrigin, EXPLOSION_RADIUS, EXPLOSION_DAMAGE, false, pTarget);
-
         ExecuteHamB(Ham_TakeDamage, pTarget, this, pOwner, flDamage, DMG_ALWAYSGIB);
     }
 }

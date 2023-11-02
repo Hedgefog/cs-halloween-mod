@@ -35,9 +35,7 @@ public plugin_init() {
 }
 
 public Hwn_Wof_Fw_Effect_Start(iSpell) {
-    if (g_iWofSpell != iSpell) {
-        return;
-    }
+    if (g_iWofSpell != iSpell) return;
 
     Hwn_Wof_Abort();
 

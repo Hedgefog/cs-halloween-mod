@@ -184,9 +184,7 @@ public client_disconnected(pPlayer) {
 }
 
 public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
-    if (iBoss != g_iBossHandler) {
-        return;
-    }
+    if (iBoss != g_iBossHandler) return;
 
     @Entity_ResetPath(pEntity);
 }
@@ -681,9 +679,7 @@ Float:@Entity_GetPathCost(this, NavArea:newArea, NavArea:prevArea) {
     pev(this, pev_origin, vecOrigin);
 
     for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
-        if (!is_user_alive(pPlayer)) {
-            continue;
-        }
+        if (!is_user_alive(pPlayer)) continue;
 
         static Float:vecUserOrigin[3];
         pev(pPlayer, pev_origin, vecUserOrigin);

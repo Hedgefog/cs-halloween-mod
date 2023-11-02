@@ -59,9 +59,7 @@ public plugin_init() {
     pev(this, pev_origin, vecOrigin);
 
     new pPumpkin = CE_Create(LOOT_ENTITY_CLASSNAME, vecOrigin);
-    if (!pPumpkin) {
-        return;
-    }
+    if (!pPumpkin) return;
 
     new Float:flImpulse = CE_GetMember(this, m_flImpulse);
     if (flImpulse > 0.0) {

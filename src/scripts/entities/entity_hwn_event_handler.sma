@@ -48,9 +48,7 @@ public plugin_end() {
 }
 
 DispatchEvent(const eventName[], caller = 0) {
-    if (g_irgEventHandlers == Invalid_Array) {
-        return;
-    }
+    if (g_irgEventHandlers == Invalid_Array) return;
 
     new iSize = ArraySize(g_irgEventHandlers);
     for (new iGlobalId = 0; iGlobalId < iSize; ++iGlobalId) {
@@ -59,9 +57,7 @@ DispatchEvent(const eventName[], caller = 0) {
         static szTargetname[32];
         pev(pEntity, pev_targetname, szTargetname, charsmax(szTargetname));
 
-        if (!equal(szTargetname, eventName)) {
-            continue;
-        }
+        if (!equal(szTargetname, eventName)) continue;
 
         static szTarget[32];
         pev(pEntity, pev_target, szTarget, charsmax(szTarget));

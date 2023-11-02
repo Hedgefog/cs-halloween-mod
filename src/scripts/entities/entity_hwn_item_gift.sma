@@ -44,30 +44,18 @@ public plugin_precache() {
 
 @Entity_Pickup(this, pPlayer) {
     new pOwner = pev(this, pev_owner);
-    if (pOwner && pPlayer != pOwner) {
-        return PLUGIN_CONTINUE;
-    }
+    if (pOwner && pPlayer != pOwner) return PLUGIN_CONTINUE;
 
     return PLUGIN_HANDLED;
 }
 
-public FMHook_AddToFullPack_Post(es, e, pEntity, host, hostflags, player, pSet) {
-    if (!pev_valid(pEntity)) {
-        return;
-    }
-
-    if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) {
-        return;
-    }
-
-    if (!is_user_connected(host)) {
-        return;
-    }
+public FMHook_AddToFullPack_Post(es, e, pEntity, pHost, pHostFlags, pPlayer, pSet) {
+    if (!pev_valid(pEntity)) return;
+    if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) return;
+    if (!is_user_connected(pHost)) return;
 
     new pOwner = pev(pEntity, pev_owner);
-    if (!pOwner || pOwner == host) {
-        return;
-    }
+    if (!pOwner || pOwner == pHost) return;
 
     set_es(es, ES_RenderMode, kRenderTransTexture);
     set_es(es, ES_RenderAmt, 0);

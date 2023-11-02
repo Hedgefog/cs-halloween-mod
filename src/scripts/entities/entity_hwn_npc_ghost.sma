@@ -379,9 +379,7 @@ public Hwn_Fw_ConfigLoaded() {
     new Float:flClosestPlayerDistance = -1.0;
 
     for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
-        if (!is_user_alive(pPlayer)) {
-            continue;
-        }
+        if (!is_user_alive(pPlayer)) continue;
 
         static Float:flDistance; flDistance = entity_range(this, pPlayer);
 
@@ -400,9 +398,7 @@ public Hwn_Fw_ConfigLoaded() {
 
 @Entity_CreateParticles(this) {
     new pParticle = CE_GetMember(this, m_pParticle);
-    if (pParticle) {
-        return;
-    }
+    if (pParticle) return;
     
     pParticle = Particles_Spawn("magic_glow", Float:{0.0, 0.0, 0.0}, 0.0);
     set_pev(pParticle, pev_movetype, MOVETYPE_FOLLOW);
@@ -412,9 +408,7 @@ public Hwn_Fw_ConfigLoaded() {
 
 @Entity_RemoveParticles(this) {
     new pParticle = CE_GetMember(this, m_pParticle);
-    if (!pParticle) {
-        return;
-    }
+    if (!pParticle) return;
 
     Particles_Remove(pParticle);
     CE_SetMember(this, m_pParticle, 0);

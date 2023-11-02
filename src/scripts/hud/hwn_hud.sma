@@ -157,9 +157,7 @@ public Hwn_Collector_Fw_ObjectiveBlocked(pPlayer) {
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public HamHook_Player_Spawn_Post(pPlayer) {
-    if (!is_user_alive(pPlayer)) {
-        return;
-    }
+    if (!is_user_alive(pPlayer)) return;
 
     SetupNotificatiMessage(HUD_POS_NOTIFICATION_MOD_MENU);
     show_dhudmessage(pPlayer, "%L", LANG_PLAYER, "HWN_MENU_HELP");
@@ -193,9 +191,7 @@ public OnSpellbookPicked(pEntity, pPlayer) {
 }
 
 public OnPumpkinPicked(pEntity, pPlayer) {
-    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) {
-        return;
-    }
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) return;
 
     new iPoints = Hwn_Collector_GetPlayerPoints(pPlayer);
     new iBucketPoints = CE_GetMember(pEntity, "iType") == -1 ? CE_GetMember(pEntity, "iSize") : 1;
@@ -207,17 +203,13 @@ public OnPumpkinPicked(pEntity, pPlayer) {
 }
 
 public OnResetHUD(pPlayer) {
-    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) {
-        return;
-    }
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) return;
 
     UTIL_Message_HideWeapon(pPlayer, GetHideWeaponFlags());
 }
 
 public Message_HideWeapon() {
-    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) {
-        return;
-    }
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) return;
 
     set_msg_arg_int(1, ARG_BYTE, get_msg_arg_int(1) | GetHideWeaponFlags());
 }
@@ -225,9 +217,7 @@ public Message_HideWeapon() {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 UpdateTeamPoints() {
-    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) {
-        return;
-    }
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) return;
 
     new iTPoints = Hwn_Collector_GetTeamPoints(1);
     new iCtPoints = Hwn_Collector_GetTeamPoints(2);
@@ -249,9 +239,7 @@ UpdateTeamPoints() {
 }
 
 UpdatePlayerPoints(pPlayer) {
-    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) {
-        return;
-    }
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) return;
 
     new iPoints = Hwn_Collector_GetPlayerPoints(pPlayer);
 
@@ -263,9 +251,7 @@ UpdatePlayerPoints(pPlayer) {
 UpdatePlayerSpell(pPlayer) {
     new iAmount = 0;
     new iSpell = Hwn_Spell_GetPlayerSpell(pPlayer, iAmount);
-    if (iSpell < 0) {
-        return;
-    }
+    if (iSpell < 0) return;
 
     set_hudmessage(HUD_COLOR_NOTIFICATION, HUD_POS_STATIC_PLAYER_SPELL, .fxtime = 0.0, .holdtime = 1.0, .channel = -1);
 
@@ -300,13 +286,9 @@ GetHideWeaponFlags() {
 
 public Task_Update() {
     for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
-        if (!is_user_connected(pPlayer)) {
-            continue;
-        }
+        if (!is_user_connected(pPlayer)) continue;
 
-        if (!is_user_alive(pPlayer)) {
-            continue;
-        }
+        if (!is_user_alive(pPlayer)) continue;
 
         UpdatePlayerPoints(pPlayer);
         UpdatePlayerSpell(pPlayer);

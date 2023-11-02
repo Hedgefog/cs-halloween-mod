@@ -80,13 +80,8 @@ bool:@SpellBall_IsFireBall(this) {
 }
 
 @FireBall_Touch(this, pTarget) {
-    if (pTarget == pev(this, pev_owner)) {
-        return;
-    }
-
-    if (pev(pTarget, pev_solid) <= SOLID_TRIGGER) {
-        return;
-    }
+    if (pTarget == pev(this, pev_owner)) return;
+    if (pev(pTarget, pev_solid) <= SOLID_TRIGGER) return;
 
     CE_Kill(this);
 }

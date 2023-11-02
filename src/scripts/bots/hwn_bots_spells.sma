@@ -42,7 +42,6 @@ public plugin_init() {
     TrieSetCell(g_spellTypes, "Moon Jump", SpellType_Applicable);
     TrieSetCell(g_spellTypes, "Power Up", SpellType_Applicable);
     TrieSetCell(g_spellTypes, "Overheal", SpellType_Heal);
-
 }
 
 public plugin_end() {
@@ -50,13 +49,8 @@ public plugin_end() {
 }
 
 public client_connect(pPlayer) {
-    if (get_pcvar_num(g_pCvarEnabled) <= 0) {
-        return;
-    }
-
-    if (!is_user_bot(pPlayer)) {
-        return;
-    }
+    if (get_pcvar_num(g_pCvarEnabled) <= 0) return;
+    if (!is_user_bot(pPlayer)) return;
 
     set_task(SPELL_CHECK_DELAY, "Task_Think", pPlayer, _, _, "b");
 }
@@ -66,31 +60,16 @@ public client_disconnected(pPlayer) {
 }
 
 public Task_Think(pPlayer) {
-    if (get_pcvar_num(g_pCvarEnabled) <= 0) {
-        return;
-    }
-
-    if (!is_user_alive(pPlayer)) {
-        return;
-    }
+    if (get_pcvar_num(g_pCvarEnabled) <= 0) return;
+    if (!is_user_alive(pPlayer)) return;
 
     new iSpell = Hwn_Spell_GetPlayerSpell(pPlayer);
-    if (iSpell == -1) {
-        return;
-    }
+    if (iSpell == -1) return;
 
-    new Float:flLastCast = g_lastSpellCast[pPlayer];
-    if (get_gametime() - flLastCast < SPELL_CAST_DELAY) {
-        return;
-    }
+    if (get_gametime() - g_lastSpellCast[pPlayer] < SPELL_CAST_DELAY) return;
 
-    if (!RandomCheck(SPELL_CAST_CHANCE)) {
-        return;
-    }
-
-    if (!CheckSpellCast(pPlayer)) {
-        return;
-    }
+    if (!RandomCheck(SPELL_CAST_CHANCE)) return;
+    if (!CheckSpellCast(pPlayer)) return;
 
     Hwn_Spell_CastPlayerSpell(pPlayer);
     g_lastSpellCast[pPlayer] = get_gametime();
@@ -98,15 +77,10 @@ public Task_Think(pPlayer) {
 
 bool:CheckSpellCast(pPlayer) {
     new iSpell = Hwn_Spell_GetPlayerSpell(pPlayer);
-    
-    static szSpellName[32];
-    Hwn_Spell_GetName(iSpell, szSpellName, charsmax(szSpellName));
-    
-    static SpellType:spellType;
-    TrieGetCell(g_spellTypes, szSpellName, spellType);
+    static szSpellName[32]; Hwn_Spell_GetName(iSpell, szSpellName, charsmax(szSpellName));
+    static SpellType:spellType; TrieGetCell(g_spellTypes, szSpellName, spellType);
 
-    switch (spellType)
-    {
+    switch (spellType) {
         case SpellType_ThrowableEnemy:
             return IsLookingAroundEnemy(pPlayer);
         case SpellType_RadiusEnemy:
@@ -159,28 +133,16 @@ CountEnemiesNearbyOrigin(pPlayer, const Float:vecOrigin[3], Float:flRadius) {
 
     new iNum = 0;
     for (new pTarget = 1; pTarget <= MaxClients; ++pTarget) {
-        if (!is_user_connected(pTarget)) {
-            continue;
-        }
-
-        if (!is_user_alive(pTarget)) {
-            continue;
-        }
-
-        if (iTeam == get_member(pTarget, m_iTeam)) {
-            continue;
-        }
+        if (!is_user_connected(pTarget)) continue;
+        if (!is_user_alive(pTarget)) continue;
+        if (iTeam == get_member(pTarget, m_iTeam)) continue;
 
         static Float:vecTargetOrigin[3];
         pev(pTarget, pev_origin, vecTargetOrigin);
 
-        if (get_distance_f(vecOrigin, vecTargetOrigin) > flRadius) {
-            continue;
-        }
+        if (get_distance_f(vecOrigin, vecTargetOrigin) > flRadius) continue;
 
-        if (!UTIL_IsPointVisible(vecOrigin, vecTargetOrigin)) {
-            continue;
-        }
+        if (!UTIL_IsPointVisible(vecOrigin, vecTargetOrigin)) continue;
 
         iNum++;
     }
