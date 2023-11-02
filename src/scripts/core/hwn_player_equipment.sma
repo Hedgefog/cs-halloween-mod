@@ -1,36 +1,44 @@
 #pragma semicolon 1
 
 #include <amxmodx>
-#include <engine>
-#include <reapi>
+#include <amxmisc>
+#include <fakemeta>
 #include <hamsandwich>
-
 #include <cstrike>
 #include <fun>
+#include <json>
 
-#include <cs_weapons_consts>
+#include <cellstruct>
 
 #include <hwn>
-#include <hwn_utils>
 
 #define PLUGIN "[Hwn] Player Equipment"
 #define AUTHOR "Hedgehog Fog"
 
-new const g_rgiWeapons[] = {
-    0,
-    CSW_UMP45,
-    CSW_MP5NAVY,
-    CSW_P90,
-    CSW_SCOUT,
-    CSW_M3
-};
+#define EQUIPMENT_DOCUMENT_VERSION 1
+
+enum Equipment {
+    Equipment_Title[32],
+    Equipment_MaxHealth,
+    Equipment_Health,
+    Equipment_Armor,
+    Equipment_ArmorType,
+    Array:Equipment_Items
+}
 
 new g_fwEquipmentChanged;
 
-new g_iWeaponMenu;
 new g_szMenuTitle[32];
+new g_iEquipmentMenu;
+new Array:g_rgsEquipments;
 
-new g_rgiPlayerWeapon[MAX_PLAYERS + 1];
+new g_rgiPlayerEquipment[MAX_PLAYERS + 1];
+
+public plugin_precache() {
+    g_rgsEquipments = ArrayCreate();
+
+    LoadEquipment();
+}
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -39,138 +47,215 @@ public plugin_init() {
 
     format(g_szMenuTitle, charsmax(g_szMenuTitle), "%L", LANG_SERVER, "HWN_EQUIPMENT_MENU_TITLE");
 
-    SetupMenu();
+    g_iEquipmentMenu = CreateMenu();
+}
+
+public plugin_end() {
+    for (new iEquipment = 0; iEquipment < ArraySize(g_rgsEquipments); ++iEquipment) {
+        new Struct:sEquipment = ArrayGetCell(g_rgsEquipments, iEquipment);
+        @Equipment_Destroy(sEquipment);
+    }
+
+    ArrayDestroy(g_rgsEquipments);
 }
 
 public plugin_natives() {
     register_library("hwn");
-    register_native("Hwn_PEquipment_ShowMenu", "Native_ShowMenu");
     register_native("Hwn_PEquipment_Equip", "Native_Equip");
     register_native("Hwn_PEquipment_GiveHealth", "Native_GiveHealth");
     register_native("Hwn_PEquipment_GiveArmor", "Native_GiveArmor");
     register_native("Hwn_PEquipment_GiveAmmo", "Native_GiveAmmo");
+    register_native("Hwn_PEquipment_ShowMenu", "Native_ShowMenu");
 }
 
 /*--------------------------------[ Natives ]--------------------------------*/
 
 public Native_ShowMenu(iPluginId, iArgc) {
     new pPlayer = get_param(1);
-    ShowMenu(pPlayer);
+
+    @Player_OpenEquipmentMenu(pPlayer);
 }
 
 public Native_Equip(iPluginId, iArgc) {
     new pPlayer = get_param(1);
-    Equip(pPlayer);
+
+    @Player_Equip(pPlayer);
 }
 
 public Native_GiveHealth(iPluginId, iArgc) {
     new pPlayer = get_param(1);
     new iAmount = get_param(2);
-    GiveHealth(pPlayer, iAmount);
+
+    @Player_GiveHealth(pPlayer, iAmount);
 }
 
 public Native_GiveArmor(iPluginId, iArgc) {
     new pPlayer = get_param(1);
     new iAmount = get_param(2);
-    GiveArmor(pPlayer, iAmount);
+
+    @Player_GiveArmor(pPlayer, iAmount);
 }
 
 public Native_GiveAmmo(iPluginId, iArgc) {
     new pPlayer = get_param(1);
     new iAmount = get_param(2);
-    GiveAmmo(pPlayer, iAmount);
+
+    @Player_GiveAmmo(pPlayer, iAmount);
 }
 
-/*--------------------------------[ Forwards ]--------------------------------*/
+Struct:@Equipment_Create() {
+    new Struct:this = StructCreate(Equipment);
 
-public client_connect(pPlayer) {
-    new iEquipment = is_user_bot(pPlayer) ? random(sizeof(g_rgiWeapons)) : 0;
-    g_rgiPlayerWeapon[pPlayer] = iEquipment;
+    new Array:irgItems = ArrayCreate(32, 4);
+    StructSetCell(this, Equipment_Items, irgItems);
+
+    return this;
 }
 
-/*--------------------------------[ Methods ]--------------------------------*/
+@Equipment_Destroy(&Struct:this) {
+    new Array:irgItems = StructGetCell(this, Equipment_Items);
+    ArrayDestroy(irgItems);
 
-SetupMenu() {
-    if (g_iWeaponMenu) {
-        menu_destroy(g_iWeaponMenu);
-        g_iWeaponMenu = 0;
-    }
-
-    g_iWeaponMenu = menu_create(g_szMenuTitle, "MenuHandler");
-
-    new iCallback = menu_makecallback("MenuCallback");
-
-    for (new iWeapon = 0; iWeapon < sizeof(g_rgiWeapons); ++iWeapon) {
-        menu_additem(g_iWeaponMenu, "", "", _, iCallback);
-    }
-
-    menu_setprop(g_iWeaponMenu, MPROP_EXIT, MEXIT_ALL);
+    StructDestroy(this);
 }
 
-Equip(pPlayer) {
-    if (!is_user_alive(pPlayer)) {
-        return;
-    }
+@Player_Equip(this) {
+    if (!is_user_alive(this)) return;
 
-    rg_remove_all_items(pPlayer);
+    strip_user_weapons(this);
 
-    give_item(pPlayer, WeaponEntityNames[CSW_KNIFE]);
+    new iEquipment = g_rgiPlayerEquipment[this];
+    new Struct:sEquipment = ArrayGetCell(g_rgsEquipments, iEquipment);
 
-    give_item(pPlayer, WeaponEntityNames[CSW_GLOCK18]);
-    cs_set_user_bpammo(pPlayer, CSW_MP5NAVY, WeaponMaxBPAmmo[CSW_MP5NAVY]);
+    new Array:irgItems = StructGetCell(sEquipment, Equipment_Items);
+    new iItemsNum = ArraySize(irgItems);
 
-    new iEquipment = g_rgiPlayerWeapon[pPlayer];
-    new iWeapon = g_rgiWeapons[iEquipment];
+    for (new i = 0; i < iItemsNum; ++i) {
+        static szItem[32];
+        ArrayGetString(irgItems, i, szItem, charsmax(szItem));
+        give_item(this, szItem);
 
-    if (iWeapon) {
-        give_item(pPlayer, WeaponEntityNames[iWeapon]);
-        cs_set_user_bpammo(pPlayer, iWeapon, WeaponMaxBPAmmo[iWeapon]);
-    }
-
-    cs_set_user_armor(pPlayer, 100, CS_ARMOR_VESTHELM);
-}
-
-GiveHealth(pPlayer, iAmount) {
-    static Float:flHealth;
-    pev(pPlayer, pev_health, flHealth);
-    flHealth = floatmin(flHealth + float(iAmount), 100.0);
-    set_pev(pPlayer, pev_health, flHealth);
-}
-
-GiveArmor(pPlayer, iAmount) {
-    static Float:flArmor;
-    pev(pPlayer, pev_armorvalue, flArmor);
-    flArmor = floatmin(flArmor + float(iAmount), 100.0);
-    set_pev(pPlayer, pev_armorvalue, flArmor);
-}
-
-GiveAmmo(pPlayer, iAmount) {
-    new rgiWeapons[32];
-    new iWeaponsNum = 0;
-
-    get_user_weapons(pPlayer, rgiWeapons, iWeaponsNum);
-
-    for (new i = 0; i < iWeaponsNum; ++i) {
-        new iWeapon = rgiWeapons[i];
-        new iAmmoType = WeaponAmmo[iWeapon];
-
-        if (iAmmoType >= 0) {
-            for (new i = 0; i < iAmount; ++i) {
-                give_item(pPlayer, AmmoEntityNames[iAmmoType]);
+        new iWeaponId = get_weaponid(szItem);
+        if (iWeaponId) {
+            new iMaxRounds = cs_get_weapon_info(iWeaponId, CS_WEAPONINFO_MAX_ROUNDS);
+            if (iMaxRounds) {
+                cs_set_user_bpammo(this, iWeaponId, iMaxRounds);
             }
         }
     }
+
+    static iMaxHealth; iMaxHealth = StructGetCell(sEquipment, Equipment_MaxHealth);
+    set_pev(this, pev_max_health, float(iMaxHealth));
+
+    static iHealth; iHealth = StructGetCell(sEquipment, Equipment_Health);
+    set_pev(this, pev_health, float(iHealth));
+    
+    static iArmor; iArmor = StructGetCell(sEquipment, Equipment_Armor);
+    static CsArmorType:iArmorType; iArmorType = StructGetCell(sEquipment, Equipment_ArmorType);
+    cs_set_user_armor(this, iArmor, iArmorType);
 }
 
-ShowMenu(pPlayer) {
-    menu_display(pPlayer, g_iWeaponMenu);
+@Player_GiveHealth(this, iAmount) {
+    static Float:flMaxHealth; pev(this, pev_max_health, flMaxHealth);
+
+    static Float:flHealth; pev(this, pev_health, flHealth);
+    flHealth = floatmin(flHealth + float(iAmount), flMaxHealth);
+    set_pev(this, pev_health, flHealth);
 }
 
-/*--------------------------------[ Menu ]--------------------------------*/
+@Player_GiveArmor(this, iAmount) {
+    static Float:flArmor;
+    pev(this, pev_armorvalue, flArmor);
+    flArmor = floatmin(flArmor + float(iAmount), 100.0);
+    set_pev(this, pev_armorvalue, flArmor);
+}
 
-public MenuHandler(pPlayer, iMenu, iItem) {
+@Player_GiveAmmo(this, iAmount) {
+    new rgiWeapons[32];
+    new iWeaponsNum = 0;
+    get_user_weapons(this, rgiWeapons, iWeaponsNum);
+
+    for (new i = 0; i < iWeaponsNum; ++i) {
+        new iWeaponId = rgiWeapons[i];
+        new iMaxRounds = cs_get_weapon_info(iWeaponId, CS_WEAPONINFO_MAX_ROUNDS);
+        new iClipSize = cs_get_weapon_info(iWeaponId, CS_WEAPONINFO_BUY_CLIP_SIZE);
+        
+        if (!iMaxRounds) continue;
+
+        new iAmount = cs_get_user_bpammo(this, iWeaponId);
+        iAmount = min(iAmount + iClipSize, iMaxRounds);
+        cs_set_user_bpammo(this, iWeaponId, iAmount);
+    }
+}
+
+@Player_OpenEquipmentMenu(this) {
+    menu_display(this, g_iEquipmentMenu);
+}
+
+LoadEquipment() {
+    new szConfigsDir[MAX_RESOURCE_PATH_LENGTH];
+    get_configsdir(szConfigsDir, charsmax(szConfigsDir));
+   
+    new szFilePath[MAX_RESOURCE_PATH_LENGTH];
+    format(szFilePath, charsmax(szFilePath), "%s/hwn/equipment.json", szConfigsDir, szFilePath);
+
+    new JSON:jsonDoc = json_parse(szFilePath, true);
+
+    new iVersion = json_object_get_number(jsonDoc, "_version");
+    if (iVersion > EQUIPMENT_DOCUMENT_VERSION) {
+        log_amx("Cannot load equipment from ^"%s^". Equipment version should be less than or equal to %d.", szFilePath, EQUIPMENT_DOCUMENT_VERSION);
+        return;
+    }
+
+    new JSON:jsonItems = json_object_get_value(jsonDoc, "items");
+
+    for (new iEquipment = 0; iEquipment < json_array_get_count(jsonItems); ++iEquipment) {
+        new JSON:jsonEquipment = json_array_get_value(jsonItems, iEquipment);
+
+        new Struct:sEquipment = @Equipment_Create();
+
+        new szTitle[32];
+        json_object_get_string(jsonEquipment, "title", szTitle, charsmax(szTitle));
+        StructSetString(sEquipment, Equipment_Title, szTitle);
+
+        StructSetCell(sEquipment, Equipment_MaxHealth, json_object_get_number(jsonEquipment, "maxhealth"));
+        StructSetCell(sEquipment, Equipment_Health, json_object_get_number(jsonEquipment, "health"));
+        StructSetCell(sEquipment, Equipment_Armor, json_object_get_number(jsonEquipment, "armor"));
+        StructSetCell(sEquipment, Equipment_ArmorType, json_object_get_number(jsonEquipment, "armortype"));
+
+        new JSON:jsonItems = json_object_get_value(jsonEquipment, "items");
+
+        new Array:irgItems = StructGetCell(sEquipment, Equipment_Items);
+        for (new i = 0; i < json_array_get_count(jsonItems); ++i) {
+            new szItem[32]; json_array_get_string(jsonItems, i, szItem, charsmax(szItem));
+            ArrayPushString(irgItems, szItem);
+        }
+
+        log_amx("Equipment ^"%s^" loaded!", szTitle);
+
+        ArrayPushCell(g_rgsEquipments, sEquipment);
+    }
+
+    json_free(jsonDoc);
+}
+
+CreateMenu() {
+    new iMenu = menu_create(g_szMenuTitle, "MenuHandler_Equipment");
+
+    new iCallback = menu_makecallback("MenuCallback_Equipment");
+
+    for (new iEquipment = 0; iEquipment < ArraySize(g_rgsEquipments); ++iEquipment) {
+        menu_additem(iMenu, "", "", _, iCallback);
+    }
+
+    menu_setprop(iMenu, MPROP_EXIT, MEXIT_ALL);
+    
+    return iMenu;
+}
+
+public MenuHandler_Equipment(pPlayer, iMenu, iItem) {
     if (iItem != MENU_EXIT) {
-        g_rgiPlayerWeapon[pPlayer] = iItem;
+        g_rgiPlayerEquipment[pPlayer] = iItem;
         ExecuteForward(g_fwEquipmentChanged, _, pPlayer);
     }
 
@@ -181,18 +266,14 @@ public MenuHandler(pPlayer, iMenu, iItem) {
     return PLUGIN_HANDLED;
 }
 
-public MenuCallback(pPlayer, iMenu, iItem) {
-    new iWeapon = g_rgiWeapons[iItem];
+public MenuCallback_Equipment(pPlayer, iMenu, iItem) {
+    static Struct:sEquipment; sEquipment = ArrayGetCell(g_rgsEquipments, iItem);
 
-    static szText[128];
-    new iEquipment = g_rgiPlayerWeapon[pPlayer];
-    if (iItem == iEquipment) {
-        format(szText, charsmax(szText), "\y%s", WeaponNames[iWeapon]);
-    } else {
-        format(szText, charsmax(szText), "%s", WeaponNames[iWeapon]);
-    }
-
-    menu_item_setname(iMenu, iItem, szText);
+    static szName[32];
+    StructGetString(sEquipment, Equipment_Title, szName, charsmax(szName));
+    format(szName, charsmax(szName), "%s%s", g_rgiPlayerEquipment[pPlayer] == iItem ? "\y" : "", szName);
+    
+    menu_item_setname(iMenu, iItem, szName);
 
     return ITEM_ENABLED;
 }

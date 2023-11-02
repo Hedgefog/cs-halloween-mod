@@ -1,0 +1,76 @@
+{
+    "_version": 1,
+    "items": [
+        {
+            "title": "None",
+            "maxhealth": 100,
+            "health": 100,
+            "armor": 100,
+            "armortype": 2,
+            "items": [
+                "weapon_knife",
+                "weapon_glock18"
+            ]
+        },
+        {
+            "title": "UMP 45",
+            "maxhealth": 100,
+            "health": 100,
+            "armor": 100,
+            "armortype": 2,
+            "items": [
+                "weapon_knife",
+                "weapon_glock18",
+                "weapon_ump45"
+            ]
+        },
+        {
+            "title": "MP5 Navy",
+            "maxhealth": 100,
+            "health": 100,
+            "armor": 100,
+            "armortype": 2,
+            "items": [
+                "weapon_knife",
+                "weapon_glock18",
+                "weapon_mp5navy"
+            ]
+        },
+        {
+            "title": "P90",
+            "maxhealth": 100,
+            "health": 100,
+            "armor": 100,
+            "armortype": 2,
+            "items": [
+                "weapon_knife",
+                "weapon_glock18",
+                "weapon_p90"
+            ]
+        },
+        {
+            "title": "SSG-08",
+            "maxhealth": 100,
+            "health": 100,
+            "armor": 100,
+            "armortype": 2,
+            "items": [
+                "weapon_knife",
+                "weapon_glock18",
+                "weapon_scout"
+            ]
+        },
+        {
+            "title": "M3 Super 90",
+            "maxhealth": 100,
+            "health": 100,
+            "armor": 100,
+            "armortype": 2,
+            "items": [
+                "weapon_knife",
+                "weapon_glock18",
+                "weapon_m3"
+            ]
+        }
+    ]
+}

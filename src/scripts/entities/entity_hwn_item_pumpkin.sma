@@ -4,8 +4,6 @@
 #include <fakemeta>
 #include <fun>
 
-#include <cs_weapons_consts>
-
 #include <api_custom_entities>
 
 #include <hwn>
