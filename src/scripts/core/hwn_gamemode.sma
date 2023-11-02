@@ -24,7 +24,6 @@ new g_fmFwSpawn;
 
 new g_pCvarRespawnTime;
 new g_pCvarSpawnProtectionTime;
-new g_pCvarNewRoundDelay;
 
 new g_iGamemode = -1;
 new g_iDefaultGamemode = -1;
@@ -63,8 +62,6 @@ public plugin_init() {
         SetGamemode(g_iDefaultGamemode);
     }
 
-    Round_HookCheckWinConditions("OnCheckWinConditions");
-
     RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
     RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed", .Post = 0);
     RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed_Post", .Post = 1);
@@ -78,7 +75,6 @@ public plugin_init() {
 
     g_pCvarRespawnTime = register_cvar("hwn_gamemode_respawn_time", "5.0");
     g_pCvarSpawnProtectionTime = register_cvar("hwn_gamemode_spawn_protection_time", "3.0");
-    g_pCvarNewRoundDelay = register_cvar("hwn_gamemode_new_round_delay", "10.0");
 
     register_forward(FM_SetModel, "FMHook_SetModel");
 
@@ -210,7 +206,7 @@ public Native_IsPlayerOnSpawn(iPluginId, iArgc) {
     new pPlayer = get_param(1);
     new bool:bIgnoreTeam = bool:get_param(2);
 
-    return IsPlayerOnSpawn(pPlayer, bIgnoreTeam);
+    return @Player_IsOnSpawn(pPlayer, bIgnoreTeam);
 }
 
 public Native_GetSpawnAreaTeam(iPluginId, iArgc) {
@@ -240,7 +236,7 @@ public Hwn_PEquipment_Event_Changed(pPlayer) {
         return;
     }
 
-    if (IsPlayerOnSpawn(pPlayer)) {
+    if (@Player_IsOnSpawn(pPlayer, false)) {
         Hwn_PEquipment_Equip(pPlayer);
     }
 }
@@ -384,7 +380,7 @@ public MenuItem_SpellShop(pPlayer) {
     Hwn_SpellShop_Open(pPlayer);
 }
 
-public OnCheckWinConditions() {
+public Round_Fw_CheckWinConditions() {
     if (!g_iGamemodesNum) {
         return PLUGIN_CONTINUE;
     }
@@ -407,7 +403,7 @@ public Hwn_SpellShop_Fw_Open(pPlayer) {
         return PLUGIN_HANDLED;
     }
 
-    if (!IsPlayerOnSpawn(pPlayer)) {
+    if (!@Player_IsOnSpawn(pPlayer, false)) {
         client_print(pPlayer, print_center, "%L", pPlayer, "HWN_SPELLSHOP_NOT_AT_SPAWN");
         return PLUGIN_HANDLED;
     }
@@ -421,7 +417,7 @@ public Hwn_SpellShop_Fw_BuySpell(pPlayer, iSpell) {
         return PLUGIN_HANDLED;
     }
 
-    if (!IsPlayerOnSpawn(pPlayer)) {
+    if (!@Player_IsOnSpawn(pPlayer, false)) {
         return PLUGIN_HANDLED;
     }
 
@@ -460,43 +456,36 @@ GetGamemodeByiPluginId(iPluginId) {
     return -1;
 }
 
-RespawnPlayer(pPlayer) {
-    if (!is_user_connected(pPlayer)) {
-        return;
-    }
+@Player_Respawn(this) {
+    if (!is_user_connected(this)) return;
+    if (is_user_alive(this)) return;
 
-    if (is_user_alive(pPlayer)) {
-        return;
-    }
+    new iTeam = get_member(this, m_iTeam);
+    if (iTeam != 1 && iTeam != 2) return;
 
-    new iTeam = get_member(pPlayer, m_iTeam);
-
-    if (iTeam != 1 && iTeam != 2) {
-        return;
-    }
-
-    ExecuteHamB(Ham_CS_RoundRespawn, pPlayer);
+    ExecuteHamB(Ham_CS_RoundRespawn, this);
 }
 
-bool:IsPlayerOnSpawn(pPlayer, bool:bIgnoreTeam = false) {
-    new iTeam = get_member(pPlayer, m_iTeam);
-    if (iTeam < 1 || iTeam > 2) {
-        return false;
+bool:@Player_IsOnSpawn(this, bool:bIgnoreTeam) {
+    new iTeam = 0;
+
+    if (!bIgnoreTeam) {
+        iTeam = get_member(this, m_iTeam);
+
+        if (iTeam < 1 || iTeam > 2) {
+            return false;
+        }
     }
 
-    return IsPlayerOnTeamSpawn(pPlayer, bIgnoreTeam ? 0 : iTeam);
-}
-
-bool:IsPlayerOnTeamSpawn(pPlayer, iTeam) {
     static Float:vecOrigin[3];
-    pev(pPlayer, pev_origin, vecOrigin);
+    pev(this, pev_origin, vecOrigin);
 
-    return IsSpawn(vecOrigin, iTeam);
+    return IsTeamSpawn(vecOrigin, iTeam);
 }
 
 GetSpawnAreaTeam(const Float:vecOrigin[3]) {
     for (new iTeam = 1; iTeam <= 2; ++iTeam) {
-        if (IsSpawn(vecOrigin, iTeam)) {
+        if (IsTeamSpawn(vecOrigin, iTeam)) {
             return iTeam;
         }
     }
@@ -504,9 +493,9 @@ GetSpawnAreaTeam(const Float:vecOrigin[3]) {
     return 0;
 }
 
-bool:IsSpawn(const Float:vecOrigin[3], iTeam) {
+bool:IsTeamSpawn(const Float:vecOrigin[3], iTeam) {
     if (!iTeam) {
-        return IsSpawn(vecOrigin, 1) || IsSpawn(vecOrigin, 2);
+        return IsTeamSpawn(vecOrigin, 1) || IsTeamSpawn(vecOrigin, 2);
     }
 
     new Array:spawnPoints = iTeam == 1 ? g_iTSpawnPoints : g_iCtSpawnPoints;
@@ -524,8 +513,7 @@ bool:IsSpawn(const Float:vecOrigin[3], iTeam) {
 }
 
 DispatchWin(iTeam) {
-    new Float:flDelay = get_pcvar_float(g_pCvarNewRoundDelay);
-    Round_DispatchWin(iTeam, flDelay);
+    Round_DispatchWin(iTeam);
 }
 
 bool:IsTeamExtermination() {
@@ -564,7 +552,7 @@ SetRespawnTask(pPlayer) {
 public Task_RespawnPlayer(iTaskId) {
     new pPlayer = iTaskId - TASKID_SUM_RESPAWN_PLAYER;
 
-    RespawnPlayer(pPlayer);
+    @Player_Respawn(pPlayer);
 }
 
 public Task_DisableSpawnProtection(iTaskId) {
