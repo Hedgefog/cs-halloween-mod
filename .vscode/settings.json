@@ -11,6 +11,7 @@
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/player-cosmetics/include",
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/player-inventory/include",
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/rounds/include",
+    "${workspaceRoot}/.thirdparty/cs-modding-kit/api/advanced-pushing-system/include",
     "${workspaceRoot}/src/include"
   ]
 }
