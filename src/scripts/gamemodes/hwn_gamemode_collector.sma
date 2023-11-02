@@ -139,9 +139,7 @@ public bool:Native_ScorePlayerPointsToTeam(iPluginId, iArgc) {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 public @Bucket_Spawn(this) {
-    if (Hwn_Gamemode_GetCurrent() == g_iGamemode) return;
-
-    Hwn_Gamemode_Activate();
+    Hwn_Gamemode_Activate(g_iGamemode);
 }
 
 public @Loot_Pickup(this, pPlayer) {

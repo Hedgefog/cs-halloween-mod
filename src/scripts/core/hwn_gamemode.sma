@@ -163,11 +163,7 @@ public Native_Register(iPluginId, iArgc) {
 }
 
 public bool:Native_Activate(iPluginId, iArgc) {
-    new iGamemode = GetGamemodeByiPluginId(iPluginId);
-    if (iGamemode < 0) {
-        return false;
-    }
-
+    new iGamemode = get_param(1);
     SetGamemode(iGamemode);
 
     return true;
@@ -427,7 +423,12 @@ public Hwn_SpellShop_Fw_BuySpell(pPlayer, iSpell) {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 SetGamemode(iGamemode) {
+    if (g_iGamemode == iGamemode) {
+        return;
+    }
+
     g_iGamemode = iGamemode;
+
     new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
     if (iFlags & Hwn_GamemodeFlag_SpecialEquip) {
         Hwn_Menu_AddItem(g_szEquipmentMenuTitle, "MenuItem_ChangeEquipment");
@@ -442,18 +443,6 @@ SetGamemode(iGamemode) {
     log_amx("[Hwn] Gamemode '%s' activated", szGamemodeName);
 
     ExecuteForward(g_fwGamemodeActivated, _, iGamemode);
-}
-
-GetGamemodeByiPluginId(iPluginId) {
-    for (new iGamemode = 0; iGamemode < g_iGamemodesNum; ++iGamemode) {
-        new iGamemodeiPluginId = ArrayGetCell(g_irgGamemodeiPluginId, iGamemode);
-
-        if (iPluginId == iGamemodeiPluginId) {
-            return iGamemode;
-        }
-    }
-
-    return -1;
 }
 
 @Player_Respawn(this) {

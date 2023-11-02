@@ -46,14 +46,14 @@
 
     6.4.0
         Additions and improvements:
-            Added Skeletons Horde iSpell
-            Added Intangibility iSpell
+            Added Skeletons Horde spell
+            Added Intangibility spell
             Added objective marks
             Added player highlight
-            Added Magic Wheel of Fate iSpell
+            Added Magic Wheel of Fate spell
             Added a random bonus drop from the bucket when scoring points
-            Players now always drop pumpkin in collector iGamemode
-            Removed Fortune Wheel of Fate iSpell
+            Players now always drop pumpkin in collector gamemode
+            Removed Fortune Wheel of Fate spell
             Reduced Monoculus rocket damage
             Increased Monoculus NPC hit range
             Increased crit pumpkin effect duration
@@ -65,9 +65,9 @@
             Improved HHH NPC AI
             Improved Monoculus NPC AI
             Improved Skeleton NPC AI
-            Improved collector iGamemode win conditions
+            Improved collector gamemode win conditions
             Added glow for Monoculus NPC
-            Increased light level for default iGamemode
+            Increased light level for default gamemode
             Added Ukrainian translation
 
         Cvars:
@@ -88,19 +88,19 @@
             Players can no longer cast spells during freezetime and with the FL_FROZEN flag
             Reduced Monoculus HP
             Added Monoculus levels
-            Power Up iSpell now heals
-            Reworked lightning iSpell
+            Power Up spell now heals
+            Reworked lightning spell
             Increased fireball speed
             Increased blinkball speed
             Event points are no longer created at enemy spawn
-            Added iSpell groups (common, rare)
-            Spellbook now indicates a iSpell group with different particles
+            Added spell groups (common, rare)
+            Spellbook now indicates a spell group with different particles
             Improved NPC targeting and navigation
-            Added iSpell iFlags to the spells api
+            Added spell flags to the spells api
             Added event points API
             Added Gifts API
             Improved magic glow particle
-            Power Up iSpell optimization
+            Power Up spell optimization
             Player burn api optimization
             Many performance optimizations
             Round logic moved to the separate API
@@ -111,25 +111,25 @@
             Added hwn_spellbook_max_rare_spell_count cvar
 
         Fixes:
-            Fixed Power Up iSpell jump behavior
-            Fixed jump animation for Power Up iSpell
+            Fixed Power Up spell jump behavior
+            Fixed jump animation for Power Up spell
             Fixed bug when monoculus can shoot while in stun
             Fixed crit sound volume
-            Fixed invisibility iSpell fade effect
+            Fixed invisibility spell fade effect
             Fixed gift spawn task
             Fixed temp entities with ignoreRounds flag behavior
             Fixed bots cosmetics
 
         Credits:
-            iwillnotleave (player burn api and Power Up iSpell optimization)
+            iwillnotleave (player burn api and Power Up spell optimization)
 
     6.2.0
         Additions and improvements:
-            New iTeam bucket
-            Added round iTime for collector iGamemode
+            New team bucket
+            Added round team for collector gamemode
             Added objectives blocking while the boss is alive
-            Added boss spawning on iTeam points collect
-            Added bonuses for iTeam bucket filling
+            Added boss spawning on team points collect
+            Added bonuses for team bucket filling
             Reduced Monoculus damage
             Added spells localization
             Added bosses localization
@@ -142,11 +142,11 @@
             Buckets now ignore wallbang damage
             Added random equipment for bots
             Added drop forward flag to hwn_pumpkin_dispenser entity
-            Removed drop iDirection flag from hwn_pumpkin_dispenser entity
+            Removed drop direction flag from hwn_pumpkin_dispenser entity
             Added onhit mode for crit effects
             Improved explosion effect
-            Improved custom lighting for default iGamemode
-            Improved overheal iSpell effect
+            Improved custom lighting for default gamemode
+            Improved overheal spell effect
             Increased spawn range
             Added flash and wave bucket effect on win
 
@@ -162,17 +162,17 @@
             Added hwn_bots_cosmetics cvar
 
         Fixes:
-            Fixed iTeam score calculation for reapi version
+            Fixed team score calculation for reapi version
             Fixed crit pTrace origin
             Fixed explosive pumpkin damage
             Fixed first pumpkin picked message condition
 
     6.1.0
         Additions and improvements:
-            Reduced the fire rate boost for the powerup iSpell
+            Reduced the fire rate boost for the powerup spell
             Added cvar to specify the number of spells on spawn
             New config loader implementation
-            Increased flying range of blink iSpell ball 
+            Increased flying range of blink spell ball 
             Added Portuguese translation (by artYY)
             Updated Hungarian translation (by regener)
 
@@ -181,19 +181,19 @@
             Added hwn_gamemode_spells_on_spawn cvar
 
         Fixes:
-            Fixed powerup iSpell effect duration
+            Fixed powerup spell effect duration
             Fixed spellball light
 
     6.0.0
         Additions and improvements:
-            Added Wheel of Fate (random iSpell effects)
+            Added Wheel of Fate (random spell effects)
             Added crits
-            Added crits iSpell
+            Added crits spell
             Added a flash effect when picking up a pumpkin
             Added a flash effect while putting pumpkin into bucket
-            Added Power Up iSpell
+            Added Power Up spell
             Added Boss PVE
-            Added showing of equipment menu when player respawning the first iTime
+            Added showing of equipment menu when player respawning the first time
             Invisibility no longer invokes for nearby teammates
             Bosses will now kill the player when intersect while respawning
             Spellballs are now cast from view position
@@ -202,7 +202,7 @@
             NPCs can now walk up stairs
             Improved spells effects
             Improved HUD
-            Money and Timer HUD in collector iGamemode now hidden by default
+            Money and Timer HUD in collector gamemode now hidden by default
             Added Hungarian translation (by regener)
             Renamed hwn_spawn_boss command to hwn_boss_spawn
 
@@ -238,7 +238,7 @@
 
         Fixes:
             Fixed boss healthbar display
-            Fixed blink iSpell teleportation
+            Fixed blink spell teleportation
             Fixed ru lang
             Fixed small skeletons getting stuck
             Fixed small skeleton hitbox
@@ -247,7 +247,7 @@
     4.0.0
 
         Additions and improvements:
-            Added Moon Jump iSpell
+            Added Moon Jump spell
             Added healthbar for bosses
             Added Spooky Pumpkin NPC
             Added smooth rotation for NPC
@@ -294,24 +294,24 @@
         Fixed equipment menu title.
 
     2.3.1
-        Corpse no longer spawn in iGamemode with player respawn
+        Corpse no longer spawn in gamemode with player respawn
         Spell balls no longer pass through clip brashes
         Minimizes mod influence on shooting
         High performance improvement
         New Spell API
-        Added event iBoss entity
-        Added Lightning iSpell
+        Added event boss entity
+        Added Lightning spell
         Added hwn_boss_min_damage_to_win cvar
         Improved NPC hit logic
         Added hwn_spawn_boss command
-        Fixed npc kill reward in collector iGamemode
-        Fade effect of invisibility iSpell now saving after external fade effects
+        Fixed npc kill reward in collector gamemode
+        Fade effect of invisibility spell now saving after external fade effects
         Improved HHH NPC
 
     2.2.1
         Orpheu no longer required
         Orpheu replaced to RoundControl
-        Changed iColor for 'hwn4' sky
+        Changed color for 'hwn4' sky
         Fixed lighting
         Fixed crashes
 
@@ -320,7 +320,7 @@
         Improved performance
         Added cvar to disable particles
         Ghost can no longer disable Jack'O'Lantern around
-        Added iFps settings
+        Added fps settings
         Fixed NPC reachable check
         Fixed crashes
         Fixed fireballs
@@ -436,7 +436,7 @@ native Hwn_EventPoints_GetRandom(Float:vecOrigin[3]);
 /*--------------------------------[ Gamemode ]--------------------------------*/
 
 native Hwn_Gamemode_Register(const szName[], Hwn_GamemodeFlags:iFlags = Hwn_GamemodeFlag_None);
-native Hwn_Gamemode_Activate();
+native Hwn_Gamemode_Activate(iGamemode);
 native Hwn_Gamemode_DispatchWin(iTeam);
 native Hwn_Gamemode_GetCurrent();
 native bool:Hwn_Gamemode_IsPlayerOnSpawn(pPlayer, bool:bIgnoreTeam = false);
