@@ -139,20 +139,20 @@ public bool:Native_ScorePlayerPointsToTeam(iPluginId, iArgc) {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 public @Bucket_Spawn(this) {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
+    if (Hwn_Gamemode_GetCurrent() == g_iGamemode) return;
 
     Hwn_Gamemode_Activate();
 }
 
 public @Loot_Pickup(this, pPlayer) {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
 
     new iPoints = GetPlayerPoints(pPlayer) + 1;
     SetPlayerPoints(pPlayer, iPoints);
 }
 
 public @Backpack_Pickup(this, pPlayer) {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
 
     new iPoints = GetPlayerPoints(pPlayer) + CE_GetMember(this, "iSize");
     SetPlayerPoints(pPlayer, iPoints);
@@ -161,7 +161,7 @@ public @Backpack_Pickup(this, pPlayer) {
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public Message_StatusIcon(iMsgId, iDest, pPlayer) {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return PLUGIN_CONTINUE;
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return PLUGIN_CONTINUE;
 
     static szIcon[8]; get_msg_arg_string(2, szIcon, 7);
     if (equal(szIcon, "buyzone") && get_msg_arg_int(1)) {
@@ -173,7 +173,7 @@ public Message_StatusIcon(iMsgId, iDest, pPlayer) {
 }
 
 public HamHook_Player_Killed_Post(pPlayer, pKiller) {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
 
     new iPoints = GetPlayerPoints(pPlayer);
     if (iPoints || (pKiller != pPlayer && !Hwn_Gamemode_IsPlayerOnSpawn(pPlayer))) {
@@ -182,7 +182,7 @@ public HamHook_Player_Killed_Post(pPlayer, pKiller) {
 }
 
 public HamHook_Base_Killed_Post(pEntity) {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
 
     static pBoss;
     Hwn_Bosses_GetCurrent(pBoss);
@@ -204,7 +204,7 @@ public HamHook_Base_Killed_Post(pEntity) {
 /*--------------------------------[ Forwards ]--------------------------------*/
 
 public Round_Fw_NewRound() {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
 
     ResetVariables();
 
@@ -212,14 +212,14 @@ public Round_Fw_NewRound() {
 }
 
 public Round_Fw_RoundStart() {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
     
     new iRoundTime = floatround(get_pcvar_float(g_pCvarRoundTime) * 60);
     Round_SetTime(iRoundTime);
 }
 
 public Round_Fw_RoundExpired() {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
 
     if (get_pcvar_float(g_pCvarRoundTime) <= 0.0) return;
 
