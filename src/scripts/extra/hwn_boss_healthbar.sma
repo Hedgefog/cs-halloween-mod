@@ -66,20 +66,13 @@ public Hwn_Bosses_Fw_BossRemove() {
 }
 
 public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDamage) {
-    if (pEntity != g_pBoss) {
-        return;
-    }
+    if (pEntity != g_pBoss) return;
+    if (!IS_PLAYER(pAttacker)) return;
 
-    if (!IS_PLAYER(pAttacker)) {
-        return;
-    }
+    static Float:flHealth; pev(g_pBoss, pev_health, flHealth);
+    static Float:flHealthMultiplier; flHealthMultiplier = floatclamp(1.0 - (flHealth / g_flBossHealth), 0.0, 1.0);
+    static Float:flFrame; flFrame = (HEALTHBAR_FRAME_COUNT - 1) * flHealthMultiplier;
 
-    static Float:flHealth;
-    pev(g_pBoss, pev_health, flHealth);
-
-    new Float:flHealthMultiplier = floatclamp(1.0 - (flHealth / g_flBossHealth), 0.0, 1.0);
-
-    new Float:flFrame = (HEALTHBAR_FRAME_COUNT - 1) * flHealthMultiplier;
     set_pev(g_pHealthBar, pev_frame, flFrame);
 }
 

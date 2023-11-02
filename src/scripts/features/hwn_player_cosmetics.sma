@@ -649,7 +649,7 @@ Register(const szName[], Hwn_PlayerCosmetic_Group:iGroups, iModelIndex, iBody, i
 
     g_iCosmeticsNum++;
 
-    log_amx("[Hwn Cosmetic] Cosmetic ^"%s^" registered.", szName);
+    log_amx("[Hwn Cosmetics] Cosmetic ^"%s^" registered.", szName);
 
     return iCosmetic;
 }

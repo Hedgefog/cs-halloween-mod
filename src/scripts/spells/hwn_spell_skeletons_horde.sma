@@ -57,31 +57,17 @@ public plugin_init() {
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public HamHook_Base_Touch_Post(pEntity, pTarget) {
-    if (!pev_valid(pEntity)) {
-        return;
-    }
-
-    if (g_iCeSpellball != CE_GetHandlerByEntity(pEntity)) {
-        return;
-    }
-
-    if (CE_GetMember(pEntity, "iSpell") != g_iSpellHandler) {
-        return;
-    }
-
-    if (pTarget == pev(pEntity, pev_owner)) {
-        return;
-    }
+    if (!pev_valid(pEntity)) return;
+    if (g_iCeSpellball != CE_GetHandlerByEntity(pEntity)) return;
+    if (CE_GetMember(pEntity, "iSpell") != g_iSpellHandler) return;
+    if (pTarget == pev(pEntity, pev_owner)) return;
 
     CE_Kill(pEntity);
 }
 
 @SpellBall_Killed(this) {
     new iSpell = CE_GetMember(this, "iSpell");
-
-    if (iSpell != g_iSpellHandler) {
-        return;
-    }
+    if (iSpell != g_iSpellHandler) return;
 
     Detonate(this);
 }
@@ -90,9 +76,7 @@ public HamHook_Base_Touch_Post(pEntity, pTarget) {
 
 @Player_CastSpell(pPlayer) {
     new pSpellBall = UTIL_HwnSpawnPlayerSpellball(pPlayer, g_iSpellHandler, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.5, 10.0);
-    if (!pSpellBall) {
-        return PLUGIN_HANDLED;
-    }
+    if (!pSpellBall) return PLUGIN_HANDLED;
 
     CE_SetMember(pSpellBall, "iSpell", g_iSpellHandler);
 
@@ -119,10 +103,7 @@ Detonate(pEntity) {
 SpawnEggs(const Float:vecOrigin[3], iTeam = 0, pOwner = 0) {
     for (new i = 0; i < SKELETON_EGG_COUNT; ++i) {
         new pEgg = CE_Create(SKELETON_EGG_ENTITY_NAME, vecOrigin);
-
-        if (!pEgg) {
-            continue;
-        }
+        if (!pEgg) continue;
 
         set_pev(pEgg, pev_team, iTeam);
         set_pev(pEgg, pev_owner, pOwner);

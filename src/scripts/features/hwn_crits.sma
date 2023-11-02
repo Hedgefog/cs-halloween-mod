@@ -14,6 +14,9 @@
 #define PLUGIN "[Hwn] Crits"
 #define AUTHOR "Hedgehog Fog"
 
+#define TASKID_SUM_PENALTY 1000
+#define TASKID_SUM_HIT_BONUS 2000
+
 #define CRIT_EFFECT_SPLASH_LENGTH 128.0
 #define CRIT_EFFECT_SPLASH_SPEEDNOISE 255
 #define CRIT_EFFECT_SPLASH_COUNT 18
@@ -25,9 +28,6 @@
 #define CRIT_EFFECT_FLASH_DECAYRATE 80
 
 #define EFFECT_COLOR_BYTE HWN_COLOR_PRIMARY_PALETTE2
-
-#define TASKID_SUM_PENALTY 1000
-#define TASKID_SUM_HIT_BONUS 2000
 
 new g_pCvarCritsDmgMultiplier;
 new g_pCvarCritsEffectTrace;

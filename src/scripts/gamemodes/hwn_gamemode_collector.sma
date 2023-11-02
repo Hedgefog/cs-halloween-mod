@@ -182,8 +182,7 @@ public HamHook_Player_Killed_Post(pPlayer, pKiller) {
 public HamHook_Base_Killed_Post(pEntity) {
     if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
 
-    static pBoss;
-    Hwn_Bosses_GetCurrent(pBoss);
+    static pBoss; Hwn_Bosses_GetCurrent(pBoss);
 
     if (pEntity != pBoss && UTIL_IsMonster(pEntity) && !pev(pEntity, pev_team)) { // Monster kill reward
         static Float:vecOrigin[3]; pev(pEntity, pev_origin, vecOrigin);

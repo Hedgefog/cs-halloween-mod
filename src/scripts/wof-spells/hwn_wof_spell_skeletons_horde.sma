@@ -63,10 +63,7 @@ public Invoke(pPlayer) {}
 SpawnEggs(const Float:vecOrigin[3], iTeam = 0, pOwner = 0) {
     for (new i = 0; i < SKELETON_EGG_COUNT; ++i) {
         new pEgg = CE_Create(SKELETON_EGG_ENTITY_NAME, vecOrigin);
-
-        if (!pEgg) {
-            continue;
-        }
+        if (!pEgg) continue;
 
         set_pev(pEgg, pev_team, iTeam);
         set_pev(pEgg, pev_owner, pOwner);
@@ -76,7 +73,7 @@ SpawnEggs(const Float:vecOrigin[3], iTeam = 0, pOwner = 0) {
         UTIL_FindPlaceToTeleport(pEgg, vecOrigin, vecNewOrigin, HULL_HUMAN);
         set_pev(pEgg, pev_origin, vecNewOrigin);
 
-        new Float:vecVelocity[3];
+        static Float:vecVelocity[3];
         xs_vec_set(vecVelocity, random_float(-96.0, 96.0), random_float(-96.0, 96.0), 128.0);
         set_pev(pEgg, pev_velocity, vecVelocity);
     }

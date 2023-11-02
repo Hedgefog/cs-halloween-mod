@@ -70,13 +70,13 @@ public plugin_init() {
     }
 }
 
-bool:@SpellBall_IsFireBall(this) {
-    return CE_GetMember(this, "iSpell") == Hwn_Spell_GetHandler(SPELL_NAME);
-}
-
 @SpellBall_InitFireBall(this) {
     CE_SetMember(this, "iSpell", Hwn_Spell_GetHandler(SPELL_NAME));
     set_pev(this, pev_movetype, MOVETYPE_FLYMISSILE);
+}
+
+bool:@SpellBall_IsFireBall(this) {
+    return CE_GetMember(this, "iSpell") == Hwn_Spell_GetHandler(SPELL_NAME);
 }
 
 @FireBall_Touch(this, pTarget) {
@@ -101,25 +101,15 @@ bool:@SpellBall_IsFireBall(this) {
 
     new pTarget = 0;
     while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EffectRadius * 2)) != 0) {
-        if (this == pTarget) {
-            continue;
-        }
-
-        if (pev(pTarget, pev_takedamage) == DAMAGE_NO) {
-            continue;
-        }
-
-        if (!UTIL_CanTakeDamage(pTarget, pOwner)) {
-            continue;
-        }
+        if (this == pTarget) continue;
+        if (pev(pTarget, pev_takedamage) == DAMAGE_NO) continue;
+        if (!UTIL_CanTakeDamage(pTarget, pOwner)) continue;
 
         ArrayPushCell(irgTargets, pTarget);
     }
 
     new iTargetsNum = ArraySize(irgTargets);
     for (new i = 0; i < iTargetsNum; ++i) {
-        pTarget = ArrayGetCell(irgTargets, i);
-
         new pTarget = ArrayGetCell(irgTargets, i);
 
         static Float:vecTargetOrigin[3];

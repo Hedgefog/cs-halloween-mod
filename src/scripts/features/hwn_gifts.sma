@@ -33,8 +33,8 @@ public plugin_precache() {
     precache_sound(g_szSndGiftSpawn);
     precache_sound(g_szSndGiftPickup);
 
-    CE_RegisterHook(CEFunction_Picked, GIFT_ENTITY_CLASSNAME, "OnGiftPicked");
-    CE_RegisterHook(CEFunction_Killed, GIFT_ENTITY_CLASSNAME, "OnGiftKilled");
+    CE_RegisterHook(CEFunction_Picked, GIFT_ENTITY_CLASSNAME, "@Gift_Picked");
+    CE_RegisterHook(CEFunction_Killed, GIFT_ENTITY_CLASSNAME, "@Gift_Killed");
 }
 
 public plugin_init() {
@@ -106,8 +106,9 @@ public Hwn_Bosses_Fw_Winner(pPlayer) {
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public OnGiftPicked(pEntity, pPlayer) {
+public @Gift_Picked(this, pPlayer) {
     new iNum = Hwn_PlayerCosmetic_GetCount();
+
     new iTime = random_num(
         get_pcvar_num(g_pCvarGiftCosmeticMinTime),
         get_pcvar_num(g_pCvarGiftCosmeticMaxTime)
@@ -125,21 +126,19 @@ public OnGiftPicked(pEntity, pPlayer) {
 
     client_cmd(pPlayer, "spk %s", g_szSndGiftPickup);
 
-    ExecuteForward(g_fwGiftPicked, _, pPlayer, pEntity);
+    ExecuteForward(g_fwGiftPicked, _, pPlayer, this);
 }
 
-public OnGiftKilled(pEntity, bool:picked) {
-    new pOwner = pev(pEntity, pev_owner);
-    if (!pOwner) {
-        return;
-    }
+public @Gift_Killed(this, bool:bPicked) {
+    new pOwner = pev(this, pev_owner);
+    if (!pOwner) return;
 
     if (is_user_connected(pOwner)) {
         SetupSpawnGiftTask(pOwner);
     }
 
-    if (!picked) {
-        ExecuteForward(g_fwGiftDisappear, _, pOwner, pEntity);
+    if (!bPicked) {
+        ExecuteForward(g_fwGiftDisappear, _, pOwner, this);
     }
 }
 
@@ -156,9 +155,7 @@ AddGiftTarget(const Float:vecOrigin[3]) {
 SpawnGift(pPlayer, const Float:vecOrigin[3]) {
     new pEntity = CE_Create(GIFT_ENTITY_CLASSNAME, vecOrigin);
 
-    if (!pEntity) {
-        return;
-    }
+    if (!pEntity) return;
 
     set_pev(pEntity, pev_owner, pPlayer);
     dllfunc(DLLFunc_Spawn, pEntity);

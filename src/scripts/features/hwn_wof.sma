@@ -101,15 +101,11 @@ public plugin_natives() {
 /*--------------------------------[ Natives ]--------------------------------*/
 
 public Native_Spell_Register(iPluginId, iArgc) {
-    new szName[32];
-    get_string(1, szName, charsmax(szName));
+    new szName[32]; get_string(1, szName, charsmax(szName));
+    new szCastCallback[32]; get_string(2, szCastCallback, charsmax(szCastCallback));
+    new szStopCallback[32]; get_string(3, szStopCallback, charsmax(szStopCallback));
 
-    new szCastCallback[32];
-    get_string(2, szCastCallback, charsmax(szCastCallback));
     new iInvokeFunctionId = get_func_id(szCastCallback, iPluginId);
-
-    new szStopCallback[32];
-    get_string(3, szStopCallback, charsmax(szStopCallback));
     new iRevokeFunctionId = equal(szStopCallback, NULL_STRING) ? -1 : get_func_id(szStopCallback, iPluginId);
 
     return Register(szName, iPluginId, iInvokeFunctionId, iRevokeFunctionId);
@@ -126,13 +122,10 @@ public Native_Spell_GetName(iPluginId, iArgc) {
 }
 
 public Native_Spell_GetHandler(iPluginId, iArgc) {
-    new szName[32];
-    get_string(1, szName, charsmax(szName));
+    new szName[32]; get_string(1, szName, charsmax(szName));
 
     new iSpell = 0;
-    if (!TrieGetCell(g_itSpells, szName, iSpell)) {
-        return -1;
-    }
+    if (!TrieGetCell(g_itSpells, szName, iSpell)) return -1;
 
     return iSpell;
 }
@@ -160,9 +153,7 @@ public Native_Abort(iPluginId, iArgc) {
 }
 
 public Native_Effect_GetCurrentSpell(iPluginId, iArgc) {
-    if (!g_bEffectStarted) {
-        return -1;
-    }
+    if (!g_bEffectStarted) return -1;
 
     return g_iSpell;
 }
@@ -178,21 +169,14 @@ public Float:Native_Effect_GetDuration(iPluginId, iArgc) {
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public client_disconnected(pPlayer) {
-    if (g_iSpell < 0) {
-        return;
-    }
-
-    if (!g_bEffectStarted) {
-        return;
-    }
+    if (g_iSpell < 0) return;
+    if (!g_bEffectStarted) return;
 
     CallRevoke(pPlayer);
 }
 
 public Command_WofRoll(pPlayer, iLevel, iCId) {
-    if (!cmd_access(pPlayer, iLevel, iCId, 1)) {
-        return PLUGIN_HANDLED;
-    }
+    if (!cmd_access(pPlayer, iLevel, iCId, 1)) return PLUGIN_HANDLED;
 
     StartRoll();
 
@@ -200,9 +184,7 @@ public Command_WofRoll(pPlayer, iLevel, iCId) {
 }
 
 public Command_WofAbort(pPlayer, iLevel, iCId) {
-    if (!cmd_access(pPlayer, iLevel, iCId, 1)) {
-        return PLUGIN_HANDLED;
-    }
+    if (!cmd_access(pPlayer, iLevel, iCId, 1)) return PLUGIN_HANDLED;
 
     Abort();
 
@@ -210,29 +192,16 @@ public Command_WofAbort(pPlayer, iLevel, iCId) {
 }
 
 public HamHook_Player_Spawn_Post(pPlayer) {
-    if (!is_user_alive(pPlayer)) {
-        return;
-    }
-
-    if (g_iSpell < 0) {
-        return;
-    }
-
-    if (!g_bEffectStarted) {
-        return;
-    }
+    if (!is_user_alive(pPlayer)) return;
+    if (g_iSpell < 0) return;
+    if (!g_bEffectStarted) return;
 
     CallInvoke(pPlayer);
 }
 
 public HamHook_Player_Killed_Post(pPlayer) {
-    if (g_iSpell < 0) {
-        return;
-    }
-
-    if (!g_bEffectStarted) {
-        return;
-    }
+    if (g_iSpell < 0) return;
+    if (!g_bEffectStarted) return;
 
     CallRevoke(pPlayer);
 }
@@ -248,16 +217,11 @@ public Hwn_Fw_ConfigLoaded() {
     SetRollTask();
 }
 
-/*--------------------------------[ Methods ]--------------------------------*/
+/*--------------------------------[ Functions ]--------------------------------*/
 
 StartRoll() {
-    if (g_iSpell >= 0) {
-        return;
-    }
-
-    if (!g_iSpellsNum) {
-        return;
-    }
+    if (g_iSpell >= 0) return;
+    if (!g_iSpellsNum) return;
 
     g_iSpell = random(g_iSpellsNum);
 
@@ -277,14 +241,10 @@ StartEffect() {
     g_bEffectStarted = true;
 
     for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
-        if (!is_user_connected(pPlayer)) {
-            continue;
-        }
+        if (!is_user_connected(pPlayer)) continue;
 
         new iTeam = get_member(pPlayer, m_iTeam);
-        if (iTeam != 1 && iTeam != 2) {
-            continue;
-        }
+        if (iTeam != 1 && iTeam != 2) continue;
 
         CallInvoke(pPlayer);
     }
@@ -296,10 +256,7 @@ StartEffect() {
 EndEffect() {
     if (g_iSpell >= 0) {
         for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
-            if (!is_user_connected(pPlayer)) {
-                continue;
-            }
-
+            if (!is_user_connected(pPlayer)) continue;
             CallRevoke(pPlayer);
         }
 
@@ -335,12 +292,7 @@ Register(const szName[], iPluginId, iInvokeFunctionId, iRevokeFunctionId) {
 
     new szDictKey[48];
     UTIL_CreateDictKey(szName, "HWN_WOF_SPELL_", szDictKey, charsmax(szDictKey));
-
-    if (UTIL_IsLocalizationExists(szDictKey)) {
-        ArrayPushString(g_irgSpellDictKey, szDictKey);
-    } else {
-        ArrayPushString(g_irgSpellDictKey, "");
-    }
+    ArrayPushString(g_irgSpellDictKey, UTIL_IsLocalizationExists(szDictKey) ? szDictKey : "");
 
     g_iSpellsNum++;
 
@@ -392,14 +344,10 @@ Reset() {
 }
 
 SetRollTask() {
-    if (get_pcvar_num(g_pCvarEnabled) <= 0) {
-        return;
-    }
+    if (get_pcvar_num(g_pCvarEnabled) <= 0) return;
 
     new Hwn_GamemodeFlags:iGameModeFlags = Hwn_Gamemode_GetFlags();
-    if (~iGameModeFlags & Hwn_GamemodeFlag_RespawnPlayers) {
-        return;
-    }
+    if (~iGameModeFlags & Hwn_GamemodeFlag_RespawnPlayers) return;
 
     remove_task(TASKID_ROLL);
     set_task(get_pcvar_float(g_pCvarRollDelay), "Task_Roll", TASKID_ROLL);

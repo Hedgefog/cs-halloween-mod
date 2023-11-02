@@ -15,9 +15,11 @@
 #define AUTHOR "Hedgehog Fog"
 
 const SpellballSpeed = 720;
+
 const Float:SmokeLifeTime = 30.0;
 const SmokeStackMaxSize = 8;
 new const Float:SmokeSize[3] = {96.0, 96.0, 64.0};
+
 new const EffectColor[3] = {HWN_COLOR_PRIMARY};
 
 new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
@@ -45,9 +47,7 @@ public plugin_init() {
 
 @Player_CastSpell(pPlayer) {
     new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, g_iSpell, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
-    if (!pEntity) {
-        return PLUGIN_HANDLED;
-    }
+    if (!pEntity) return PLUGIN_HANDLED;
 
     CE_SetMember(pEntity, "iSpell", g_iSpell);
     set_pev(pEntity, pev_team, get_member(pPlayer, m_iTeam));
@@ -58,48 +58,29 @@ public plugin_init() {
 }
 
 @SpellBall_Kill(this) {
-    if (CE_GetMember(this, "iSpell") != g_iSpell) {
-        return;
-    }
+    if (CE_GetMember(this, "iSpell") != g_iSpell) return;
 
     @Entity_Detonate(this);
 }
 
 @SpellBall_Touch(this, pToucher) {
-    if (CE_GetMember(this, "iSpell") != g_iSpell) {
-        return;
-    }
-
-    if (pToucher == pev(this, pev_owner)) {
-        return;
-    }
-
-    if (pev(this, pev_deadflag) == DEAD_DEAD) {
-        return;
-    }
-
-    if (pev(pToucher, pev_solid) < SOLID_BBOX) {
-        return;
-    }
+    if (CE_GetMember(this, "iSpell") != g_iSpell) return;
+    if (pToucher == pev(this, pev_owner)) return;
+    if (pev(this, pev_deadflag) == DEAD_DEAD) return;
+    if (pev(pToucher, pev_solid) < SOLID_BBOX) return;
 
     CE_Kill(this);
 }
 
 @SpellBall_Think(this) {
-    if (CE_GetMember(this, "iSpell") != g_iSpell) {
-        return;
-    }
+    if (CE_GetMember(this, "iSpell") != g_iSpell) return;
 
-    if (pev(this, pev_deadflag) == DEAD_DEAD) {
-        return;
-    }
+    if (pev(this, pev_deadflag) == DEAD_DEAD) return;
 
     static Float:vecVelocity[3];
     pev(this, pev_velocity, vecVelocity);
 
-    if (!xs_vec_len(vecVelocity)) {
-        CE_Kill(this);
-    }
+    if (!xs_vec_len(vecVelocity)) CE_Kill(this);
 }
 
 @Entity_Detonate(this) {
@@ -120,16 +101,11 @@ public plugin_init() {
     new iStackSize = 0;
     new Float:flStackTotalLifeTime = 0.0;
 
-    // merge nearby smoke entities into the stack
+    // Merge nearby smoke entities into the stack
     new pTarget = 0;
     while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, 96.0)) > 0) {
-        if (CE_GetHandlerByEntity(pTarget) != g_iCeMysteryHandler) {
-            continue;
-        }
-
-        if (pev(pTarget, pev_team) != iTeam) {
-            continue;
-        }
+        if (CE_GetHandlerByEntity(pTarget) != g_iCeMysteryHandler) continue;
+        if (pev(pTarget, pev_team) != iTeam) continue;
 
         new iTargetStackSize = CE_GetMember(pTarget, "iStackSize");
 
@@ -195,9 +171,7 @@ public plugin_init() {
 
 CreateSmoke(const Float:vecOrigin[3], const Float:vecSize[3], Float:flLifeTime, iTeam, pOwner) {
     new pEntity = CE_Create("hwn_mystery_smoke", vecOrigin);
-    if (!pEntity) {
-        return 0;
-    }
+    if (!pEntity) return 0;
 
     static Float:vecMins[3];
     static Float:vecMaxs[3];

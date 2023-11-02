@@ -22,61 +22,45 @@ public plugin_init() {
 }
 
 public FMHook_AddToFullPack_Post(es, e, pEntity, pHost, hostflags, player, pSet) {
-    if (!get_pcvar_num(g_pCvarEnabled)) {
-        return FMRES_IGNORED;
-    }
-
-    if (!pev_valid(pEntity)) {
-        return FMRES_IGNORED;
-    }
+    if (!get_pcvar_num(g_pCvarEnabled)) return FMRES_IGNORED;
+    if (!pev_valid(pEntity)) return FMRES_IGNORED;
 
     new pTargetPlayer = 0;
     if (IS_PLAYER(pEntity)) {
         pTargetPlayer = pEntity;
     } else {
         new pAimEnt = pev(pEntity, pev_aiment);
+
         if (IS_PLAYER(pAimEnt)) {
             pTargetPlayer = pAimEnt;
         }
     }
 
-    if (pTargetPlayer == pHost) {
-        return FMRES_IGNORED;
-    }
-
-    if (!is_user_alive(pTargetPlayer)) {
-        return FMRES_IGNORED;
-    }
-
-    if (pev(pTargetPlayer, pev_rendermode) != kRenderNormal) {
-        return FMRES_IGNORED;
-    }
-
-    if (pev(pTargetPlayer, pev_renderfx) != kRenderFxNone) {
-        return FMRES_IGNORED;
-    }
+    if (pTargetPlayer == pHost) return FMRES_IGNORED;
+    if (!is_user_alive(pTargetPlayer)) return FMRES_IGNORED;
+    if (pev(pTargetPlayer, pev_rendermode) != kRenderNormal) return FMRES_IGNORED;
+    if (pev(pTargetPlayer, pev_renderfx) != kRenderFxNone) return FMRES_IGNORED;
 
     if (pev(pTargetPlayer, pev_rendermode) == pev(pEntity, pev_rendermode) && pev(pTargetPlayer, pev_renderfx) == pev(pEntity, pev_renderfx)) {
-      set_es(es, ES_RenderMode, kRenderNormal);
-      set_es(es, ES_RenderFx, kRenderFxGlowShell);
-      set_es(es, ES_RenderAmt, 1);
+        set_es(es, ES_RenderMode, kRenderNormal);
+        set_es(es, ES_RenderFx, kRenderFxGlowShell);
+        set_es(es, ES_RenderAmt, 1);
 
-      new iPrimaryBrightness = get_pcvar_num(g_pCvarPrimaryBrightness);
-      new iSecondaryBrightness = get_pcvar_num(g_pCvarSecondaryBrightness);
+        new iPrimaryBrightness = get_pcvar_num(g_pCvarPrimaryBrightness);
+        new iSecondaryBrightness = get_pcvar_num(g_pCvarSecondaryBrightness);
 
-      static rgiColor[3];
-      for (new i = 0; i < 3; ++i) {
-        rgiColor[i] = iSecondaryBrightness;
-      }
+        static rgiColor[3];
+        for (new i = 0; i < 3; ++i) {
+            rgiColor[i] = iSecondaryBrightness;
+        }
 
-      new iTeam = get_member(pTargetPlayer, m_iTeam);
-      switch (iTeam) {
-        case 1: rgiColor[0] = iPrimaryBrightness;
-        case 2: rgiColor[2] = iPrimaryBrightness;
-      }
+        new iTeam = get_member(pTargetPlayer, m_iTeam);
+        switch (iTeam) {
+            case 1: rgiColor[0] = iPrimaryBrightness;
+            case 2: rgiColor[2] = iPrimaryBrightness;
+        }
 
-
-      set_es(es, ES_RenderColor, rgiColor);
+        set_es(es, ES_RenderColor, rgiColor);
     }
 
     return FMRES_IGNORED;

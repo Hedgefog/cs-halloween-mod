@@ -47,52 +47,37 @@ public plugin_init() {
     CE_RegisterHook(CEFunction_Think, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Think");
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
-
-@Player_CastSpell(pPlayer) {
-    new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, g_iSpellHandler, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
-
-    if (!pEntity) {
-        return PLUGIN_HANDLED;
-    }
-
-    CE_SetMember(pEntity, "iSpell", g_iSpellHandler);
-
-    emit_sound(pPlayer, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-
-    return PLUGIN_CONTINUE;
-}
+/*--------------------------------[ Methods ]--------------------------------*/
 
 public HamHook_Player_Spawn_Post(pPlayer) {
-    if (!is_user_alive(pPlayer)) {
-        return;
-    }
+    if (!is_user_alive(pPlayer)) return;
 
     new pTarget = -1;
     while ((pTarget = engfunc(EngFunc_FindEntityByString, pTarget, "classname", SPELLBALL_ENTITY_CLASSNAME)) != 0) {
-        if (CE_GetMember(pTarget, "iSpell") != g_iSpellHandler) {
-            continue;
-        }
-
+        if (CE_GetMember(pTarget, "iSpell") != g_iSpellHandler) continue;
         set_pev(pTarget, pev_owner, 0);
     }
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
+@Player_CastSpell(pPlayer) {
+    new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, g_iSpellHandler, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
+
+    if (!pEntity) return PLUGIN_HANDLED;
+
+    CE_SetMember(pEntity, "iSpell", g_iSpellHandler);
+    emit_sound(pPlayer, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
+    return PLUGIN_CONTINUE;
+}
+
 @SpellBall_Kill(this) {
-    if (CE_GetMember(this, "iSpell") != g_iSpellHandler) {
-        return;
-    }
+    if (CE_GetMember(this, "iSpell") != g_iSpellHandler) return;
 
     new pOwner = pev(this, pev_owner);
-    if (!pOwner) {
-        return;
-    }
-
-    if (!is_user_alive(pOwner)) {
-        return;
-    }
+    if (!pOwner) return;
+    if (!is_user_alive(pOwner)) return;
 
     static Float:vecOwnerOrigin[3];
     pev(pOwner, pev_origin, vecOwnerOrigin);
@@ -111,18 +96,9 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 
     new pTarget = 0;
     while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EffectRadius)) > 0) {
-        if (pOwner == pTarget) {
-            continue;
-        }
-
-        if (pev(pTarget, pev_deadflag) != DEAD_NO) {
-            continue;
-        }
-
-        if (pev(pTarget, pev_takedamage) == DAMAGE_NO) {
-            continue;
-        }
-
+        if (pOwner == pTarget) continue;
+        if (pev(pTarget, pev_deadflag) != DEAD_NO) continue;
+        if (pev(pTarget, pev_takedamage) == DAMAGE_NO) continue;
         ExecuteHamB(Ham_TakeDamage, pTarget, this, pOwner, SpellballDamage, DMG_ALWAYSGIB);
     }
 
@@ -132,33 +108,21 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 }
 
 @SpellBall_Touch(this, pToucher) {
-    if (CE_GetMember(this, "iSpell") != g_iSpellHandler) {
-        return;
-    }
-
-    if (pToucher == pev(this, pev_owner)) {
-        return;
-    }
+    if (CE_GetMember(this, "iSpell") != g_iSpellHandler) return;
+    if (pToucher == pev(this, pev_owner)) return;
 
     CE_Kill(this);
 }
 
 @SpellBall_Think(this) {
-    if (CE_GetMember(this, "iSpell") != g_iSpellHandler) {
-        return;
-    }
+    if (CE_GetMember(this, "iSpell") != g_iSpellHandler) return;
 
-    static Float:vecVelocity[3];
-    pev(this, pev_velocity, vecVelocity);
-
-    if (!xs_vec_len(vecVelocity)) {
-        CE_Kill(this);
-    }
+    static Float:vecVelocity[3]; pev(this, pev_velocity, vecVelocity);
+    if (!xs_vec_len(vecVelocity)) CE_Kill(this);
 }
 
 @SpellBall_BlinkEffect(this) {
-    new Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
+    new Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
 
     emit_sound(this, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
     UTIL_Message_Dlight(vecOrigin, 32, EffectColor, 5, 64);

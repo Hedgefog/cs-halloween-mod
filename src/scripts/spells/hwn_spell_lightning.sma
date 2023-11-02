@@ -68,15 +68,15 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    CE_RegisterHook(CEFunction_Init, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Init");
-    CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Killed");
-    CE_RegisterHook(CEFunction_Remove, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Remove");
-    CE_RegisterHook(CEFunction_Think, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Think");
-
     register_forward(FM_OnFreeEntPrivateData, "FMHook_OnFreeEntPrivateData");
     register_forward(FM_Think, "FMHook_Think", ._post = 1);
 
     RegisterHamPlayer(Ham_Player_PostThink, "HamHook_Player_PostThink", .Post = 1);
+
+    CE_RegisterHook(CEFunction_Init, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Init");
+    CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Killed");
+    CE_RegisterHook(CEFunction_Remove, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Remove");
+    CE_RegisterHook(CEFunction_Think, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Think");
 }
 
 public plugin_end() {
@@ -135,7 +135,7 @@ public plugin_end() {
         CE_SetMember(this, m_flSpellNextEffect, flGameTime + EffectLightningDelay);
     }
 
-    // update velocity
+    // Update velocity
     static Float:vecVelocity[3];
     pev(this, pev_vuser1, vecVelocity);
     set_pev(this, pev_velocity, vecVelocity);
@@ -210,7 +210,7 @@ bool:@SpellBall_Magnetize(pEntity, pTarget) {
     static Float:vecOrigin[3];
     pev(this, pev_origin, vecOrigin);
 
-    // generate random offset
+    // Generate random offset
     static Float:vecTarget[3];
     for (new i = 0; i < 3; ++i) vecTarget[i] = random_float(-16.0, 16.0);
 
@@ -248,7 +248,6 @@ bool:@SpellBall_Magnetize(pEntity, pTarget) {
 
 @SpellBall_IsValidVictim(this, pVictim) {
     if (!pev_valid(pVictim)) return false;
-
     if (this == pVictim) return false;
 
     static Float:flTakeDamage; pev(pVictim, pev_takedamage, flTakeDamage);
@@ -258,9 +257,7 @@ bool:@SpellBall_Magnetize(pEntity, pTarget) {
     if (pVictim == pOwner) return false;
 
     if (!UTIL_CanTakeDamage(pVictim, pOwner)) return false;
-    
     if (!UTIL_IsMonster(pVictim) && (!IS_PLAYER(pVictim) || !is_user_alive(pVictim))) return false;
-
     if (UTIL_GetWeight(pVictim) > 1.0) return false;
 
     return true;
