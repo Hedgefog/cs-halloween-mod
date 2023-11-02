@@ -24,6 +24,13 @@
 
 new const g_szSndPointCollected[] = "hwn/misc/collected.wav";
 
+new g_pCvarTeamPointsLimit;
+new g_pCvarRoundTime;
+new g_pCvarRoundTimeOvertime;
+new g_pCvarNpcDropChanceSpell;
+new g_pCvarTeamPointsToBossSpawn;
+new g_pCvarTeamPointsReward;
+
 new g_fwPlayerPointsChanged;
 new g_fwTeamPointsChanged;
 new g_fwTeamPointsScored;
@@ -38,25 +45,16 @@ new bool:g_bOvertime;
 
 new g_iGamemode;
 
-new g_pCvarTeamPointsLimit;
-new g_pCvarRoundTime;
-new g_pCvarRoundTimeOvertime;
-new g_pCvarNpcDropChanceSpell;
-new g_pCvarTeamPointsToBossSpawn;
-new g_pCvarTeamPointsReward;
-
 public plugin_precache() {
     precache_sound(g_szSndPointCollected);
 
-    CE_RegisterHook(CEFunction_Spawned, BUCKET_ENTITY_CLASSNAME, "OnBucketSpawn");
-    CE_RegisterHook(CEFunction_Picked, LOOT_ENTITY_CLASSNAME, "OnLootPickup");
-    CE_RegisterHook(CEFunction_Picked, BACKPACK_ENTITY_CLASSNAME, "OnBackpackPickup");
+    CE_RegisterHook(CEFunction_Spawned, BUCKET_ENTITY_CLASSNAME, "@Bucket_Spawn");
+    CE_RegisterHook(CEFunction_Picked, LOOT_ENTITY_CLASSNAME, "@Loot_Pickup");
+    CE_RegisterHook(CEFunction_Picked, BACKPACK_ENTITY_CLASSNAME, "@Backpack_Pickup");
 
     g_iGamemode = Hwn_Gamemode_Register(
-        .szName = "Collector",
-        .iFlags = (
-            Hwn_GamemodeFlag_RespawnPlayers | Hwn_GamemodeFlag_SpecialEquip | Hwn_GamemodeFlag_SpellShop
-        )
+        "Collector",
+        Hwn_GamemodeFlag_RespawnPlayers | Hwn_GamemodeFlag_SpecialEquip | Hwn_GamemodeFlag_SpellShop
     );
 }
 
@@ -64,6 +62,7 @@ public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed_Post", .Post = 1);
+
     RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "HamHook_Base_Killed_Post", .Post = 1);
 
     register_message(get_user_msgid("StatusIcon"), "Message_StatusIcon");
@@ -137,40 +136,34 @@ public bool:Native_ScorePlayerPointsToTeam(iPluginId, iArgc) {
     return ScorePlayerPointsToTeam(pPlayer, iAmount);
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
+/*--------------------------------[ Methods ]--------------------------------*/
 
-public OnBucketSpawn(pEntity) {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) {
-        Hwn_Gamemode_Activate();
-    }
+public @Bucket_Spawn(this) {
+    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
+
+    Hwn_Gamemode_Activate();
 }
 
-public OnLootPickup(pEntity, pPlayer) {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) {
-        return;
-    }
+public @Loot_Pickup(this, pPlayer) {
+    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
 
     new iPoints = GetPlayerPoints(pPlayer) + 1;
     SetPlayerPoints(pPlayer, iPoints);
 }
 
-public OnBackpackPickup(pEntity, pPlayer) {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) {
-        return;
-    }
+public @Backpack_Pickup(this, pPlayer) {
+    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
 
-    new iPoints = GetPlayerPoints(pPlayer) + CE_GetMember(pEntity, "iSize");
+    new iPoints = GetPlayerPoints(pPlayer) + CE_GetMember(this, "iSize");
     SetPlayerPoints(pPlayer, iPoints);
 }
 
+/*--------------------------------[ Hooks ]--------------------------------*/
+
 public Message_StatusIcon(iMsgId, iDest, pPlayer) {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) {
-        return PLUGIN_CONTINUE;
-    }
+    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return PLUGIN_CONTINUE;
 
-    new szIcon[8];
-    get_msg_arg_string(2, szIcon, 7);
-
+    static szIcon[8]; get_msg_arg_string(2, szIcon, 7);
     if (equal(szIcon, "buyzone") && get_msg_arg_int(1)) {
         get_member(pPlayer, m_signals, get_member(pPlayer, m_signals) & ~SIGNAL_BUY);
         return PLUGIN_HANDLED;
@@ -180,52 +173,38 @@ public Message_StatusIcon(iMsgId, iDest, pPlayer) {
 }
 
 public HamHook_Player_Killed_Post(pPlayer, pKiller) {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) {
-        return;
-    }
+    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
 
     new iPoints = GetPlayerPoints(pPlayer);
-
     if (iPoints || (pKiller != pPlayer && !Hwn_Gamemode_IsPlayerOnSpawn(pPlayer))) {
         ExtractPlayerPoints(pPlayer);
     }
 }
 
 public HamHook_Base_Killed_Post(pEntity) {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) {
-        return;
-    }
+    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
 
     static pBoss;
     Hwn_Bosses_GetCurrent(pBoss);
 
-    if (pEntity != pBoss && pev(pEntity, pev_flags) & FL_MONSTER && !pev(pEntity, pev_team)) { // Monster kill reward
-        new Float:vecOrigin[3];
-        pev(pEntity, pev_origin, vecOrigin);
-
+    if (pEntity != pBoss && UTIL_IsMonster(pEntity) && !pev(pEntity, pev_team)) { // Monster kill reward
+        static Float:vecOrigin[3]; pev(pEntity, pev_origin, vecOrigin);
         new Float:flSpellChance = get_pcvar_float(g_pCvarNpcDropChanceSpell);
+        new bool:bSpawnSpell = flSpellChance && flSpellChance >= random_float(0.0, 100.0);
 
         new pEntity = CE_Create(
-            (
-                flSpellChance && flSpellChance >= random_float(0.0, 100.0)
-                    ? SPELLBOOK_ENTITY_CLASSNAME
-                    : LOOT_ENTITY_CLASSNAME
-            ),
+            bSpawnSpell ? SPELLBOOK_ENTITY_CLASSNAME : LOOT_ENTITY_CLASSNAME,
             vecOrigin
         );
 
-        if (pEntity) {
-            dllfunc(DLLFunc_Spawn, pEntity);
-        }
+        if (pEntity) dllfunc(DLLFunc_Spawn, pEntity);
     }
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
 public Round_Fw_NewRound() {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) {
-        return;
-    }
+    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
 
     ResetVariables();
 
@@ -233,29 +212,23 @@ public Round_Fw_NewRound() {
 }
 
 public Round_Fw_RoundStart() {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) {
-        return;
-    }
+    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
     
     new iRoundTime = floatround(get_pcvar_float(g_pCvarRoundTime) * 60);
     Round_SetTime(iRoundTime);
 }
 
 public Round_Fw_RoundExpired() {
-    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) {
-        return;
-    }
+    if (g_iGamemode != Hwn_Gamemode_GetCurrent()) return;
 
-    if (get_pcvar_float(g_pCvarRoundTime) <= 0.0) {
-        return;
-    }
+    if (get_pcvar_float(g_pCvarRoundTime) <= 0.0) return;
 
-    new iTTeamPoints = GetTeamPoints(1);
-    new iCtTeamPoints = GetTeamPoints(2);
+    new iTeam1Points = GetTeamPoints(1);
+    new iTeam2Points = GetTeamPoints(2);
 
-    if (iTTeamPoints == iCtTeamPoints) {
+    if (iTeam1Points == iTeam2Points) {
         new iOvertime = get_pcvar_num(g_pCvarRoundTimeOvertime);
-        if (iTTeamPoints > 0 && iOvertime > 0) {
+        if (iTeam1Points > 0 && iOvertime > 0) {
             new iRoundTime = Round_GetTime() + iOvertime;
             Round_SetTime(iRoundTime);
 
@@ -266,21 +239,20 @@ public Round_Fw_RoundExpired() {
             DispatchWin(3);
         }
     } else {
-        DispatchWin(iTTeamPoints > iCtTeamPoints ? 1 : 2);
+        DispatchWin(iTeam1Points > iTeam2Points ? 1 : 2);
     }
 }
 
 public Hwn_Bosses_Fw_BossSpawn(pEntity, Float:flLifeTime) {
-    if (!Round_IsRoundStarted()) {
-        return;
-    }
+    if (!Round_IsRoundStarted()) return;
 
     new iRoundTime = Round_GetTime() + floatround(flLifeTime);
     Round_SetTime(iRoundTime);
+
     g_iTeamPointsToSpawnBoss = 0;
 }
 
-/*--------------------------------[ Methods ]--------------------------------*/
+/*--------------------------------[ Functions ]--------------------------------*/
 
 GetPlayerPoints(pPlayer) {
     return g_rgiPlayerPoints[pPlayer];
@@ -293,19 +265,13 @@ SetPlayerPoints(pPlayer, iAmount) {
 
 bool:ExtractPlayerPoints(pPlayer) {
     new iPoints = GetPlayerPoints(pPlayer);
-
-    static Float:vecOrigin[3];
-    pev(pPlayer, pev_origin, vecOrigin);
-
     new bool:bIsBackpack = iPoints > 1;
-    new pBackpack = CE_Create(bIsBackpack ? BACKPACK_ENTITY_CLASSNAME : LOOT_ENTITY_CLASSNAME, vecOrigin);
-    if (!pBackpack) {
-        return false;
-    }
+    static Float:vecOrigin[3]; pev(pPlayer, pev_origin, vecOrigin);
 
-    if (bIsBackpack) {
-        CE_SetMember(pBackpack, "iSize", iPoints);
-    }
+    new pBackpack = CE_Create(bIsBackpack ? BACKPACK_ENTITY_CLASSNAME : LOOT_ENTITY_CLASSNAME, vecOrigin);
+    if (!pBackpack) return false;
+
+    if (bIsBackpack) CE_SetMember(pBackpack, "iSize", iPoints);
 
     CE_SetMember(pBackpack, "iType", Hwn_PumpkinType_Default);
     dllfunc(DLLFunc_Spawn, pBackpack);
@@ -340,18 +306,14 @@ SetTeamPoints(iTeam, iAmount) {
     g_rgiTeamPoints[iTeam] = iAmount;
 
     new iTeamPointsLimit = get_pcvar_num(g_pCvarTeamPointsLimit);
-    if (iAmount >= iTeamPointsLimit) {
-        DispatchWin(iTeam);
-    }
+    if (iAmount >= iTeamPointsLimit) DispatchWin(iTeam);
 
     ExecuteForward(g_fwTeamPointsChanged, _, iTeam);
 }
 
 bool:ScorePlayerPointsToTeam(pPlayer, iAmount) {
     new iPlayerPoints = GetPlayerPoints(pPlayer);
-    if (iPlayerPoints < iAmount) {
-        return false;
-    }
+    if (iPlayerPoints < iAmount) return false;
 
     if (IsObjectiveBlocked()) {
         ExecuteForward(g_fwObjectiveBlocked, _, pPlayer);
@@ -377,17 +339,9 @@ bool:ScorePlayerPointsToTeam(pPlayer, iAmount) {
 }
 
 bool:IsObjectiveBlocked() {
-    if (!Round_IsRoundStarted()) {
-        return true;
-    }
-    
-    if (Round_IsRoundEnd()) {
-        return true;
-    }
-
-    if (Hwn_Bosses_GetCurrent() != -1) {
-        return true;
-    }
+    if (!Round_IsRoundStarted()) return true;
+    if (Round_IsRoundEnd()) return true;
+    if (Hwn_Bosses_GetCurrent() != -1) return true;
 
     return false;
 }

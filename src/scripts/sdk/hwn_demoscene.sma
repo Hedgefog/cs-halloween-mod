@@ -39,7 +39,7 @@
 #define CAMERA_DISTANCE 240.0 // Resolution: 1920x1080 FOV: 90
 #define CAMERA_YAW 90.0 // Side view
 
-new g_hSpellFireball;
+new g_iFireballSpell;
 
 public plugin_init() {
     register_plugin("[Hwn] Demo Scene", "1.0.0", "Hedgehog Fog");
@@ -49,7 +49,7 @@ public plugin_init() {
     RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
     RegisterHamPlayer(Ham_Player_PreThink, "HamHook_Player_PreThink", .Post = 0);
 
-    g_hSpellFireball = Hwn_Spell_GetHandler("Fireball");
+    g_iFireballSpell = Hwn_Spell_GetHandler("Fireball");
 
     register_clcmd("hwn_demoscene_reset", "ResetAll");
 }
@@ -184,7 +184,7 @@ public SetDecalsLimit(pPlayer, iValue) {
 }
 
 public CastSpell(pPlayer) {
-    Hwn_Spell_SetPlayerSpell(pPlayer, g_hSpellFireball, 1);
+    Hwn_Spell_SetPlayerSpell(pPlayer, g_iFireballSpell, 1);
     client_cmd(pPlayer, "impulse 100");
 }
 

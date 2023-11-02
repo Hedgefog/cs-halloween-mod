@@ -5,9 +5,10 @@
 #include <cstrike>
 #include <xs>
 
+#include <api_custom_entities>
+
 #include <hwn>
 #include <hwn_utils>
-#include <api_custom_entities>
 
 #define PLUGIN "[Hwn] Spell Shop"
 #define AUTHOR "Hedgehog Fog"
@@ -61,21 +62,21 @@ public plugin_natives() {
 
 public bool:Native_Open(iPluginId, iArgc) {
     new pPlayer = get_param(1);
-    return Open(pPlayer);
+    return @Player_OpenMenu(pPlayer);
 }
 
 public bool:Native_BuySpell(iPluginId, iArgc) {
     new pPlayer = get_param(1);
     new iSpell = get_param(2);
 
-    return BuySpell(pPlayer, iSpell);
+    return @Player_BuySpell(pPlayer, iSpell);
 }
 
 public bool:Native_CanBuySpell(iPluginId, iArgc) {
     new pPlayer = get_param(1);
     new iSpell = get_param(2);
 
-    return CanBuySpell(pPlayer, iSpell);
+    return @Player_CanBuySpell(pPlayer, iSpell);
 }
 
 public Native_GetSpellPrice(iPluginId, iArgc) {
@@ -84,7 +85,122 @@ public Native_GetSpellPrice(iPluginId, iArgc) {
     return GetSpellPrice(iSpell);
 }
 
+/*--------------------------------[ Methods ]--------------------------------*/
+
+bool:@Player_CanBuySpell(this, iSpell) {
+    if (!is_user_alive(this)) {
+        return false;
+    }
+
+    new iPrice = GetSpellPrice(iSpell);
+
+    if (cs_get_user_money(this) < iPrice) {
+        return false;
+    }
+
+    return true;
+}
+
+bool:@Player_BuySpell(this, iSpell) {
+    if (!@Player_CanBuySpell(this, iSpell)) {
+        return false;
+    }
+
+    new iResult = 0;
+    ExecuteForward(g_fwBuySpell, iResult, this, iSpell);
+    if (iResult != PLUGIN_CONTINUE) {
+        return false;
+    }
+
+    new iPrice = GetSpellPrice(iSpell);
+    new iSpellAmount = 0;
+    new iPlayerSpell = Hwn_Spell_GetPlayerSpell(this, iSpellAmount);
+
+    iSpellAmount = iSpell == iPlayerSpell ? iSpellAmount + 1 : 1;
+
+    if (iSpell != iPlayerSpell) {
+        @Player_DropSpell(this);
+    }
+
+    new iMoney = cs_get_user_money(this);
+    cs_set_user_money(this, iMoney - iPrice);
+    Hwn_Spell_SetPlayerSpell(this, iSpell, iSpellAmount);
+
+    return true;
+}
+
+@Player_DropSpell(this) {
+    new iSpellAmount = 0;
+    new iSpell = Hwn_Spell_GetPlayerSpell(this, iSpellAmount);
+
+    if (iSpell == -1) {
+        return;
+    }
+
+    static Float:vecOrigin[3];
+    pev(this, pev_origin, vecOrigin);
+
+    new pSpellBook = CE_Create("hwn_item_spellbook", vecOrigin);
+    CE_SetMember(pSpellBook, "iSpell", iSpell);
+    CE_SetMember(pSpellBook, "iAmount", iSpellAmount);
+
+    if (pSpellBook) {
+        dllfunc(DLLFunc_Spawn, pSpellBook);
+    }
+
+    static Float:vecVelocity[3];
+    UTIL_GetDirectionVector(this, vecVelocity, 250.0);
+    set_pev(pSpellBook, pev_velocity, vecVelocity);
+}
+
+bool:@Player_OpenMenu(this)  {
+    if (!is_user_alive(this)) {
+        return false;
+    }
+
+    if (!get_pcvar_num(g_pCvarEnabled)) {
+        client_print(this, print_center, "%L", this, "HWN_SPELLSHOP_DISABLED");
+        return false;
+    }
+
+    new iResult = 0;
+    ExecuteForward(g_fwOpen, iResult, this);
+    if (iResult != PLUGIN_CONTINUE) {
+        return false;
+    }
+
+    new iMenu = CreateShopMenu(this);
+    menu_display(this, iMenu);
+
+    return true;
+}
+
 /*--------------------------------[ Functions ]--------------------------------*/
+
+CreateShopMenu(pPlayer) {
+    static szMenuTitle[32];
+    format(szMenuTitle, charsmax(szMenuTitle), "%L\RCost", pPlayer, "HWN_SPELLSHOP_MENU_TITLE");
+
+    new iCallback = menu_makecallback("MenuCallback");
+    new iMenu = menu_create(szMenuTitle, "MenuHandler");
+
+    new iNum = Hwn_Spell_GetCount();
+    for (new iSpell = 0; iSpell < iNum; ++iSpell) {
+        static szSpellName[128];
+        Hwn_Spell_GetDictionaryKey(iSpell, szSpellName, charsmax(szSpellName));
+
+        new iPrice = GetSpellPrice(iSpell);
+      
+        static szText[128];
+        format(szText, charsmax(szText), "%L\R\y$%d", pPlayer, szSpellName, iPrice);
+
+        menu_additem(iMenu, szText, .callback = iCallback);
+    }
+
+    menu_setprop(iMenu, MPROP_EXIT, MEXIT_ALL);
+
+    return iMenu;
+}
 
 GetSpellPrice(iSpell) {
     new iPrice = get_pcvar_num(g_pCvarPrice);
@@ -126,125 +242,12 @@ GetSpellPrice(iSpell) {
     return iPrice;
 }
 
-bool:CanBuySpell(pPlayer, iSpell) {
-    if (!is_user_alive(pPlayer)) {
-        return false;
-    }
-
-    new iPrice = GetSpellPrice(iSpell);
-
-    if (cs_get_user_money(pPlayer) < iPrice) {
-        return false;
-    }
-
-    return true;
-}
-
-bool:BuySpell(pPlayer, iSpell) {
-    if (!CanBuySpell(pPlayer, iSpell)) {
-        return false;
-    }
-
-    new iResult = 0;
-    ExecuteForward(g_fwBuySpell, iResult, pPlayer, iSpell);
-    if (iResult != PLUGIN_CONTINUE) {
-        return false;
-    }
-
-    new iPrice = GetSpellPrice(iSpell);
-    new iSpellAmount = 0;
-    new iPlayerSpell = Hwn_Spell_GetPlayerSpell(pPlayer, iSpellAmount);
-
-    iSpellAmount = iSpell == iPlayerSpell ? iSpellAmount + 1 : 1;
-
-    if (iSpell != iPlayerSpell) {
-        DropPlayerSpell(pPlayer);
-    }
-
-    new iMoney = cs_get_user_money(pPlayer);
-    cs_set_user_money(pPlayer, iMoney - iPrice);
-    Hwn_Spell_SetPlayerSpell(pPlayer, iSpell, iSpellAmount);
-
-    return true;
-}
-
-DropPlayerSpell(pPlayer) {
-    new iSpellAmount = 0;
-    new iSpell = Hwn_Spell_GetPlayerSpell(pPlayer, iSpellAmount);
-
-    if (iSpell == -1) {
-        return;
-    }
-
-    static Float:vecOrigin[3];
-    pev(pPlayer, pev_origin, vecOrigin);
-
-    new pSpellBook = CE_Create("hwn_item_spellbook", vecOrigin);
-    CE_SetMember(pSpellBook, "iSpell", iSpell);
-    CE_SetMember(pSpellBook, "iAmount", iSpellAmount);
-
-    if (pSpellBook) {
-        dllfunc(DLLFunc_Spawn, pSpellBook);
-    }
-
-    static Float:vecVelocity[3];
-    UTIL_GetDirectionVector(pPlayer, vecVelocity, 250.0);
-    set_pev(pSpellBook, pev_velocity, vecVelocity);
-}
-
-bool:Open(pPlayer)  {
-    if (!is_user_alive(pPlayer)) {
-        return false;
-    }
-
-    if (!get_pcvar_num(g_pCvarEnabled)) {
-        client_print(pPlayer, print_center, "%L", pPlayer, "HWN_SPELLSHOP_DISABLED");
-        return false;
-    }
-
-    new iResult = 0;
-    ExecuteForward(g_fwOpen, iResult, pPlayer);
-    if (iResult != PLUGIN_CONTINUE) {
-        return false;
-    }
-
-    new iMenu = CreateMenu(pPlayer);
-    menu_display(pPlayer, iMenu);
-
-    return true;
-}
-
-CreateMenu(pPlayer) {
-    static szMenuTitle[32];
-    format(szMenuTitle, charsmax(szMenuTitle), "%L\RCost", pPlayer, "HWN_SPELLSHOP_MENU_TITLE");
-
-    new iCallback = menu_makecallback("MenuCallback");
-    new iMenu = menu_create(szMenuTitle, "MenuHandler");
-
-    new iNum = Hwn_Spell_GetCount();
-    for (new iSpell = 0; iSpell < iNum; ++iSpell) {
-        static szSpellName[128];
-        Hwn_Spell_GetDictionaryKey(iSpell, szSpellName, charsmax(szSpellName));
-
-        new iPrice = GetSpellPrice(iSpell);
-      
-        static szText[128];
-        format(szText, charsmax(szText), "%L\R\y$%d", pPlayer, szSpellName, iPrice);
-
-        menu_additem(iMenu, szText, .callback = iCallback);
-    }
-
-    menu_setprop(iMenu, MPROP_EXIT, MEXIT_ALL);
-
-    return iMenu;
-}
-
 /*--------------------------------[ Menu ]--------------------------------*/
 
 public MenuHandler(pPlayer, iMenu, item, page) {
     if (item != MENU_EXIT) {
         new iSpell = item * (page + 1);
-        BuySpell(pPlayer, iSpell);
+        @Player_BuySpell(pPlayer, iSpell);
     }
 
     menu_destroy(iMenu);
@@ -254,5 +257,5 @@ public MenuHandler(pPlayer, iMenu, item, page) {
 
 public MenuCallback(pPlayer, iMenu, item) {
     new iSpell = item;
-    return CanBuySpell(pPlayer, iSpell) ? ITEM_ENABLED : ITEM_DISABLED;
+    return @Player_CanBuySpell(pPlayer, iSpell) ? ITEM_ENABLED : ITEM_DISABLED;
 }

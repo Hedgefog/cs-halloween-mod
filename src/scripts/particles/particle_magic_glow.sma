@@ -1,5 +1,4 @@
 #include <amxmodx>
-#include <fakemeta>
 #include <xs>
 
 #include <api_particles>
@@ -51,15 +50,10 @@ public plugin_init() {
 
 public Transform(Float:vecOrigin[3], Float:vecVelocity[3]) {
     static Float:vecRandom[3];
+    UTIL_RandomVector(-16.0, 16.0, vecRandom);
+    xs_vec_add(vecOrigin, vecRandom, vecOrigin);
 
-    {
-        UTIL_RandomVector(-16.0, 16.0, vecRandom);
-        xs_vec_add(vecOrigin, vecRandom, vecOrigin);
-    }
-
-    {
-        UTIL_RandomVector(0.0, 32.0, vecVelocity);
-    }
+    UTIL_RandomVector(0.0, 32.0, vecVelocity);
 }
 
 stock UTIL_RandomVector(const Float:flMin, const Float:flMax, Float:vecOut[3]) {

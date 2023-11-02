@@ -11,7 +11,7 @@ public plugin_precache() {
     Hwn_Spell_Register(
         "Invisibility",
         Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability | Hwn_SpellFlag_Protection,
-        "Cast"
+        "@Player_CastSpell"
     );
 }
 
@@ -19,6 +19,6 @@ public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
-public Cast(pPlayer) {
+@Player_CastSpell(pPlayer) {
     Hwn_Player_SetEffect(pPlayer, "invisibility", true, 9.9);
 }

@@ -20,7 +20,7 @@ new const g_szSndDetonate[] = "hwn/spells/spell_skeletons_horde_rise.wav";
 
 new g_iGibsModelIndex;
 
-new g_hWofSpell;
+new g_iWofSpell;
 
 public plugin_precache() {
     g_iGibsModelIndex = precache_model("models/bonegibs.mdl");
@@ -31,11 +31,11 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    g_hWofSpell = Hwn_Wof_Spell_Register("Skeletons Horde", "Invoke");
+    g_iWofSpell = Hwn_Wof_Spell_Register("Skeletons Horde", "Invoke");
 }
 
 public Hwn_Wof_Fw_Effect_Start(iSpell) {
-    if (g_hWofSpell != iSpell) {
+    if (g_iWofSpell != iSpell) {
         return;
     }
 

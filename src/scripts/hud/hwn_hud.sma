@@ -35,7 +35,7 @@
 
 new Float:g_rgflPlayerNextObjectiveBlockMsg[MAX_PLAYERS + 1];
 
-new g_hGamemodeCollector;
+new g_iGamemodeCollector;
 
 new g_iHudMsgTeamPoints;
 new g_iHudMsgPlayerPoints;
@@ -63,7 +63,7 @@ public plugin_init() {
     CE_RegisterHook(CEFunction_Picked, "hwn_item_pumpkin", "OnPumpkinPicked");
     CE_RegisterHook(CEFunction_Picked, "hwn_item_pumpkin_big", "OnPumpkinPicked");
 
-    g_hGamemodeCollector = Hwn_Gamemode_GetHandler("Collector");
+    g_iGamemodeCollector = Hwn_Gamemode_GetHandler("Collector");
 
     g_pCvarCollectoriTeamPointsLimit = get_cvar_pointer("hwn_collector_teampoints_limit");
     g_pCvarCollectorRoundTime = get_cvar_pointer("hwn_collector_roundtime");
@@ -193,7 +193,7 @@ public OnSpellbookPicked(pEntity, pPlayer) {
 }
 
 public OnPumpkinPicked(pEntity, pPlayer) {
-    if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) {
         return;
     }
 
@@ -207,7 +207,7 @@ public OnPumpkinPicked(pEntity, pPlayer) {
 }
 
 public OnResetHUD(pPlayer) {
-    if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) {
         return;
     }
 
@@ -215,7 +215,7 @@ public OnResetHUD(pPlayer) {
 }
 
 public Message_HideWeapon() {
-    if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) {
         return;
     }
 
@@ -225,7 +225,7 @@ public Message_HideWeapon() {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 UpdateTeamPoints() {
-    if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) {
         return;
     }
 
@@ -249,7 +249,7 @@ UpdateTeamPoints() {
 }
 
 UpdatePlayerPoints(pPlayer) {
-    if (Hwn_Gamemode_GetCurrent() != g_hGamemodeCollector) {
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemodeCollector) {
         return;
     }
 
@@ -287,7 +287,7 @@ SetupNotificatiMessage(Float:iPosX = -1.0, Float:iPosY = -1.0, const rgiColor[3]
 GetHideWeaponFlags() {
     new iFlags = 0;
 
-    if (Hwn_Gamemode_GetCurrent() == g_hGamemodeCollector) {
+    if (Hwn_Gamemode_GetCurrent() == g_iGamemodeCollector) {
         if (get_pcvar_float(g_pCvarCollectorRoundTime) <= 0.0) {
             iFlags |= HUD_HIDE_TIMER;
         }

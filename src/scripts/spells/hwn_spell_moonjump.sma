@@ -11,7 +11,7 @@ public plugin_precache() {
     Hwn_Spell_Register(
         "Moon Jump",
         Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability,
-        "Cast"
+        "@Player_CastSpell"
     );
 }
 
@@ -19,6 +19,6 @@ public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
-public Cast(pPlayer) {
+@Player_CastSpell(pPlayer) {
     Hwn_Player_SetEffect(pPlayer, "moonjump", true, 25.0);
 }

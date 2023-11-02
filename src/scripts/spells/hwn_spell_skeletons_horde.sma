@@ -28,7 +28,7 @@ new const g_szSprSpellBall[] = "sprites/xsmoke1.spr";
 new g_iGibsModelIndex;
 
 new g_iSpellHandler;
-new g_hCeSpellball;
+new g_iCeSpellball;
 
 public plugin_precache() {
     g_iGibsModelIndex = precache_model("models/bonegibs.mdl");
@@ -40,7 +40,7 @@ public plugin_precache() {
     g_iSpellHandler = Hwn_Spell_Register(
         "Skeletons Horde",
         Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Radius | Hwn_SpellFlag_Rare,
-        "Cast"
+        "@Player_CastSpell"
     );
 }
 
@@ -49,7 +49,7 @@ public plugin_init() {
 
     RegisterHam(Ham_Touch, CE_BASE_CLASSNAME, "HamHook_Base_Touch_Post", .Post = 1);
 
-    g_hCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
+    g_iCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Killed");
 }
@@ -61,7 +61,7 @@ public HamHook_Base_Touch_Post(pEntity, pTarget) {
         return;
     }
 
-    if (g_hCeSpellball != CE_GetHandlerByEntity(pEntity)) {
+    if (g_iCeSpellball != CE_GetHandlerByEntity(pEntity)) {
         return;
     }
 
@@ -88,7 +88,7 @@ public HamHook_Base_Touch_Post(pEntity, pTarget) {
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-public Cast(pPlayer) {
+@Player_CastSpell(pPlayer) {
     new pSpellBall = UTIL_HwnSpawnPlayerSpellball(pPlayer, g_iSpellHandler, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.5, 10.0);
     if (!pSpellBall) {
         return PLUGIN_HANDLED;

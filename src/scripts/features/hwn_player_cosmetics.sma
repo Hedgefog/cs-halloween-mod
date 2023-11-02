@@ -757,6 +757,8 @@ LoadCosmeticsFromFile(const szFilePath[]) {
 
         Register(szName, iGroups, iModelIndex, iBody, iSkin, rgiEffectColor);
     }
+
+    json_free(jsonDoc);
 }
 
 Hwn_PlayerCosmetic_Group:GetGroupsFromJson(JSON:jsonGroups) {

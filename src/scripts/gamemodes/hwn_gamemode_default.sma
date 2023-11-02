@@ -11,18 +11,24 @@
 #define PLUGIN "[Hwn] Gamemode Default"
 #define AUTHOR "Hedgehog Fog"
 
-enum CustomSky {
-    CustomSky_Name[32],
-    CustomSky_Color[3]
-}
+#define TASKID_UPDATE_SKY 0
 
-new const g_rgszSkySufixes[][4] = {"bk", "dn", "ft", "lf", "rt", "up"};
+enum CustomSky { CustomSky_Name[32], CustomSky_Color[3] };
 
-new const g_customSkies[][CustomSky] = {
-    {"hwn1", {56, 56, 72}},
-    {"hwn2", {25, 21, 29}},
-    {"hwn3", {56, 56, 72}},
-    {"hwn4", {72, 64, 72}}
+new const g_rgszSkySufixes[][4] = { "bk", "dn", "ft", "lf", "rt", "up" };
+
+new const g_rgCustomSkies[][CustomSky] = {
+    { "hwn1", { 56, 56, 72 } },
+    { "hwn2", { 25, 21, 29 } },
+    { "hwn3", { 56, 56, 72 } },
+    { "hwn4", { 72, 64, 72 } }
+};
+
+new const g_rgszRandomEntities[][] = {
+    "hwn_item_spellbook",
+    "hwn_npc_ghost",
+    "hwn_npc_skeleton",
+    "hwn_npc_spookypumpkin"
 };
 
 new g_pCvarSpellsOnSpawn;
@@ -31,7 +37,7 @@ new g_pCvarChangeLighting;
 
 new g_iGamemode;
 
-new g_iCustomSkyIdx = -1;
+new g_iCustomSky = -1;
 
 new g_szDefaultLigthStyle[] = "0";
 new g_szCustomLigthStyle[] = "g";
@@ -39,13 +45,9 @@ new g_szDefaultSkyName[32];
 new g_rgiDefaultSkyColor[3];
 
 public plugin_precache() {
-    g_iCustomSkyIdx = random(sizeof(g_customSkies));
+    g_iCustomSky = random(sizeof(g_rgCustomSkies));
 
-    new szPath[32];
-    for (new i = 0; i < sizeof(g_rgszSkySufixes); ++i) {
-        format(szPath, charsmax(szPath), "gfx/env/%s%s.tga", g_customSkies[g_iCustomSkyIdx][CustomSky_Name], g_rgszSkySufixes[i]);
-        precache_generic(szPath);
-    }
+    PrecacheSky(g_rgCustomSkies[g_iCustomSky][CustomSky_Name]);
 
     g_iGamemode = Hwn_Gamemode_Register("Default", Hwn_GamemodeFlag_Default | Hwn_GamemodeFlag_SpellShop);
     
@@ -68,13 +70,11 @@ public plugin_init() {
 /*--------------------------------[ Forwards ]--------------------------------*/
 
 public Hwn_Gamemode_Fw_Activated(iGamemode) {
-    remove_task(0);
+    remove_task(TASKID_UPDATE_SKY);
 
-    if (iGamemode != g_iGamemode) {
-        return;
-    }
+    if (iGamemode != g_iGamemode) return;
 
-    set_task(15.0, "Task_Event", 0, _, _, "b");
+    set_task(15.0, "Task_Event", TASKID_UPDATE_SKY, _, _, "b");
 
     UpdateLighting();
 }
@@ -82,9 +82,7 @@ public Hwn_Gamemode_Fw_Activated(iGamemode) {
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public FMHook_LightStyle(iStyle, const szPattern[]) {
-    if (iStyle) {
-        return;
-    }
+    if (iStyle) return;
 
     g_szDefaultLigthStyle[0] = szPattern[0];
 
@@ -96,35 +94,34 @@ public FMHook_LightStyle(iStyle, const szPattern[]) {
 }
 
 public HamHook_Player_Spawn_Post(pPlayer) {
-    if (!is_user_alive(pPlayer)) {
-        return;
-    }
-
-    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) {
-        return;
-    }
+    if (!is_user_alive(pPlayer)) return;
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
 
     new bSpellsOnSpawn = get_pcvar_bool(g_pCvarSpellsOnSpawn);
 
     if (bSpellsOnSpawn > 0) {
         new iSpellsNum = Hwn_Spell_GetCount();
-        if (iSpellsNum) {
-            Hwn_Spell_SetPlayerSpell(pPlayer, random(iSpellsNum), bSpellsOnSpawn);
-        }
+        if (iSpellsNum) Hwn_Spell_SetPlayerSpell(pPlayer, random(iSpellsNum), bSpellsOnSpawn);
     }
 }
 
 public CvarHook_ChangeLighting(pCvar) {
-    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) {
-        return;
-    }
-
     UpdateLighting();
 }
 
-/*--------------------------------[ Methods ]--------------------------------*/
+/*--------------------------------[ Functions ]--------------------------------*/
+
+PrecacheSky(const szName[]) {
+    new szPath[32];
+    for (new i = 0; i < sizeof(g_rgszSkySufixes); ++i) {
+        format(szPath, charsmax(szPath), "gfx/env/%s%s.tga", szName, g_rgszSkySufixes[i]);
+        precache_generic(szPath);
+    }
+}
 
 UpdateLighting() {
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
+
     new bool:bChangeLighting = get_pcvar_bool(g_pCvarChangeLighting);
 
     new bool:bUseCustom = (
@@ -137,15 +134,13 @@ UpdateLighting() {
 }
 
 UpdateSky() {
-    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) {
-        return;
-    }
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
 
     if (get_pcvar_num(g_pCvarChangeLighting) > 0) {
-        set_cvar_string("sv_skyname", g_customSkies[g_iCustomSkyIdx][CustomSky_Name]);
-        set_cvar_num("sv_skycolor_r", g_customSkies[g_iCustomSkyIdx][CustomSky_Color][0]);
-        set_cvar_num("sv_skycolor_g", g_customSkies[g_iCustomSkyIdx][CustomSky_Color][1]);
-        set_cvar_num("sv_skycolor_b", g_customSkies[g_iCustomSkyIdx][CustomSky_Color][2]);
+        set_cvar_string("sv_skyname", g_rgCustomSkies[g_iCustomSky][CustomSky_Name]);
+        set_cvar_num("sv_skycolor_r", g_rgCustomSkies[g_iCustomSky][CustomSky_Color][0]);
+        set_cvar_num("sv_skycolor_g", g_rgCustomSkies[g_iCustomSky][CustomSky_Color][1]);
+        set_cvar_num("sv_skycolor_b", g_rgCustomSkies[g_iCustomSky][CustomSky_Color][2]);
     } else {
         set_cvar_string("sv_skyname", g_szDefaultSkyName);
         set_cvar_num("sv_skycolor_r", g_rgiDefaultSkyColor[0]);
@@ -157,33 +152,12 @@ UpdateSky() {
 /*--------------------------------[ Tasks ]--------------------------------*/
 
 public Task_Event() {
-    if (!get_pcvar_num(g_pCvarRandomEvents)) {
-        return;
-    }
+    if (!get_pcvar_num(g_pCvarRandomEvents)) return;
 
     static Float:vecOrigin[3];
-    if (!Hwn_EventPoints_GetRandom(vecOrigin)) {
-        return;
-    }
+    if (!Hwn_EventPoints_GetRandom(vecOrigin)) return;
 
-    new pEntity = 0;
-
-    switch (random(3)) {
-        case 0: {
-            pEntity = CE_Create("hwn_npc_ghost", vecOrigin);
-        }
-        case 1: {
-            pEntity = CE_Create("hwn_npc_skeleton", vecOrigin);
-        }
-        case 2: {
-            pEntity = CE_Create("hwn_npc_spookypumpkin", vecOrigin);
-        }
-        case 3: {
-            pEntity = CE_Create("hwn_item_spellbook", vecOrigin);
-        }
-    }
-
-    if (pEntity) {
-        dllfunc(DLLFunc_Spawn, pEntity);
-    }
+    new iRandomEntity = random(sizeof(g_rgszRandomEntities));
+    new pEntity = CE_Create(g_rgszRandomEntities[iRandomEntity], vecOrigin);
+    if (pEntity) dllfunc(DLLFunc_Spawn, pEntity);
 }

@@ -120,7 +120,7 @@ stock bool:NPC_IsReachable(pEntity, const Float:vecTarget[3], pIgnoreEnt = 0, Fl
             new iStepsNum = floatround(flDistance / flStepLength);
 
             if (iStepsNum) {
-                //Get iDirection vetor
+                //Get direction vector
                 static Float:vecStep[3];
                 xs_vec_sub(_vecTarget, vecOrigin, vecStep);
                 

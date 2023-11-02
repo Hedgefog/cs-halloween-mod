@@ -30,7 +30,7 @@ public plugin_precache() {
     precache_model(g_szSprSpellBall);
     precache_sound(g_szSndCast);
 
-    g_iSpell = Hwn_Spell_Register("Mystery Smoke", Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Radius | Hwn_SpellFlag_Protection, "OnCast");
+    g_iSpell = Hwn_Spell_Register("Mystery Smoke", Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Radius | Hwn_SpellFlag_Protection, "@Player_CastSpell");
 }
 
 public plugin_init() {
@@ -43,7 +43,7 @@ public plugin_init() {
     CE_RegisterHook(CEFunction_Think, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Think");
 }
 
-public OnCast(pPlayer) {
+@Player_CastSpell(pPlayer) {
     new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, g_iSpell, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
     if (!pEntity) {
         return PLUGIN_HANDLED;

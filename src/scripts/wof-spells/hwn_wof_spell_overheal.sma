@@ -8,16 +8,16 @@
 #define PLUGIN "[Hwn] Overheal WoF Spell"
 #define AUTHOR "Hedgehog Fog"
 
-new g_hWofSpell;
+new g_iWofSpell;
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    g_hWofSpell = Hwn_Wof_Spell_Register("Overheal", "Invoke");
+    g_iWofSpell = Hwn_Wof_Spell_Register("Overheal", "Invoke");
 }
 
 public Hwn_Wof_Fw_Effect_Start(iSpell) {
-    if (g_hWofSpell == iSpell) {
+    if (g_iWofSpell == iSpell) {
         Hwn_Wof_Abort();
     }
 }

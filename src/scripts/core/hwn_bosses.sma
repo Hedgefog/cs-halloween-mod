@@ -2,8 +2,6 @@
 
 #include <amxmodx>
 #include <amxmisc>
-#include <engine>
-
 #include <fakemeta>
 #include <hamsandwich>
 
@@ -49,6 +47,13 @@ new g_pBoss = -1;
 new g_iBossIdx = -1;
 new g_iBossSpawnPoint;
 
+public plugin_precache() {
+    precache_sound(g_szSndBossSpawn);
+    precache_sound(g_szSndBossDefeat);
+    precache_sound(g_szSndBossEscape);
+    precache_sound(g_szSndCongratulations);
+}
+
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
@@ -86,13 +91,6 @@ public plugin_end() {
     if (g_irgBossSpawnPoints != Invalid_Array) {
         ArrayDestroy(g_irgBossSpawnPoints);
     }
-}
-
-public plugin_precache() {
-    precache_sound(g_szSndBossSpawn);
-    precache_sound(g_szSndBossDefeat);
-    precache_sound(g_szSndBossEscape);
-    precache_sound(g_szSndCongratulations);
 }
 
 public plugin_natives() {
@@ -296,17 +294,9 @@ public HC_Player_CanTakeDamage(pPlayer, pAttacker) {
 /*--------------------------------[ Functions ]--------------------------------*/
 
 SpawnBoss() {
-    if (g_pBoss != -1) {
-        return;
-    }
-
-    if (g_irgpBosses == Invalid_Array) {
-        return;
-    }
-
-    if (g_irgBossSpawnPoints == Invalid_Array) {
-        return;
-    }
+    if (g_pBoss != -1) return;
+    if (g_irgpBosses == Invalid_Array) return;
+    if (g_irgBossSpawnPoints == Invalid_Array) return;
 
     ResetPlayersTotalDamage();
 
@@ -323,9 +313,8 @@ SpawnBoss() {
     ArrayGetArray(g_irgBossSpawnPoints, iPointIdx, vecOrigin);
 
     g_pBoss = CE_Create(szClassName, vecOrigin);
-    if (g_pBoss == -1) {
-        return;
-    }
+
+    if (g_pBoss == -1) return;
 
     g_iBossIdx = iBossIdx;
     g_iBossSpawnPoint = iPointIdx;
@@ -348,9 +337,7 @@ RadiusKill(const Float:vecOrigin[3]) {
 
     new pTarget = 0;
     while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, flRadius)) > 0) {
-        if (g_pBoss == pTarget) {
-            continue;
-        }
+        if (g_pBoss == pTarget) continue;
 
         if ((IS_PLAYER(pTarget) && is_user_alive(pTarget)) || UTIL_IsMonster(pTarget)) {
             ExecuteHamB(Ham_Killed, pTarget, g_pBoss, GIB_ALWAYS);

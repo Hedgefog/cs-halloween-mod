@@ -11,7 +11,6 @@
 #define AUTHOR "Hedgehog Fog"
 
 #define MIN_EVENT_POINTS 8
-
 #define MAX_EVENT_POINTS 32
 
 new Float:g_rgvecEventPoints[MAX_EVENT_POINTS][3];
