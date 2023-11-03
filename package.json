@@ -14,11 +14,10 @@
   "license": "MIT",
   "devDependencies": {
     "amxxpack": "^1.4.7",
-    "concurrently": "^7.4.0",
     "gulp": "^4.0.2",
     "gulp-file": "^0.4.0",
-    "gulp-zip": "^5.0.2",
+    "gulp-zip": "^5.1.0",
     "lodash": "^4.17.21",
-    "merge2": "^1.2.0"
+    "merge2": "^1.4.1"
   }
 }

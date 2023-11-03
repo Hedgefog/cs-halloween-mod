@@ -17,92 +17,53 @@
           uses: actions/setup-node@v1
           with:
             node-version: 12
-        - name: Setup Build Variables
-          id: buildvars
-          uses: actions/github-script@v3
-          with:
-            github-token: ${{secrets.GITHUB_TOKEN}}
-            script: |
-              try {
-                const package = require(`${process.env.GITHUB_WORKSPACE}/package.json`);
-                ['name', 'version', 'description', 'author']
-                  .forEach(k => core.setOutput(k, package[k]));
-                const tagVersion = package.version.replace(/\./g, '');
-                core.setOutput('tagversion', tagVersion);
-                core.setOutput('tagname', `${package.name}-${tagVersion}`);
-                core.setOutput('releasename', `${package.description} Release v${package.version}`);
-              } catch (err) {
-                core.setFailed(err.message);
-              }
         - name: Install Dependencies
           run: npm install
         - name: Build project
           run: npm run build
         - name: Pack bundles
           run: npm run pack
+        - name: Setup Release Variables
+          id: release_vars
+          uses: actions/github-script@v6
+          with:
+            github-token: ${{secrets.GITHUB_TOKEN}}
+            script: |
+              try {
+                const package = require(`${process.env.GITHUB_WORKSPACE}/package.json`);
+                ['name', 'version', 'description', 'author'].forEach(k => core.setOutput(k, package[k]));
+                const tagVersion = package.version.replace(/\./g, '');
+                core.setOutput('tagversion', tagVersion);
+                core.setOutput('bundlename', `${package.name}-${tagVersion}`);
+                core.setOutput('tagname', `${package.name}-${tagVersion}`);
+                core.setOutput('releasename', `${package.description} Release v${package.version}`);
+
+                const bundles_metadata = require(`${process.env.GITHUB_WORKSPACE}/dist/bundles/files.json`);
+                core.setOutput('srcArchive', bundles_metadata.srcArchive);
+                core.setOutput('buildArchive', bundles_metadata.buildArchive);
+                core.setOutput('resourcesArchive', bundles_metadata.resourcesArchive);
+                core.setOutput('sdkArchive', bundles_metadata.sdkArchive);
+
+              } catch (err) {
+                core.setFailed(err.message);
+              }
         - name: Create Release
           id: create_release
-          uses: actions/create-release@v1
+          uses: softprops/action-gh-release@v1
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
-            tag_name: ${{ steps.buildvars.outputs.tagname }}
-            release_name: ${{ steps.buildvars.outputs.releasename }}
+            name: ${{ steps.release_vars.outputs.releasename }}
+            tag_name: ${{ steps.release_vars.outputs.tagname }}
             draft: false
             prerelease: false
-        - name: Upload Release Addons Src
-          id: upload-release-addons-src
-          uses: actions/upload-release-asset@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: ./dist/bundles/halloween-mod-${{ steps.buildvars.outputs.tagversion }}-addons-src.zip
-            asset_name: halloween-mod-${{ steps.buildvars.outputs.tagversion }}-addons-src.zip
-            asset_content_type: application/zip
-        - name: Upload Release Addons
-          id: upload-release-addons
-          uses: actions/upload-release-asset@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: ./dist/bundles/halloween-mod-${{ steps.buildvars.outputs.tagversion }}-addons.zip
-            asset_name: halloween-mod-${{ steps.buildvars.outputs.tagversion }}-addons.zip
-            asset_content_type: application/zip
-        - name: Upload Release Addons ReAPI
-          id: upload-release-addons-reapi
-          uses: actions/upload-release-asset@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: ./dist/bundles/halloween-mod-${{ steps.buildvars.outputs.tagversion }}-addons-reapi.zip
-            asset_name: halloween-mod-${{ steps.buildvars.outputs.tagversion }}-addons-reapi.zip
-            asset_content_type: application/zip
-        - name: Upload Release Resources
-          id: upload-release-resources
-          uses: actions/upload-release-asset@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: ./dist/bundles/halloween-mod-${{ steps.buildvars.outputs.tagversion }}-resources.zip
-            asset_name: halloween-mod-${{ steps.buildvars.outputs.tagversion }}-resources.zip
-            asset_content_type: application/zip
-        - name: Upload Release SDK
-          id: upload-release-sdk
-          uses: actions/upload-release-asset@v1
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: ./dist/bundles/halloween-mod-${{ steps.buildvars.outputs.tagversion }}-sdk.zip
-            asset_name: halloween-mod-${{ steps.buildvars.outputs.tagversion }}-sdk.zip
-            asset_content_type: application/zip
+            files: |
+              ./dist/bundles/${{ steps.release_vars.outputs.srcArchive }}
+              ./dist/bundles/${{ steps.release_vars.outputs.buildArchive }}
+              ./dist/bundles/${{ steps.release_vars.outputs.resourcesArchive }}
+              ./dist/bundles/${{ steps.release_vars.outputs.sdkArchive }}
         - name: Cleanup
           run: |
-            rm -rf ./compiler
-            rm -rf ./thirdparty
+            rm -rf ./.compiler
+            rm -rf ./.thirdparty
             rm -rf ./dist
-            rm -rf ./downloads
