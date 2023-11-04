@@ -76,16 +76,17 @@ public plugin_precache() {
 }
 
 @Entity_Think(this) {
+    static Float:flGameTime; flGameTime = get_gametime();
     static Float:flNextSmokeEmit; flNextSmokeEmit = CE_GetMember(this, m_flNextSmokeEmit); 
-    if (flNextSmokeEmit >= get_gametime()) {
+    if (flNextSmokeEmit < flGameTime) {
         new Float:flLocalDensity = @Entity_EmitSmoke(this);
         new Float:flDelayRatio = 1.0 / floatclamp(flLocalDensity, SMOKE_EMIT_FREQUENCY, 1.0);
         new Float:flDelay = SMOKE_EMIT_FREQUENCY * flDelayRatio;
 
-        CE_SetMember(this, m_flNextSmokeEmit, get_gametime() + flDelay);
+        CE_SetMember(this, m_flNextSmokeEmit, flGameTime + flDelay);
     }
 
-    set_pev(this, pev_nextthink, get_gametime() + Hwn_GetUpdateRate());
+    set_pev(this, pev_nextthink, flGameTime + Hwn_GetUpdateRate());
 }
 
 @Entity_Touch(this, pToucher) {
