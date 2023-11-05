@@ -22,6 +22,7 @@
           "api/navsystem/**",
           "api/player-inventory/**",
           "api/player-cosmetics/**",
+          "api/advanced-pushing/**",
           "api/waypoint-markers/**"
         ]
       }
