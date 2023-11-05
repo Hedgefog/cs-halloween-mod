@@ -46,12 +46,11 @@ public plugin_end() {
     if (get_pcvar_bool(g_pCvarEnabled)) {
         static Float:vecOrigin[3];
         pev(this, pev_origin, vecOrigin);
-        vecOrigin[2] += 38.0;
+        vecOrigin[2] += 28.0;
 
-        new pMarker = WaypointMarker_Create(g_szMarkerModel, vecOrigin, 0.5, Float:{56.0, 56.0});
+        new pMarker = WaypointMarker_Create(g_szMarkerModel, vecOrigin, 56.0 / SPRITE_WIDTH / 2, Float:{28.0, 28.0});
         set_pev(pMarker, pev_team, pev(this, pev_team));
-        set_pev(pMarker, pev_scale, 56.0 / SPRITE_WIDTH);
-        set_pev(pMarker, pev_renderamt, 200.0);
+        set_pev(pMarker, pev_renderamt, 160.0);
 
         CE_SetMember(this, "pMarker", pMarker);
     }
@@ -76,14 +75,32 @@ public WaypointMarker_Fw_Destroy(pMarker) {
     }
 }
 
-public HamHook_Player_Spawn_Post(pPlayer) {
-    static iTeam; iTeam = get_member(pPlayer, m_iTeam);
-    static bool:bEnabled; bEnabled = get_pcvar_bool(g_pCvarEnabled);
-    static iMarkCount; iMarkCount = ArraySize(g_irgpMarkers);
+public Hwn_Collector_Fw_PlayerPoints(pPlayer) {
+    @Player_UpdateMarkersVisibility(pPlayer);
+}
 
+public HamHook_Player_Spawn_Post(pPlayer) {
+    @Player_UpdateMarkersVisibility(pPlayer);
+}
+
+@Player_UpdateMarkersVisibility(this) {
+    static iMarkCount; iMarkCount = ArraySize(g_irgpMarkers);
     for (new iMarker = 0; iMarker < iMarkCount; ++iMarker) {
         static pMarker; pMarker = ArrayGetCell(g_irgpMarkers, iMarker);
-        static iMarkerTeam; iMarkerTeam = pev(pMarker, pev_team);
-        WaypointMarker_SetVisible(pMarker, pPlayer, bEnabled && (!iMarkerTeam || iMarkerTeam == iTeam));
+        WaypointMarker_SetVisible(pMarker, this, @Player_ShouldSeeMarker(this, pMarker));
     }
+}
+
+bool:@Player_ShouldSeeMarker(this, pMarker) {
+    if (!get_pcvar_bool(g_pCvarEnabled)) return false;
+    if (!is_user_alive(this)) return false;
+
+    static iMarkerTeam; iMarkerTeam = pev(pMarker, pev_team);
+    static iTeam; iTeam = get_member(this, m_iTeam);
+    if (iMarkerTeam && iMarkerTeam != iTeam) return false;
+
+    new iPoints = Hwn_Collector_GetPlayerPoints(this);
+    if (!iPoints) return false;
+
+    return true;
 }
