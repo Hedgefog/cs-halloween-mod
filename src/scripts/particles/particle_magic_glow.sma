@@ -57,5 +57,5 @@ public Transform(Float:vecOrigin[3], Float:vecVelocity[3]) {
 }
 
 stock UTIL_RandomVector(const Float:flMin, const Float:flMax, Float:vecOut[3]) {
-    for (new i = 0; i < 3; ++i) random_float(flMin, flMax);
+    for (new i = 0; i < 3; ++i) vecOut[i] = random_float(flMin, flMax);
 }
