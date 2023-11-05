@@ -94,6 +94,7 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 bool:@Player_ShouldSeeMarker(this, pMarker) {
     if (!get_pcvar_bool(g_pCvarEnabled)) return false;
     if (!is_user_alive(this)) return false;
+    if (Hwn_Collector_ObjectiveBlocked()) return false;
 
     static iMarkerTeam; iMarkerTeam = pev(pMarker, pev_team);
     static iTeam; iTeam = get_member(this, m_iTeam);
