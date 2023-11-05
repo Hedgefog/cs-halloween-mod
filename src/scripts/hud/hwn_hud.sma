@@ -33,7 +33,8 @@
 #define HUD_POS_NOTIFICATION_FIRST_PUMPKIN_PICKED HUD_POS_NOTIFICATION_INFO
 #define HUD_POS_OBJECTIVE_INFO -1.0, 0.35
 
-new Float:g_rgflPlayerNextObjectiveBlockMsg[MAX_PLAYERS + 1];
+new g_pCvarCollectoriTeamPointsLimit;
+new g_pCvarCollectorRoundTime;
 
 new g_iGamemodeCollector;
 
@@ -41,8 +42,7 @@ new g_iHudMsgTeamPoints;
 new g_iHudMsgPlayerPoints;
 new g_iHudMsgPlayerSpell;
 
-new g_pCvarCollectoriTeamPointsLimit;
-new g_pCvarCollectorRoundTime;
+new Float:g_rgflPlayerNextObjectiveBlockMsg[MAX_PLAYERS + 1];
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
@@ -286,8 +286,6 @@ GetHideWeaponFlags() {
 
 public Task_Update() {
     for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
-        if (!is_user_connected(pPlayer)) continue;
-
         if (!is_user_alive(pPlayer)) continue;
 
         UpdatePlayerPoints(pPlayer);

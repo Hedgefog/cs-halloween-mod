@@ -241,6 +241,10 @@ public PlayerInventory_Fw_SlotRemoved(pPlayer, iSlot) {
     @SlotItem_Destroy(sItem);
 }
 
+public PlayerCamera_Fw_Deactivated(pPlayer) {
+    @Player_DeactivatePreview(pPlayer);
+}
+
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public FMHook_AddToFullPack_Post(es, e, pEntity, pHost, iHostFlags, iPlayer, pSet) {

@@ -93,7 +93,7 @@ new g_iCeHandler;
 
 new Float:g_rgflPlayerNextCollectTime[MAX_PLAYERS + 1];
 
-new Array:g_irgBuckets;
+new Array:g_irgpBuckets;
 
 public plugin_precache() {
     g_iBloodModelIndex = precache_model("sprites/blood.spr");
@@ -138,7 +138,7 @@ public plugin_precache() {
     g_pCvarBucketBonusAmmo = register_cvar("hwn_bucket_bonus_ammo", "1");
     g_pCvarBucketBonusChance = register_cvar("hwn_bucket_bonus_chance", "5");
 
-    g_irgBuckets = ArrayCreate(1, 2);
+    g_irgpBuckets = ArrayCreate(1, 2);
 }
 
 public plugin_init() {
@@ -151,16 +151,16 @@ public plugin_init() {
 }
 
 public plugin_end() {
-    ArrayDestroy(g_irgBuckets);
+    ArrayDestroy(g_irgpBuckets);
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
 
 public Hwn_Collector_Fw_WinnerTeam(iTeam) {
-    new iBucketsNum = ArraySize(g_irgBuckets);
+    new iBucketsNum = ArraySize(g_irgpBuckets);
 
     for (new iBucket = 0; iBucket < iBucketsNum; ++iBucket) {
-        new pEntity = ArrayGetCell(g_irgBuckets, iBucket);
+        new pEntity = ArrayGetCell(g_irgpBuckets, iBucket);
         new iBucketTeam = pev(pEntity, pev_team);
 
         if (iBucketTeam && iBucketTeam != iTeam) continue;
@@ -185,7 +185,7 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
     dllfunc(DLLFunc_Spawn, pLiquid);
     CE_SetMember(this, m_pLiquid, pLiquid);
 
-    ArrayPushCell(g_irgBuckets, this);
+    ArrayPushCell(g_irgpBuckets, this);
 }
 
 @Entity_Spawned(this) {
@@ -230,9 +230,9 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
     CE_SetMember(this, m_pLiquid, 0);
     CE_Remove(pLiquid);
 
-    new iGlobalId = ArrayFindValue(g_irgBuckets, this);
+    new iGlobalId = ArrayFindValue(g_irgpBuckets, this);
     if (iGlobalId != -1) {
-        ArrayDeleteItem(g_irgBuckets, iGlobalId);
+        ArrayDeleteItem(g_irgpBuckets, iGlobalId);
     }
 }
 
