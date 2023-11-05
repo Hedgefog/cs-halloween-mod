@@ -163,7 +163,7 @@ public Command_Give(pPlayer, iLevel, iCId) {
 
     for (new pTarget = 1; pTarget <= MaxClients; ++pTarget) {
         if (!CMD_SHOULD_TARGET_PLAYER(pTarget, iTarget)) continue;
-        @Player_SetSpell(pPlayer, iSpell, iAmount);
+        @Player_SetSpell(pTarget, iSpell, iAmount);
     }
 
     return PLUGIN_HANDLED;
