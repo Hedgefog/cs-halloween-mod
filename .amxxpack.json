@@ -21,7 +21,8 @@
           "api/player-camera/**",
           "api/navsystem/**",
           "api/player-inventory/**",
-          "api/player-cosmetics/**"
+          "api/player-cosmetics/**",
+          "api/waypoint-markers/**"
         ]
       }
     ]
