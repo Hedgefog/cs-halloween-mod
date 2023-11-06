@@ -23,30 +23,32 @@ new g_iGibsModelIndex;
 new g_iExlplosionModelIndex;
 new g_iExplodeSmokeModelIndex;
 
+new const g_szModel[] = "models/hwn/props/pumpkin_explode_v2.mdl";
 new const g_szSndExplode[] = "hwn/misc/pumpkin_explode.wav";
 
 public plugin_precache() {
+    precache_model(g_szModel);
     precache_sound(g_szSndExplode);
 
     g_iExlplosionModelIndex = precache_model("sprites/eexplo.spr");
     g_iExplodeSmokeModelIndex = precache_model("sprites/hwn/pumpkin_smoke.spr");
     g_iGibsModelIndex = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
     
-    CE_Register(
-        ENTITY_NAME,
-        .szModel = "models/hwn/props/pumpkin_explode_v2.mdl",
-        .vecMins = Float:{-16.0, -16.0, 0.0},
-        .vecMaxs = Float:{16.0, 16.0, 32.0},
-        .flRespawnTime = HWN_NPC_RESPAWN_TIME,
-        .iPreset = CEPreset_Prop
-    );
-
+    CE_Register(ENTITY_NAME, CEPreset_Prop);
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
 }
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+}
+
+@Entity_Init(this) {
+    CE_SetMember(this, CE_MEMBER_RESPAWNTIME, HWN_NPC_RESPAWN_TIME);
+    CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-16.0, -16.0, 0.0});
+    CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{16.0, 16.0, 32.0});
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
 }
 
 @Entity_Spawned(this) {

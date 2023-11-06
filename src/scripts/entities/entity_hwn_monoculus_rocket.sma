@@ -20,6 +20,7 @@
 #define EXPLOSION_DAMAGE 160.0
 #define EXPLOSION_SPRITE_SIZE 80.0
 
+new const g_szModel[] = "models/hwn/props/monoculus_rocket.mdl";
 new const g_szSndExplode[] = "hwn/misc/pumpkin_explode.wav";
 
 new g_iSmokeModelIndex;
@@ -33,22 +34,23 @@ public plugin_init() {
 public plugin_precache() {
     precache_sound(g_szSndExplode);
 
+    precache_model(g_szModel);
     g_iSmokeModelIndex = precache_model("sprites/black_smoke1.spr");
     g_iExplodeSmokeModelIndex = precache_model("sprites/hwn/magic_smoke.spr");
     g_iExlplosionModelIndex = precache_model("sprites/eexplo.spr");
 
-    CE_Register(
-        ENTITY_NAME,
-        .szModel = "models/hwn/props/monoculus_rocket.mdl",
-        .iPreset = CEPreset_Prop
-    );
-
+    CE_Register(ENTITY_NAME, CEPreset_Prop);
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_InitPhysics, ENTITY_NAME, "@Entity_InitPhysics");
     CE_RegisterHook(CEFunction_InitSize, ENTITY_NAME, "@Entity_InitSize");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
     CE_RegisterHook(CEFunction_Touch, ENTITY_NAME, "@Entity_Touch");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
+}
+
+@Entity_Init(this) {
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
 }
 
 @Entity_Spawned(this) {

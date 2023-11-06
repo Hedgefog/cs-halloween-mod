@@ -13,21 +13,25 @@
 
 #define ENTITY_NAME "hwn_prop_jackolantern"
 
+new const g_szModel[] = "models/hwn/props/jackolantern.mdl";
+
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 }
 
 public plugin_precache() {
-    CE_Register(
-        ENTITY_NAME,
-        .szModel = "models/hwn/props/jackolantern.mdl",
-        .vecMins = Float:{-16.0, -16.0, 0.0},
-        .vecMaxs = Float:{16.0, 16.0, 48.0},
-        .iPreset = CEPreset_Prop
-    );
+    precache_model(g_szModel);
 
+    CE_Register(ENTITY_NAME, CEPreset_Prop);
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
+}
+
+@Entity_Init(this) {
+    CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-16.0, -16.0, 0.0});
+    CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{16.0, 16.0, 48.0});
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
 }
 
 @Entity_Spawned(this) {

@@ -20,6 +20,7 @@
 #define m_iAmount "iAmount"
 #define m_pParticle "pParticle"
 
+new const g_szModel[] = "models/hwn/items/spellbook_v2.mdl";
 new const g_szSndSpawn[] = "hwn/items/spellbook/spellbook_spawn.wav";
 new const g_szSndPickup[] = "hwn/spells/spell_pickup.wav";
 new const g_szSndPickupRare[] = "hwn/spells/spell_pickup_rare.wav";
@@ -39,6 +40,7 @@ new g_iSmokeModelIndex;
 public plugin_precache() {
     g_bIsPrecaching = true;
 
+    precache_model(g_szModel);
     g_iSparkleModelIndex = precache_model("sprites/muz2.spr");
     g_iSparklePurpleModelIndex = precache_model("sprites/muz7.spr");
     g_iSmokeModelIndex = precache_model("sprites/hwn/magic_smoke.spr");
@@ -47,16 +49,8 @@ public plugin_precache() {
     precache_sound(g_szSndPickup);
     precache_sound(g_szSndPickupRare);
 
-    CE_Register(
-        ENTITY_NAME,
-        .szModel = "models/hwn/items/spellbook_v2.mdl",
-        .vecMins = Float:{-16.0, -12.0, 0.0},
-        .vecMaxs = Float:{16.0, 12.0, 24.0},
-        .flLifeTime = HWN_NPC_LIFE_TIME,
-        .flRespawnTime = HWN_ITEM_RESPAWN_TIME,
-        .iPreset = CEPreset_Item
-    );
-
+    CE_Register(ENTITY_NAME, CEPreset_Item);
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
@@ -76,6 +70,14 @@ public plugin_init() {
 
 public Hwn_Fw_ConfigLoaded() {
     g_particlesEnabled = get_cvar_num("hwn_enable_particles");
+}
+
+@Entity_Init(this) {
+    CE_SetMember(this, CE_MEMBER_LIFETIME, HWN_NPC_LIFE_TIME);
+    CE_SetMember(this, CE_MEMBER_RESPAWNTIME, HWN_ITEM_RESPAWN_TIME);
+    CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-16.0, -12.0, 0.0});
+    CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{16.0, 12.0, 24.0});
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
 }
 
 @Entity_Spawned(this) {

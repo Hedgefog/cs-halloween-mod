@@ -12,6 +12,8 @@
 
 #define ENTITY_NAME "hwn_item_gift"
 
+new const g_szModel[] = "models/hwn/items/gift_v2.mdl";
+
 new g_iCeHandler;
 
 public plugin_init() {
@@ -21,18 +23,20 @@ public plugin_init() {
 }
 
 public plugin_precache() {
-    g_iCeHandler = CE_Register(
-        ENTITY_NAME,
-        .szModel = "models/hwn/items/gift_v2.mdl",
-        .vecMins = Float:{-16.0, -16.0, 0.0},
-        .vecMaxs = Float:{16.0, 16.0, 32.0},
-        .flLifeTime = 120.0,
-        .bIgnoreRounds = true,
-        .iPreset = CEPreset_Item
-    );
+    precache_model(g_szModel);
 
+    g_iCeHandler = CE_Register(ENTITY_NAME, CEPreset_Item);
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "@Entity_Pickup");
+}
+
+@Entity_Init(this) {
+    CE_SetMember(this, CE_MEMBER_LIFETIME, 120.0);
+    CE_SetMember(this, CE_MEMBER_IGNOREROUNDS, true);
+    CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-16.0, -16.0, 0.0});
+    CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{16.0, 16.0, 32.0});
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
 }
 
 @Entity_Spawned(this) {

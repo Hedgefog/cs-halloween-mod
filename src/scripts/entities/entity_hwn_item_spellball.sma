@@ -23,14 +23,8 @@ public plugin_precache() {
     g_iSmokeModelIndex = precache_model("sprites/black_smoke1.spr");
     g_iNullModelIndex = precache_model("sprites/white.spr");
 
-    CE_Register(
-        ENTITY_NAME,
-        .vecMins = Float:{-8.0, -8.0, -8.0},
-        .vecMaxs = Float:{8.0, 8.0, 8.0},
-        .flLifeTime = HWN_NPC_LIFE_TIME,
-        .iPreset = CEPreset_None
-    );
-
+    CE_Register(ENTITY_NAME, CEPreset_None);
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
@@ -39,6 +33,12 @@ public plugin_precache() {
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+}
+
+@Entity_Init(this) {
+    CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-8.0, -8.0, -8.0});
+    CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{8.0, 8.0, 8.0});
+    CE_SetMember(this, CE_MEMBER_LIFETIME, HWN_NPC_LIFE_TIME);
 }
 
 @Entity_Spawned(this) {

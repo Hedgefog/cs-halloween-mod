@@ -33,38 +33,26 @@ new const Float:g_rgflLootTypeColor[Hwn_PumpkinType][3] = {
     {50.0, 50.0, 50.0},
 };
 
+new const g_szModel[] = "models/hwn/items/pumpkin_loot_v3.mdl";
+new const g_szBigModel[] = "models/hwn/items/pumpkin_loot_big_v2.mdl";
 new const g_szSndItemSpawn[] = "hwn/items/pumpkin/pumpkin_drop.wav";
 new const g_szSndItemPickup[] = "hwn/items/pumpkin/pumpkin_pickup.wav";
 
 new g_pCvarPumpkinFlash;
 
 public plugin_precache() {
+    precache_model(g_szModel);
+    precache_model(g_szBigModel);
     precache_sound(g_szSndItemSpawn);
     precache_sound(g_szSndItemPickup);
 
-    CE_Register(
-        ENTITY_NAME,
-        .szModel = "models/hwn/items/pumpkin_loot_v3.mdl",
-        .vecMins = Float:{-12.0, -12.0, 0.0},
-        .vecMaxs = Float:{12.0, 12.0, 24.0},
-        .flLifeTime = 10.0,
-        .flRespawnTime = HWN_ITEM_RESPAWN_TIME,
-        .iPreset = CEPreset_Item
-    );
-
+    CE_Register(ENTITY_NAME, CEPreset_Item);
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "@Entity_Pickup");
 
-    CE_Register(
-        ENTITY_NAME_BIG,
-        .szModel = "models/hwn/items/pumpkin_loot_big_v2.mdl",
-        .vecMins = Float:{-16.0, -16.0, 0.0},
-        .vecMaxs = Float:{16.0, 16.0, 32.0},
-        .flLifeTime = 30.0,
-        .flRespawnTime = HWN_ITEM_RESPAWN_TIME,
-        .iPreset = CEPreset_Item
-    );
-
+    CE_Register(ENTITY_NAME_BIG, CEPreset_Item);
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME_BIG, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME_BIG, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME_BIG, "@Entity_Pickup");
 }
@@ -73,6 +61,25 @@ public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
     g_pCvarPumpkinFlash = register_cvar("hwn_pumpkin_pickup_flash", "1");
+}
+
+@Entity_Init(this) {
+    new bool:bBig = CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_BIG);
+
+    if (bBig) {
+        CE_SetMember(this, CE_MEMBER_LIFETIME, 30.0);
+        CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-16.0, -16.0, 0.0});
+        CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{16.0, 16.0, 32.0});
+        CE_SetMemberString(this, CE_MEMBER_MODEL, g_szBigModel);
+    } else {
+        CE_SetMember(this, CE_MEMBER_LIFETIME, 10.0);
+        CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-12.0, -12.0, 0.0});
+        CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{12.0, 12.0, 24.0});
+        CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
+    }
+
+    CE_SetMember(this, m_bBig, bBig);
+    CE_SetMember(this, CE_MEMBER_RESPAWNTIME, HWN_ITEM_RESPAWN_TIME);
 }
 
 @Entity_Spawned(this) {
@@ -90,7 +97,6 @@ public plugin_init() {
     set_pev(this, pev_rendercolor, g_rgflLootTypeColor[iType]);
     set_pev(this, pev_framerate, 1.0);
 
-    CE_SetMember(this, m_bBig, CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_BIG));
 
     emit_sound(this, CHAN_BODY, g_szSndItemSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }

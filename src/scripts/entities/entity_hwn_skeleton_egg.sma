@@ -22,18 +22,33 @@ public plugin_init() {
 }
 
 public plugin_precache() {
-    CE_Register(ENTITY_NAME, .vecMins = Float:{-12.0, -12.0, -16.0}, .vecMaxs = Float:{12.0, 12.0, 16.0}, .iPreset = CEPreset_Prop);
+    CE_Register(ENTITY_NAME, CEPreset_Prop);
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 
-    CE_Register(ENTITY_NAME_BIG, .vecMins = Float:{-12.0, -12.0, -32.0}, .vecMaxs = Float:{12.0, 12.0, 32.0}, .iPreset = CEPreset_Prop);
+    CE_Register(ENTITY_NAME_BIG, CEPreset_Prop);
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME_BIG, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME_BIG, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME_BIG, "@Entity_Think");
 }
 
-@Entity_Spawned(this) {
-    CE_SetMember(this, m_bBig, CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_BIG));
+@Entity_Init(this) {
+    new bool:bBig = CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_BIG);
 
+    if (bBig) {
+        CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-12.0, -12.0, -32.0});
+        CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{12.0, 12.0, 32.0});
+    } else {
+        CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-12.0, -12.0, -16.0});
+        CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{12.0, 12.0, 16.0});
+    }
+
+    CE_SetMember(this, m_bBig, bBig);
+    CE_SetMember(this, CE_MEMBER_RESPAWNTIME, HWN_ITEM_RESPAWN_TIME);
+}
+
+@Entity_Spawned(this) {
     set_pev(this, pev_solid, SOLID_NOT);
     set_pev(this, pev_movetype, MOVETYPE_BOUNCE);
     set_pev(this, pev_nextthink, get_gametime() + 2.0);

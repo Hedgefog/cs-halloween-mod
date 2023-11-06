@@ -17,8 +17,14 @@ public plugin_init() {
 }
 
 public plugin_precache() {
-    CE_Register(ENTITY_NAME, .vecMins = Float:{-48.0, -48.0, -48.0}, .vecMaxs = Float:{48.0, 48.0, 48.0});
+    CE_Register(ENTITY_NAME);
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
+}
+
+@Entity_Init(this) {
+    CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-48.0, -48.0, -48.0});
+    CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{48.0, 48.0, 48.0});
 }
 
 @Entity_Spawned(this) {

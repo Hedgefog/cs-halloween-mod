@@ -74,6 +74,8 @@ new Float:g_rgvecTeamColor[Team][3] = {
     { 255.0, 255.0, 255.0}
 };
 
+new const g_szModel[] = "models/hwn/props/cauldron.mdl";
+new const g_szLiquidModel[] = "models/hwn/props/cauldron_liquid.mdl";
 new const g_szSndBoil[] = "hwn/misc/cauldron_boil.wav";
 new const g_szSndHit[][] = { "debris/metal4.wav", "debris/metal6.wav" };
 
@@ -96,6 +98,9 @@ new Float:g_rgflPlayerNextCollectTime[MAX_PLAYERS + 1];
 new Array:g_irgpBuckets;
 
 public plugin_precache() {
+    precache_model(g_szModel);
+    precache_model(g_szLiquidModel);
+
     g_iBloodModelIndex = precache_model("sprites/blood.spr");
     g_iSparkleModelIndex = precache_model("sprites/exit1.spr");
     g_iPotionSplashModelIndex = precache_model("sprites/bm1.spr");
@@ -107,28 +112,15 @@ public plugin_precache() {
         precache_sound(g_szSndHit[i]);
     }
 
-    g_iCeHandler = CE_Register(
-        ENTITY_NAME,
-        .szModel = "models/hwn/props/cauldron.mdl",
-        .vecMins = Float:{-28.0, -28.0, 0.0},
-        .vecMaxs = Float:{28.0, 28.0, 56.0},
-        .iPreset = CEPreset_Prop
-    );
-
-    CE_Register(
-        LIQUID_ENTITY_NAME,
-        .szModel = "models/hwn/props/cauldron_liquid.mdl",
-        .vecMins = Float:{-28.0, -28.0, 0.0},
-        .vecMaxs = Float:{28.0, 28.0, 56.0},
-        .iPreset = CEPreset_Prop
-    );
-
+    g_iCeHandler = CE_Register(ENTITY_NAME, CEPreset_Prop);
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 
+    CE_Register(LIQUID_ENTITY_NAME, CEPreset_Prop);
+    CE_RegisterHook(CEFunction_Init, LIQUID_ENTITY_NAME, "@Liquid_Init");
     CE_RegisterHook(CEFunction_Spawned, LIQUID_ENTITY_NAME, "@Liquid_Spawn");
 
     g_pCvarBucketHealth = register_cvar("hwn_bucket_health", "300");
@@ -180,6 +172,10 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 @Entity_Init(this) {
+    CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-28.0, -28.0, 0.0});
+    CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{28.0, 28.0, 56.0});
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
+
     new pLiquid = CE_Create(LIQUID_ENTITY_NAME, Float:{0.0, 0.0, 0.0}, false);
     set_pev(pLiquid, pev_owner, this);
     dllfunc(DLLFunc_Spawn, pLiquid);
@@ -420,9 +416,7 @@ bool:@Entity_DropEntity(this, pEntity) {
 
     static iModelIndex = 0;
     if (!iModelIndex) {
-        static szModel[MAX_RESOURCE_PATH_LENGTH];
-        CE_GetModel("hwn_item_pumpkin", szModel, charsmax(szModel));
-        iModelIndex = engfunc(EngFunc_ModelIndex, szModel);
+        iModelIndex = engfunc(EngFunc_ModelIndex, "models/hwn/items/pumpkin_loot_v3.mdl");
     }
 
     UTILS_Message_Projectile(vecUserOrigin, vecVelocity, iModelIndex, 10, pPlayer);
@@ -512,6 +506,12 @@ bool:@Entity_DropEntity(this, pEntity) {
         EFFECT_MAGIC_SPLASH_PARTICLE_SPEED,
         EFFECT_MAGIC_SPLASH_PARTICLE_NOISE
     );
+}
+
+@Liquid_Init(this) {
+    CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-28.0, -28.0, 0.0});
+    CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{28.0, 28.0, 56.0});
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szLiquidModel);
 }
 
 @Liquid_Spawn(this) {

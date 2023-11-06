@@ -41,6 +41,8 @@ const Float:NPC_HitDelay = 0.25;
 const Float:NPC_ViewRange = 1024.0;
 const Float:NPC_TargetUpdateRate = 1.0;
 
+new const g_szModel[] = "models/hwn/npc/ghost_v3.mdl";
+
 new const g_szSndDisappeared[] = "hwn/misc/gotohell.wav";
 
 new const g_szSndAttack[][128] = {
@@ -61,6 +63,8 @@ new g_particlesEnabled;
 new g_rgpPlayerKiller[MAX_PLAYERS + 1];
 
 public plugin_precache() {
+    precache_model(g_szModel);
+
     precache_sound(g_szSndDisappeared);
 
     for (new i = 0; i < sizeof(g_szSndAttack); ++i) {
@@ -71,16 +75,8 @@ public plugin_precache() {
         precache_sound(g_szSndIdle[i]);
     }
 
-    CE_Register(
-        ENTITY_NAME,
-        .szModel = "models/hwn/npc/ghost_v3.mdl",
-        .vecMins = Float:{-12.0, -12.0, -32.0},
-        .vecMaxs = Float:{12.0, 12.0, 32.0},
-        .flLifeTime = HWN_NPC_LIFE_TIME,
-        .flRespawnTime = HWN_NPC_RESPAWN_TIME,
-        .iPreset = CEPreset_NPC
-    );
-
+    CE_Register(ENTITY_NAME, CEPreset_NPC);
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_InitPhysics, ENTITY_NAME, "@Entity_InitPhysics");
     CE_RegisterHook(CEFunction_Restart, ENTITY_NAME, "@Entity_Restart");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
@@ -102,8 +98,12 @@ public Hwn_Fw_ConfigLoaded() {
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-@Entity_Restart(this) {
-    @Entity_ResetPath(this);
+@Entity_Init(this) {
+    CE_SetMember(this, CE_MEMBER_LIFETIME, HWN_NPC_LIFE_TIME);
+    CE_SetMember(this, CE_MEMBER_RESPAWNTIME, HWN_NPC_RESPAWN_TIME);
+    CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-12.0, -12.0, -32.0});
+    CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{12.0, 12.0, 32.0});
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
 }
 
 @Entity_Spawned(this) {
@@ -135,6 +135,10 @@ public Hwn_Fw_ConfigLoaded() {
     @Entity_FindEnemy(this);
 
     set_pev(this, pev_nextthink, flGameTime);
+}
+
+@Entity_Restart(this) {
+    @Entity_ResetPath(this);
 }
 
 @Entity_Kill(this, pKiller) {

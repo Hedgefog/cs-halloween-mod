@@ -77,6 +77,9 @@ const Float:NPC_Big_Damage = 40.0;
 const Float:NPC_JumpVelocity = 160.0;
 const Float:NPC_AttackJumpVelocity = 256.0;
 
+new const g_szModel[] = "models/hwn/npc/spookypumpkin.mdl";
+new const g_szBigModel[] = "models/hwn/npc/spookypumpkin_big.mdl";
+
 new const g_szSndIdleList[][] = {
     "hwn/npc/spookypumpkin/sp_laugh01.wav",
     "hwn/npc/spookypumpkin/sp_laugh02.wav",
@@ -102,23 +105,15 @@ new g_iCeHandlerBig;
 public plugin_precache() {
     Nav_Precache();
 
+    precache_model(g_szModel);
+    precache_model(g_szBigModel);
     g_iGibsModelIndex = precache_model("models/hwn/props/pumpkin_explode_jib_v2.mdl");
 
     for (new i = 0; i < sizeof(g_szSndIdleList); ++i) {
         precache_sound(g_szSndIdleList[i]);
     }
 
-    g_iCeHandler = CE_Register(
-        ENTITY_NAME,
-        .szModel = "models/hwn/npc/spookypumpkin.mdl",
-        .vecMins = Float:{-12.0, -12.0, 0.0},
-        .vecMaxs = Float:{12.0, 12.0, 24.0},
-        .flLifeTime = HWN_NPC_LIFE_TIME,
-        .flRespawnTime = HWN_NPC_RESPAWN_TIME,
-        .iPreset = CEPreset_NPC,
-        .iBloodColor = 103
-    );
-
+    g_iCeHandler = CE_Register(ENTITY_NAME, CEPreset_NPC);
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Restart, ENTITY_NAME, "@Entity_Restart");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
@@ -127,17 +122,7 @@ public plugin_precache() {
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 
-    g_iCeHandlerBig = CE_Register(
-        ENTITY_NAME_BIG,
-        .szModel = "models/hwn/npc/spookypumpkin_big.mdl",
-        .vecMins = Float:{-16.0, -16.0, 0.0},
-        .vecMaxs = Float:{16.0, 16.0, 32.0},
-        .flLifeTime = HWN_NPC_LIFE_TIME,
-        .flRespawnTime = HWN_NPC_RESPAWN_TIME,
-        .iPreset = CEPreset_NPC,
-        .iBloodColor = 103
-    );
-
+    g_iCeHandlerBig = CE_Register(ENTITY_NAME_BIG, CEPreset_NPC);
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME_BIG, "@Entity_Init");
     CE_RegisterHook(CEFunction_Restart, ENTITY_NAME_BIG, "@Entity_Restart");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME_BIG, "@Entity_Spawned");
@@ -162,6 +147,22 @@ public plugin_init() {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 @Entity_Init(this) {
+    new bool:bBig = CE_GetHandlerByEntity(this) == g_iCeHandlerBig;
+
+    if (bBig) {
+        CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-16.0, -16.0, 0.0});
+        CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{16.0, 16.0, 32.0});
+        CE_SetMemberString(this, CE_MEMBER_MODEL, g_szBigModel);
+    } else {
+        CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-12.0, -12.0, 0.0});
+        CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{12.0, 12.0, 24.0});
+        CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
+    }
+
+    CE_SetMember(this, m_bBig, bBig);
+    CE_SetMember(this, CE_MEMBER_LIFETIME, HWN_NPC_LIFE_TIME);
+    CE_SetMember(this, CE_MEMBER_RESPAWNTIME, HWN_NPC_RESPAWN_TIME);
+    CE_SetMember(this, CE_MEMBER_BLOODCOLOR, 103);
     CE_SetMember(this, m_pBuildPathTask, Invalid_NavBuildPathTask);
     CE_SetMember(this, m_irgPath, ArrayCreate(3));
 
@@ -181,10 +182,9 @@ public plugin_init() {
 @Entity_Spawned(this) {
     new Float:flGameTime = get_gametime();
 
-    new bool:bBig = CE_GetHandlerByEntity(this) == g_iCeHandlerBig;
     new iType = CE_GetMember(this, m_iType);
+    new bool:bBig = CE_GetMember(this, m_bBig);
 
-    CE_SetMember(this, m_bBig, bBig);
     CE_SetMember(this, m_flDamage, bBig ? NPC_Big_Damage : NPC_Damage);
     CE_SetMember(this, m_flNextAttack, 0.0);
     CE_SetMember(this, m_flReleaseHit, 0.0);

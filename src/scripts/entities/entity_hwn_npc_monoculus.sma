@@ -71,6 +71,8 @@ enum Action {
     Action_LookAround
 };
 
+new const g_szModel[] = "models/hwn/npc/monoculus.mdl";
+
 new const g_szSndAttack[][128] = {
     "hwn/npc/monoculus/monoculus_attack01.wav",
     "hwn/npc/monoculus/monoculus_attack02.wav"
@@ -158,17 +160,11 @@ public plugin_precache() {
     precache_sound(g_szSndDeath);
     precache_sound(g_szSndMoved);
 
+    precache_model(g_szModel);
     g_iSmokeModelIndex = precache_model("sprites/hwn/magic_smoke.spr");
 
-    g_iCeHandler = CE_Register(
-        ENTITY_NAME,
-        .szModel = "models/hwn/npc/monoculus.mdl",
-        .vecMins = Float:{-48.0, -48.0, -48.0},
-        .vecMaxs = Float:{48.0, 48.0, 48.0},
-        .iPreset = CEPreset_NPC,
-        .iBloodColor = 212
-    );
-
+    g_iCeHandler = CE_Register(ENTITY_NAME, CEPreset_NPC);
+    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_InitPhysics, ENTITY_NAME, "@Entity_InitPhysics");
     CE_RegisterHook(CEFunction_Restart, ENTITY_NAME, "@Entity_Restart");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
@@ -219,6 +215,13 @@ public plugin_end() {
     ArrayPushArray(g_irgPortalAngles, vecAngles);
 
     CE_Remove(pEntity);
+}
+
+@Entity_Init(this) {
+    CE_SetMember(this, CE_MEMBER_BLOODCOLOR, 212);
+    CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-48.0, -48.0, -48.0});
+    CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{48.0, 48.0, 48.0});
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
 }
 
 @Entity_Restart(this) {

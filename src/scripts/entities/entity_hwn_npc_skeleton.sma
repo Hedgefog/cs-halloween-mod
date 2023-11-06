@@ -78,6 +78,14 @@ const Float:NPC_Small_Damage = 12.0;
 const Float:NPC_Small_HitRange = 48.0;
 const Float:NPC_Small_HitDelay = 0.35;
 
+new const g_rgActions[Action][NPC_Action] = {
+    {    Sequence_Idle,         Sequence_Idle,          0.0    },
+    {    Sequence_Run,          Sequence_Run,           0.0    },
+    {    Sequence_Attack,       Sequence_Attack,        1.0    },
+    {    Sequence_RunAttack,    Sequence_RunAttack,     1.0    },
+    {    Sequence_Spawn1,       Sequence_Spawn7,        2.0    }
+};
+
 new const g_szSndLaugh[][] = {
     "hwn/npc/skeleton/skelly_medium_01.wav",
     "hwn/npc/skeleton/skelly_medium_02.wav",
@@ -94,15 +102,9 @@ new const g_szSndSmallLaugh[][] = {
     "hwn/npc/skeleton/skelly_small_05.wav"
 };
 
+new const g_szModel[] = "models/hwn/npc/skeleton_v2.mdl";
+new const g_szSmallModel[] = "models/hwn/npc/skeleton_small_v3.mdl";
 new const g_szSndBreak[]    = "hwn/npc/skeleton/skeleton_break.wav";
-
-new const g_rgActions[Action][NPC_Action] = {
-    {    Sequence_Idle,         Sequence_Idle,          0.0    },
-    {    Sequence_Run,          Sequence_Run,           0.0    },
-    {    Sequence_Attack,       Sequence_Attack,        1.0    },
-    {    Sequence_RunAttack,    Sequence_RunAttack,     1.0    },
-    {    Sequence_Spawn1,       Sequence_Spawn7,        2.0    }
-};
 
 new g_pCvarUseAstar;
 
@@ -114,6 +116,8 @@ new g_iCeHandlerSmall;
 public plugin_precache() {
     Nav_Precache();
 
+    precache_model(g_szModel);
+    precache_model(g_szSmallModel);
     g_iGibsModelIndex = precache_model("models/bonegibs.mdl");
 
     precache_sound(g_szSndBreak);
@@ -126,17 +130,7 @@ public plugin_precache() {
         precache_sound(g_szSndSmallLaugh[i]);
     }
 
-    g_iCeHandler = CE_Register(
-        ENTITY_NAME,
-        .szModel = "models/hwn/npc/skeleton_v2.mdl",
-        .vecMins = Float:{-12.0, -12.0, -32.0},
-        .vecMaxs = Float:{12.0, 12.0, 32.0},
-        .flLifeTime = HWN_NPC_LIFE_TIME,
-        .flRespawnTime = HWN_NPC_RESPAWN_TIME,
-        .iPreset = CEPreset_NPC,
-        .iBloodColor = 242
-    );
-
+    g_iCeHandler = CE_Register(ENTITY_NAME, CEPreset_NPC);
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Restart, ENTITY_NAME, "@Entity_Restart");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
@@ -145,17 +139,7 @@ public plugin_precache() {
     CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
 
-    g_iCeHandlerSmall = CE_Register(
-        ENTITY_NAME_SMALL,
-        .szModel = "models/hwn/npc/skeleton_small_v3.mdl",
-        .vecMins = Float:{-8.0, -8.0, -16.0},
-        .vecMaxs = Float:{8.0, 8.0, 16.0},
-        .flLifeTime = HWN_NPC_LIFE_TIME,
-        .flRespawnTime = HWN_NPC_RESPAWN_TIME,
-        .iPreset = CEPreset_NPC,
-        .iBloodColor = 242
-    );
-
+    g_iCeHandlerSmall = CE_Register(ENTITY_NAME_SMALL, CEPreset_NPC);
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME_SMALL, "@Entity_Init");
     CE_RegisterHook(CEFunction_Restart, ENTITY_NAME_SMALL, "@Entity_Restart");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME_SMALL, "@Entity_Spawned");
@@ -176,6 +160,22 @@ public plugin_init() {
 /*--------------------------------[ Methods ]--------------------------------*/
 
 @Entity_Init(this) {
+    new bool:bSmall = CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_SMALL);
+
+    if (bSmall) {
+        CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-8.0, -8.0, -16.0});
+        CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{8.0, 8.0, 16.0});
+        CE_SetMemberString(this, CE_MEMBER_MODEL, g_szSmallModel);
+    } else {
+        CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-12.0, -12.0, -32.0});
+        CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{12.0, 12.0, 32.0});
+        CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
+    }
+
+    CE_SetMember(this, m_bSmall, bSmall);
+    CE_SetMember(this, CE_MEMBER_LIFETIME, HWN_NPC_LIFE_TIME);
+    CE_SetMember(this, CE_MEMBER_RESPAWNTIME, HWN_NPC_RESPAWN_TIME);
+    CE_SetMember(this, CE_MEMBER_BLOODCOLOR, 242);
     CE_SetMember(this, m_pBuildPathTask, Invalid_NavBuildPathTask);
     CE_SetMember(this, m_irgPath, ArrayCreate(3));
 }
@@ -187,9 +187,8 @@ public plugin_init() {
 @Entity_Spawned(this) {
     new Float:flGameTime = get_gametime();
 
-    new bool:bSmall = CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_SMALL);
+    new bool:bSmall = CE_GetMember(this, m_bSmall);
 
-    CE_SetMember(this, m_bSmall, bSmall);
     CE_SetMember(this, m_flDamage, bSmall ? NPC_Small_Damage : NPC_Damage);
     CE_SetMember(this, m_flNextAttack, 0.0);
     CE_SetMember(this, m_flReleaseHit, 0.0);
