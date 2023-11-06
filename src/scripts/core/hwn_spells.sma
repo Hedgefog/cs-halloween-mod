@@ -158,7 +158,7 @@ public Command_Give(pPlayer, iLevel, iCId) {
     new iSpell = -1;
     if (!TrieGetCell(g_itSpells, szSpellId, iSpell)) return PLUGIN_HANDLED;
 
-    new iTarget = CMD_RESOLVE_TARGET(pPlayer, szTarget);
+    new iTarget = CMD_RESOLVE_TARGET(szTarget);
     new iAmount = equal(szAmount, NULL_STRING) ? 1 : str_to_num(szAmount);
 
     for (new pTarget = 1; pTarget <= MaxClients; ++pTarget) {

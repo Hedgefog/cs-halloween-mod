@@ -148,7 +148,7 @@ public Command_Set(pPlayer, iLevel, iCId) {
     new iEffectId = -1;
     if (!TrieGetCell(g_itEffectsIds, szEffectId, iEffectId)) return PLUGIN_HANDLED;
 
-    new iTarget = CMD_RESOLVE_TARGET(pPlayer, szTarget);
+    new iTarget = CMD_RESOLVE_TARGET(szTarget);
     new bool:bValue = equal(szValue, NULL_STRING) ? true : bool:str_to_num(szValue);
     new Float:flDuration = equal(szDuration, NULL_STRING) ? -1.0 : str_to_float(szDuration);
 
