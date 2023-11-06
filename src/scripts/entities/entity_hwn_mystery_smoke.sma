@@ -77,11 +77,12 @@ public plugin_precache() {
 
 @Entity_Think(this) {
     static Float:flGameTime; flGameTime = get_gametime();
+
     static Float:flNextSmokeEmit; flNextSmokeEmit = CE_GetMember(this, m_flNextSmokeEmit); 
     if (flNextSmokeEmit < flGameTime) {
-        new Float:flLocalDensity = @Entity_EmitSmoke(this);
-        new Float:flDelayRatio = 1.0 / floatclamp(flLocalDensity, SMOKE_EMIT_FREQUENCY, 1.0);
-        new Float:flDelay = SMOKE_EMIT_FREQUENCY * flDelayRatio;
+        static Float:flLocalDensity; flLocalDensity = @Entity_EmitSmoke(this);
+        static Float:flDelayRatio; flDelayRatio = 1.0 / floatclamp(flLocalDensity, SMOKE_EMIT_FREQUENCY, 1.0);
+        static Float:flDelay; flDelay = SMOKE_EMIT_FREQUENCY * flDelayRatio;
 
         CE_SetMember(this, m_flNextSmokeEmit, flGameTime + flDelay);
     }

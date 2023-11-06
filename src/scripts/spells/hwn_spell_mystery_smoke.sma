@@ -107,16 +107,10 @@ public plugin_init() {
         if (CE_GetHandlerByEntity(pTarget) != g_iCeMysteryHandler) continue;
         if (pev(pTarget, pev_team) != iTeam) continue;
 
-        new iTargetStackSize = CE_GetMember(pTarget, "iStackSize");
-
-        static Float:vecTargetOrigin[3];
-        pev(pTarget, pev_origin, vecTargetOrigin);
-
-        static Float:vecTargetMins[3];
-        pev(pTarget, pev_mins, vecTargetMins);
-
-        static Float:vecTargetMaxs[3];
-        pev(pTarget, pev_maxs, vecTargetMaxs);
+        static iTargetStackSize; iTargetStackSize = CE_GetMember(pTarget, "iStackSize");
+        static Float:vecTargetOrigin[3]; pev(pTarget, pev_origin, vecTargetOrigin);
+        static Float:vecTargetMins[3]; pev(pTarget, pev_mins, vecTargetMins);
+        static Float:vecTargetMaxs[3]; pev(pTarget, pev_maxs, vecTargetMaxs);
 
         for (new i = 0; i < 3; ++i) {
             if (i != 2) {
@@ -126,10 +120,8 @@ public plugin_init() {
             flStackOriginsSum[i] += (vecTargetOrigin[i] * iTargetStackSize);
         }
 
-        static Float:flTargetKillTime;
-        pev(pTarget, pev_fuser4, flTargetKillTime);
-
-        flStackTotalLifeTime += (flTargetKillTime - get_gametime()) * iTargetStackSize;
+        static Float:flNextKill; flNextKill = CE_GetMember(pTarget, CE_MEMBER_NEXTKILL);
+        flStackTotalLifeTime += (flNextKill - get_gametime()) * iTargetStackSize;
         iStackSize += iTargetStackSize;
 
         CE_Kill(pTarget);
@@ -143,10 +135,10 @@ public plugin_init() {
         flLifeTime = flStackTotalLifeTime / iStackSize;
 
         // calculate extra lifetime based on new smoke energy
-        new Float:flLifetimeToAdd = SmokeLifeTime / iStackSize;
+        static Float:flLifetimeToAdd; flLifetimeToAdd = SmokeLifeTime / iStackSize;
 
         // calculating remaining smoke "energy" 
-        new Float:flStackEnergyRemainder = (flLifeTime + flLifetimeToAdd - SmokeLifeTime) / SmokeLifeTime;
+        static Float:flStackEnergyRemainder; flStackEnergyRemainder = (flLifeTime + flLifetimeToAdd - SmokeLifeTime) / SmokeLifeTime;
         flLifeTime = floatmin(flLifeTime + flLifetimeToAdd, SmokeLifeTime);
 
         if (flStackEnergyRemainder > 0 && iStackSize <= SmokeStackMaxSize) {
@@ -189,7 +181,6 @@ CreateSmoke(const Float:vecOrigin[3], const Float:vecSize[3], Float:flLifeTime, 
     dllfunc(DLLFunc_Spawn, pEntity);
     set_pev(pEntity, pev_team, iTeam);
     set_pev(pEntity, pev_owner, pOwner);
-    set_pev(pEntity, pev_fuser4, get_gametime() + flLifeTime);
     engfunc(EngFunc_SetSize, pEntity, vecMins, vecMaxs);
 
     CE_SetMember(pEntity, CE_MEMBER_NEXTKILL, get_gametime() + flLifeTime);
