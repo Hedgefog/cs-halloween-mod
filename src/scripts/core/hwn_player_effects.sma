@@ -153,7 +153,7 @@ public Command_Set(pPlayer, iLevel, iCId) {
     new Float:flDuration = equal(szDuration, NULL_STRING) ? -1.0 : str_to_float(szDuration);
 
     for (new pTarget = 1; pTarget <= MaxClients; ++pTarget) {
-        if (!CMD_SHOULD_TARGET_PLAYER(pTarget, iTarget)) continue;
+        if (!CMD_SHOULD_TARGET_PLAYER(pTarget, iTarget, pPlayer)) continue;
         @Player_SetEffect(pTarget, iEffectId, bValue, flDuration, false);
     }
 

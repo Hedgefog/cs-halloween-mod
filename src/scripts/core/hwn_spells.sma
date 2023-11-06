@@ -162,7 +162,7 @@ public Command_Give(pPlayer, iLevel, iCId) {
     new iAmount = equal(szAmount, NULL_STRING) ? 1 : str_to_num(szAmount);
 
     for (new pTarget = 1; pTarget <= MaxClients; ++pTarget) {
-        if (!CMD_SHOULD_TARGET_PLAYER(pTarget, iTarget)) continue;
+        if (!CMD_SHOULD_TARGET_PLAYER(pTarget, iTarget, pPlayer)) continue;
         @Player_SetSpell(pTarget, iSpell, iAmount);
     }
 
