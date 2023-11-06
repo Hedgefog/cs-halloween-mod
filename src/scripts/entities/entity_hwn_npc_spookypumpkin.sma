@@ -99,8 +99,8 @@ new g_pCvarPumpkinMutateChance;
 
 new g_iGibsModelIndex;
 
-new g_iCeHandler;
-new g_iCeHandlerBig;
+new CE:g_iCeHandler;
+new CE:g_iCeHandlerBig;
 
 public plugin_precache() {
     Nav_Precache();
@@ -711,7 +711,7 @@ Float:@Entity_GetPathCost(this, NavArea:newArea, NavArea:prevArea) {
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
-    new iHandler = CE_GetHandlerByEntity(pEntity);
+    new CE:iHandler = CE_GetHandlerByEntity(pEntity);
     if (iHandler == g_iCeHandler || iHandler == g_iCeHandlerBig) {
         @Entity_TakeDamage(pEntity,  pInflictor, pAttacker, flDamage, iDamageBits);
         return HAM_HANDLED;

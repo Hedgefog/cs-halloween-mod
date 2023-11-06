@@ -26,7 +26,7 @@ new const g_szSndCast[] = "hwn/spells/spell_fireball_cast.wav";
 new g_szSprSpellBall[] = "sprites/xsmoke1.spr";
 
 new g_iSpell;
-new g_iCeMysteryHandler;
+new CE:g_iCeMysteryHandler;
 
 public plugin_precache() {
     precache_model(g_szSprSpellBall);

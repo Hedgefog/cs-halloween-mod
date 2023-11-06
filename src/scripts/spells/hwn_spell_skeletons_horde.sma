@@ -28,7 +28,7 @@ new const g_szSprSpellBall[] = "sprites/xsmoke1.spr";
 new g_iGibsModelIndex;
 
 new g_iSpellHandler;
-new g_iCeSpellball;
+new CE:g_iCeSpellball;
 
 public plugin_precache() {
     g_iGibsModelIndex = precache_model("models/bonegibs.mdl");

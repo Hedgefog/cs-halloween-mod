@@ -14,7 +14,7 @@
 
 new const g_szModel[] = "models/hwn/items/gift_v2.mdl";
 
-new g_iCeHandler;
+new CE:g_iCeHandler;
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);

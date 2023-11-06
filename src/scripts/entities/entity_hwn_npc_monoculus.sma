@@ -133,7 +133,7 @@ new g_pCvarDamageToStun;
 new g_pCvarJumpTimeMin;
 new g_pCvarJumpTimeMax;
 
-new g_iCeHandler;
+new CE:g_iCeHandler;
 
 new Array:g_irgPortals;
 new Array:g_irgPortalAngles;

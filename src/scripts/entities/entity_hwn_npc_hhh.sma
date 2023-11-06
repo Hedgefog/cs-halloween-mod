@@ -111,7 +111,7 @@ new gmsgScreenShake;
 new g_iSmokeModelIndex;
 new g_iGibsModelIndex;
 
-new g_iCeHandler;
+new CE:g_iCeHandler;
 new g_iBossHandler;
 
 new g_pCvarUseAstar;

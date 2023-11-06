@@ -91,7 +91,7 @@ new g_iSparkleModelIndex;
 new g_iPotionSplashModelIndex;
 new g_iPotionBeamModelIndex;
 
-new g_iCeHandler;
+new CE:g_iCeHandler;
 
 new Float:g_rgflPlayerNextCollectTime[MAX_PLAYERS + 1];
 
