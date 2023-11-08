@@ -51,7 +51,7 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
-    for (new iWeapon = CSW_P228; iWeapon < CSW_LAST_WEAPON; ++iWeapon) {
+    for (new iWeapon = CSW_P228; iWeapon <= CSW_LAST_WEAPON; ++iWeapon) {
         static szWeapon[32]; get_weaponname(iWeapon, szWeapon, charsmax(szWeapon));
         if (equal(szWeapon, NULL_STRING)) continue;
         RegisterHam(Ham_Item_CanDeploy, szWeapon, "HamHook_Weapon_CanDeploy");
