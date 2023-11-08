@@ -52,6 +52,7 @@
 #define m_flNextRemoveLid "flNextRemoveLid"
 #define m_iBonusChance "iBonusChance"
 #define m_pLiquid "pLiquid"
+#define m_flReleaseBoiling "flReleaseBoiling"
 
 enum _:Sequence {
     Sequence_Idle = 0,
@@ -95,8 +96,6 @@ new CE:g_iCeHandler;
 
 new Float:g_rgflPlayerNextCollectTime[MAX_PLAYERS + 1];
 
-new Array:g_irgpBuckets;
-
 public plugin_precache() {
     precache_model(g_szModel);
     precache_model(g_szLiquidModel);
@@ -112,9 +111,10 @@ public plugin_precache() {
         precache_sound(g_szSndHit[i]);
     }
 
-    g_iCeHandler = CE_Register(ENTITY_NAME, CEPreset_Prop);
+    g_iCeHandler = CE_Register(ENTITY_NAME);
     CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
     CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
+    CE_RegisterHook(CEFunction_InitPhysics, ENTITY_NAME, "@Entity_InitPhysics");
     CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
     CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
     CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
@@ -122,6 +122,7 @@ public plugin_precache() {
     CE_Register(LIQUID_ENTITY_NAME, CEPreset_Prop);
     CE_RegisterHook(CEFunction_Init, LIQUID_ENTITY_NAME, "@Liquid_Init");
     CE_RegisterHook(CEFunction_Spawned, LIQUID_ENTITY_NAME, "@Liquid_Spawn");
+    CE_RegisterHook(CEFunction_InitPhysics, LIQUID_ENTITY_NAME, "@Liquid_InitPhysics");
 
     g_pCvarBucketHealth = register_cvar("hwn_bucket_health", "300");
     g_pCvarBucketCollectFlash = register_cvar("hwn_bucket_collect_flash", "1");
@@ -129,8 +130,6 @@ public plugin_precache() {
     g_pCvarBucketBonusArmor = register_cvar("hwn_bucket_bonus_armor", "10");
     g_pCvarBucketBonusAmmo = register_cvar("hwn_bucket_bonus_ammo", "1");
     g_pCvarBucketBonusChance = register_cvar("hwn_bucket_bonus_chance", "5");
-
-    g_irgpBuckets = ArrayCreate(1, 2);
 }
 
 public plugin_init() {
@@ -140,33 +139,6 @@ public plugin_init() {
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "HamHook_Base_TraceAttack", .Post = 0);
     RegisterHam(Ham_TakeDamage, CE_BASE_CLASSNAME, "HamHook_Base_TakeDamage_Post", .Post = 1);
     RegisterHam(Ham_TraceAttack, CE_BASE_CLASSNAME, "HamHook_Base_TraceAttack_Post", .Post = 1);
-}
-
-public plugin_end() {
-    ArrayDestroy(g_irgpBuckets);
-}
-
-/*--------------------------------[ Forwards ]--------------------------------*/
-
-public Hwn_Collector_Fw_WinnerTeam(iTeam) {
-    new iBucketsNum = ArraySize(g_irgpBuckets);
-
-    for (new iBucket = 0; iBucket < iBucketsNum; ++iBucket) {
-        new pEntity = ArrayGetCell(g_irgpBuckets, iBucket);
-        new iBucketTeam = pev(pEntity, pev_team);
-
-        if (iBucketTeam && iBucketTeam != iTeam) continue;
-
-        new Float:flDuration = ACTION_BIG_POP_DURATION * (1.0 / ACTION_BIG_POP_FRAMERATE);
-        @Entity_PlayActionSequence(pEntity, Sequence_BigPop, flDuration);
-        set_pev(pEntity, pev_framerate, ACTION_BIG_POP_FRAMERATE);
-
-        @Entity_PotionExplodeEffect(pEntity);
-        @Entity_FlashEffect(pEntity);
-        @Entity_WaveEffect(pEntity);
-
-        CE_SetMember(pEntity, "flNextRemoveLid", get_gametime() + flDuration);
-    }
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -180,16 +152,17 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
     set_pev(pLiquid, pev_owner, this);
     dllfunc(DLLFunc_Spawn, pLiquid);
     CE_SetMember(this, m_pLiquid, pLiquid);
-
-    ArrayPushCell(g_irgpBuckets, this);
 }
 
 @Entity_Spawned(this) {
     new iTeam = pev(this, pev_team);
 
-    set_pev(this, pev_solid, SOLID_BBOX);
-    set_pev(this, pev_movetype, MOVETYPE_PUSHSTEP);
-    set_pev(this, pev_takedamage, DAMAGE_AIM);
+    CE_SetMember(this, m_flNextBoil, 0.0);
+    CE_SetMember(this, m_flNextAction, 0.0);
+    CE_SetMember(this, m_flNextRemoveLid, 0.0);
+    CE_SetMember(this, m_flReleaseBoiling, 0.0);
+    CE_SetMember(this, m_iBonusChance, 0);
+
     set_pev(this, pev_renderfx, kRenderFxGlowShell);
     set_pev(this, pev_renderamt, 0.0);
     set_pev(this, pev_rendercolor, g_rgvecTeamColor[Team:iTeam]);
@@ -197,11 +170,6 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
     set_pev(this, pev_body, 0);
 
     engfunc(EngFunc_DropToFloor, this);
-
-    CE_SetMember(this, m_flNextBoil, 0.0);
-    CE_SetMember(this, m_flNextAction, 0.0);
-    CE_SetMember(this, m_flNextRemoveLid, 0.0);
-    CE_SetMember(this, m_iBonusChance, 0);
 
     set_pev(this, pev_nextthink, get_gametime());
 }
@@ -221,25 +189,33 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
     return HAM_HANDLED;
 }
 
+@Entity_InitPhysics(this) {
+    set_pev(this, pev_solid, SOLID_BBOX);
+    set_pev(this, pev_movetype, MOVETYPE_PUSHSTEP);
+    set_pev(this, pev_takedamage, DAMAGE_AIM);
+}
+
 @Entity_Remove(this) {
     new pLiquid = CE_GetMember(this, m_pLiquid);
     CE_SetMember(this, m_pLiquid, 0);
     CE_Remove(pLiquid);
-
-    new iGlobalId = ArrayFindValue(g_irgpBuckets, this);
-    if (iGlobalId != -1) {
-        ArrayDeleteItem(g_irgpBuckets, iGlobalId);
-    }
 }
 
 @Entity_Think(this) {
-    new Float:flGameTime = get_gametime();
+    static Float:flGameTime; flGameTime = get_gametime();
 
     new pLiquid = CE_GetMember(this, m_pLiquid);
     if (pLiquid) {
         new Float:vecOrigin[3];
         pev(this, pev_origin, vecOrigin);
         engfunc(EngFunc_SetOrigin, pLiquid, vecOrigin);
+    }
+
+    static Float:flReleaseBoiling; flReleaseBoiling = CE_GetMember(this, m_flReleaseBoiling);
+    if (flReleaseBoiling && flReleaseBoiling <= flGameTime) {
+        CE_SetMember(this, m_flNextAction, 0.0);
+        @Entity_Pop(this);
+        CE_SetMember(this, m_flReleaseBoiling, 0.0);
     }
 
     if (@Entity_CollectPoints(this)) {
@@ -250,18 +226,31 @@ public Hwn_Collector_Fw_WinnerTeam(iTeam) {
         @Entity_PlayActionSequence(this, iSequence, 0.0);
     }
 
-    new Float:flNextRemoveLid = CE_GetMember(this, m_flNextRemoveLid);
+    new Float:flNextRemoveLid; flNextRemoveLid = CE_GetMember(this, m_flNextRemoveLid);
     if (flNextRemoveLid && flNextRemoveLid <= flGameTime) {
         set_pev(this, pev_body, 1);
+        CE_SetMember(this, m_flNextRemoveLid, 0.0);
     }
 
-    new Float:flNextBoil = CE_GetMember(this, m_flNextBoil);
+    static Float:flNextBoil; flNextBoil = CE_GetMember(this, m_flNextBoil);
     if (flNextBoil <= flGameTime) {
         emit_sound(this, CHAN_STATIC, g_szSndBoil, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-        CE_SetMember(this, m_flNextBoil, get_gametime() + BOIL_SOUND_DURATION);
+        CE_SetMember(this, m_flNextBoil, flGameTime + BOIL_SOUND_DURATION);
     }
 
     set_pev(this, pev_nextthink, flGameTime + Hwn_GetUpdateRate());
+}
+
+@Entity_Pop(this) {
+    new Float:flDuration = ACTION_BIG_POP_DURATION * (1.0 / ACTION_BIG_POP_FRAMERATE);
+    @Entity_PlayActionSequence(this, Sequence_BigPop, flDuration);
+    set_pev(this, pev_framerate, ACTION_BIG_POP_FRAMERATE);
+
+    @Entity_PotionExplodeEffect(this);
+    @Entity_FlashEffect(this);
+    @Entity_WaveEffect(this);
+
+    CE_SetMember(this, m_flNextRemoveLid, get_gametime() + flDuration);
 }
 
 bool:@Entity_CollectPoints(this) {
@@ -515,9 +504,14 @@ bool:@Entity_DropEntity(this, pEntity) {
 }
 
 @Liquid_Spawn(this) {
-    set_pev(this, pev_solid, SOLID_NOT);
     set_pev(this, pev_rendermode, kRenderTransAdd);
     set_pev(this, pev_renderamt, 255.0);
+}
+
+@Liquid_InitPhysics(this) {
+    set_pev(this, pev_solid, SOLID_NOT);
+    set_pev(this, pev_movetype, MOVETYPE_FLY);
+    set_pev(this, pev_takedamage, DAMAGE_NO);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
@@ -537,8 +531,7 @@ public HamHook_Base_TraceAttack(pEntity, pAttacker, Float:flDamage, Float:vecDir
 public HamHook_Base_TraceAttack_Post(pEntity, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
     if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) return HAM_IGNORED;
 
-    static Float:vecEnd[3];
-    get_tr2(pTrace, TR_vecEndPos, vecEnd);
+    static Float:vecEnd[3]; get_tr2(pTrace, TR_vecEndPos, vecEnd);
 
     UTIL_Message_Sparks(vecEnd);
     emit_sound(pEntity, CHAN_BODY, g_szSndHit[random(sizeof(g_szSndHit))], VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
@@ -552,11 +545,8 @@ public HamHook_Base_TakeDamage(pEntity, pInflictor, pAttacker, Float:flDamage, i
     if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) return HAM_IGNORED;
 
     if (~iDamageBits & DMG_BULLET) { // explosions, etc.
-        static Float:vecStart[3];
-        pev(pInflictor, pev_origin, vecStart);
-
-        static Float:vecEnd[3];
-        pev(pEntity, pev_origin, vecEnd);
+        static Float:vecStart[3]; pev(pInflictor, pev_origin, vecStart);
+        static Float:vecEnd[3]; pev(pEntity, pev_origin, vecEnd);
 
         // Ignore wallbang damage
         if (!UTIL_IsPointVisible(vecStart, vecEnd, pEntity)) return HAM_SUPERCEDE; 

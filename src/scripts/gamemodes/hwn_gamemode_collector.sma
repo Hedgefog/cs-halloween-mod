@@ -38,6 +38,7 @@ new g_fwOvertime;
 new g_fwWinnerTeam;
 new g_fwObjectiveBlocked;
 
+new Array:g_irgpBuckets;
 new g_rgiPlayerPoints[MAX_PLAYERS + 1];
 new g_rgiTeamPoints[TEAM_COUNT];
 new g_iTeamPointsToSpawnBoss;
@@ -48,7 +49,8 @@ new g_iGamemode;
 public plugin_precache() {
     precache_sound(g_szSndPointCollected);
 
-    CE_RegisterHook(CEFunction_Spawned, BUCKET_ENTITY_CLASSNAME, "@Bucket_Spawn");
+    CE_RegisterHook(CEFunction_Init, BUCKET_ENTITY_CLASSNAME, "@Bucket_Init");
+    CE_RegisterHook(CEFunction_Remove, BUCKET_ENTITY_CLASSNAME, "@Bucket_Remove");
     CE_RegisterHook(CEFunction_Picked, LOOT_ENTITY_CLASSNAME, "@Loot_Pickup");
     CE_RegisterHook(CEFunction_Picked, BACKPACK_ENTITY_CLASSNAME, "@Backpack_Pickup");
 
@@ -56,6 +58,8 @@ public plugin_precache() {
         "Collector",
         Hwn_GamemodeFlag_RespawnPlayers | Hwn_GamemodeFlag_SpecialEquip | Hwn_GamemodeFlag_SpellShop
     );
+
+    g_irgpBuckets = ArrayCreate(1, 2);
 }
 
 public plugin_init() {
@@ -80,6 +84,10 @@ public plugin_init() {
     g_fwOvertime = CreateMultiForward("Hwn_Collector_Fw_Overtime", ET_IGNORE, FP_CELL);
     g_fwWinnerTeam = CreateMultiForward("Hwn_Collector_Fw_WinnerTeam", ET_IGNORE, FP_CELL);
     g_fwObjectiveBlocked = CreateMultiForward("Hwn_Collector_Fw_ObjectiveBlocked", ET_IGNORE, FP_CELL);
+}
+
+public plugin_end() {
+    ArrayDestroy(g_irgpBuckets);
 }
 
 public plugin_natives() {
@@ -138,8 +146,19 @@ public bool:Native_ScorePlayerPointsToTeam(iPluginId, iArgc) {
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-public @Bucket_Spawn(this) {
+public @Bucket_Init(this) {
     Hwn_Gamemode_Activate(g_iGamemode);
+
+    ArrayPushCell(g_irgpBuckets, this);
+}
+
+public @Bucket_Remove(this) {
+    Hwn_Gamemode_Activate(g_iGamemode);
+
+    new iGlobalId = ArrayFindValue(g_irgpBuckets, this);
+    if (iGlobalId != -1) {
+        ArrayDeleteItem(g_irgpBuckets, iGlobalId);
+    }
 }
 
 public @Loot_Pickup(this, pPlayer) {
@@ -357,6 +376,20 @@ ResetVariables() {
 }
 
 DispatchWin(iTeam) {
+    ReleaseTeamBucketsBoiling(iTeam);
     Hwn_Gamemode_DispatchWin(iTeam);
     ExecuteForward(g_fwWinnerTeam, _, iTeam);
+}
+
+ReleaseTeamBucketsBoiling(iTeam) {
+    new iBucketsNum = ArraySize(g_irgpBuckets);
+
+    for (new iBucket = 0; iBucket < iBucketsNum; ++iBucket) {
+        new pBucket = ArrayGetCell(g_irgpBuckets, iBucket);
+        new iBucketTeam = pev(pBucket, pev_team);
+
+        if (iBucketTeam && iBucketTeam != iTeam) continue;
+
+        CE_SetMember(pBucket, "flReleaseBoiling", get_gametime() + 0.1);
+    }
 }
