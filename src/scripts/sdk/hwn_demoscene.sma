@@ -27,14 +27,16 @@
 #include <fun>
 #include <xs>
 
+#include <api_custom_entities>
+#include <api_player_camera>
+
 #include <hwn>
 #include <hwn_utils>
-#include <api_custom_entities>
 
-#define CAMERA_CLASSNAME "trigger_camera"
 #define CAMERA_MODEL "models/rpgrocket.mdl"
 #define PLAYER_MODEL "gign"
 #define PLAYER_WEAPON "weapon_mp5navy"
+#define HEIGHT_OFFSET 16.0 // Distance between player and logo
 #define DEPTH_OFFSET 64.0 // Distance between player and logo
 #define CAMERA_DISTANCE 240.0 // Resolution: 1920x1080 FOV: 90
 #define CAMERA_YAW 90.0 // Side view
@@ -44,14 +46,12 @@ new g_iFireballSpell;
 public plugin_init() {
     register_plugin("[Hwn] Demo Scene", "1.0.0", "Hedgehog Fog");
 
-    RegisterHam(Ham_Think, CAMERA_CLASSNAME, "HamHook_Camera_Think", .Post = 0);
-
     RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
     RegisterHamPlayer(Ham_Player_PreThink, "HamHook_Player_PreThink", .Post = 0);
 
     g_iFireballSpell = Hwn_Spell_GetHandler("Fireball");
 
-    register_clcmd("hwn_demoscene_reset", "ResetAll");
+    register_clcmd("hwn_demoscene_reset", "@Player_ResetAll");
 }
 
 public plugin_precache() {
@@ -62,132 +62,95 @@ public plugin_precache() {
         return;
     }
 
-    CE_RegisterHook(CEFunction_Spawned, "hwn_skeleton_egg", "OnSkeletonEggSpawn");
-    CE_RegisterHook(CEFunction_Spawned, "hwn_item_pumpkin", "OnPumpkinSpawn");
+    CE_RegisterHook(CEFunction_Spawned, "hwn_skeleton_egg", "@SkeletonEgg_Spawned");
+    CE_RegisterHook(CEFunction_Spawned, "hwn_item_pumpkin", "@Pumpkin_Spawned");
 
     precache_model(CAMERA_MODEL);
 }
 
 public client_disconnected(pPlayer) {
-    ResetAll(pPlayer);
+    @Player_ResetAll(pPlayer);
 }
 
 public Hwn_Fw_ConfigLoaded() {
     set_cvar_num("hwn_collector_npc_drop_chance_spell", 0);
     set_cvar_num("hwn_crits_random_chance_max", 0);
+    set_cvar_num("hwn_objective_marks", 0);
+    set_cvar_num("mp_freezetime", 0);
 }
 
 public HamHook_Player_Spawn_Post(pPlayer) {
     if (!is_user_alive(pPlayer)) return;
 
-    ResetAll(pPlayer);
+    @Player_ResetAll(pPlayer);
 
-    CreateCamera(pPlayer);
-    SetHudDraw(pPlayer, 0);
-    SetDecalsLimit(pPlayer, 0);
-    set_task(0.1, "Equip", pPlayer);
-    set_task(2.0, "MoveStart", pPlayer);
-    set_task(4.8, "CastSpell", pPlayer);
-    set_task(5.75, "AttackStart", pPlayer);
-    set_task(6.5, "AttackEnd", pPlayer);
+    PlayerCamera_Activate(pPlayer);
+    PlayerCamera_SetAngles(pPlayer, Float:{0.0, CAMERA_YAW, 0.0});
+    PlayerCamera_SetDistance(pPlayer, CAMERA_DISTANCE + DEPTH_OFFSET);
+    PlayerCamera_SetOffset(pPlayer, Float:{0.0, 0.0, HEIGHT_OFFSET});
+
+    @Player_SetHudDraw(pPlayer, 0);
+    @Player_SetDecalsLimit(pPlayer, 0);
+
+    set_task(0.1, "@Player_Equip", pPlayer);
+    set_task(2.0, "@Player_MoveStart", pPlayer);
+    set_task(4.8, "@Player_CastSpell", pPlayer);
+    set_task(5.75, "@Player_AttackStart", pPlayer);
+    set_task(6.5, "@Player_AttackEnd", pPlayer);
 }
 
 public HamHook_Player_PreThink(pPlayer) {
     set_pev(pPlayer, pev_punchangle, {0.0, 0.0, 0.0});
 }
 
-public OnSkeletonEggSpawn(pEntity) {
+@SkeletonEgg_Spawned(pEntity) {
     CE_Remove(pEntity);
 }
 
-public OnPumpkinSpawn(pEntity) {
+@Pumpkin_Spawned(pEntity) {
     CE_SetMember(pEntity, "iType", 2);
     set_pev(pEntity, pev_rendercolor, {HWN_COLOR_RED_F});
 }
 
-public HamHook_Camera_Think(pEntity) {
-    new pOwner = pev(pEntity, pev_owner);
-    if (!pOwner) return;
-
-    static Float:vecPlayerOrigin[3];
-    UTIL_GetViewOrigin(pOwner, vecPlayerOrigin);
-
-    static Float:vecViewAngle[3];
-    pev(pOwner, pev_v_angle, vecViewAngle);
-    vecViewAngle[1] += CAMERA_YAW;
-
-    static Float:vecOffset[3];
-    angle_vector(vecViewAngle, ANGLEVECTOR_FORWARD, vecOffset);
-    xs_vec_mul_scalar(vecOffset, -1.0, vecOffset);
-    xs_vec_mul_scalar(vecOffset, CAMERA_DISTANCE + DEPTH_OFFSET, vecOffset);
-
-    static Float:vecOrigin[3];
-    xs_vec_add(vecPlayerOrigin, vecOffset, vecOrigin);
-
-    engfunc(EngFunc_SetOrigin, pEntity, vecOrigin);
-    set_pev(pEntity, pev_angles, vecViewAngle);
-
-    set_pev(pEntity, pev_nextthink, get_gametime());
-}
-
-public CreateCamera(pPlayer) {
-    static iszClassName;
-    if (!iszClassName) {
-        iszClassName = engfunc(EngFunc_AllocString, CAMERA_CLASSNAME);
-    }
-
-    new pEntity = engfunc(EngFunc_CreateNamedEntity, iszClassName);
-    set_pev(pEntity, pev_classname, CAMERA_CLASSNAME);
-    set_pev(pEntity, pev_owner, pPlayer);
-    set_pev(pEntity, pev_solid, SOLID_NOT);
-    set_pev(pEntity, pev_movetype, MOVETYPE_FLY);
-    set_pev(pEntity, pev_rendermode, kRenderTransTexture);
-
-    engfunc(EngFunc_SetModel, pEntity, CAMERA_MODEL);
-    engfunc(EngFunc_SetView, pPlayer, pEntity);
-
-    set_pev(pEntity, pev_nextthink, get_gametime());
-}
-
-public Equip(pPlayer) {
+@Player_Equip(pPlayer) {
     cs_set_user_model(pPlayer, PLAYER_MODEL);
     strip_user_weapons(pPlayer);
     give_item(pPlayer, PLAYER_WEAPON);
 }
 
-public MoveStart(pPlayer) {
+@Player_MoveStart(pPlayer) {
     client_cmd(pPlayer, "+forward");
 }
 
-public MoveEnd(pPlayer) {
+@Player_MoveEnd(pPlayer) {
     client_cmd(pPlayer, "-forward");
 }
 
-public AttackStart(pPlayer) {
+@Player_AttackStart(pPlayer) {
     client_cmd(pPlayer, "+attack");
 }
 
-public AttackEnd(pPlayer) {
+@Player_AttackEnd(pPlayer) {
     client_cmd(pPlayer, "-attack");
 }
 
-public SetHudDraw(pPlayer, iValue) {
+@Player_SetHudDraw(pPlayer, iValue) {
     client_cmd(pPlayer, "hud_draw %d", iValue);
 }
 
-public SetDecalsLimit(pPlayer, iValue) {
+@Player_SetDecalsLimit(pPlayer, iValue) {
     client_cmd(pPlayer, "r_decals %d", iValue);
 }
 
-public CastSpell(pPlayer) {
+@Player_CastSpell(pPlayer) {
     Hwn_Spell_SetPlayerSpell(pPlayer, g_iFireballSpell, 1);
     client_cmd(pPlayer, "impulse 100");
 }
 
-public ResetAll(pPlayer) {
-    MoveEnd(pPlayer);
-    AttackEnd(pPlayer);
-    SetHudDraw(pPlayer, 1);
-    SetDecalsLimit(pPlayer, 300);
+@Player_ResetAll(pPlayer) {
+    @Player_MoveEnd(pPlayer);
+    @Player_AttackEnd(pPlayer);
+    @Player_SetHudDraw(pPlayer, 1);
+    @Player_SetDecalsLimit(pPlayer, 300);
     remove_task(pPlayer);
 }
