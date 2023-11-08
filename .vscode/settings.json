@@ -13,6 +13,7 @@
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/rounds/include",
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/advanced-pushing/include",
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/waypoint-markers/include",
+    "${workspaceRoot}/.thirdparty/cs-modding-kit/api/custom-events/include",
     "${workspaceRoot}/src/include"
   ]
 }

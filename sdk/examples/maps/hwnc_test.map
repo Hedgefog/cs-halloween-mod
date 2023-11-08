@@ -2008,9 +2008,9 @@
 "origin" "368 -352 144"
 }
 {
-"classname" "hwn_event_handler"
+"classname" "custom_events_handler"
+"event" "hwn_boss_spawn"
 "target" "on_boss_spawn"
-"targetname" "boss_spawn"
 "origin" "32 0 96"
 }
 {
@@ -2283,14 +2283,14 @@
 }
 }
 {
-"classname" "hwn_event_handler"
-"targetname" "boss_spawn"
+"classname" "custom_events_handler"
+"event" "hwn_boss_spawn"
 "target" "hhh_door"
 "origin" "-536 384 88"
 }
 {
-"classname" "hwn_event_handler"
-"targetname" "boss_remove"
+"classname" "custom_events_handler"
+"event" "hwn_boss_remove"
 "target" "hhh_door"
 "origin" "-536 384 104"
 }

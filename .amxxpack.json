@@ -16,6 +16,7 @@
         "filter": [
           "util/**",
           "entities/entity_fire.sma",
+          "entities/entity_custom_events_handler.sma",
           "api/custom-entities/**",
           "api/rounds/**",
           "api/player-camera/**",
@@ -23,7 +24,8 @@
           "api/player-inventory/**",
           "api/player-cosmetics/**",
           "api/advanced-pushing/**",
-          "api/waypoint-markers/**"
+          "api/waypoint-markers/**",
+          "api/custom-events/**"
         ]
       }
     ]
