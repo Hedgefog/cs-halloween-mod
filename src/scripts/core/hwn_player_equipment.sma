@@ -157,14 +157,14 @@ Struct:@Equipment_Create() {
     static Float:flMaxHealth; pev(this, pev_max_health, flMaxHealth);
 
     static Float:flHealth; pev(this, pev_health, flHealth);
-    flHealth = floatmin(flHealth + float(iAmount), flMaxHealth);
+    flHealth = floatmin(flHealth + float(iAmount), floatmax(flHealth, flMaxHealth));
     set_pev(this, pev_health, flHealth);
 }
 
 @Player_GiveArmor(this, iAmount) {
     static Float:flArmor;
     pev(this, pev_armorvalue, flArmor);
-    flArmor = floatmin(flArmor + float(iAmount), 100.0);
+    flArmor = floatmin(flArmor + float(iAmount), floatmax(flArmor, 100.0));
     set_pev(this, pev_armorvalue, flArmor);
 }
 
@@ -239,7 +239,6 @@ LoadEquipment() {
 
 CreateMenu() {
     new iMenu = menu_create(g_szMenuTitle, "MenuHandler_Equipment");
-
     new iCallback = menu_makecallback("MenuCallback_Equipment");
 
     for (new iEquipment = 0; iEquipment < ArraySize(g_rgsEquipments); ++iEquipment) {
