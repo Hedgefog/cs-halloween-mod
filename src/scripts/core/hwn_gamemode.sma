@@ -25,16 +25,16 @@ new g_fwGamemodeActivated;
 
 new g_iFmFwSpawn;
 
-new Array:g_iTeam1SpawnPoints;
-new Array:g_iTeam2SpawnPoints;
-
 new g_iGamemode = -1;
 new g_iDefaultGamemode = -1;
 
-new Trie:g_itGamemodes;
-new Array:g_irgGamemodeName;
-new Array:g_irgGamemodeFlags;
-new Array:g_irgGamemodeiPluginId;
+new Array:g_iTeam1SpawnPoints = Invalid_Array;
+new Array:g_iTeam2SpawnPoints = Invalid_Array;
+
+new Trie:g_itGamemodes = Invalid_Trie;
+new Array:g_irgGamemodeName = Invalid_Array;
+new Array:g_irgGamemodeFlags = Invalid_Array;
+new Array:g_irgGamemodeiPluginId = Invalid_Array;
 new g_iGamemodesNum = 0;
 
 new g_rgiPlayerFirstSpawnFlag = 0;

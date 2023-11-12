@@ -7,9 +7,11 @@
 #define PLUGIN "[Hwn] Power Up Spell"
 #define AUTHOR "Hedgehog Fog"
 
+#define SPELL_NAME "Power Up"
+
 public plugin_precache() {
     Hwn_Spell_Register(
-        "Power Up",
+        SPELL_NAME,
         Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Heal | Hwn_SpellFlag_Rare,
         "@Player_CastSpell"
     );

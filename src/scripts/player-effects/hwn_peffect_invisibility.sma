@@ -45,6 +45,8 @@ public client_connect(pPlayer) {
     g_rgflPlayerNextFixFade[pPlayer] = 0.0;
 }
 
+/*--------------------------------[ Methods ]--------------------------------*/
+
 @Player_EffectInvoke(this, Float:flDuration) {
     @Player_FadeEffect(this, flDuration, true);
 
@@ -84,6 +86,8 @@ public client_connect(pPlayer) {
     UTIL_Message_BeamCylinder(vecOrigin, EffectRadius * 3, g_iEffectTraceModelIndex, 0, 3, 90, 255, EffectColor, 100, 0);
     emit_sound(this, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
+
+/*--------------------------------[ Hooks ]--------------------------------*/
 
 public HamHook_Player_PostThink_Post(pPlayer) {
     static Float:flGameTime; flGameTime = get_gametime();

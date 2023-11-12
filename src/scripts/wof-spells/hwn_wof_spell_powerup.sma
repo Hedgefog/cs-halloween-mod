@@ -11,13 +11,13 @@
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    Hwn_Wof_Spell_Register("Power Up", "Invoke", "Revoke");
+    Hwn_Wof_Spell_Register("Power Up", "@Player_InvokeEffect", "@Player_RevokeEffect");
 }
 
-public Invoke(pPlayer) {
-    Hwn_Player_SetEffect(pPlayer, "powerup", true);
+@Player_InvokeEffect(this) {
+    Hwn_Player_SetEffect(this, "powerup", true);
 }
 
-public Revoke(pPlayer) {
-    Hwn_Player_SetEffect(pPlayer, "powerup", false);
+@Player_RevokeEffect(this) {
+    Hwn_Player_SetEffect(this, "powerup", false);
 }

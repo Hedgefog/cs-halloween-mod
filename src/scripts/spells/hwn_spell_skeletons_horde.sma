@@ -14,6 +14,8 @@
 #define PLUGIN "[Hwn] Skeletons Horde Spell"
 #define AUTHOR "Hedgehog Fog"
 
+#define SPELL_NAME "Skeletons Horde"
+
 #define SKELETON_EGG_ENTITY_NAME "hwn_skeleton_egg_big"
 #define SKELETON_EGG_COUNT 5
 
@@ -38,7 +40,7 @@ public plugin_precache() {
     precache_sound(g_szSndDetonate);
 
     g_iSpellHandler = Hwn_Spell_Register(
-        "Skeletons Horde",
+        SPELL_NAME,
         Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Radius | Hwn_SpellFlag_Rare,
         "@Player_CastSpell"
     );
@@ -54,24 +56,6 @@ public plugin_init() {
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Killed");
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
-
-public HamHook_Base_Touch_Post(pEntity, pTarget) {
-    if (!pev_valid(pEntity)) return;
-    if (g_iCeSpellball != CE_GetHandlerByEntity(pEntity)) return;
-    if (CE_GetMember(pEntity, "iSpell") != g_iSpellHandler) return;
-    if (pTarget == pev(pEntity, pev_owner)) return;
-
-    CE_Kill(pEntity);
-}
-
-@SpellBall_Killed(this) {
-    new iSpell = CE_GetMember(this, "iSpell");
-    if (iSpell != g_iSpellHandler) return;
-
-    Detonate(this);
-}
-
 /*--------------------------------[ Methods ]--------------------------------*/
 
 @Player_CastSpell(pPlayer) {
@@ -85,7 +69,14 @@ public HamHook_Base_Touch_Post(pEntity, pTarget) {
     return PLUGIN_CONTINUE;
 }
 
-Detonate(pEntity) {
+@SpellBall_Killed(this) {
+    new iSpell = CE_GetMember(this, "iSpell");
+    if (iSpell != g_iSpellHandler) return;
+
+    @SkeletonBall_Detonate(this);
+}
+
+@SkeletonBall_Detonate(pEntity) {
     new pOwner = pev(pEntity, pev_owner);
     new iTeam = get_member(pOwner, m_iTeam);
 
@@ -97,10 +88,22 @@ Detonate(pEntity) {
 
     SpawnEggs(vecOrigin, iTeam, pOwner);
 
-    DetonateEffect(pEntity);
+    @SkeletonBall_DetonateEffect(pEntity);
 }
 
-SpawnEggs(const Float:vecOrigin[3], iTeam = 0, pOwner = 0) {
+
+@SkeletonBall_DetonateEffect(pEntity) {
+    static Float:vecVelocity[3]; UTIL_RandomVector(-128.0, 128.0, vecVelocity);
+    static Float:vecOrigin[3]; pev(pEntity, pev_origin, vecOrigin);
+
+    UTIL_Message_Dlight(vecOrigin, 36, {HWN_COLOR_SECONDARY}, 30, 12);
+    UTIL_Message_BreakModel(vecOrigin, Float:{16.0, 16.0, 16.0}, vecVelocity, 30, g_iGibsModelIndex, 20, 25, 0);
+    emit_sound(pEntity, CHAN_BODY , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+}
+
+/*--------------------------------[ Functions ]--------------------------------*/
+
+SpawnEggs(const Float:vecOrigin[3], iTeam, pOwner) {
     for (new i = 0; i < SKELETON_EGG_COUNT; ++i) {
         new pEgg = CE_Create(SKELETON_EGG_ENTITY_NAME, vecOrigin);
         if (!pEgg) continue;
@@ -119,15 +122,13 @@ SpawnEggs(const Float:vecOrigin[3], iTeam = 0, pOwner = 0) {
     }
 }
 
-DetonateEffect(pEntity) {
-    static Float:vecVelocity[3];
-    UTIL_RandomVector(-128.0, 128.0, vecVelocity);
+/*--------------------------------[ Hooks ]--------------------------------*/
 
-    static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
-    UTIL_Message_Dlight(vecOrigin, 36, {HWN_COLOR_SECONDARY}, 30, 12);
+public HamHook_Base_Touch_Post(pEntity, pTarget) {
+    if (!pev_valid(pEntity)) return;
+    if (g_iCeSpellball != CE_GetHandlerByEntity(pEntity)) return;
+    if (CE_GetMember(pEntity, "iSpell") != g_iSpellHandler) return;
+    if (pTarget == pev(pEntity, pev_owner)) return;
 
-    UTIL_Message_BreakModel(vecOrigin, Float:{16.0, 16.0, 16.0}, vecVelocity, 30, g_iGibsModelIndex, 20, 25, 0);
-
-    emit_sound(pEntity, CHAN_BODY , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    CE_Kill(pEntity);
 }

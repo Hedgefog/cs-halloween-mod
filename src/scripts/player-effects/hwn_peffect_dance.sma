@@ -65,57 +65,7 @@ public plugin_init() {
     Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke");
 }
 
-public HamHook_Weapon_CanDeploy(pWeapon) {
-    new pPlayer = get_member(pWeapon, m_pPlayer);
-
-    if (!@Player_CanUseWeapon(pPlayer)) {
-        SetHamReturnInteger(0);
-        return HAM_OVERRIDE;
-    }
-
-    return HAM_IGNORED;
-}
-
-public HamHook_Weapon_GetMaxSpeed(pWeapon) {
-    new pPlayer = get_member(pWeapon, m_pPlayer);
-
-    if (!@Player_CanUseWeapon(pPlayer)) {
-        SetHamReturnFloat(1.0);
-        return HAM_OVERRIDE;
-    }
-
-    return HAM_IGNORED;
-}
-
-public HamHook_Weapon_PrimaryAttack(pWeapon) {
-    new pPlayer = get_member(pWeapon, m_pPlayer);
-
-    return @Player_CanUseWeapon(pPlayer) ? HAM_IGNORED : HAM_SUPERCEDE;
-}
-
-public HamHook_Weapon_SecondaryAttack(pWeapon) {
-    new pPlayer = get_member(pWeapon, m_pPlayer);
-
-    return @Player_CanUseWeapon(pPlayer) ? HAM_IGNORED : HAM_SUPERCEDE;
-}
-
-public HamHook_Player_PostThink_Post(pPlayer) {
-    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return HAM_IGNORED;
-
-    static Float:flGameTime; flGameTime = get_gametime();
-
-    if (g_rgvecPlayerNextDanceThink[pPlayer] <= flGameTime) {
-        @Player_DanceThink(pPlayer);
-        g_rgvecPlayerNextDanceThink[pPlayer] = flGameTime + DANCE_THINK_RATE;
-    }
-    
-    if (g_rgvecPlayerNextSoundLoop[pPlayer] <= flGameTime) {
-        @Player_DanceSoundLoop(pPlayer);
-        g_rgvecPlayerNextSoundLoop[pPlayer] = get_gametime() + DANCE_SOUND_DURATION;
-    }
-
-    return HAM_HANDLED;
-}
+/*--------------------------------[ Methods ]--------------------------------*/
 
 bool:@Player_CanUseWeapon(this) {
     if (!IS_PLAYER(this)) return true;
@@ -187,4 +137,58 @@ bool:@Player_CanUseWeapon(this) {
 
         g_rgvecPlayerNextDanceLight[this] = flGameTime + DANCE_LIGHT_DURATION;
     }
+}
+
+/*--------------------------------[ Hooks ]--------------------------------*/
+
+public HamHook_Weapon_CanDeploy(pWeapon) {
+    new pPlayer = get_member(pWeapon, m_pPlayer);
+
+    if (!@Player_CanUseWeapon(pPlayer)) {
+        SetHamReturnInteger(0);
+        return HAM_OVERRIDE;
+    }
+
+    return HAM_IGNORED;
+}
+
+public HamHook_Weapon_GetMaxSpeed(pWeapon) {
+    new pPlayer = get_member(pWeapon, m_pPlayer);
+
+    if (!@Player_CanUseWeapon(pPlayer)) {
+        SetHamReturnFloat(1.0);
+        return HAM_OVERRIDE;
+    }
+
+    return HAM_IGNORED;
+}
+
+public HamHook_Weapon_PrimaryAttack(pWeapon) {
+    new pPlayer = get_member(pWeapon, m_pPlayer);
+
+    return @Player_CanUseWeapon(pPlayer) ? HAM_IGNORED : HAM_SUPERCEDE;
+}
+
+public HamHook_Weapon_SecondaryAttack(pWeapon) {
+    new pPlayer = get_member(pWeapon, m_pPlayer);
+
+    return @Player_CanUseWeapon(pPlayer) ? HAM_IGNORED : HAM_SUPERCEDE;
+}
+
+public HamHook_Player_PostThink_Post(pPlayer) {
+    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return HAM_IGNORED;
+
+    static Float:flGameTime; flGameTime = get_gametime();
+
+    if (g_rgvecPlayerNextDanceThink[pPlayer] <= flGameTime) {
+        @Player_DanceThink(pPlayer);
+        g_rgvecPlayerNextDanceThink[pPlayer] = flGameTime + DANCE_THINK_RATE;
+    }
+    
+    if (g_rgvecPlayerNextSoundLoop[pPlayer] <= flGameTime) {
+        @Player_DanceSoundLoop(pPlayer);
+        g_rgvecPlayerNextSoundLoop[pPlayer] = get_gametime() + DANCE_SOUND_DURATION;
+    }
+
+    return HAM_HANDLED;
 }

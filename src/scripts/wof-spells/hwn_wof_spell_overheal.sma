@@ -13,7 +13,7 @@ new g_iWofSpell;
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    g_iWofSpell = Hwn_Wof_Spell_Register("Overheal", "Invoke");
+    g_iWofSpell = Hwn_Wof_Spell_Register("Overheal", "@Player_InvokeEffect");
 }
 
 public Hwn_Wof_Fw_Effect_Start(iSpell) {
@@ -22,6 +22,6 @@ public Hwn_Wof_Fw_Effect_Start(iSpell) {
     }
 }
 
-public Invoke(pPlayer) {
-    Hwn_Player_SetEffect(pPlayer, "overheal", true, 0.0);
+@Player_InvokeEffect(this) {
+    Hwn_Player_SetEffect(this, "overheal", true, 0.0);
 }

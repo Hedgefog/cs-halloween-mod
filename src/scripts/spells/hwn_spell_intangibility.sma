@@ -7,9 +7,11 @@
 #define PLUGIN "[Hwn] Intangibility Spell"
 #define AUTHOR "Hedgehog Fog"
 
+#define SPELL_NAME "Intangibility"
+
 public plugin_precache() {
     Hwn_Spell_Register(
-        "Intangibility",
+        SPELL_NAME,
         Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability | Hwn_SpellFlag_Protection,
         "@Player_CastSpell"
     );

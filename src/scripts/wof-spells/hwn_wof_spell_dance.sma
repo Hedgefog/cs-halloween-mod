@@ -14,15 +14,15 @@ new g_iWofSpell;
 
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-    g_iWofSpell = Hwn_Wof_Spell_Register("Dance", "Invoke");
+    g_iWofSpell = Hwn_Wof_Spell_Register("Dance", "@Player_InvokeEffect");
 }
 
 public Hwn_Wof_Fw_Effect_Start(iSpell) {
-    if (g_iWofSpell == iSpell) {
-        Hwn_Wof_Abort();
-    }
+    if (g_iWofSpell != iSpell) return;
+
+    Hwn_Wof_Abort();
 }
 
-public Invoke(pPlayer) {
-    Hwn_Player_SetEffect(pPlayer, "dance", true, EffectTime);
+@Player_InvokeEffect(this) {
+    Hwn_Player_SetEffect(this, "dance", true, EffectTime);
 }

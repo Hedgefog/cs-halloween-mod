@@ -11,9 +11,9 @@
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    Hwn_Wof_Spell_Register("Magic", "Invoke");
+    Hwn_Wof_Spell_Register("Magic", "@Player_InvokeEffect");
 }
 
-public Invoke(pPlayer, Float:flTime) {
-    Hwn_Player_SetEffect(pPlayer, "magic", true, 0.0);
+@Player_InvokeEffect(this, Float:flTime) {
+    Hwn_Player_SetEffect(this, "magic", true, 0.0);
 }

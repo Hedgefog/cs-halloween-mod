@@ -1,10 +1,8 @@
 #pragma semicolon 1
 
 #include <amxmodx>
-#include <fakemeta>
 
 #include <hwn>
-#include <hwn_utils>
 #include <hwn_wof>
 
 #define PLUGIN "[Hwn] Fire WoF Spell"
@@ -13,13 +11,13 @@
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    Hwn_Wof_Spell_Register("Fire", "Invoke", "Revoke");
+    Hwn_Wof_Spell_Register("Fire", "@Player_InvokeEffect", "@Player_RevokeEffect");
 }
 
-public Invoke(pPlayer, Float:flTime) {
-    Hwn_Player_SetEffect(pPlayer, "fire", true);
+@Player_InvokeEffect(this, Float:flTime) {
+    Hwn_Player_SetEffect(this, "fire", true);
 }
 
-public Revoke(pPlayer, Float:flTime) {
-    Hwn_Player_SetEffect(pPlayer, "fire", false);
+@Player_RevokeEffect(this, Float:flTime) {
+    Hwn_Player_SetEffect(this, "fire", false);
 }

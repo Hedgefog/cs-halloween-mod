@@ -15,6 +15,8 @@
 #define PLUGIN "[Hwn] Lightning Spell"
 #define AUTHOR "Hedgehog Fog"
 
+#define SPELL_NAME "Lightning"
+
 #define SPELLBALL_ENTITY_CLASSNAME "hwn_item_spellball"
 
 #define m_iSpell "iSpell"
@@ -54,7 +56,7 @@ public plugin_precache() {
     precache_sound(g_szSndDetonate);
 
     g_iSpellHandler = Hwn_Spell_Register(
-        "Lightning", 
+        SPELL_NAME, 
         (
             Hwn_SpellFlag_Throwable |
             Hwn_SpellFlag_Damage |
@@ -85,17 +87,48 @@ public plugin_end() {
 
 /*--------------------------------[ Methods ]--------------------------------*/
 
-@SpellBall_Init(this) {
-    if (CE_GetMember(this, m_iSpell) != g_iSpellHandler) return;
+@Player_CastSpell(this) {
+    new pSpellBall = UTIL_HwnSpawnPlayerSpellball(this, g_iSpellHandler, EffectColor, floatround(SpellballSpeed), g_szSprSpellBall, _, _, 10.0);
+    if (!pSpellBall) return PLUGIN_HANDLED;
 
+    CE_SetMember(pSpellBall, CE_MEMBER_NEXTKILL, get_gametime() + SpellballLifeTime);
+
+    new Float:vecVelocity[3];
+    pev(pSpellBall, pev_velocity, vecVelocity);
+    set_pev(pSpellBall, pev_vuser1, vecVelocity);
+    set_pev(pSpellBall, pev_groupinfo, 128);
+
+    emit_sound(this, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+
+    dllfunc(DLLFunc_Think, pSpellBall);
+
+    return PLUGIN_CONTINUE;
+}
+
+@SpellBall_Init(this) {
+    if (@SpellBall_IsLightningBall(this)) @LightningBall_Init(this);
+}
+@SpellBall_Remove(this) {
+    if (@SpellBall_IsLightningBall(this)) @LightningBall_Remove(this);
+}
+@SpellBall_Killed(this) {
+    if (@SpellBall_IsLightningBall(this)) @LightningBall_Killed(this);
+}
+@SpellBall_Think(this) {
+    if (@SpellBall_IsLightningBall(this)) @LightningBall_Think(this);
+}
+
+@SpellBall_IsLightningBall(this) {
+    return CE_GetMember(this, m_iSpell) == g_iSpellHandler;
+}
+
+@LightningBall_Init(this) {
     CE_SetMember(this, m_irgpVictims, ArrayCreate());
 
     ArrayPushCell(g_irgLightningBalls, this);
 }
 
-@SpellBall_Remove(this) {
-    if (CE_GetMember(this, m_iSpell) != g_iSpellHandler) return;
-
+@LightningBall_Remove(this) {
     new Array:irgpVictims = CE_GetMember(this, m_irgpVictims);
     ArrayDestroy(irgpVictims);
 
@@ -105,33 +138,29 @@ public plugin_end() {
     }
 }
 
-@SpellBall_Killed(this) {
-    if (CE_GetMember(this, m_iSpell) != g_iSpellHandler) return;
-
-    @SpellBall_Detonate(this);
+@LightningBall_Killed(this) {
+    @LightningBall_Detonate(this);
 }
 
-@SpellBall_Think(this) {
-    if (CE_GetMember(this, m_iSpell) != g_iSpellHandler) return;
-
+@LightningBall_Think(this) {
     static Float:flGameTime; flGameTime = get_gametime();
 
     static Float:flSpellNextVictimsUpdate; flSpellNextVictimsUpdate = CE_GetMember(this, m_flSpellNextVictimsUpdate);
     if (flSpellNextVictimsUpdate <= flGameTime) {
-        @SpellBall_UpdateVictims(this);
+        @LightningBall_UpdateVictims(this);
         CE_SetMember(this, m_flSpellNextVictimsUpdate, flGameTime + 0.1);
     }
 
     static Float:flSpellNextDamage; flSpellNextDamage = CE_GetMember(this, m_flSpellNextDamage);
     if (flSpellNextDamage <= flGameTime) {
-        @SpellBall_RadiusDamage(this, false);
+        @LightningBall_RadiusDamage(this, false);
         emit_sound(this, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
         CE_SetMember(this, m_flSpellNextDamage, flGameTime + EffectDamageDelay);
     }
 
     static Float:flSpellNextEffect; flSpellNextEffect = CE_GetMember(this, m_flSpellNextEffect);
     if (flSpellNextEffect <= flGameTime) {
-        for (new i = 0; i < 4; ++i) @SpellBall_DrawLightingBeam(this);
+        for (new i = 0; i < 4; ++i) @LightningBall_DrawLightingBeam(this);
         CE_SetMember(this, m_flSpellNextEffect, flGameTime + EffectLightningDelay);
     }
 
@@ -141,28 +170,24 @@ public plugin_end() {
     set_pev(this, pev_velocity, vecVelocity);
 }
 
-@SpellBall_UpdateVictims(this) {
-    new Array:irgpVictims; irgpVictims = CE_GetMember(this, m_irgpVictims);
+@LightningBall_UpdateVictims(this) {
+    static Array:irgpVictims; irgpVictims = CE_GetMember(this, m_irgpVictims);
     static Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
 
     ArrayClear(irgpVictims);
 
     new pTarget = 0;
     while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EffectRadius)) > 0) {
-        if (@SpellBall_IsValidVictim(this, pTarget)) {
+        if (@LightningBall_IsValidVictim(this, pTarget)) {
             ArrayPushCell(irgpVictims, pTarget);
         }
     }
 }
 
-bool:@SpellBall_Magnetize(pEntity, pTarget) {
-    static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
-
-    static Float:vecTargetOrigin[3];
-    pev(pTarget, pev_origin, vecTargetOrigin);
-
-    new Float:flDistance = get_distance_f(vecOrigin, vecTargetOrigin);
+bool:@LightningBall_Magnetize(pEntity, pTarget) {
+    static Float:vecOrigin[3]; pev(pEntity, pev_origin, vecOrigin);
+    static Float:vecTargetOrigin[3]; pev(pTarget, pev_origin, vecTargetOrigin);
+    static Float:flDistance; flDistance = get_distance_f(vecOrigin, vecTargetOrigin);
 
     if (flDistance > EffectRadius) return false;
 
@@ -177,46 +202,41 @@ bool:@SpellBall_Magnetize(pEntity, pTarget) {
     return true;
 }
 
-@SpellBall_Detonate(pEntity) {
-    @SpellBall_RadiusDamage(pEntity, true);
-    @SpellBall_DetonateEffect(pEntity);
+@LightningBall_Detonate(pEntity) {
+    @LightningBall_RadiusDamage(pEntity, true);
+    @LightningBall_DetonateEffect(pEntity);
 }
 
-@SpellBall_RadiusDamage(this, bool:bPush) {
-    new Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
-
-    new pOwner = pev(this, pev_owner);
+@LightningBall_RadiusDamage(this, bool:bPush) {
+    static Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
+    static pOwner; pOwner = pev(this, pev_owner);
 
     new pTarget = 0;
     while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EffectRadius)) != 0) {
-        if (@SpellBall_IsValidVictim(this, pTarget)) {
+        if (@LightningBall_IsValidVictim(this, pTarget)) {
             if (bPush) {
                 if (IS_PLAYER(pTarget) || pev(pTarget, pev_flags) & FL_MONSTER) {
                     APS_PushFromOrigin(pTarget, SpellballMagnetism, vecOrigin);
                 }
             }
 
-            static Float:vecTargetOrigin[3];
-            pev(pTarget, pev_origin, vecTargetOrigin);
+            static Float:vecTargetOrigin[3]; pev(pTarget, pev_origin, vecTargetOrigin);
+            static Float:flDamage; flDamage = UTIL_CalculateRadiusDamage(vecOrigin, vecTargetOrigin, EffectRadius * EffectDamageRadiusMultiplier, EffectDamage, false, pTarget);
 
-            new Float:flDamage = UTIL_CalculateRadiusDamage(vecOrigin, vecTargetOrigin, EffectRadius * EffectDamageRadiusMultiplier, EffectDamage, false, pTarget);
             ExecuteHamB(Ham_TakeDamage, pTarget, this, pOwner, flDamage, DMG_SHOCK);
         }
     }
 }
 
-@SpellBall_DrawLightingBeam(this) {
-    static Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
+@LightningBall_DrawLightingBeam(this) {
+    static Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
 
     // Generate random offset
     static Float:vecTarget[3];
     for (new i = 0; i < 3; ++i) vecTarget[i] = random_float(-16.0, 16.0);
 
     xs_vec_normalize(vecTarget, vecTarget);
-    xs_vec_mul_scalar(vecTarget, EffectRadius, vecTarget);
-    xs_vec_add(vecOrigin, vecTarget, vecTarget);
+    xs_vec_add_scaled(vecOrigin, vecTarget, EffectRadius, vecTarget);
 
     engfunc(EngFunc_MessageBegin, MSG_PVS, SVC_TEMPENTITY, vecOrigin, 0);
     write_byte(TE_BEAMPOINTS);
@@ -240,13 +260,13 @@ bool:@SpellBall_Magnetize(pEntity, pTarget) {
     message_end();
 }
 
-@SpellBall_DetonateEffect(this) {
+@LightningBall_DetonateEffect(this) {
     new Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
     UTIL_Message_BeamCylinder(vecOrigin, EffectRadius * 3, g_iEffectModelIndex, 0, 3, 32, 255, EffectColor, 100, 0);
     emit_sound(this, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
-@SpellBall_IsValidVictim(this, pVictim) {
+@LightningBall_IsValidVictim(this, pVictim) {
     if (!pev_valid(pVictim)) return false;
     if (this == pVictim) return false;
 
@@ -261,24 +281,6 @@ bool:@SpellBall_Magnetize(pEntity, pTarget) {
     if (UTIL_GetWeight(pVictim) > 1.0) return false;
 
     return true;
-}
-
-@Player_CastSpell(this) {
-    new pSpellBall = UTIL_HwnSpawnPlayerSpellball(this, g_iSpellHandler, EffectColor, floatround(SpellballSpeed), g_szSprSpellBall, _, _, 10.0);
-    if (!pSpellBall) return PLUGIN_HANDLED;
-
-    CE_SetMember(pSpellBall, CE_MEMBER_NEXTKILL, get_gametime() + SpellballLifeTime);
-
-    new Float:vecVelocity[3];
-    pev(pSpellBall, pev_velocity, vecVelocity);
-    set_pev(pSpellBall, pev_vuser1, vecVelocity);
-    set_pev(pSpellBall, pev_groupinfo, 128);
-
-    emit_sound(this, CHAN_STATIC , g_szSndCast, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
-
-    dllfunc(DLLFunc_Think, pSpellBall);
-
-    return PLUGIN_CONTINUE;
 }
 
 @Base_FindLightningMaster(pEntity, &iIndex) {
@@ -318,7 +320,7 @@ bool:@SpellBall_Magnetize(pEntity, pTarget) {
 
     if (!pLightningBall) return;
 
-    @SpellBall_Magnetize(pLightningBall, this);
+    @LightningBall_Magnetize(pLightningBall, this);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/

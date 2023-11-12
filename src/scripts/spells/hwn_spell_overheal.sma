@@ -7,9 +7,11 @@
 #define PLUGIN "[Hwn] Overheal Spell"
 #define AUTHOR "Hedgehog Fog"
 
+#define SPELL_NAME "Overheal"
+
 public plugin_precache() {
     Hwn_Spell_Register(
-        "Overheal",
+        SPELL_NAME,
         Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Heal | Hwn_SpellFlag_Radius,
         "@Player_CastSpell"
     );

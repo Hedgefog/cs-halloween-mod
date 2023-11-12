@@ -14,6 +14,8 @@
 #define PLUGIN "[Hwn] Mystery Smoke Spell"
 #define AUTHOR "Hedgehog Fog"
 
+#define SPELL_NAME "Mystery Smoke"
+
 const SpellballSpeed = 720;
 
 const Float:SmokeLifeTime = 30.0;
@@ -32,7 +34,7 @@ public plugin_precache() {
     precache_model(g_szSprSpellBall);
     precache_sound(g_szSndCast);
 
-    g_iSpell = Hwn_Spell_Register("Mystery Smoke", Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Radius | Hwn_SpellFlag_Protection, "@Player_CastSpell");
+    g_iSpell = Hwn_Spell_Register(SPELL_NAME, Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Radius | Hwn_SpellFlag_Protection, "@Player_CastSpell");
 }
 
 public plugin_init() {
@@ -44,6 +46,8 @@ public plugin_init() {
     CE_RegisterHook(CEFunction_Touch, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Touch");
     CE_RegisterHook(CEFunction_Think, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Think");
 }
+
+/*--------------------------------[ Methods ]--------------------------------*/
 
 @Player_CastSpell(pPlayer) {
     new pEntity = UTIL_HwnSpawnPlayerSpellball(pPlayer, g_iSpell, EffectColor, SpellballSpeed, g_szSprSpellBall, _, 0.75, 10.0);
@@ -58,23 +62,34 @@ public plugin_init() {
 }
 
 @SpellBall_Kill(this) {
-    if (CE_GetMember(this, "iSpell") != g_iSpell) return;
+    if (@SpellBall_IsMysterySmokeBall(this)) @MysterySmokeBall_Kill(this);
+}
 
+@SpellBall_Touch(this, pTarget) {
+    if (@SpellBall_IsMysterySmokeBall(this)) @MysterySmokeBall_Touch(this, pTarget);
+}
+
+@SpellBall_Think(this) {
+    if (@SpellBall_IsMysterySmokeBall(this)) @MysterySmokeBall_Think(this);
+}
+
+@SpellBall_IsMysterySmokeBall(this) {
+    return CE_GetMember(this, "iSpell") == g_iSpell;
+}
+
+@MysterySmokeBall_Kill(this) {
     @Entity_Detonate(this);
 }
 
-@SpellBall_Touch(this, pToucher) {
-    if (CE_GetMember(this, "iSpell") != g_iSpell) return;
-    if (pToucher == pev(this, pev_owner)) return;
+@MysterySmokeBall_Touch(this, pTarget) {
+    if (pTarget == pev(this, pev_owner)) return;
     if (pev(this, pev_deadflag) == DEAD_DEAD) return;
-    if (pev(pToucher, pev_solid) < SOLID_BBOX) return;
+    if (pev(pTarget, pev_solid) < SOLID_BBOX) return;
 
     CE_Kill(this);
 }
 
-@SpellBall_Think(this) {
-    if (CE_GetMember(this, "iSpell") != g_iSpell) return;
-
+@MysterySmokeBall_Think(this) {
     if (pev(this, pev_deadflag) == DEAD_DEAD) return;
 
     static Float:vecVelocity[3];
@@ -157,11 +172,13 @@ public plugin_init() {
         xs_vec_copy(SmokeSize, vecSize);
     }
 
-    new pSmoke = CreateSmoke(vecOrigin, vecSize, flLifeTime, pev(this, pev_team), pev(this, pev_owner));
+    new pSmoke = CreateMysterySmoke(vecOrigin, vecSize, flLifeTime, pev(this, pev_team), pev(this, pev_owner));
     CE_SetMember(pSmoke, "iStackSize", iStackSize);
 }
 
-CreateSmoke(const Float:vecOrigin[3], const Float:vecSize[3], Float:flLifeTime, iTeam, pOwner) {
+/*--------------------------------[ Functions ]--------------------------------*/
+
+CreateMysterySmoke(const Float:vecOrigin[3], const Float:vecSize[3], Float:flLifeTime, iTeam, pOwner) {
     new pEntity = CE_Create("hwn_mystery_smoke", vecOrigin);
     if (!pEntity) return 0;
 

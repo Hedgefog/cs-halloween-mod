@@ -11,13 +11,13 @@
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    Hwn_Wof_Spell_Register("Moon Jump", "Invoke", "Revoke");
+    Hwn_Wof_Spell_Register("Moon Jump", "@Player_InvokeEffect", "@Player_RevokeEffect");
 }
 
-public Invoke(pPlayer) {
-    Hwn_Player_SetEffect(pPlayer, "moonjump", true);
+@Player_InvokeEffect(this) {
+    Hwn_Player_SetEffect(this, "moonjump", true);
 }
 
-public Revoke(pPlayer) {
-    Hwn_Player_SetEffect(pPlayer, "moonjump", false);
+@Player_RevokeEffect(this) {
+    Hwn_Player_SetEffect(this, "moonjump", false);
 }

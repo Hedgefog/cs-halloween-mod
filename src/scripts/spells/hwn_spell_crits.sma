@@ -7,9 +7,11 @@
 #define PLUGIN "[Hwn] Crits Spell"
 #define AUTHOR "Hedgehog Fog"
 
+#define SPELL_NAME "Crits"
+
 public plugin_precache() {
     Hwn_Spell_Register(
-        "Crits",
+        SPELL_NAME,
         Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability | Hwn_SpellFlag_Damage | Hwn_SpellFlag_Rare,
         "@Player_CastSpell"
     );

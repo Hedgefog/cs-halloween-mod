@@ -26,10 +26,9 @@ public plugin_init() {
 }
 
 @Player_EffectInvoke(this) {
-    set_pev(this, pev_gravity, MOON_GRAVIY);
+    new Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
 
-    new Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
+    set_pev(this, pev_gravity, MOON_GRAVIY);
 
     UTIL_Message_Dlight(vecOrigin, EffectRadius, EffectColor, 5, 80);
     emit_sound(this, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);

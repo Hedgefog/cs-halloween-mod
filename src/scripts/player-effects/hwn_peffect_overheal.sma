@@ -46,20 +46,18 @@ public plugin_init() {
         UTIL_Message_BeamEnts(this, pTarget, g_iEffectModelIndex, .iLifeTime = 10, .iColor = EffectColor, .iWidth = 8, .iNoise = 120);
     }
 
-    DetonateEffect(this);
+    @Player_HealEffect(this);
 
     return PLUGIN_HANDLED;
 }
 
 @Player_EffectRevoke(this) {}
 
-DetonateEffect(pEntity) {
+@Player_HealEffect(pEntity) {
+    new Float:vecMins[3]; pev(pEntity, pev_mins, vecMins);
+
     new Float:vecOrigin[3];
     pev(pEntity, pev_origin, vecOrigin);
-
-    new Float:vecMins[3];
-    pev(pEntity, pev_mins, vecMins);
-
     vecOrigin[2] += vecMins[2] + 1.0;
 
     UTIL_Message_BeamDisk(vecOrigin, EffectRadius * 2, g_iEffectModelIndex, 0, 5, 0, 0, EffectColor, 100, 0);

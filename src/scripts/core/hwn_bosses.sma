@@ -62,6 +62,9 @@ public plugin_init() {
 
     RegisterHookChain(RG_CSGameRules_FPlayerCanTakeDamage, "HC_Player_CanTakeDamage");
 
+    register_concmd("hwn_boss_spawn", "Command_SpawnBoss", ADMIN_CVAR);
+    register_concmd("hwn_boss_abort", "Command_AbortBoss", ADMIN_CVAR);
+
     g_pCvarBossSpawnDelay = register_cvar("hwn_boss_spawn_delay", "300.0");
     g_pCvarBossSpawnKillRadius = register_cvar("hwn_boss_spawn_kill_radius", "64.0");
     g_pCvarBossLifeTime = register_cvar("hwn_boss_life_time", "120.0");
@@ -74,9 +77,6 @@ public plugin_init() {
     g_fwBossRemove = CreateMultiForward("Hwn_Bosses_Fw_BossRemove", ET_IGNORE, FP_CELL);
     g_fwBossTeleport = CreateMultiForward("Hwn_Bosses_Fw_BossTeleport", ET_IGNORE, FP_CELL, FP_CELL);
     g_fwWinner = CreateMultiForward("Hwn_Bosses_Fw_Winner", ET_IGNORE, FP_CELL, FP_CELL);
-
-    register_concmd("hwn_boss_spawn", "Command_SpawnBoss", ADMIN_CVAR);
-    register_concmd("hwn_boss_abort", "Command_AbortBoss", ADMIN_CVAR);
 
     CreateBossSpawnTask();
 }
@@ -142,16 +142,16 @@ public Native_Spawn(iPluginId, iArgc) {
 }
 
 public Native_GetName(iPluginId, iArgc) {
-    new iBossIdx = get_param(1);
-    new iLen = get_param(3);
-    new szName[32]; ArrayGetString(g_irgszBossesNames, iBossIdx, szName, charsmax(szName));
+    static iBossIdx; iBossIdx = get_param(1);
+    static iLen; iLen = get_param(3);
+    static szName[32]; ArrayGetString(g_irgszBossesNames, iBossIdx, szName, charsmax(szName));
 
     set_string(2, szName, iLen);
 }
 
 public Native_GetDictionaryKey(iPluginId, iArgc) {
-    new iBossIdx = get_param(1);
-    new iLen = get_param(3);
+    static iBossIdx; iBossIdx = get_param(1);
+    static iLen; iLen = get_param(3);
     static szDictKey[48]; ArrayGetString(g_irgszBossesDictKeys, iBossIdx, szDictKey, charsmax(szDictKey));
 
     set_string(2, szDictKey, iLen);
@@ -160,20 +160,20 @@ public Native_GetDictionaryKey(iPluginId, iArgc) {
 public Native_AddTarget(iPluginId, iArgc) {
     new Float:vecOrigin[3]; get_array_f(1, vecOrigin, sizeof(vecOrigin));
 
-    if (!g_irgBossSpawnPoints) {
-        g_irgBossSpawnPoints = ArrayCreate(3);
-    }
-    
+    if (!g_irgBossSpawnPoints) g_irgBossSpawnPoints = ArrayCreate(3);
+
     return ArrayPushArray(g_irgBossSpawnPoints, vecOrigin);
 }
 
 public Native_GetTarget(iPluginId, iArgc) {
-    return g_irgBossSpawnPoints == Invalid_Array ? 0 : ArraySize(g_irgBossSpawnPoints);
+    if (g_irgBossSpawnPoints == Invalid_Array) return 0;
+
+    return ArraySize(g_irgBossSpawnPoints);
 }
 
 public Native_GetTargetCount(iPluginId, iArgc) {
-    new iTarget = get_param(1);
-    new Float:vecOrigin[3]; ArrayGetArray(g_irgBossSpawnPoints, iTarget, vecOrigin);
+    static iTarget; iTarget = get_param(1);
+    static Float:vecOrigin[3]; ArrayGetArray(g_irgBossSpawnPoints, iTarget, vecOrigin);
 
     set_array_f(2, vecOrigin, sizeof(vecOrigin));
 }
@@ -318,11 +318,6 @@ RadiusKill(const Float:vecOrigin[3]) {
     }
 }
 
-CreateBossSpawnTask() {
-    remove_task(TASKID_SPAWN_BOSS);
-    set_task(get_pcvar_float(g_pCvarBossSpawnDelay), "Task_SpawnBoss", TASKID_SPAWN_BOSS);
-}
-
 ResetPlayersTotalDamage() {
     for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
         g_rgiPlayerTotalDamage[pPlayer] = 0;
@@ -330,15 +325,22 @@ ResetPlayersTotalDamage() {
 }
 
 SelectWinners() {
+    new iMinDamageToWin = get_pcvar_num(g_pCvarBossMinDamageToWin);
+
     for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
         if (!is_user_connected(pPlayer)) continue;
 
         new iTotalDamage = g_rgiPlayerTotalDamage[pPlayer];
-        if (iTotalDamage >= get_pcvar_num(g_pCvarBossMinDamageToWin)) {
+        if (iTotalDamage >= iMinDamageToWin) {
             client_cmd(pPlayer, "spk %s", g_szSndCongratulations);
             ExecuteForward(g_fwWinner, g_fwResult, pPlayer, iTotalDamage);
         }
     }
+}
+
+CreateBossSpawnTask() {
+    remove_task(TASKID_SPAWN_BOSS);
+    set_task(get_pcvar_float(g_pCvarBossSpawnDelay), "Task_SpawnBoss", TASKID_SPAWN_BOSS);
 }
 
 /*--------------------------------[ Tasks ]--------------------------------*/

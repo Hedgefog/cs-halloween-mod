@@ -7,9 +7,11 @@
 #define PLUGIN "[Hwn] Moon Jump Spell"
 #define AUTHOR "Hedgehog Fog"
 
+#define SPELL_NAME "Moon Jump"
+
 public plugin_precache() {
     Hwn_Spell_Register(
-        "Moon Jump",
+        SPELL_NAME,
         Hwn_SpellFlag_Applicable | Hwn_SpellFlag_Ability,
         "@Player_CastSpell"
     );

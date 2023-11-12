@@ -17,6 +17,8 @@
 
 #define SPELL_NAME "Fireball"
 
+#define m_iSpell "iSpell"
+
 const Float:FireballDamage = 60.0;
 const FireballSpeed = 720;
 
@@ -52,6 +54,8 @@ public plugin_init() {
     CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Killed");
 }
 
+/*--------------------------------[ Methods ]--------------------------------*/
+
 @Player_CastSpell(pPlayer) {
     new pSpellBall = UTIL_HwnSpawnPlayerSpellball(pPlayer, g_iSpellHandler, EffectColor, FireballSpeed, g_szSprFireball, _, 0.5, 10.0);
     @SpellBall_InitFireBall(pSpellBall);
@@ -59,24 +63,20 @@ public plugin_init() {
 }
 
 @SpellBall_Touch(this, pTarget) {
-    if (@SpellBall_IsFireBall(this)) {
-        @FireBall_Touch(this, pTarget);
-    }
+    if (@SpellBall_IsFireBall(this)) @FireBall_Touch(this, pTarget);
 }
 
 @SpellBall_Killed(this) {
-    if (@SpellBall_IsFireBall(this)) {
-        @FireBall_Detonate(this);
-    }
+    if (@SpellBall_IsFireBall(this)) @FireBall_Detonate(this);
 }
 
 @SpellBall_InitFireBall(this) {
-    CE_SetMember(this, "iSpell", Hwn_Spell_GetHandler(SPELL_NAME));
+    CE_SetMember(this, m_iSpell, Hwn_Spell_GetHandler(SPELL_NAME));
     set_pev(this, pev_movetype, MOVETYPE_FLYMISSILE);
 }
 
 bool:@SpellBall_IsFireBall(this) {
-    return CE_GetMember(this, "iSpell") == Hwn_Spell_GetHandler(SPELL_NAME);
+    return CE_GetMember(this, m_iSpell) == Hwn_Spell_GetHandler(SPELL_NAME);
 }
 
 @FireBall_Touch(this, pTarget) {
@@ -89,8 +89,7 @@ bool:@SpellBall_IsFireBall(this) {
 @FireBall_Detonate(this) {
     new pOwner = pev(this, pev_owner);
 
-    new Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
+    new Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
 
     new Array:irgTargets = ArrayCreate();
 
@@ -107,14 +106,11 @@ bool:@SpellBall_IsFireBall(this) {
     for (new i = 0; i < iTargetsNum; ++i) {
         new pTarget = ArrayGetCell(irgTargets, i);
 
-        static Float:vecTargetOrigin[3];
-        pev(pTarget, pev_origin, vecTargetOrigin);
-
-        new Float:flDamage = UTIL_CalculateRadiusDamage(vecOrigin, vecTargetOrigin, EffectRadius, FireballDamage);
+        static Float:vecTargetOrigin[3]; pev(pTarget, pev_origin, vecTargetOrigin);
+        static Float:flDuration; flDuration = pOwner == pTarget ? 1.0 : 15.0;
+        static Float:flDamage; flDamage = UTIL_CalculateRadiusDamage(vecOrigin, vecTargetOrigin, EffectRadius, FireballDamage);
 
         ExecuteHamB(Ham_TakeDamage, pTarget, this, pOwner, flDamage, DMG_BURN);
-
-        static Float:flDuration; flDuration = pOwner == pTarget ? 1.0 : 15.0;
 
         new pFire = CE_Create("fire", vecTargetOrigin);
         if (pFire) {
@@ -143,8 +139,7 @@ bool:@SpellBall_IsFireBall(this) {
 }
 
 @FireBall_DetonateEffect(this) {
-    new Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
+    new Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
 
     UTIL_Message_BeamCylinder(vecOrigin, EffectRadius * 3, g_iEffectModelIndex, 0, 3, 32, 255, EffectColor, 100, 0);
     emit_sound(this, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);

@@ -344,25 +344,11 @@ stock UTIL_FixedUnsigned16(const Float:flValue, const iScale) {
     return clamp(floatround(flValue * iScale), 0, 0xFFFF);
 }
 
-stock UTIL_SetPlayerTeamChange(pPlayer, bool: bValue) {
-    new iCurrentValue = get_pdata_int(pPlayer, 125, 5);
+stock UTIL_FindEntityNearby(iStartIndex = 0, const Float:vecOrigin[3], const Float:flRadius) {
+    new pTarget = engfunc(EngFunc_FindEntityInSphere, iStartIndex, vecOrigin, flRadius);
 
-    if (bValue) {
-        set_pdata_int(pPlayer, 125, iCurrentValue &  ~(1<<8), 5);
-    } else {
-        set_pdata_int(pPlayer, 125, iCurrentValue | (1<<8), 5);
-    }
-}
-
-stock UTIL_FindEntityNearby(startEnt = 0, const Float:vecOrigin[3], const Float:flRadius) {
-    new pTarget = engfunc(EngFunc_FindEntityInSphere, startEnt, vecOrigin, flRadius);
-    if (pTarget <= startEnt) {
-        return 0; // infinite loop fix
-    }
-
-    if (!pev_valid(pTarget)) {
-        return 0;
-    }
+    if (pTarget <= iStartIndex) return 0; // infinite loop fix
+    if (!pev_valid(pTarget)) return 0;
 
     return pTarget;
 }

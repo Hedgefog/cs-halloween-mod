@@ -2,7 +2,6 @@
 
 #include <amxmodx>
 #include <fakemeta>
-#include <fakemeta_util>
 #include <hamsandwich>
 #include <xs>
 
@@ -15,6 +14,8 @@
 
 #define PLUGIN "[Hwn] Blink Spell"
 #define AUTHOR "Hedgehog Fog"
+
+#define SPELL_NAME "Blink"
 
 const Float:SpellballDamage = 500.0;
 const SpellballSpeed = 600;
@@ -34,7 +35,7 @@ public plugin_precache() {
     precache_sound(g_szSndCast);
     precache_sound(g_szSndDetonate);
 
-    g_iSpellHandler = Hwn_Spell_Register("Blink", Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage, "@Player_CastSpell");
+    g_iSpellHandler = Hwn_Spell_Register(SPELL_NAME, Hwn_SpellFlag_Throwable | Hwn_SpellFlag_Damage, "@Player_CastSpell");
 }
 
 public plugin_init() {
@@ -47,16 +48,18 @@ public plugin_init() {
     CE_RegisterHook(CEFunction_Think, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Think");
 }
 
-/*--------------------------------[ Methods ]--------------------------------*/
+/*--------------------------------[ Hooks ]--------------------------------*/
 
 public HamHook_Player_Spawn_Post(pPlayer) {
-    if (!is_user_alive(pPlayer)) return;
+    if (!is_user_alive(pPlayer)) return HAM_IGNORED;
 
     new pTarget = -1;
-    while ((pTarget = engfunc(EngFunc_FindEntityByString, pTarget, "classname", SPELLBALL_ENTITY_CLASSNAME)) != 0) {
-        if (CE_GetMember(pTarget, "iSpell") != g_iSpellHandler) continue;
+    while ((pTarget = FindSpellBall(pTarget)) != 0) {
+        if (!@SpellBall_IsBlinkBall(pTarget)) continue;
         set_pev(pTarget, pev_owner, 0);
     }
+
+    return HAM_HANDLED;
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -73,9 +76,35 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 }
 
 @SpellBall_Kill(this) {
-    if (CE_GetMember(this, "iSpell") != g_iSpellHandler) return;
+    if (@SpellBall_IsBlinkBall(this)) @BlinkBall_Kill(this);
+}
 
+@SpellBall_Touch(this, pTarget) {
+    if (@SpellBall_IsBlinkBall(this)) @BlinkBall_Touch(this, pTarget);
+}
+
+@SpellBall_Think(this) {
+    if (@SpellBall_IsBlinkBall(this)) @BlinkBall_Think(this);
+}
+
+bool:@SpellBall_IsBlinkBall(this) {
+    return CE_GetMember(this, "iSpell") == g_iSpellHandler;
+}
+
+@BlinkBall_Touch(this, pTarget) {
+    if (pTarget == pev(this, pev_owner)) return;
+
+    CE_Kill(this);
+}
+
+@BlinkBall_Think(this) {
+    static Float:vecVelocity[3]; pev(this, pev_velocity, vecVelocity);
+    if (!xs_vec_len(vecVelocity)) CE_Kill(this);
+}
+
+@BlinkBall_Kill(this) {
     new pOwner = pev(this, pev_owner);
+
     if (!pOwner) return;
     if (!is_user_alive(pOwner)) return;
 
@@ -92,7 +121,7 @@ public HamHook_Player_Spawn_Post(pPlayer) {
     }
 
     UTIL_ScreenFade(pOwner, {0, 0, 255}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
-    @SpellBall_BlinkEffect(pOwner);
+    @BlinkBall_DetonateEffect(pOwner);
 
     new pTarget = 0;
     while ((pTarget = UTIL_FindEntityNearby(pTarget, vecOrigin, EffectRadius)) > 0) {
@@ -107,24 +136,16 @@ public HamHook_Player_Spawn_Post(pPlayer) {
     }
 }
 
-@SpellBall_Touch(this, pToucher) {
-    if (CE_GetMember(this, "iSpell") != g_iSpellHandler) return;
-    if (pToucher == pev(this, pev_owner)) return;
-
-    CE_Kill(this);
-}
-
-@SpellBall_Think(this) {
-    if (CE_GetMember(this, "iSpell") != g_iSpellHandler) return;
-
-    static Float:vecVelocity[3]; pev(this, pev_velocity, vecVelocity);
-    if (!xs_vec_len(vecVelocity)) CE_Kill(this);
-}
-
-@SpellBall_BlinkEffect(this) {
+@BlinkBall_DetonateEffect(this) {
     new Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
 
-    emit_sound(this, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
     UTIL_Message_Dlight(vecOrigin, 32, EffectColor, 5, 64);
     UTIL_Message_ParticleBurst(vecOrigin, 32, 210, 1);
+    emit_sound(this, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+}
+
+/*--------------------------------[ Functions ]--------------------------------*/
+
+FindSpellBall(iStartIndex) {
+    return engfunc(EngFunc_FindEntityByString, iStartIndex, "classname", SPELLBALL_ENTITY_CLASSNAME);
 }

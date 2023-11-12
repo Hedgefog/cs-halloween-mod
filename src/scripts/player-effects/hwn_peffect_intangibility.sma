@@ -29,6 +29,8 @@ public plugin_init() {
     RegisterHamPlayer(Ham_TakeDamage, "HamHook_Player_TakeDamage", .Post = 0);
 }
 
+/*--------------------------------[ Methods ]--------------------------------*/
+
 @Player_EffectInvoke(pPlayer) {
     set_pev(pPlayer, pev_renderfx, kRenderFxHologram);
     UTIL_ScreenFade(pPlayer, {50, 50, 50}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
@@ -38,6 +40,8 @@ public plugin_init() {
 @Player_EffectRevoke(pPlayer) {
     set_pev(pPlayer, pev_renderfx, kRenderFxNone);
 }
+
+/*--------------------------------[ Hooks ]--------------------------------*/
 
 public HamHook_Player_TraceAttack(pPlayer, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
     if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return HAM_IGNORED;

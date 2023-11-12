@@ -11,13 +11,13 @@
 public plugin_init() {
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
 
-    Hwn_Wof_Spell_Register("Intangibility", "Invoke", "Revoke");
+    Hwn_Wof_Spell_Register("Intangibility", "@Player_InvokeEffect", "@Player_RevokeEffect");
 }
 
-public Invoke(pPlayer) {
-    Hwn_Player_SetEffect(pPlayer, "intangibility", true);
+@Player_InvokeEffect(this) {
+    Hwn_Player_SetEffect(this, "intangibility", true);
 }
 
-public Revoke(pPlayer) {
-    Hwn_Player_SetEffect(pPlayer, "intangibility", false);
+@Player_RevokeEffect(this) {
+    Hwn_Player_SetEffect(this, "intangibility", false);
 }

@@ -73,7 +73,7 @@ public HamHook_Player_Killed_Post(pPlayer) {
     AddPoint(vecOrigin);
 }
 
-/*--------------------------------[ Methods ]--------------------------------*/
+/*--------------------------------[ Functions ]--------------------------------*/
 
 AddPoint(const Float:vecOrigin[3]) {
     new bool:bIsFull = xs_vec_len(g_rgvecEventPoints[MAX_EVENT_POINTS - 1]) > 0.0;
