@@ -76,6 +76,8 @@ public Hwn_Fw_ConfigLoaded() {
     set_cvar_num("hwn_collector_npc_drop_chance_spell", 0);
     set_cvar_num("hwn_crits_random_chance_max", 0);
     set_cvar_num("hwn_objective_marks", 0);
+    set_cvar_num("hwn_objective_marks", 0);
+    set_cvar_num("hwn_pumpkin_mutate_chance", 100);
     set_cvar_num("mp_freezetime", 0);
 }
 
