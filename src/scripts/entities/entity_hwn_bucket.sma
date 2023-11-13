@@ -175,18 +175,20 @@ public plugin_init() {
 }
 
 @Entity_Kill(this) {
+    new iMaxHealth = get_pcvar_num(g_pCvarBucketHealth);
+
     new iExtractsNum = 1;
 
     static Float:flHealth; pev(this, pev_health, flHealth);
     if (flHealth < 0) {
-        iExtractsNum += -(floatround(flHealth) / get_pcvar_num(g_pCvarBucketHealth));
+        iExtractsNum += floatround(-flHealth) / iMaxHealth;
     }
 
-    set_pev(this, pev_health, float(get_pcvar_num(g_pCvarBucketHealth)));
+    set_pev(this, pev_health, float(iMaxHealth));
 
     @Entity_ExtractPoints(this, iExtractsNum);
 
-    return HAM_HANDLED;
+    return PLUGIN_HANDLED;
 }
 
 @Entity_InitPhysics(this) {
