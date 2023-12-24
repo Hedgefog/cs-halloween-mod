@@ -1,7 +1,7 @@
 ![Alt Text](./images/demo.gif)
 ## 🎃 Halloween Mod 🇺🇦
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/hedgefog/cs-halloween-mod)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/hedgefog/cs-halloween-mod/CI)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/hedgefog/cs-halloween-mod/build.yml?branch=release)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/hedgefog/cs-halloween-mod)
 ![GitHub all releases](https://img.shields.io/github/downloads/hedgefog/cs-halloween-mod/total)
 
