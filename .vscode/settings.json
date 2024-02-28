@@ -8,6 +8,7 @@
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/custom-entities/include",
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/navsystem/include",
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/player-camera/include",
+    "${workspaceRoot}/.thirdparty/cs-modding-kit/api/player-effects/include",
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/player-cosmetics/include",
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/player-inventory/include",
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/rounds/include",
