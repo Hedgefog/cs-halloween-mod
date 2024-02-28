@@ -2,6 +2,8 @@
 
 #include <amxmodx>
 
+#include <api_player_effects>
+
 #include <hwn>
 
 #define PLUGIN "[Hwn] Crits Spell"
@@ -22,5 +24,5 @@ public plugin_init() {
 }
 
 @Player_CastSpell(pPlayer) {
-    Hwn_Player_SetEffect(pPlayer, "crits", true, 10.0);
+    PlayerEffect_Set(pPlayer, "hwn-crits", true, 10.0);
 }

@@ -23,14 +23,14 @@ public plugin_init() {
 
 public plugin_precache() {
     CE_Register(ENTITY_NAME, CEPreset_Prop);
-    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
-    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
-    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Init, "@Entity_Init");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
 
     CE_Register(ENTITY_NAME_BIG, CEPreset_Prop);
-    CE_RegisterHook(CEFunction_Init, ENTITY_NAME_BIG, "@Entity_Init");
-    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME_BIG, "@Entity_Spawned");
-    CE_RegisterHook(CEFunction_Think, ENTITY_NAME_BIG, "@Entity_Think");
+    CE_RegisterHook(ENTITY_NAME_BIG, CEFunction_Init, "@Entity_Init");
+    CE_RegisterHook(ENTITY_NAME_BIG, CEFunction_Spawned, "@Entity_Spawned");
+    CE_RegisterHook(ENTITY_NAME_BIG, CEFunction_Think, "@Entity_Think");
 }
 
 @Entity_Init(this) {

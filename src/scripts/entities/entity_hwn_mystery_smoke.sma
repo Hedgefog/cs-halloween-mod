@@ -34,11 +34,11 @@ public plugin_init() {
 
 public plugin_precache() {
     CE_Register(ENTITY_NAME);
-    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
-    CE_RegisterHook(CEFunction_InitSize, ENTITY_NAME, "@Entity_InitSize");
-    CE_RegisterHook(CEFunction_KVD, ENTITY_NAME, "@Entity_KeyValue");
-    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
-    CE_RegisterHook(CEFunction_Touch, ENTITY_NAME, "@Entity_Touch");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_InitSize, "@Entity_InitSize");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_KeyValue, "@Entity_KeyValue");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Touch, "@Entity_Touch");
 
     g_iNullModelIndex = precache_model("sprites/white.spr");
     g_iTeamSmokeModelIndex[0] = precache_model("sprites/hwn/magic_smoke.spr");

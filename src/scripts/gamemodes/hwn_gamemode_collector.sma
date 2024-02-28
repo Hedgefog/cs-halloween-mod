@@ -49,10 +49,10 @@ new g_iGamemode;
 public plugin_precache() {
     precache_sound(g_szSndPointCollected);
 
-    CE_RegisterHook(CEFunction_Init, BUCKET_ENTITY_CLASSNAME, "@Bucket_Init");
-    CE_RegisterHook(CEFunction_Remove, BUCKET_ENTITY_CLASSNAME, "@Bucket_Remove");
-    CE_RegisterHook(CEFunction_Picked, LOOT_ENTITY_CLASSNAME, "@Loot_Pickup");
-    CE_RegisterHook(CEFunction_Picked, BACKPACK_ENTITY_CLASSNAME, "@Backpack_Pickup");
+    CE_RegisterHook(BUCKET_ENTITY_CLASSNAME, CEFunction_Init, "@Bucket_Init");
+    CE_RegisterHook(BUCKET_ENTITY_CLASSNAME, CEFunction_Remove, "@Bucket_Remove");
+    CE_RegisterHook(LOOT_ENTITY_CLASSNAME, CEFunction_Picked, "@Loot_Pickup");
+    CE_RegisterHook(BACKPACK_ENTITY_CLASSNAME, CEFunction_Picked, "@Backpack_Pickup");
 
     g_iGamemode = Hwn_Gamemode_Register(
         "Collector",

@@ -2,6 +2,8 @@
 
 #include <amxmodx>
 
+#include <api_player_effects>
+
 #include <hwn>
 #include <hwn_wof>
 
@@ -23,5 +25,5 @@ public Hwn_Wof_Fw_Effect_Start(iSpell) {
 }
 
 @Player_InvokeEffect(this) {
-    Hwn_Player_SetEffect(this, "overheal", true, 0.0);
+    PlayerEffect_Set(this, "hwn-overheal", true, 0.0);
 }

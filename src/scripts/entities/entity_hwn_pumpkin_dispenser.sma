@@ -20,9 +20,9 @@
 
 public plugin_precache() {
     CE_Register(ENTITY_NAME);
-    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
-    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
-    CE_RegisterHook(CEFunction_KVD, ENTITY_NAME, "@Entity_KeyValue");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_KeyValue, "@Entity_KeyValue");
 }
 
 public plugin_init() {

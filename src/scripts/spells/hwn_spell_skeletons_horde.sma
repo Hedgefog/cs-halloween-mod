@@ -53,7 +53,7 @@ public plugin_init() {
 
     g_iCeSpellball = CE_GetHandler(SPELLBALL_ENTITY_CLASSNAME);
 
-    CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Killed");
+    CE_RegisterHook(SPELLBALL_ENTITY_CLASSNAME, CEFunction_Killed, "@SpellBall_Killed");
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/

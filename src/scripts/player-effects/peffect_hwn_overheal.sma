@@ -2,6 +2,7 @@
 #include <fakemeta>
 #include <reapi>
 
+#include <api_player_effects>
 #include <screenfade_util>
 
 #include <hwn>
@@ -11,7 +12,7 @@
 #define VERSION HWN_VERSION
 #define AUTHOR "Hedgehog Fog"
 
-#define EFFECT_ID "overheal"
+#define EFFECT_ID "hwn-overheal"
 
 const Float:EffectRadius = 128.0;
 new const EffectColor[3] = {255, 0, 0};
@@ -28,7 +29,7 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
-    Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "cross", EffectColor);
+    PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "cross", EffectColor);
 }
 
 @Player_EffectInvoke(this) {

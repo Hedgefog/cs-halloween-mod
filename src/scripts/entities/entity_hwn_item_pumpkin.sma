@@ -5,6 +5,7 @@
 #include <fun>
 
 #include <api_custom_entities>
+#include <api_player_effects>
 
 #include <hwn>
 #include <hwn_utils>
@@ -47,14 +48,14 @@ public plugin_precache() {
     precache_sound(g_szSndItemPickup);
 
     CE_Register(ENTITY_NAME, CEPreset_Item);
-    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
-    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
-    CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "@Entity_Pickup");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Init, "@Entity_Init");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Pickup, "@Entity_Pickup");
 
     CE_Register(ENTITY_NAME_BIG, CEPreset_Item);
-    CE_RegisterHook(CEFunction_Init, ENTITY_NAME_BIG, "@Entity_Init");
-    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME_BIG, "@Entity_Spawned");
-    CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME_BIG, "@Entity_Pickup");
+    CE_RegisterHook(ENTITY_NAME_BIG, CEFunction_Init, "@Entity_Init");
+    CE_RegisterHook(ENTITY_NAME_BIG, CEFunction_Spawned, "@Entity_Spawned");
+    CE_RegisterHook(ENTITY_NAME_BIG, CEFunction_Pickup, "@Entity_Pickup");
 }
 
 public plugin_init() {
@@ -106,7 +107,7 @@ public plugin_init() {
 
     switch (iType) {
         case Hwn_PumpkinType_Crits: {
-            Hwn_Player_SetEffect(pPlayer, "crits", true, 2.0);
+            PlayerEffect_Set(pPlayer, "hwn-crits", true, 2.0);
         }
         case Hwn_PumpkinType_Equipment: {
             Hwn_PEquipment_GiveAmmo(pPlayer);
@@ -116,7 +117,7 @@ public plugin_init() {
             Hwn_PEquipment_GiveHealth(pPlayer, 30);
         }
         case Hwn_PumpkinType_Gravity: {
-            Hwn_Player_SetEffect(pPlayer, "moonjump", true, 2.0);
+            PlayerEffect_Set(pPlayer, "hwn-moonjump", true, 2.0);
         }
     }
 

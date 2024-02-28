@@ -2,6 +2,8 @@
 
 #include <amxmodx>
 
+#include <api_player_effects>
+
 #include <hwn>
 #include <hwn_wof>
 
@@ -15,9 +17,9 @@ public plugin_init() {
 }
 
 @Player_InvokeEffect(this) {
-    Hwn_Player_SetEffect(this, "invisibility", true);
+    PlayerEffect_Set(this, "hwn-invisibility", true);
 }
 
 @Player_RevokeEffect(this) {
-    Hwn_Player_SetEffect(this, "invisibility", false);
+    PlayerEffect_Set(this, "hwn-invisibility", false);
 }

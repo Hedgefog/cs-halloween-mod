@@ -3,6 +3,7 @@
 #include <hamsandwich>
 
 #include <api_custom_entities>
+#include <api_player_effects>
 
 #include <hwn>
 #include <hwn_utils>
@@ -12,16 +13,16 @@
 #define VERSION HWN_VERSION
 #define AUTHOR "Hedgehog Fog"
 
-#define EFFECT_ID "fire"
+#define EFFECT_ID "hwn-fire"
 
 new g_pPlayerFire[MAX_PLAYERS + 1];
 
 public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
-    CE_RegisterHook(CEFunction_Remove, "fire", "@Fire_Remove");
+    CE_RegisterHook("fire", CEFunction_Remove, "@Fire_Remove");
 
-    Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "dmg_heat", {255, 128, 0});
+    PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "dmg_heat", {255, 128, 0});
 }
 
 @Player_EffectInvoke(pPlayer) {
@@ -49,6 +50,6 @@ public plugin_init() {
     // If something removes fire entity of the current effect
     if (IS_PLAYER(pAimEnt) && g_pPlayerFire[pAimEnt] == this) {
         g_pPlayerFire[pAimEnt] = 0;
-        Hwn_Player_SetEffect(pAimEnt, "fire", false);
+        PlayerEffect_Set(pAimEnt, "hwn-fire", false);
     }
 }

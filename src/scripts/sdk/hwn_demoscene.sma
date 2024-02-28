@@ -62,8 +62,8 @@ public plugin_precache() {
         return;
     }
 
-    CE_RegisterHook(CEFunction_Spawned, "hwn_skeleton_egg", "@SkeletonEgg_Spawned");
-    CE_RegisterHook(CEFunction_Spawned, "hwn_item_pumpkin", "@Pumpkin_Spawned");
+    CE_RegisterHook("hwn_skeleton_egg", CEFunction_Spawned, "@SkeletonEgg_Spawned");
+    CE_RegisterHook("hwn_item_pumpkin", CEFunction_Spawned, "@Pumpkin_Spawned");
 
     precache_model(CAMERA_MODEL);
 }

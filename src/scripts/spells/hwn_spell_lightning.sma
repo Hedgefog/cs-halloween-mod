@@ -75,10 +75,10 @@ public plugin_init() {
 
     RegisterHamPlayer(Ham_Player_PostThink, "HamHook_Player_PostThink", .Post = 1);
 
-    CE_RegisterHook(CEFunction_Init, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Init");
-    CE_RegisterHook(CEFunction_Killed, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Killed");
-    CE_RegisterHook(CEFunction_Remove, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Remove");
-    CE_RegisterHook(CEFunction_Think, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Think");
+    CE_RegisterHook(SPELLBALL_ENTITY_CLASSNAME, CEFunction_Init, "@SpellBall_Init");
+    CE_RegisterHook(SPELLBALL_ENTITY_CLASSNAME, CEFunction_Killed, "@SpellBall_Killed");
+    CE_RegisterHook(SPELLBALL_ENTITY_CLASSNAME, CEFunction_Remove, "@SpellBall_Remove");
+    CE_RegisterHook(SPELLBALL_ENTITY_CLASSNAME, CEFunction_Think, "@SpellBall_Think");
 }
 
 public plugin_end() {

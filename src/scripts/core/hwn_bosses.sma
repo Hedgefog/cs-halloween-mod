@@ -125,8 +125,8 @@ public Native_Register(iPluginId, iArgc) {
     UTIL_CreateDictKey(szName, "HWN_BOSS_", szDictKey, charsmax(szDictKey));
     ArrayPushString(g_irgszBossesDictKeys, UTIL_IsLocalizationExists(szDictKey) ? szDictKey : "");
 
-    CE_RegisterHook(CEFunction_Killed, szClassName, "@Boss_Killed");
-    CE_RegisterHook(CEFunction_Remove, szClassName, "@Boss_Remove");
+    CE_RegisterHook(szClassName, CEFunction_Killed, "@Boss_Killed");
+    CE_RegisterHook(szClassName, CEFunction_Remove, "@Boss_Remove");
 
     return iBoss;
 }

@@ -1,17 +1,19 @@
 #include <amxmodx>
 
+#include <api_player_effects>
+
 #include <hwn>
 
 #define PLUGIN "[Hwn] Magic Player Effect"
 #define VERSION HWN_VERSION
 #define AUTHOR "Hedgehog Fog"
 
-#define EFFECT_ID "magic"
+#define EFFECT_ID "hwn-magic"
 
 public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
-    Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke");
+    PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke");
 }
 
 @Player_EffectInvoke(this) {

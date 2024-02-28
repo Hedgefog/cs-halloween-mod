@@ -33,8 +33,8 @@ public plugin_precache() {
     precache_sound(g_szSndGiftSpawn);
     precache_sound(g_szSndGiftPickup);
 
-    CE_RegisterHook(CEFunction_Picked, GIFT_ENTITY_CLASSNAME, "@Gift_Picked");
-    CE_RegisterHook(CEFunction_Killed, GIFT_ENTITY_CLASSNAME, "@Gift_Killed");
+    CE_RegisterHook(GIFT_ENTITY_CLASSNAME, CEFunction_Picked, "@Gift_Picked");
+    CE_RegisterHook(GIFT_ENTITY_CLASSNAME, CEFunction_Killed, "@Gift_Killed");
 }
 
 public plugin_init() {

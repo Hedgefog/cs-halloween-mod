@@ -26,8 +26,8 @@ public plugin_precache() {
 
     precache_model(g_szMarkerModel);
 
-    CE_RegisterHook(CEFunction_Init, "hwn_bucket", "@Bucket_Init");
-    CE_RegisterHook(CEFunction_Remove, "hwn_bucket", "@Bucket_Remove");
+    CE_RegisterHook("hwn_bucket", CEFunction_Init, "@Bucket_Init");
+    CE_RegisterHook("hwn_bucket", CEFunction_Remove, "@Bucket_Remove");
 
     g_pCvarEnabled = register_cvar("hwn_objective_marks", "1");
 }

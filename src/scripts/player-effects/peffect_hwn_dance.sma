@@ -6,6 +6,7 @@
 #include <xs>
 
 #include <api_player_camera>
+#include <api_player_effects>
 
 #include <hwn>
 #include <hwn_utils>
@@ -14,7 +15,7 @@
 #define VERSION HWN_VERSION
 #define AUTHOR "Hedgehog Fog"
 
-#define EFFECT_ID "dance"
+#define EFFECT_ID "hwn-dance"
 
 #define DANCE_LIGHT_RANGE 24
 #define DANCE_LIGHT_LIFETIME 5
@@ -62,7 +63,7 @@ public plugin_init() {
 
     RegisterHamPlayer(Ham_Player_PostThink, "HamHook_Player_PostThink_Post", .Post = 1);
 
-    Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke");
+    PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke");
 }
 
 /*--------------------------------[ Methods ]--------------------------------*/
@@ -70,7 +71,7 @@ public plugin_init() {
 bool:@Player_CanUseWeapon(this) {
     if (!IS_PLAYER(this)) return true;
     if (!is_user_alive(this)) return true;
-    if (!Hwn_Player_GetEffect(this, EFFECT_ID)) return true;
+    if (!PlayerEffect_Get(this, EFFECT_ID)) return true;
 
     return false;
 }
@@ -176,7 +177,7 @@ public HamHook_Weapon_SecondaryAttack(pWeapon) {
 }
 
 public HamHook_Player_PostThink_Post(pPlayer) {
-    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return HAM_IGNORED;
+    if (!PlayerEffect_Get(pPlayer, EFFECT_ID)) return HAM_IGNORED;
 
     static Float:flGameTime; flGameTime = get_gametime();
 

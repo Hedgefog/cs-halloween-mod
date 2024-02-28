@@ -26,9 +26,9 @@ public plugin_precache() {
     precache_model(g_szModel);
 
     g_iCeHandler = CE_Register(ENTITY_NAME, CEPreset_Item);
-    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
-    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
-    CE_RegisterHook(CEFunction_Pickup, ENTITY_NAME, "@Entity_Pickup");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Init, "@Entity_Init");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Pickup, "@Entity_Pickup");
 }
 
 @Entity_Init(this) {

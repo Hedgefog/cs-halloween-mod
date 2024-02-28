@@ -23,7 +23,7 @@ public plugin_init() {
     register_clcmd("buyequip", "Command_SpellsShop");
     register_clcmd("hwn_spells_shop_menu", "Command_SpellsShop");
 
-    register_impulse(100, "OnImpulse_100");
+    register_impulse(100, "Impulse_100");
 
     new szCosmeticMenuTitle[32];
     format(szCosmeticMenuTitle, charsmax(szCosmeticMenuTitle), "%L", LANG_SERVER, "HWN_COSMETIC_MENU_TITLE");
@@ -60,6 +60,7 @@ public Command_Drop(pPlayer) {
 
 public Command_SpellsShop(pPlayer) {
     new Hwn_GamemodeFlags:iFlags = Hwn_Gamemode_GetFlags();
+
     if (!(iFlags & Hwn_GamemodeFlag_SpellShop)) return PLUGIN_CONTINUE;
 
     Hwn_SpellShop_Open(pPlayer);
@@ -67,7 +68,7 @@ public Command_SpellsShop(pPlayer) {
     return PLUGIN_HANDLED;
 }
 
-public OnImpulse_100(pPlayer) {
+public Impulse_100(pPlayer) {
     if (!Round_IsRoundStarted()) return PLUGIN_HANDLED;
 
     Hwn_Spell_CastPlayerSpell(pPlayer);

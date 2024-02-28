@@ -2,6 +2,8 @@
 
 #include <amxmodx>
 
+#include <api_player_effects>
+
 #include <hwn>
 #include <hwn_wof>
 
@@ -24,5 +26,5 @@ public Hwn_Wof_Fw_Effect_Start(iSpell) {
 }
 
 @Player_InvokeEffect(this) {
-    Hwn_Player_SetEffect(this, "dance", true, EffectTime);
+    PlayerEffect_Set(this, "hwn-dance", true, EffectTime);
 }

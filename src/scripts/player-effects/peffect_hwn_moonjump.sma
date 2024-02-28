@@ -1,6 +1,9 @@
 #include <amxmodx>
 #include <fakemeta>
 
+#include <api_player_effects>
+
+
 #include <hwn>
 #include <hwn_utils>
 
@@ -8,7 +11,7 @@
 #define VERSION HWN_VERSION
 #define AUTHOR "Hedgehog Fog"
 
-#define EFFECT_ID "moonjump"
+#define EFFECT_ID "hwn-moonjump"
 
 const Float:EffectTime = 25.0;
 const EffectRadius = 32;
@@ -22,7 +25,7 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
-    Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "item_longjump", {200, 200, 200});
+    PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "item_longjump", {200, 200, 200});
 }
 
 @Player_EffectInvoke(this) {

@@ -18,8 +18,8 @@ public plugin_init() {
 
 public plugin_precache() {
     CE_Register(ENTITY_NAME);
-    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
-    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Init, "@Entity_Init");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
 }
 
 @Entity_Init(this) {

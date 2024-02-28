@@ -2,6 +2,8 @@
 
 #include <amxmodx>
 
+#include <api_player_effects>
+
 #include <hwn>
 #include <hwn_wof>
 
@@ -15,9 +17,9 @@ public plugin_init() {
 }
 
 @Player_InvokeEffect(this, Float:flTime) {
-    Hwn_Player_SetEffect(this, "fire", true);
+    PlayerEffect_Set(this, "hwn-fire", true);
 }
 
 @Player_RevokeEffect(this, Float:flTime) {
-    Hwn_Player_SetEffect(this, "fire", false);
+    PlayerEffect_Set(this, "hwn-fire", false);
 }

@@ -2,6 +2,8 @@
 
 #include <amxmodx>
 
+#include <api_player_effects>
+
 #include <hwn>
 
 #define PLUGIN "[Hwn] Invisibility Spell"
@@ -22,5 +24,5 @@ public plugin_init() {
 }
 
 @Player_CastSpell(pPlayer) {
-    Hwn_Player_SetEffect(pPlayer, "invisibility", true, 9.9);
+    PlayerEffect_Set(pPlayer, "hwn-invisibility", true, 9.9);
 }

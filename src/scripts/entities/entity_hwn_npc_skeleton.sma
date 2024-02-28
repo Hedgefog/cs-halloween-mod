@@ -131,22 +131,22 @@ public plugin_precache() {
     }
 
     g_iCeHandler = CE_Register(ENTITY_NAME, CEPreset_NPC);
-    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
-    CE_RegisterHook(CEFunction_Restart, ENTITY_NAME, "@Entity_Restart");
-    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
-    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
-    CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
-    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
-    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Init, "@Entity_Init");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Restart, "@Entity_Restart");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Remove, "@Entity_Remove");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Kill, "@Entity_Kill");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Killed, "@Entity_Killed");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
 
     g_iCeHandlerSmall = CE_Register(ENTITY_NAME_SMALL, CEPreset_NPC);
-    CE_RegisterHook(CEFunction_Init, ENTITY_NAME_SMALL, "@Entity_Init");
-    CE_RegisterHook(CEFunction_Restart, ENTITY_NAME_SMALL, "@Entity_Restart");
-    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME_SMALL, "@Entity_Spawned");
-    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME_SMALL, "@Entity_Remove");
-    CE_RegisterHook(CEFunction_Kill, ENTITY_NAME_SMALL, "@Entity_Kill");
-    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME_SMALL, "@Entity_Killed");
-    CE_RegisterHook(CEFunction_Think, ENTITY_NAME_SMALL, "@Entity_Think");
+    CE_RegisterHook(ENTITY_NAME_SMALL, CEFunction_Init, "@Entity_Init");
+    CE_RegisterHook(ENTITY_NAME_SMALL, CEFunction_Restart, "@Entity_Restart");
+    CE_RegisterHook(ENTITY_NAME_SMALL, CEFunction_Spawned, "@Entity_Spawned");
+    CE_RegisterHook(ENTITY_NAME_SMALL, CEFunction_Remove, "@Entity_Remove");
+    CE_RegisterHook(ENTITY_NAME_SMALL, CEFunction_Kill, "@Entity_Kill");
+    CE_RegisterHook(ENTITY_NAME_SMALL, CEFunction_Killed, "@Entity_Killed");
+    CE_RegisterHook(ENTITY_NAME_SMALL, CEFunction_Think, "@Entity_Think");
 }
 
 public plugin_init() {

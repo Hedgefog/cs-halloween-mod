@@ -1,5 +1,7 @@
 #include <amxmodx>
 
+#include <api_player_effects>
+
 #include <hwn>
 #include <hwn_crits>
 
@@ -7,12 +9,12 @@
 #define VERSION HWN_VERSION
 #define AUTHOR "Hedgehog Fog"
 
-#define EFFECT_ID "crits"
+#define EFFECT_ID "hwn-crits"
 
 public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
-    Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "dmg_shock", {HWN_COLOR_PRIMARY});
+    PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "dmg_shock", {HWN_COLOR_PRIMARY});
 }
 
 @Player_EffectInvoke(pPlayer) {

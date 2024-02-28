@@ -164,16 +164,16 @@ public plugin_precache() {
     g_iSmokeModelIndex = precache_model("sprites/hwn/magic_smoke.spr");
 
     g_iCeHandler = CE_Register(ENTITY_NAME, CEPreset_NPC);
-    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
-    CE_RegisterHook(CEFunction_InitPhysics, ENTITY_NAME, "@Entity_InitPhysics");
-    CE_RegisterHook(CEFunction_Restart, ENTITY_NAME, "@Entity_Restart");
-    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
-    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
-    CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
-    CE_RegisterHook(CEFunction_Killed, ENTITY_NAME, "@Entity_Killed");
-    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Init, "@Entity_Init");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_InitPhysics, "@Entity_InitPhysics");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Restart, "@Entity_Restart");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Remove, "@Entity_Remove");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Kill, "@Entity_Kill");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Killed, "@Entity_Killed");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
 
-    CE_RegisterHook(CEFunction_Spawned, PORTAL_ENTITY_NAME, "@Portal_Spawn");
+    CE_RegisterHook(PORTAL_ENTITY_NAME, CEFunction_Spawned, "@Portal_Spawn");
 
     Hwn_Bosses_Register(ENTITY_NAME, "Monoculus");
 }

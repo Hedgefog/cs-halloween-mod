@@ -59,9 +59,9 @@ public plugin_init() {
     register_event("ResetHUD", "OnResetHUD", "b");
     register_message(get_user_msgid("HideWeapon"), "Message_HideWeapon");
 
-    CE_RegisterHook(CEFunction_Picked, "hwn_item_spellbook", "OnSpellbookPicked");
-    CE_RegisterHook(CEFunction_Picked, "hwn_item_pumpkin", "OnPumpkinPicked");
-    CE_RegisterHook(CEFunction_Picked, "hwn_item_pumpkin_big", "OnPumpkinPicked");
+    CE_RegisterHook("hwn_item_spellbook", CEFunction_Picked, "OnSpellbookPicked");
+    CE_RegisterHook("hwn_item_pumpkin", CEFunction_Picked, "OnPumpkinPicked");
+    CE_RegisterHook("hwn_item_pumpkin_big", CEFunction_Picked, "OnPumpkinPicked");
 
     g_iGamemodeCollector = Hwn_Gamemode_GetHandler("Collector");
 

@@ -9,6 +9,7 @@
 #include <reapi>
 
 #include <api_rounds>
+#include <api_player_effects>
 
 #include <hwn>
 #include <hwn_utils>
@@ -17,7 +18,7 @@
 #define VERSION HWN_VERSION
 #define AUTHOR "Hedgehog Fog"
 
-#define EFFECT_ID "powerup"
+#define EFFECT_ID "hwn-powerup"
 
 #define JUMP_SPEED 320.0
 #define JUMP_DELAY 0.175
@@ -46,7 +47,7 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
-    Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "stopwatch", EffectColor);
+    PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "stopwatch", EffectColor);
 
     RegisterHamPlayer(Ham_Player_Jump, "HamHook_Player_Jump_Post", .Post = 1);
     RegisterHamPlayer(Ham_Item_PreFrame, "HamHook_Player_ItemPreFrame_Post", .Post = 1);
@@ -73,7 +74,7 @@ public HamHook_Weapon_Attack_Post(pEntity) {
     new pPlayer = get_member(pEntity, m_pPlayer);
 
     if (!is_user_alive(pPlayer)) return HAM_IGNORED;
-    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return HAM_IGNORED;
+    if (!PlayerEffect_Get(pPlayer, EFFECT_ID)) return HAM_IGNORED;
 
     @Weapon_BoostShootSpeed(pEntity);
 
@@ -81,7 +82,7 @@ public HamHook_Weapon_Attack_Post(pEntity) {
 }
 
 public HamHook_Player_Jump_Post(pPlayer) {
-    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return HAM_IGNORED;
+    if (!PlayerEffect_Get(pPlayer, EFFECT_ID)) return HAM_IGNORED;
 
     @Player_ProcessJump(pPlayer);
 
@@ -89,7 +90,7 @@ public HamHook_Player_Jump_Post(pPlayer) {
 }
 
 public HamHook_Player_ItemPreFrame_Post(pPlayer) {
-    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return HAM_IGNORED;
+    if (!PlayerEffect_Get(pPlayer, EFFECT_ID)) return HAM_IGNORED;
 
     @Player_BoostSpeed(pPlayer);
 
@@ -97,7 +98,7 @@ public HamHook_Player_ItemPreFrame_Post(pPlayer) {
 }
 
 public HamHook_Player_TakeDamage(pPlayer, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
-    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return HAM_IGNORED;
+    if (!PlayerEffect_Get(pPlayer, EFFECT_ID)) return HAM_IGNORED;
 
     if (~iDamageBits & DMG_FALL) return HAM_IGNORED;
 
@@ -150,8 +151,8 @@ public HamHook_Player_TakeDamage(pPlayer, pInflictor, pAttacker, Float:flDamage,
     set_pev(this, pev_velocity, vecVelocity);
     set_pev(this, pev_gaitsequence, 6);
 
-    new Float:flDuration = Hwn_Player_GetEffectDuration(this, EFFECT_ID);
-    new Float:flTimeLeft = Hwn_Player_GetEffectEndtime(this, EFFECT_ID) - get_gametime();
+    new Float:flDuration = PlayerEffect_GetDuration(this, EFFECT_ID);
+    new Float:flTimeLeft = PlayerEffect_GetEndtime(this, EFFECT_ID) - get_gametime();
     new Float:flTimeRatio = floatclamp(1.0 - (flTimeLeft / flDuration), 0.0, 1.0);
     new iPitch = PITCH_NORM + floatround(80 * flTimeRatio);
     emit_sound(this, CHAN_STATIC, g_szSndJump, VOL_NORM, ATTN_NORM, 0, iPitch);

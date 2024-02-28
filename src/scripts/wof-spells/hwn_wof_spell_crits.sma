@@ -2,6 +2,8 @@
 
 #include <amxmodx>
 
+#include <api_player_effects>
+
 #include <hwn>
 #include <hwn_wof>
 
@@ -15,9 +17,9 @@ public plugin_init() {
 }
 
 @Player_InvokeEffect(this) {
-    Hwn_Player_SetEffect(this, "crits", true);
+    PlayerEffect_Set(this, "hwn-crits", true);
 }
 
 @Player_RevokeEffect(this) {
-    Hwn_Player_SetEffect(this, "crits", false);
+    PlayerEffect_Set(this, "hwn-crits", false);
 }

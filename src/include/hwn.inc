@@ -463,11 +463,3 @@ native Hwn_SpellShop_GetSpellPrice(iSpell);
 
 forward Hwn_SpellShop_Fw_Open(pPlayer);
 forward Hwn_SpellShop_Fw_BuySpell(pPlayer, iSpell);
-
-/*--------------------------------[ Player Effects ]--------------------------------*/
-
-native Hwn_PlayerEffect_Register(const szId[], const szInvokeFunction[], const szRevokeFunction[], const szIcon[] = "", const irgIconColor[3] = {255, 255, 255});
-native Hwn_Player_SetEffect(pPlayer, const szId[], bool:bValue, Float:flDuration = -1.0, bool:bExtend = true);
-native bool:Hwn_Player_GetEffect(pPlayer, const szId[]);
-native Float:Hwn_Player_GetEffectEndtime(pPlayer, const szId[]);
-native Float:Hwn_Player_GetEffectDuration(pPlayer, const szId[]);

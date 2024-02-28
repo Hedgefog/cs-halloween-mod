@@ -43,9 +43,9 @@ public plugin_init() {
 
     RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn_Post", .Post = 1);
 
-    CE_RegisterHook(CEFunction_Kill, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Kill");
-    CE_RegisterHook(CEFunction_Touch, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Touch");
-    CE_RegisterHook(CEFunction_Think, SPELLBALL_ENTITY_CLASSNAME, "@SpellBall_Think");
+    CE_RegisterHook(SPELLBALL_ENTITY_CLASSNAME, CEFunction_Kill, "@SpellBall_Kill");
+    CE_RegisterHook(SPELLBALL_ENTITY_CLASSNAME, CEFunction_Touch, "@SpellBall_Touch");
+    CE_RegisterHook(SPELLBALL_ENTITY_CLASSNAME, CEFunction_Think, "@SpellBall_Think");
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/

@@ -3,6 +3,7 @@
 #include <hamsandwich>
 #include <reapi>
 
+#include <api_player_effects>
 #include <screenfade_util>
 
 #include <hwn>
@@ -12,7 +13,7 @@
 #define VERSION HWN_VERSION
 #define AUTHOR "Hedgehog Fog"
 
-#define EFFECT_ID "invisibility"
+#define EFFECT_ID "hwn-invisibility"
 
 const Float:EffectRadius = 16.0;
 new const EffectColor[3] = {255, 255, 255};
@@ -34,7 +35,7 @@ public plugin_precache() {
 public plugin_init() {
     register_plugin(PLUGIN, VERSION, AUTHOR);
 
-    Hwn_PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "hostage", {90, 90, 90});
+    PlayerEffect_Register(EFFECT_ID, "@Player_EffectInvoke", "@Player_EffectRevoke", "hostage", {90, 90, 90});
 
     RegisterHamPlayer(Ham_Player_PostThink, "HamHook_Player_PostThink_Post", .Post = 1);
 
@@ -92,17 +93,17 @@ public client_connect(pPlayer) {
 public HamHook_Player_PostThink_Post(pPlayer) {
     static Float:flGameTime; flGameTime = get_gametime();
     
-    if (Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) {
+    if (PlayerEffect_Get(pPlayer, EFFECT_ID)) {
         if (g_rgflPlayerNextFixFade[pPlayer] <= flGameTime) {
-            new Float:flDuration = Hwn_Player_GetEffectDuration(pPlayer, EFFECT_ID);
-            new Float:flTimeLeft = flDuration > 0.0 ? Hwn_Player_GetEffectEndtime(pPlayer, EFFECT_ID) - flGameTime : FadeEffectMaxTime;
+            new Float:flDuration = PlayerEffect_GetDuration(pPlayer, EFFECT_ID);
+            new Float:flTimeLeft = flDuration > 0.0 ? PlayerEffect_GetEndtime(pPlayer, EFFECT_ID) - flGameTime : FadeEffectMaxTime;
             @Player_FadeEffect(pPlayer, flTimeLeft, false);
         }
     }
 }
 
 public Message_ScreenFade(iMsgId, iDest, pPlayer) {
-    if (!Hwn_Player_GetEffect(pPlayer, EFFECT_ID)) return;
+    if (!PlayerEffect_Get(pPlayer, EFFECT_ID)) return;
 
     new Float:flDuration = (float(get_msg_arg_int(1)) / (1<<12)) + (float(get_msg_arg_int(2)) / (1<<12));
     g_rgflPlayerNextFixFade[pPlayer] = get_gametime() + flDuration;

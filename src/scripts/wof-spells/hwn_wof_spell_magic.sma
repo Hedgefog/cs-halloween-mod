@@ -2,6 +2,8 @@
 
 #include <amxmodx>
 
+#include <api_player_effects>
+
 #include <hwn>
 #include <hwn_wof>
 
@@ -15,5 +17,5 @@ public plugin_init() {
 }
 
 @Player_InvokeEffect(this, Float:flTime) {
-    Hwn_Player_SetEffect(this, "magic", true, 0.0);
+    PlayerEffect_Set(this, "hwn-magic", true, 0.0);
 }

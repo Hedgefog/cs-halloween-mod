@@ -112,17 +112,17 @@ public plugin_precache() {
     }
 
     g_iCeHandler = CE_Register(ENTITY_NAME);
-    CE_RegisterHook(CEFunction_Init, ENTITY_NAME, "@Entity_Init");
-    CE_RegisterHook(CEFunction_Spawned, ENTITY_NAME, "@Entity_Spawned");
-    CE_RegisterHook(CEFunction_InitPhysics, ENTITY_NAME, "@Entity_InitPhysics");
-    CE_RegisterHook(CEFunction_Kill, ENTITY_NAME, "@Entity_Kill");
-    CE_RegisterHook(CEFunction_Remove, ENTITY_NAME, "@Entity_Remove");
-    CE_RegisterHook(CEFunction_Think, ENTITY_NAME, "@Entity_Think");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Init, "@Entity_Init");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_InitPhysics, "@Entity_InitPhysics");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Kill, "@Entity_Kill");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Remove, "@Entity_Remove");
+    CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
 
     CE_Register(LIQUID_ENTITY_NAME, CEPreset_Prop);
-    CE_RegisterHook(CEFunction_Init, LIQUID_ENTITY_NAME, "@Liquid_Init");
-    CE_RegisterHook(CEFunction_Spawned, LIQUID_ENTITY_NAME, "@Liquid_Spawn");
-    CE_RegisterHook(CEFunction_InitPhysics, LIQUID_ENTITY_NAME, "@Liquid_InitPhysics");
+    CE_RegisterHook(LIQUID_ENTITY_NAME, CEFunction_Init, "@Liquid_Init");
+    CE_RegisterHook(LIQUID_ENTITY_NAME, CEFunction_Spawned, "@Liquid_Spawn");
+    CE_RegisterHook(LIQUID_ENTITY_NAME, CEFunction_InitPhysics, "@Liquid_InitPhysics");
 
     g_pCvarBucketHealth = register_cvar("hwn_bucket_health", "300");
     g_pCvarBucketCollectFlash = register_cvar("hwn_bucket_collect_flash", "1");
