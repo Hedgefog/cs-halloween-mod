@@ -27,6 +27,7 @@ public plugin_init() {
         RegisterHam(Ham_CS_Item_GetMaxSpeed, szWeapon, "HamHook_Weapon_GetMaxSpeed");
         RegisterHam(Ham_Weapon_PrimaryAttack, szWeapon, "HamHook_Weapon_PrimaryAttack");
         RegisterHam(Ham_Weapon_SecondaryAttack, szWeapon, "HamHook_Weapon_SecondaryAttack");
+        RegisterHam(Ham_Weapon_Reload, szWeapon, "HamHook_Weapon_Reload");
     }
     
     RegisterHamPlayer(Ham_Spawn, "HamHook_Player_Spawn", .Post = 0);
@@ -131,6 +132,12 @@ public HamHook_Weapon_PrimaryAttack(pWeapon) {
 }
 
 public HamHook_Weapon_SecondaryAttack(pWeapon) {
+    new pPlayer = get_ent_data_entity(pWeapon, "CBasePlayerItem", "m_pPlayer");
+
+    return @Player_CanUseWeapon(pPlayer) ? HAM_IGNORED : HAM_SUPERCEDE;
+}
+
+public HamHook_Weapon_Reload(pWeapon) {
     new pPlayer = get_ent_data_entity(pWeapon, "CBasePlayerItem", "m_pPlayer");
 
     return @Player_CanUseWeapon(pPlayer) ? HAM_IGNORED : HAM_SUPERCEDE;

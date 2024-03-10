@@ -36,6 +36,7 @@ public plugin_init() {
     Hwn_Stun_Set(this, Hwn_StunType_Slowdown);
 
     set_ent_data_string(this, "CBasePlayer", "m_szAnimExtention", "fear");
+    set_ent_data(this, "CBaseMonster", "m_Activity", ACT_IDLE);
     rg_set_animation(this, PLAYER_IDLE);
 
     emit_sound(this, CHAN_VOICE, g_szSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
