@@ -20,9 +20,12 @@
 
 public plugin_precache() {
     CE_Register(ENTITY_NAME);
+
     CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
-    CE_RegisterHook(ENTITY_NAME, CEFunction_KeyValue, "@Entity_KeyValue");
+
+    CE_RegisterKeyMemberBinding(ENTITY_NAME, "impulse", m_flImpulse, CEMemberType_Float);
+    CE_RegisterKeyMemberBinding(ENTITY_NAME, "delay", m_flDelay, CEMemberType_Float);
 }
 
 public plugin_init() {
@@ -44,14 +47,6 @@ public plugin_init() {
 @Entity_Think(this) {
     @Entity_Drop(this);
     set_pev(this, pev_nextthink, get_gametime() + Float:CE_GetMember(this, m_flDelay));
-}
-
-@Entity_KeyValue(this, const szKey[], const szValue[]) {
-    if (equal(szKey, "impulse")) {
-        CE_SetMember(this, m_flImpulse, str_to_float(szValue));
-    } else if (equal(szKey, "delay")) {
-        CE_SetMember(this, m_flDelay, str_to_float(szValue));
-    }
 }
 
 @Entity_Drop(this) {

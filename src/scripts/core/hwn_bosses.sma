@@ -4,6 +4,7 @@
 #include <amxmisc>
 #include <fakemeta>
 #include <hamsandwich>
+#include <reapi>
 
 #include <api_custom_entities>
 

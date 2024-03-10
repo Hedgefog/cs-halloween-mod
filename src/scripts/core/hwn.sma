@@ -22,7 +22,7 @@ new Float:g_flNpcUpdateRate = 0.01;
 public plugin_precache() {
     g_pCvarVersion = register_cvar("hwn_version", HWN_VERSION, FCVAR_SERVER);
     g_pFpsCvar = register_cvar("hwn_fps", "25");
-    g_pNpcFpsCvar = register_cvar("hwn_npc_fps", "25");
+    g_pNpcFpsCvar = register_cvar("hwn_npc_fps", "10");
 
     hook_cvar_change(g_pFpsCvar, "CvarHook_Fps");
     hook_cvar_change(g_pNpcFpsCvar, "CvarHook_NpcFps");

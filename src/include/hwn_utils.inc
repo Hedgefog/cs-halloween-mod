@@ -16,6 +16,12 @@
 
 #define HUD_HIDE_TIMER (1<<4)
 
+enum NPC_Action {
+    NPC_Action_StartSequence,
+    NPC_Action_EndSequence,
+    Float:NPC_Action_Time
+};
+
 stock Float:UTIL_FpsToDelay(iFps) {
     return iFps > 0 ? ((100.0 / iFps) / 100.0) : 0.0;
 }
@@ -59,7 +65,7 @@ stock bool:UTIL_IsMonster(pEntity) {
 }
 
 stock bool:UTIL_IsTeammate(pEntity, iTeam) {
-    new iTargetTeam = IS_PLAYER(pEntity) ? get_member(pEntity, m_iTeam) : pev(pEntity, pev_team);
+    new iTargetTeam = IS_PLAYER(pEntity) ? get_ent_data(pEntity, "CBasePlayer", "m_iTeam") : pev(pEntity, pev_team);
     return iTeam == iTargetTeam;
 }
 
@@ -68,7 +74,7 @@ stock bool:UTIL_CanTakeDamage(pEntity, pAttacker) {
         return true;
     }
 
-    new iAttackerTeam = get_member(pAttacker, m_iTeam);
+    new iAttackerTeam = get_ent_data(pAttacker, "CBasePlayer", "m_iTeam");
 
     if (IS_PLAYER(pEntity)) {
         if (!rg_is_player_can_takedamage(pEntity, pAttacker)) {
@@ -144,11 +150,17 @@ stock bool:UTIL_SetSequence(pEntity, iSequence) {
 
 stock UTIL_GetDirectionVector(pEntity, Float:vecOut[3], Float:flLength = 1.0) {
     new Float:vecAngles[3];
-    pev(pEntity, pev_angles, vecAngles);
+    if (IS_PLAYER(pEntity)) {
+        pev(pEntity, pev_v_angle, vecAngles);
+        // vecAngles[0] = -vecAngles[2];
+    } else {
+        pev(pEntity, pev_angles, vecAngles);
+        vecAngles[0] = -vecAngles[0];
+    }
+
     angle_vector(vecAngles, ANGLEVECTOR_FORWARD, vecOut);
     xs_vec_normalize(vecOut, vecOut);
     xs_vec_mul_scalar(vecOut, flLength, vecOut);
-    vecOut[2] = -vecOut[2];
 }
 
 stock bool:UTIL_IsTraceOpen(pTrace) {   
@@ -323,7 +335,7 @@ stock UTIL_FindUsersNearby(pStartPlayer = 0, Float:vecOrigin[3], Float:flDistanc
             continue;
         }
 
-        if (iTeam && iTeam != get_member(pPlayer, m_iTeam)) {
+        if (iTeam && iTeam != get_ent_data(pPlayer, "CBasePlayer", "m_iTeam")) {
             continue;
         }
 

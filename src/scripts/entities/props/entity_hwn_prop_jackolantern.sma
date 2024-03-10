@@ -11,6 +11,8 @@
 #define PLUGIN "[Custom Entity] Hwn Prop Jack'O'Lantern"
 #define AUTHOR "Hedgehog Fog"
 
+#define BIT(%0) (1<<(%0))
+
 #define ENTITY_NAME "hwn_prop_jackolantern"
 
 new const g_szModel[] = "models/hwn/props/jackolantern.mdl";
@@ -31,7 +33,7 @@ public plugin_precache() {
 @Entity_Init(this) {
     CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-16.0, -16.0, 0.0});
     CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{16.0, 16.0, 48.0});
-    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel, false);
 }
 
 @Entity_Spawned(this) {

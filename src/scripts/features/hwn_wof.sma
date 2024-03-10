@@ -243,7 +243,7 @@ StartEffect() {
     for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
         if (!is_user_connected(pPlayer)) continue;
 
-        new iTeam = get_member(pPlayer, m_iTeam);
+        new iTeam = get_ent_data(pPlayer, "CBasePlayer", "m_iTeam");
         if (iTeam != 1 && iTeam != 2) continue;
 
         CallInvoke(pPlayer);

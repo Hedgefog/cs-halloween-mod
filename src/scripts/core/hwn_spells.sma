@@ -3,10 +3,12 @@
 #include <amxmodx>
 #include <amxmisc>
 #include <fakemeta>
+#include <reapi>
 
 #include <command_util>
 
 #include <hwn>
+#include <hwn_stun>
 #include <hwn_utils>
 
 #define PLUGIN "[Hwn] Spells"
@@ -179,6 +181,7 @@ public Command_Give(pPlayer, iLevel, iCId) {
 @Player_CastPlayerSpell(this) {
     if (!is_user_alive(this)) return;
     if (pev(this, pev_flags) & FL_FROZEN) return;
+    if (Hwn_Stun_Get(this)) return;
 
     new iSpellAmount = g_rgiPlayeriSpellAmount[this];
     if (iSpellAmount <= 0) return;
@@ -204,18 +207,18 @@ public Command_Give(pPlayer, iLevel, iCId) {
     }
 
     @Player_PlayCastAnimation(this);
-    set_member(this, m_flNextAttack, SpellCastDuration);
+    set_ent_data_float(this, "CBaseMonster", "m_flNextAttack", SpellCastDuration);
 }
 
 @Player_PlayCastAnimation(this) {
     static szAnimExtention[32];
-    get_member(this, m_szAnimExtention, szAnimExtention, charsmax(szAnimExtention));
+    get_ent_data_string(this, "CBasePlayer", "m_szAnimExtention", szAnimExtention, charsmax(szAnimExtention));
 
-    set_member(this, m_szAnimExtention, "grenade");
+    set_ent_data_string(this, "CBasePlayer", "m_szAnimExtention", "grenade");
 
     rg_set_animation(this, PLAYER_ATTACK1);
 
-    set_member(this, m_szAnimExtention, szAnimExtention);
+    set_ent_data_string(this, "CBasePlayer", "m_szAnimExtention", szAnimExtention);
 }
 
 /*--------------------------------[ Functions ]--------------------------------*/

@@ -2,7 +2,6 @@
 
 #include <amxmodx>
 #include <hamsandwich>
-#include <reapi>
 
 #include <api_player_inventory>
 

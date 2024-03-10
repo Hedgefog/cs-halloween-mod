@@ -15,6 +15,10 @@
 #define PLUGIN "[Hwn] Gamemode Collector"
 #define AUTHOR "Hedgehog Fog"
 
+#define BIT(%0) (1<<(%0))
+
+#define SIGNAL_BUY BIT(0)
+
 #define BUCKET_ENTITY_CLASSNAME "hwn_bucket"
 #define LOOT_ENTITY_CLASSNAME "hwn_item_pumpkin"
 #define SPELLBOOK_ENTITY_CLASSNAME "hwn_item_spellbook"
@@ -182,7 +186,7 @@ public Message_StatusIcon(iMsgId, iDest, pPlayer) {
 
     static szIcon[8]; get_msg_arg_string(2, szIcon, 7);
     if (equal(szIcon, "buyzone") && get_msg_arg_int(1)) {
-        get_member(pPlayer, m_signals, get_member(pPlayer, m_signals) & ~SIGNAL_BUY);
+        set_ent_data(pPlayer, "CBasePlayer", "m_signals", get_ent_data(pPlayer, "CBasePlayer", "m_signals") & ~SIGNAL_BUY);
         return PLUGIN_HANDLED;
     }
 
@@ -336,7 +340,7 @@ bool:ScorePlayerPointsToTeam(pPlayer, iAmount) {
         return false;
     }
 
-    new iTeam = get_member(pPlayer, m_iTeam);
+    new iTeam = get_ent_data(pPlayer, "CBasePlayer", "m_iTeam");
     new iTeamPoints = GetTeamPoints(iTeam);
 
     SetPlayerPoints(pPlayer, iPlayerPoints - iAmount);

@@ -12,7 +12,7 @@
 | hwn_gifts_spawn_delay                   | Time before new gift will be spawned                                  | 300.0         |
 | hwn_gifts_cosmetic_min_time             | Min time of hat from gift                                             | 450.0         |
 | hwn_gifts_cosmetic_max_time             | Max time of hat from gift                                             | 1200.0        |
-| hwn_fps                                 | FPS for effects                                                       | 25            |
+| hwn_fps                                 | FPS for effects                                                       | 10            |
 | hwn_npc_fps                             | FPS for NPC                                                           | 25            |
 | hwn_npc_monoculus_angry_time            | Time of monoculus angry state                                         | 15.0          |
 | hwn_npc_monoculus_dmg_to_stun           | Required damage count to stun monoculus                               | 2000.0        |

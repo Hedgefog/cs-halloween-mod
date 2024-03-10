@@ -8,8 +8,8 @@
 #include <hwn>
 #include <hwn_utils>
 
-#include <api_particles>
 #include <api_custom_entities>
+#include <api_particles>
 
 #define PLUGIN "[Custom Entity] Hwn Item Spellbook"
 #define AUTHOR "Hedgehog Fog"
@@ -18,32 +18,45 @@
 
 #define m_iSpell "iSpell"
 #define m_iAmount "iAmount"
-#define m_pParticle "pParticle"
+#define m_pParticlesEmitter "pParticlesEmitter"
 
 new const g_szModel[] = "models/hwn/items/spellbook_v2.mdl";
 new const g_szSndSpawn[] = "hwn/items/spellbook/spellbook_spawn.wav";
 new const g_szSndPickup[] = "hwn/spells/spell_pickup.wav";
 new const g_szSndPickupRare[] = "hwn/spells/spell_pickup_rare.wav";
 
-new bool:g_bIsPrecaching;
-
-new g_particlesEnabled = false;
-
 new g_pCvarMaxSpellsNum;
 new g_pCvarMaxRareSpellsNum;
 new g_pCvarRareChance;
 
-new g_iSparkleModelIndex;
-new g_iSparklePurpleModelIndex;
 new g_iSmokeModelIndex;
 
-public plugin_precache() {
-    g_bIsPrecaching = true;
+new g_rgszParticleSprites[][] = {
+    "sprites/muz2.spr",
+    "sprites/muz3.spr",
+    "sprites/muz4.spr",
+    "sprites/muz5.spr",
+    "sprites/muz6.spr",
+    "sprites/muz7.spr",
+    "sprites/muz8.spr"
+};
 
+new g_rgszRareParticleSprites[][] = {
+    "sprites/muz7.spr",
+    "sprites/muz4.spr"
+};
+
+public plugin_precache() {
     precache_model(g_szModel);
-    g_iSparkleModelIndex = precache_model("sprites/muz2.spr");
-    g_iSparklePurpleModelIndex = precache_model("sprites/muz7.spr");
     g_iSmokeModelIndex = precache_model("sprites/hwn/magic_smoke.spr");
+
+    for (new i = 0; i < sizeof(g_rgszParticleSprites); ++i) {
+        precache_model(g_rgszParticleSprites[i]);
+    }
+
+    for (new i = 0; i < sizeof(g_rgszRareParticleSprites); ++i) {
+        precache_model(g_rgszRareParticleSprites[i]);
+    }
 
     precache_sound(g_szSndSpawn);
     precache_sound(g_szSndPickup);
@@ -63,13 +76,7 @@ public plugin_precache() {
 }
 
 public plugin_init() {
-    g_bIsPrecaching = false;
-
     register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
-}
-
-public Hwn_Fw_ConfigLoaded() {
-    g_particlesEnabled = get_cvar_num("hwn_enable_particles");
 }
 
 @Entity_Init(this) {
@@ -77,12 +84,15 @@ public Hwn_Fw_ConfigLoaded() {
     CE_SetMember(this, CE_MEMBER_RESPAWNTIME, HWN_ITEM_RESPAWN_TIME);
     CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-16.0, -12.0, 0.0});
     CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{16.0, 12.0, 24.0});
-    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel, false);
+    CE_SetMember(this, m_pParticlesEmitter, -1);
+
+    new ParticleSystem:pParticlesEmitter = ParticleSystem_Create("hwn-magic-circle", Float:{0.0, 0.0, 1.0}, _, this);
+    ParticleSystem_SetMember(pParticlesEmitter, "flRadius", 24.0);
+    CE_SetMember(this, m_pParticlesEmitter, pParticlesEmitter);
 }
 
 @Entity_Spawned(this) {
-    @Entity_RemoveParticles(this);
-
     if (!CE_HasMember(this, m_iSpell)) {
         CE_SetMember(this, m_iSpell, GetRandomSpell());
     }
@@ -110,19 +120,25 @@ public Hwn_Fw_ConfigLoaded() {
     @Entity_AppearEffect(this);
     emit_sound(this, CHAN_BODY, g_szSndSpawn, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 
-    @Entity_CreateParticles(this);
+    set_pev(this, pev_angles, Float:{0.0, 0.0, 0.0});
+    
+    new ParticleSystem:pParticlesEmitter = CE_GetMember(this, m_pParticlesEmitter);
+    ParticleSystem_Activate(pParticlesEmitter);
 
     set_pev(this, pev_nextthink, get_gametime());
-}
-
-@Entity_Remove(this) {
-    @Entity_RemoveParticles(this);
 }
 
 @Entity_Killed(this) {
     CE_DeleteMember(this, m_iSpell);
     CE_DeleteMember(this, m_iAmount);
-    @Entity_RemoveParticles(this);
+
+    new ParticleSystem:pParticlesEmitter = CE_GetMember(this, m_pParticlesEmitter);
+    ParticleSystem_Deactivate(pParticlesEmitter);
+}
+
+@Entity_Remove(this) {
+    new ParticleSystem:pParticlesEmitter = CE_GetMember(this, m_pParticlesEmitter);
+    ParticleSystem_Destroy(pParticlesEmitter);
 }
 
 @Entity_Pickup(this, pPlayer) {
@@ -141,13 +157,20 @@ public Hwn_Fw_ConfigLoaded() {
 @Entity_Think(this) {
     if (pev(this, pev_deadflag) != DEAD_NO) return;
 
-    if (g_particlesEnabled) {
-        @Entity_UpdateParticles(this, true);
-    } else {
-        @Entity_RemoveParticles(this);
-    }
+    @Entity_UpdateParticles(this);
 
     set_pev(this, pev_nextthink, get_gametime() + 1.0);
+}
+
+@Entity_UpdateParticles(this) {
+    static ParticleSystem:pParticlesEmitter; pParticlesEmitter = CE_GetMember(this, m_pParticlesEmitter);
+
+    if (_:pParticlesEmitter == -1) return;
+
+    static iSpell; iSpell = CE_GetMember(this, m_iSpell);
+    static bool:bIsRare; bIsRare = !!(Hwn_Spell_GetFlags(iSpell) & Hwn_SpellFlag_Rare);
+
+    ParticleSystem_SetMember(pParticlesEmitter, "bRare", bIsRare);
 }
 
 @Entity_AppearEffect(this) {
@@ -163,53 +186,13 @@ public Hwn_Fw_ConfigLoaded() {
     vecEnd[2] += 8.0;
 
     if (bIsRare) {
-        UTIL_Message_SpriteTrail(vecOrigin, vecEnd,  g_iSparklePurpleModelIndex, 8, 1, 1, 32, 16);
+        UTIL_Message_SpriteTrail(vecOrigin, vecEnd,  engfunc(EngFunc_ModelIndex, g_rgszRareParticleSprites[0]), 8, 1, 1, 32, 16);
     } else {
-        UTIL_Message_SpriteTrail(vecOrigin, vecEnd, g_iSparkleModelIndex, 6, 1, 1, 32, 16);
-        UTIL_Message_SpriteTrail(vecOrigin, vecEnd, g_iSparklePurpleModelIndex, 2, 1, 1, 32, 16);
+        UTIL_Message_SpriteTrail(vecOrigin, vecEnd, engfunc(EngFunc_ModelIndex, g_rgszParticleSprites[0]), 6, 1, 1, 32, 16);
+        UTIL_Message_SpriteTrail(vecOrigin, vecEnd, engfunc(EngFunc_ModelIndex, g_rgszParticleSprites[5]), 2, 1, 1, 32, 16);
     }
 
     UTIL_Message_FireField(vecOrigin, 32, g_iSmokeModelIndex, 3, TEFIRE_FLAG_ALLFLOAT | TEFIRE_FLAG_ALPHA, 10);
-}
-
-@Entity_CreateParticles(this) {
-    new iSpell = CE_GetMember(this, m_iSpell);
-    new bool:bIsRare = !!(Hwn_Spell_GetFlags(iSpell) & Hwn_SpellFlag_Rare);
-
-    new pParticle = Particles_Spawn(bIsRare ? "magic_glow_purple" : "magic_glow", Float:{0.0, 0.0, 0.0}, 0.0);
-    if (pParticle) {
-        CE_SetMember(this, m_pParticle, pParticle);
-    }
-}
-
-@Entity_UpdateParticles(this, bool:createIflNotExists) {
-    if (g_bIsPrecaching) return;
-
-    new pParticle = CE_GetMember(this, m_pParticle);
-    if (!pParticle || !pev_valid(pParticle)) {
-        if (createIflNotExists) {
-            @Entity_CreateParticles(this);
-        }
-
-        return;
-    }
-
-    static Float:vecOrigin[3];
-    pev(this, pev_origin, vecOrigin);
-    vecOrigin[2] += 32.0;
-
-    engfunc(EngFunc_SetOrigin, pParticle, vecOrigin);
-}
-
-@Entity_RemoveParticles(this) {
-    new pParticle = CE_GetMember(this, m_pParticle);
-    if (!pParticle) return;
-
-    if (pev_valid(pParticle)) {
-        Particles_Remove(pParticle);
-    }
-
-    CE_SetMember(this, m_pParticle, 0);
 }
 
 GetRandomSpell() {
@@ -221,9 +204,7 @@ GetRandomSpell() {
     new Array:spells = ArrayCreate(_, iSpellsNum);
 
     for (new iSpell = 0; iSpell < iSpellsNum; ++iSpell) {
-        if (bIsRare != !!(Hwn_Spell_GetFlags(iSpell) & Hwn_SpellFlag_Rare)) {
-            continue;
-        }
+        if (bIsRare != !!(Hwn_Spell_GetFlags(iSpell) & Hwn_SpellFlag_Rare)) continue;
 
         ArrayPushCell(spells, iSpell);
     }

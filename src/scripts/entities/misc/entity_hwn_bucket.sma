@@ -146,7 +146,7 @@ public plugin_init() {
 @Entity_Init(this) {
     CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-28.0, -28.0, 0.0});
     CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{28.0, 28.0, 56.0});
-    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel, false);
 
     new pLiquid = CE_Create(LIQUID_ENTITY_NAME, Float:{0.0, 0.0, 0.0}, false);
     set_pev(pLiquid, pev_owner, this);
@@ -270,7 +270,7 @@ bool:@Entity_CollectPoints(this) {
         if (flGameTime < g_rgflPlayerNextCollectTime[pPlayer]) continue;
 
         new iTeam = pev(this, pev_team);
-        if (iTeam && get_member(pPlayer, m_iTeam) != iTeam) continue;
+        if (iTeam && get_ent_data(pPlayer, "CBasePlayer", "m_iTeam") != iTeam) continue;
 
         static Float:vecPlayerOrigin[3]; pev(pPlayer, pev_origin, vecPlayerOrigin);
         if (get_distance_f(vecOrigin, vecPlayerOrigin) > TAKE_RANGE) continue;
@@ -555,7 +555,7 @@ public HamHook_Base_TakeDamage(pEntity, pInflictor, pAttacker, Float:flDamage, i
     }
 
     new iTeam = pev(pEntity, pev_team);
-    if (iTeam == get_member(pAttacker, m_iTeam)) return HAM_SUPERCEDE;
+    if (iTeam == get_ent_data(pAttacker, "CBasePlayer", "m_iTeam")) return HAM_SUPERCEDE;
 
     new iiTeamPoints = Hwn_Collector_GetTeamPoints(iTeam);
     if (iiTeamPoints <= 0) return HAM_SUPERCEDE;
@@ -567,7 +567,7 @@ public HamHook_Base_TakeDamage_Post(pEntity, pInflictor, pAttacker, Float:flDama
     if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) return HAM_IGNORED;
 
     new iTeam = pev(pEntity, pev_team);
-    if (!Hwn_Collector_ObjectiveBlocked() && IS_PLAYER(pAttacker) && iTeam && get_member(pAttacker, m_iTeam) != iTeam) {
+    if (!Hwn_Collector_ObjectiveBlocked() && IS_PLAYER(pAttacker) && iTeam && get_ent_data(pAttacker, "CBasePlayer", "m_iTeam") != iTeam) {
         @Entity_DamageEffect(pEntity);
     }
 

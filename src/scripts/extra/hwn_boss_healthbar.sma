@@ -5,6 +5,7 @@
 #include <fakemeta>
 #include <hamsandwich>
 #include <xs>
+#include <reapi>
 
 #include <api_custom_entities>
 

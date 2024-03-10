@@ -2,7 +2,6 @@
 
 #include <amxmodx>
 #include <fakemeta>
-#include <reapi>
 #include <hamsandwich>
 
 #include <api_custom_entities>
@@ -97,7 +96,7 @@ bool:@Player_ShouldSeeMarker(this, pMarker) {
     if (Hwn_Collector_ObjectiveBlocked()) return false;
 
     static iMarkerTeam; iMarkerTeam = pev(pMarker, pev_team);
-    static iTeam; iTeam = get_member(this, m_iTeam);
+    static iTeam; iTeam = get_ent_data(this, "CBasePlayer", "m_iTeam");
     if (iMarkerTeam && iMarkerTeam != iTeam) return false;
 
     new iPoints = Hwn_Collector_GetPlayerPoints(this);

@@ -36,7 +36,7 @@ public plugin_precache() {
     CE_SetMember(this, CE_MEMBER_IGNOREROUNDS, true);
     CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-16.0, -16.0, 0.0});
     CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{16.0, 16.0, 32.0});
-    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel, false);
 }
 
 @Entity_Spawned(this) {

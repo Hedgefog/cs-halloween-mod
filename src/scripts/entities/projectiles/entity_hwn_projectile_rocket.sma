@@ -11,10 +11,10 @@
 #include <hwn>
 #include <hwn_utils>
 
-#define PLUGIN "[Custom Entity] Hwn Monoculus Rocket"
+#define PLUGIN "[Entity] Hwn Monoculus Rocket"
 #define AUTHOR "Hedgehog Fog"
 
-#define ENTITY_NAME "hwn_monoculus_rocket"
+#define ENTITY_NAME "hwn_projectile_rocket"
 
 #define EXPLOSION_RADIUS 128.0
 #define EXPLOSION_DAMAGE 160.0
@@ -39,18 +39,19 @@ public plugin_precache() {
     g_iExplodeSmokeModelIndex = precache_model("sprites/hwn/magic_smoke.spr");
     g_iExlplosionModelIndex = precache_model("sprites/eexplo.spr");
 
-    CE_Register(ENTITY_NAME, CEPreset_Prop);
+    CE_RegisterDerived(ENTITY_NAME, "hwn_projectile_base");
+
     CE_RegisterHook(ENTITY_NAME, CEFunction_Init, "@Entity_Init");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
     CE_RegisterHook(ENTITY_NAME, CEFunction_InitPhysics, "@Entity_InitPhysics");
     CE_RegisterHook(ENTITY_NAME, CEFunction_InitSize, "@Entity_InitSize");
-    CE_RegisterHook(ENTITY_NAME, CEFunction_Killed, "@Entity_Killed");
-    CE_RegisterHook(ENTITY_NAME, CEFunction_Touch, "@Entity_Touch");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
+
+    CE_RegisterMethod(ENTITY_NAME, "Detonate", "@Entity_Detonate", CE_MP_Cell);
 }
 
 @Entity_Init(this) {
-    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
+    CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel, false);
 }
 
 @Entity_Spawned(this) {
@@ -71,13 +72,11 @@ public plugin_precache() {
     engfunc(EngFunc_SetSize, this, Float:{-8.0, -8.0, -8.0}, Float:{8.0, 8.0, 8.0});
 }
 
-@Entity_Killed(this) {
+@Entity_Detonate(this, pDetonator) {
     @Entity_ExplosionEffect(this);
     @Entity_RadiusDamage(this);
-}
 
-@Entity_Touch(this, pToucher) {
-    CE_Kill(this, pToucher);
+    CE_CallBaseMethod(pDetonator);
 }
 
 @Entity_Think(this) {

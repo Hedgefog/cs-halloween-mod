@@ -6,6 +6,7 @@
 #include <reapi>
 
 #include <api_rounds>
+#include <api_player_effects>
 
 #include <hwn>
 #include <hwn_utils>
@@ -194,6 +195,25 @@ public Round_Fw_CheckWinConditions() {
     return PLUGIN_CONTINUE;
 }
 
+public Round_Fw_RoundEnd(iWinnerTeam) {
+    new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
+
+    if (iWinnerTeam >= 1 && iWinnerTeam <= 2) {
+        for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
+            if (!is_user_connected(pPlayer)) continue;
+            if (get_ent_data(pPlayer, "CBasePlayer", "m_iTeam") == iWinnerTeam) continue;
+
+            if (is_user_alive(pPlayer)) {
+                PlayerEffect_Set(pPlayer, "hwn-fear", true);
+            } else {
+                if (iFlags & Hwn_GamemodeFlag_RespawnPlayers) {
+                    set_member(pPlayer, m_flRespawnPending, 0.0);
+                }
+            }
+        }
+    }
+}
+
 public Hwn_SpellShop_Fw_Open(pPlayer) {
     new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
 
@@ -315,7 +335,7 @@ public HC_HandleMenu_ChooseTeam_Post(pPlayer) {
 
     new Hwn_GamemodeFlags:iFlags = ArrayGetCell(g_irgGamemodeFlags, g_iGamemode);
     if (iFlags & Hwn_GamemodeFlag_RespawnPlayers) {
-        set_member(pPlayer, m_bTeamChanged, false);
+        set_ent_data(pPlayer, "CBasePlayer", "m_bTeamChanged", false);
     }
 
     return HC_CONTINUE;
@@ -338,7 +358,7 @@ bool:@Player_IsOnSpawn(this, bool:bIgnoreTeam) {
     new iTeam = 0;
 
     if (!bIgnoreTeam) {
-        iTeam = get_member(this, m_iTeam);
+        iTeam = get_ent_data(this, "CBasePlayer", "m_iTeam");
         if (iTeam < 1 || iTeam > 2) return false;
     }
 

@@ -2,7 +2,6 @@
 
 #include <amxmodx>
 #include <engine>
-#include <reapi>
 
 #include <api_rounds>
 
@@ -10,6 +9,8 @@
 
 #define PLUGIN "[Hwn] Controlls"
 #define AUTHOR "Hedgehog Fog"
+
+#define BIT(%0) (1<<(%0))
 
 new g_iPlayerTeamMenuOverrideFlags;
 

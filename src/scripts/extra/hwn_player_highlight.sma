@@ -54,7 +54,7 @@ public FMHook_AddToFullPack_Post(es, e, pEntity, pHost, hostflags, player, pSet)
             rgiColor[i] = iSecondaryBrightness;
         }
 
-        new iTeam = get_member(pTargetPlayer, m_iTeam);
+        new iTeam = get_ent_data(pTargetPlayer, "CBasePlayer", "m_iTeam");
         switch (iTeam) {
             case 1: rgiColor[0] = iPrimaryBrightness;
             case 2: rgiColor[2] = iPrimaryBrightness;

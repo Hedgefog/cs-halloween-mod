@@ -52,10 +52,7 @@ public plugin_precache() {
     CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Pickup, "@Entity_Pickup");
 
-    CE_Register(ENTITY_NAME_BIG, CEPreset_Item);
-    CE_RegisterHook(ENTITY_NAME_BIG, CEFunction_Init, "@Entity_Init");
-    CE_RegisterHook(ENTITY_NAME_BIG, CEFunction_Spawned, "@Entity_Spawned");
-    CE_RegisterHook(ENTITY_NAME_BIG, CEFunction_Pickup, "@Entity_Pickup");
+    CE_RegisterDerived(ENTITY_NAME_BIG, ENTITY_NAME);
 }
 
 public plugin_init() {
@@ -65,7 +62,7 @@ public plugin_init() {
 }
 
 @Entity_Init(this) {
-    new bool:bBig = CE_GetHandlerByEntity(this) == CE_GetHandler(ENTITY_NAME_BIG);
+    new bool:bBig = CE_IsInstanceOf(this, ENTITY_NAME_BIG);
 
     if (bBig) {
         CE_SetMember(this, CE_MEMBER_LIFETIME, 30.0);
@@ -76,7 +73,7 @@ public plugin_init() {
         CE_SetMember(this, CE_MEMBER_LIFETIME, 10.0);
         CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-12.0, -12.0, 0.0});
         CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{12.0, 12.0, 24.0});
-        CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel);
+        CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel, false);
     }
 
     CE_SetMember(this, m_bBig, bBig);

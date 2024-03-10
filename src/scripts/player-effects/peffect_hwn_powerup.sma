@@ -6,7 +6,6 @@
 #include <cstrike>
 #include <fun>
 #include <xs>
-#include <reapi>
 
 #include <api_rounds>
 #include <api_player_effects>
@@ -31,8 +30,8 @@
 const EffectRadius = 48;
 new const EffectColor[3] = {HWN_COLOR_PRIMARY};
 
-new const g_szSndDetonate[] = "hwn/spells/spell_powerup.wav";
-new const g_szSndJump[] = "hwn/spells/spell_powerup_jump_v2.wav";
+new const g_szDetonateSound[] = "hwn/spells/spell_powerup.wav";
+new const g_szJumpSound[] = "hwn/spells/spell_powerup_jump_v2.wav";
 
 new g_iTrailModelIndex;
 
@@ -40,8 +39,8 @@ new Float:g_rgPlayerLastJump[MAX_PLAYERS + 1];
 
 public plugin_precache() {
     g_iTrailModelIndex = precache_model("sprites/zbeam2.spr");
-    precache_sound(g_szSndDetonate);
-    precache_sound(g_szSndJump);
+    precache_sound(g_szDetonateSound);
+    precache_sound(g_szJumpSound);
 }
 
 public plugin_init() {
@@ -71,7 +70,7 @@ public plugin_cfg() {
 /*--------------------------------[ Hooks ]--------------------------------*/
 
 public HamHook_Weapon_Attack_Post(pEntity) {
-    new pPlayer = get_member(pEntity, m_pPlayer);
+    new pPlayer = get_ent_data_entity(pEntity, "CBasePlayerItem", "m_pPlayer");
 
     if (!is_user_alive(pPlayer)) return HAM_IGNORED;
     if (!PlayerEffect_Get(pPlayer, EFFECT_ID)) return HAM_IGNORED;
@@ -113,7 +112,7 @@ public HamHook_Player_TakeDamage(pPlayer, pInflictor, pAttacker, Float:flDamage,
     @Player_Heal(this);
     @Player_JumpEffect(this);
     ExecuteHamB(Ham_Item_PreFrame, this);
-    emit_sound(this, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(this, CHAN_STATIC , g_szDetonateSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
 @Player_EffectRevoke(this) {
@@ -155,7 +154,7 @@ public HamHook_Player_TakeDamage(pPlayer, pInflictor, pAttacker, Float:flDamage,
     new Float:flTimeLeft = PlayerEffect_GetEndtime(this, EFFECT_ID) - get_gametime();
     new Float:flTimeRatio = floatclamp(1.0 - (flTimeLeft / flDuration), 0.0, 1.0);
     new iPitch = PITCH_NORM + floatround(80 * flTimeRatio);
-    emit_sound(this, CHAN_STATIC, g_szSndJump, VOL_NORM, ATTN_NORM, 0, iPitch);
+    emit_sound(this, CHAN_STATIC, g_szJumpSound, VOL_NORM, ATTN_NORM, 0, iPitch);
 }
 
 @Player_Heal(this) {
@@ -194,11 +193,11 @@ public HamHook_Player_TakeDamage(pPlayer, pInflictor, pAttacker, Float:flDamage,
 @Weapon_BoostShootSpeed(this) {
     static Float:flMultiplier; flMultiplier =  1.0 / ATTACK_SPEED_BOOST;
 
-    static Float:flNextPrimaryAttack; flNextPrimaryAttack = get_member(this, m_Weapon_flNextPrimaryAttack);
-    set_member(this, m_Weapon_flNextPrimaryAttack, flNextPrimaryAttack * flMultiplier);
+    static Float:flNextPrimaryAttack; flNextPrimaryAttack = get_ent_data_float(this, "CBasePlayerWeapon", "m_flNextPrimaryAttack");
+    set_ent_data_float(this, "CBasePlayerWeapon", "m_flNextPrimaryAttack", flNextPrimaryAttack * flMultiplier);
 
-    static Float:flNextSecondaryAttack; flNextSecondaryAttack = get_member(this, m_Weapon_flNextSecondaryAttack);
-    set_member(this, m_Weapon_flNextSecondaryAttack, flNextSecondaryAttack * flMultiplier);
+    static Float:flNextSecondaryAttack; flNextSecondaryAttack = get_ent_data_float(this, "CBasePlayerWeapon", "m_flNextSecondaryAttack");
+    set_ent_data_float(this, "CBasePlayerWeapon", "m_flNextSecondaryAttack", flNextSecondaryAttack * flMultiplier);
 }
 
 /*--------------------------------[ Functions ]--------------------------------*/

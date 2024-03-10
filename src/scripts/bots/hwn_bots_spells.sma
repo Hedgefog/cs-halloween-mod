@@ -117,12 +117,12 @@ bool:@Bot_HasEnemiesNearby(this, Float:flRadius) {
 @Bot_CountEnemiesNearbyOrigin(this, const Float:vecOrigin[3], Float:flRadius) {
     new iNum = 0;
 
-    new iTeam = get_member(this, m_iTeam);
+    new iTeam = get_ent_data(this, "CBasePlayer", "m_iTeam");
 
     for (new pTarget = 1; pTarget <= MaxClients; ++pTarget) {
         if (!is_user_connected(pTarget)) continue;
         if (!is_user_alive(pTarget)) continue;
-        if (iTeam == get_member(pTarget, m_iTeam)) continue;
+        if (iTeam == get_ent_data(pTarget, "CBasePlayer", "m_iTeam")) continue;
 
         static Float:vecTargetOrigin[3]; pev(pTarget, pev_origin, vecTargetOrigin);
         if (get_distance_f(vecOrigin, vecTargetOrigin) > flRadius) continue;

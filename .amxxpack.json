@@ -15,18 +15,20 @@
         "strip": 1,
         "filter": [
           "util/**",
-          "entities/entity_fire.sma",
-          "entities/entity_custom_events_handler.sma",
-          "api/custom-entities/**",
           "api/rounds/**",
-          "api/player-camera/**",
+          "api/custom-entities/**",
+          "api/custom-events/**",
           "api/navsystem/**",
-          "api/player-inventory/**",
-          "api/player-effects/**",
-          "api/player-cosmetics/**",
+          "api/particles/**",
           "api/advanced-pushing/**",
           "api/waypoint-markers/**",
-          "api/custom-events/**"
+          "api/player-camera/**",
+          "api/player-inventory/**",
+          "api/player-effects/**",
+          "api/player-model/**",
+          "api/player-cosmetics/**",
+          "entities/entity_fire.sma",
+          "entities/entity_custom_events_handler.sma"
         ]
       }
     ]

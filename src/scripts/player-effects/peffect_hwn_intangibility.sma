@@ -14,10 +14,10 @@
 
 #define EFFECT_ID "hwn-intangibility"
 
-new const g_szSndDetonate[] = "hwn/spells/spell_intangibility.wav";
+new const g_szDetonateSound[] = "hwn/spells/spell_intangibility.wav";
 
 public plugin_precache() {
-    precache_sound(g_szSndDetonate);
+    precache_sound(g_szDetonateSound);
 }
 
 public plugin_init() {
@@ -35,7 +35,7 @@ public plugin_init() {
 @Player_EffectInvoke(pPlayer) {
     set_pev(pPlayer, pev_renderfx, kRenderFxHologram);
     UTIL_ScreenFade(pPlayer, {50, 50, 50}, 1.0, 0.0, 128, FFADE_IN, .bExternal = true);
-    emit_sound(pPlayer, CHAN_STATIC, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(pPlayer, CHAN_STATIC, g_szDetonateSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
 @Player_EffectRevoke(pPlayer) {

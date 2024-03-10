@@ -16,7 +16,7 @@
 #define SKELETON_EGG_ENTITY_NAME "hwn_skeleton_egg_big"
 #define SKELETON_EGGS_NUM 5
 
-new const g_szSndDetonate[] = "hwn/spells/spell_skeletons_horde_rise.wav";
+new const g_szDetonateSound[] = "hwn/spells/spell_skeletons_horde_rise.wav";
 
 new g_iGibsModelIndex;
 
@@ -25,7 +25,7 @@ new g_iWofSpell;
 public plugin_precache() {
     g_iGibsModelIndex = precache_model("models/bonegibs.mdl");
 
-    precache_sound(g_szSndDetonate);
+    precache_sound(g_szDetonateSound);
 }
 
 public plugin_init() {
@@ -59,7 +59,7 @@ public Hwn_Wof_Fw_Effect_Start(iSpell) {
 
     UTIL_Message_Dlight(vecOrigin, 36, {HWN_COLOR_SECONDARY}, 30, 12);
 
-    emit_sound(this, CHAN_BODY, g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(this, CHAN_BODY, g_szDetonateSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
 FindPumpkinDispenser(iStartIndex) {

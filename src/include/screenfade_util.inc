@@ -29,7 +29,7 @@ stock FixedUnsigned16(Float:flValue, iScale)
 	return iOutput;
 }
 
-stock UTIL_ScreenFade(pPlayer=0,iColor[3]={0,0,0},Float:flFxTime=-1.0,Float:flHoldTime=0.0,iAlpha=0,iFlags=FFADE_IN,bool:bReliable=false,bool:bExternal=false)
+stock UTIL_ScreenFade(pPlayer=0,const iColor[3]={0,0,0},Float:flFxTime=-1.0,Float:flHoldTime=0.0,iAlpha=0,iFlags=FFADE_IN,bool:bReliable=false,bool:bExternal=false)
 {
 	if( pPlayer && !is_user_connected(pPlayer))
 		return;

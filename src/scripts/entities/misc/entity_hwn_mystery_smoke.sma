@@ -36,9 +36,10 @@ public plugin_precache() {
     CE_Register(ENTITY_NAME);
     CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
     CE_RegisterHook(ENTITY_NAME, CEFunction_InitSize, "@Entity_InitSize");
-    CE_RegisterHook(ENTITY_NAME, CEFunction_KeyValue, "@Entity_KeyValue");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Touch, "@Entity_Touch");
+
+    CE_RegisterKeyMemberBinding(ENTITY_NAME, "team", m_iTeam, CEMemberType_Cell);
 
     g_iNullModelIndex = precache_model("sprites/white.spr");
     g_iTeamSmokeModelIndex[0] = precache_model("sprites/hwn/magic_smoke.spr");
@@ -66,12 +67,6 @@ public plugin_precache() {
 
     if (equal(szModel, NULL_STRING) || szModel[0] != '*') {
         engfunc(EngFunc_SetSize, this, Float:{-64.0, -64.0, 0.0}, Float:{64.0, 64.0, 64.0});
-    }
-}
-
-@Entity_KeyValue(this, const szKey[], const szValue[]) {
-    if (equal(szKey, "team")) {
-        CE_SetMember(this, m_iTeam, str_to_num(szValue));
     }
 }
 

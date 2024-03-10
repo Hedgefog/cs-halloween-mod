@@ -174,7 +174,7 @@ SetupSpawnGiftTask(pPlayer) {
 public Task_SpawnGift(iTaskId) {
     new pPlayer = iTaskId - TASKID_SUM_SPAWN_GIFT;
 
-    new iTeam = get_member(pPlayer, m_iTeam);
+    new iTeam = get_ent_data(pPlayer, "CBasePlayer", "m_iTeam");
     if (iTeam != 1 && iTeam != 2) {
         SetupSpawnGiftTask(pPlayer);
         return;

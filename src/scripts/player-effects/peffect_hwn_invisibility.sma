@@ -1,7 +1,6 @@
 #include <amxmodx>
 #include <fakemeta>
 #include <hamsandwich>
-#include <reapi>
 
 #include <api_player_effects>
 #include <screenfade_util>
@@ -19,9 +18,9 @@ const Float:EffectRadius = 16.0;
 new const EffectColor[3] = {255, 255, 255};
 
 const Float:FadeEffectMaxTime = 9.9;
-new FadeEffectColor[3] = {128, 128, 128};
+new const FadeEffectColor[3] = {128, 128, 128};
 
-new const g_szSndDetonate[] = "hwn/spells/spell_stealth.wav";
+new const g_szDetonateSound[] = "hwn/spells/spell_stealth.wav";
 
 new g_iEffectTraceModelIndex;
 
@@ -29,7 +28,7 @@ new Float:g_rgflPlayerNextFixFade[MAX_PLAYERS + 1];
 
 public plugin_precache() {
     g_iEffectTraceModelIndex = precache_model("sprites/xbeam4.spr");
-    precache_sound(g_szSndDetonate);
+    precache_sound(g_szDetonateSound);
 }
 
 public plugin_init() {
@@ -85,7 +84,7 @@ public client_connect(pPlayer) {
     vecOrigin[2] += vecMins[2];
 
     UTIL_Message_BeamCylinder(vecOrigin, EffectRadius * 3, g_iEffectTraceModelIndex, 0, 3, 90, 255, EffectColor, 100, 0);
-    emit_sound(this, CHAN_STATIC , g_szSndDetonate, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    emit_sound(this, CHAN_STATIC , g_szDetonateSound, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
 }
 
 /*--------------------------------[ Hooks ]--------------------------------*/
