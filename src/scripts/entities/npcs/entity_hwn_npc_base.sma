@@ -898,7 +898,7 @@ bool:@Entity_TestStep(this, const Float:vecOrigin[3], const Float:vecStep[3], Fl
         xs_vec_normalize(vecDirection, vecDirection);
     }
 
-    static Float:vecVelocity[3];
+    static Float:vecVelocity[3]; pev(this, pev_velocity, vecVelocity);
 
     vecVelocity[0] = vecDirection[0] * flMaxSpeed;
     vecVelocity[1] = vecDirection[1] * flMaxSpeed;
