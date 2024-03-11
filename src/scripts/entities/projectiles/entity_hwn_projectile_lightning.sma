@@ -79,6 +79,8 @@ public plugin_end() {
 @Entity_Init(this) {
     CE_SetMember(this, m_irgpVictims, ArrayCreate());
     CE_SetMember(this, CE_MEMBER_LIFETIME, 5.0);
+
+    ArrayPushCell(g_irgLightningBalls, this);
 }
 
 @Entity_Spawned(this) {
