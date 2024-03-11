@@ -14,7 +14,6 @@
 
 #define ENTITY_NAME "hwn_projectile_base"
 
-#define TouchDetonate "TouchDetonate"
 #define TouchKill "TouchKill"
 #define Detonate "Detonate"
 #define Launch "Launch"
@@ -26,7 +25,6 @@ public plugin_precache() {
     CE_RegisterHook(ENTITY_NAME, CEFunction_Touch, "@Entity_Touch");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Kill, "@Entity_Kill");
 
-    CE_RegisterVirtualMethod(ENTITY_NAME, TouchDetonate, "@Entity_TouchDetonate", CE_MP_Cell);
     CE_RegisterVirtualMethod(ENTITY_NAME, TouchKill, "@Entity_TouchKill", CE_MP_Cell);
     CE_RegisterVirtualMethod(ENTITY_NAME, Detonate, "@Entity_Detonate", CE_MP_Cell);
     CE_RegisterVirtualMethod(ENTITY_NAME, Launch, "@Entity_Launch", CE_MP_FloatArray, 3);
@@ -38,7 +36,7 @@ public plugin_init() {
 }
 
 @Entity_Kill(this, pKiller) {
-    CE_CallMethod(this, TouchKill, pKiller);
+    CE_CallMethod(this, Detonate, pKiller);
 }
 
 @Entity_Touch(this, pToucher) {
@@ -46,15 +44,11 @@ public plugin_init() {
     if (pev(this, pev_deadflag) == DEAD_DEAD) return;
     if (pev(pToucher, pev_solid) <= SOLID_TRIGGER) return;
 
-    CE_CallMethod(this, TouchDetonate, pToucher);
-}
-
-@Entity_TouchDetonate(this, pDetonator) {
-    CE_Kill(this, pDetonator);
+    CE_CallMethod(this, TouchKill, pToucher);
 }
 
 @Entity_TouchKill(this, pDetonator) {
-    CE_CallMethod(this, Detonate, pDetonator);
+    CE_Kill(this, pDetonator);
 }
 
 @Entity_Detonate(this, pDetonator) {}

@@ -59,7 +59,7 @@ public plugin_precache() {
 
     CE_RegisterMethod(ENTITY_NAME, "Launch", "@Entity_Launch", CE_MP_FloatArray, 3);
     CE_RegisterMethod(ENTITY_NAME, "Detonate", "@Entity_Detonate", CE_MP_Cell);
-    CE_RegisterMethod(ENTITY_NAME, "TouchKill", "@Entity_TouchDetonate", CE_MP_Cell);
+    CE_RegisterMethod(ENTITY_NAME, "TouchKill", "@Entity_TouchKill", CE_MP_Cell);
     CE_RegisterMethod(ENTITY_NAME, "StopKill", "@Entity_StopKill");
 }
 
@@ -133,7 +133,7 @@ public plugin_end() {
     CE_SetMemberVec(this, "vecVelocity", vecVelocity);
 }
 
-@Entity_TouchDetonate(this, pDetonator) {}
+@Entity_TouchKill(this, pDetonator) {}
 @Entity_StopKill(this, pDetonator) {}
 
 @Entity_Detonate(this, pDetonator) {
