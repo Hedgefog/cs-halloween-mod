@@ -10,11 +10,10 @@
 #include <hwn_utils>
 
 #define PLUGIN "[Hwn] Gifts"
+#define VERSION HWN_VERSION
 #define AUTHOR "Hedgehog Fog"
 
 #define GIFT_ENTITY_CLASSNAME "hwn_item_gift"
-
-#define TASKID_SUM_SPAWN_GIFT 1000
 
 new Array:g_irgGiftTargets;
 
@@ -29,6 +28,8 @@ new g_fwGiftSpawn;
 new g_fwGiftPicked;
 new g_fwGiftDisappear;
 
+new Float:g_rgflPlayerNextGiftSpawn[MAX_PLAYERS + 1];
+
 public plugin_precache() {
     precache_sound(g_szSndGiftSpawn);
     precache_sound(g_szSndGiftPickup);
@@ -38,7 +39,7 @@ public plugin_precache() {
 }
 
 public plugin_init() {
-    register_plugin(PLUGIN, HWN_VERSION, AUTHOR);
+    register_plugin(PLUGIN, VERSION, AUTHOR);
 
     g_pCvarGiftSpawnDelay = register_cvar("hwn_gifts_spawn_delay", "300.0");
     g_pCvarGiftCosmeticMinTime = register_cvar("hwn_gifts_cosmetic_min_time", "450");
@@ -47,6 +48,8 @@ public plugin_init() {
     g_fwGiftSpawn = CreateMultiForward("Hwn_Gifts_Fw_GiftSpawn", ET_IGNORE, FP_CELL, FP_CELL);
     g_fwGiftPicked = CreateMultiForward("Hwn_Gifts_Fw_GiftPicked", ET_IGNORE, FP_CELL, FP_CELL);
     g_fwGiftDisappear = CreateMultiForward("Hwn_Gifts_Fw_GiftDisappear", ET_IGNORE, FP_CELL, FP_CELL);
+
+    set_task(1.0, "Task_GiftSpawnThink", _, _, _, "b");
 }
 
 public plugin_end() {
@@ -87,11 +90,7 @@ public Native_GetTarget(iPluginId, iArgc) {
 /*--------------------------------[ Forwards ]--------------------------------*/
 
 public client_putinserver(pPlayer) {
-    SetupSpawnGiftTask(pPlayer);
-}
-
-public client_disconnected(pPlayer) {
-    remove_task(pPlayer + TASKID_SUM_SPAWN_GIFT);
+    ScheduleGiftSpawn(pPlayer);
 }
 
 public Hwn_Bosses_Fw_Winner(pPlayer) {
@@ -104,9 +103,9 @@ public Hwn_Bosses_Fw_Winner(pPlayer) {
     Hwn_Player_GiveCosmetic(pPlayer, szCosmetic, Hwn_PlayerCosmetic_Type_Unusual, float(iTime));
 }
 
-/*--------------------------------[ Hooks ]--------------------------------*/
+/*--------------------------------[ Methods ]--------------------------------*/
 
-public @Gift_Picked(this, pPlayer) {
+@Gift_Picked(this, pPlayer) {
     new iNum = Hwn_PlayerCosmetic_GetCount();
 
     new iTime = random_num(
@@ -129,12 +128,12 @@ public @Gift_Picked(this, pPlayer) {
     ExecuteForward(g_fwGiftPicked, _, pPlayer, this);
 }
 
-public @Gift_Killed(this, bool:bPicked) {
+@Gift_Killed(this, bool:bPicked) {
     new pOwner = pev(this, pev_owner);
     if (!pOwner) return;
 
     if (is_user_connected(pOwner)) {
-        SetupSpawnGiftTask(pOwner);
+        ScheduleGiftSpawn(pOwner);
     }
 
     if (!bPicked) {
@@ -165,31 +164,37 @@ SpawnGift(pPlayer, const Float:vecOrigin[3]) {
     ExecuteForward(g_fwGiftSpawn, _, pPlayer, pEntity);
 }
 
-SetupSpawnGiftTask(pPlayer) {
-    set_task(get_pcvar_float(g_pCvarGiftSpawnDelay), "Task_SpawnGift", pPlayer + TASKID_SUM_SPAWN_GIFT);
+ScheduleGiftSpawn(pPlayer) {
+    g_rgflPlayerNextGiftSpawn[pPlayer] = get_gametime() + get_pcvar_float(g_pCvarGiftSpawnDelay);
 }
 
-/*--------------------------------[ Tasks ]--------------------------------*/
-
-public Task_SpawnGift(iTaskId) {
-    new pPlayer = iTaskId - TASKID_SUM_SPAWN_GIFT;
-
+PlayerGiftSpawnCheck(pPlayer) {
     new iTeam = get_ent_data(pPlayer, "CBasePlayer", "m_iTeam");
-    if (iTeam != 1 && iTeam != 2) {
-        SetupSpawnGiftTask(pPlayer);
-        return;
-    }
+    if (iTeam != 1 && iTeam != 2) return;
 
     new Float:vecOrigin[3];
+
     if (g_irgGiftTargets != Invalid_Array && ArraySize(g_irgGiftTargets) > 0) {
         new iTargetsNum = ArraySize(g_irgGiftTargets);
         ArrayGetArray(g_irgGiftTargets, random(iTargetsNum), vecOrigin);
     } else {
-        if (!Hwn_EventPoints_GetRandom(vecOrigin)) {
-            SetupSpawnGiftTask(pPlayer);
-            return;
-        }
+        if (!Hwn_EventPoints_GetRandom(vecOrigin)) return;
     }
 
     SpawnGift(pPlayer, vecOrigin);
+    g_rgflPlayerNextGiftSpawn[pPlayer] = 0.0;
+}
+
+/*--------------------------------[ Tasks ]--------------------------------*/
+
+public Task_GiftSpawnThink() {
+    new Float:flGameTime = get_gametime();
+
+    for (new pPlayer = 1; pPlayer <= MaxClients; ++pPlayer) {
+        if (!is_user_connected(pPlayer)) continue;
+        if (!g_rgflPlayerNextGiftSpawn[pPlayer]) continue;
+        if (g_rgflPlayerNextGiftSpawn[pPlayer] > flGameTime) continue;
+
+        PlayerGiftSpawnCheck(pPlayer);
+    }
 }
