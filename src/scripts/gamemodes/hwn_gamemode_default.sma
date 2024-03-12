@@ -13,6 +13,9 @@
 
 #define TASKID_UPDATE_SKY 0
 
+#define GAMEMODE_NAME "Default"
+#define GAMEMODE_FLAGS (Hwn_GamemodeFlag_Default | Hwn_GamemodeFlag_SpellShop)
+
 enum CustomSky { CustomSky_Name[32], CustomSky_Color[3] };
 
 new const g_rgszSkySufixes[][4] = { "bk", "dn", "ft", "lf", "rt", "up" };
@@ -49,7 +52,7 @@ public plugin_precache() {
 
     PrecacheSky(g_rgCustomSkies[g_iCustomSky][CustomSky_Name]);
 
-    g_iGamemode = Hwn_Gamemode_Register("Default", Hwn_GamemodeFlag_Default | Hwn_GamemodeFlag_SpellShop);
+    g_iGamemode = Hwn_Gamemode_Register(GAMEMODE_NAME, GAMEMODE_FLAGS);
     
     g_pCvarChangeLighting = register_cvar("hwn_gamemode_change_lighting", "1");
 

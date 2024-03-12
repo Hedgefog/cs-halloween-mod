@@ -15,6 +15,9 @@
 #define PLUGIN "[Hwn] Gamemode Collector"
 #define AUTHOR "Hedgehog Fog"
 
+#define GAMEMODE_NAME "Collector"
+#define GAMEMODE_FLAGS (Hwn_GamemodeFlag_RespawnPlayers | Hwn_GamemodeFlag_SpecialEquip | Hwn_GamemodeFlag_SpellShop)
+
 #define BIT(%0) (1<<(%0))
 
 #define BUCKET_ENTITY_CLASSNAME "hwn_bucket"
@@ -32,6 +35,7 @@ new g_pCvarRoundTimeOvertime;
 new g_pCvarNpcDropChanceSpell;
 new g_pCvarTeamPointsToBossSpawn;
 new g_pCvarTeamPointsReward;
+new g_pCvarMaxMoney;
 
 new g_fwPlayerPointsChanged;
 new g_fwTeamPointsChanged;
@@ -56,10 +60,7 @@ public plugin_precache() {
     CE_RegisterHook(LOOT_ENTITY_CLASSNAME, CEFunction_Picked, "@Loot_Pickup");
     CE_RegisterHook(BACKPACK_ENTITY_CLASSNAME, CEFunction_Picked, "@Backpack_Pickup");
 
-    g_iGamemode = Hwn_Gamemode_Register(
-        "Collector",
-        Hwn_GamemodeFlag_RespawnPlayers | Hwn_GamemodeFlag_SpecialEquip | Hwn_GamemodeFlag_SpellShop
-    );
+    g_iGamemode = Hwn_Gamemode_Register(GAMEMODE_NAME, GAMEMODE_FLAGS);
 
     g_irgpBuckets = ArrayCreate(1, 2);
 }
@@ -77,6 +78,7 @@ public plugin_init() {
     g_pCvarNpcDropChanceSpell = register_cvar("hwn_collector_npc_drop_chance_spell", "7.5");
     g_pCvarTeamPointsToBossSpawn = register_cvar("hwn_collector_teampoints_to_boss_spawn", "20");
     g_pCvarTeamPointsReward = register_cvar("hwn_collector_teampoints_reward", "150");
+    g_pCvarMaxMoney = get_cvar_pointer("mp_maxmoney");
 
     g_fwPlayerPointsChanged = CreateMultiForward("Hwn_Collector_Fw_PlayerPoints", ET_IGNORE, FP_CELL);
     g_fwTeamPointsChanged = CreateMultiForward("Hwn_Collector_Fw_TeamPoints", ET_IGNORE, FP_CELL);
@@ -275,8 +277,8 @@ SetPlayerPoints(pPlayer, iAmount) {
 }
 
 bool:ExtractPlayerPoints(pPlayer) {
-    new iPoints = GetPlayerPoints(pPlayer);
-    new bool:bIsBackpack = iPoints > 1;
+    static iPoints; iPoints = GetPlayerPoints(pPlayer);
+    static bool:bIsBackpack; bIsBackpack = iPoints > 1;
     static Float:vecOrigin[3]; pev(pPlayer, pev_origin, vecOrigin);
 
     new pBackpack = CE_Create(bIsBackpack ? BACKPACK_ENTITY_CLASSNAME : LOOT_ENTITY_CLASSNAME, vecOrigin);
@@ -338,10 +340,11 @@ bool:ScorePlayerPointsToTeam(pPlayer, iAmount) {
     SetTeamPoints(iTeam, iTeamPoints + iAmount);
     ExecuteHamB(Ham_AddPoints, pPlayer, 1, false);
 
-    new reward = get_pcvar_num(g_pCvarTeamPointsReward);
-    new maxMoney = get_cvar_num("mp_maxmoney");
+    new iReward = get_pcvar_num(g_pCvarTeamPointsReward);
+    new iMaxMoney = get_pcvar_num(g_pCvarMaxMoney);
+    new iMoney = cs_get_user_money(pPlayer);
 
-    cs_set_user_money(pPlayer, clamp(cs_get_user_money(pPlayer) + reward, 0, maxMoney));
+    cs_set_user_money(pPlayer, clamp(iMoney + iReward, 0, iMaxMoney));
 
     client_cmd(pPlayer, "spk %s", g_szSndPointCollected);
     ExecuteForward(g_fwTeamPointsScored, _, iTeam, iAmount, pPlayer);
@@ -380,8 +383,8 @@ ReleaseTeamBucketsBoiling(iTeam) {
     new iBucketsNum = ArraySize(g_irgpBuckets);
 
     for (new iBucket = 0; iBucket < iBucketsNum; ++iBucket) {
-        new pBucket = ArrayGetCell(g_irgpBuckets, iBucket);
-        new iBucketTeam = pev(pBucket, pev_team);
+        static pBucket; pBucket = ArrayGetCell(g_irgpBuckets, iBucket);
+        static iBucketTeam; iBucketTeam = pev(pBucket, pev_team);
 
         if (iBucketTeam && iBucketTeam != iTeam) continue;
 
