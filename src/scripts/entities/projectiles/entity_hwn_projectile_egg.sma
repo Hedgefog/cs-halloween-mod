@@ -34,7 +34,6 @@ public plugin_init() {
 
 @Entity_Init(this) {
     CE_SetMember(this, CE_MEMBER_RESPAWNTIME, HWN_ITEM_RESPAWN_TIME);
-    CE_SetMemberString(this, CE_MEMBER_MODEL, "models/w_c4.mdl");
     CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-8.0, -8.0, -8.0}, false);
     CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{8.0, 8.0, 8.0}, false);
     CE_SetMemberString(this, m_szTargetClassname, NULL_STRING, false);
