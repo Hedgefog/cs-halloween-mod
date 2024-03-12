@@ -17,9 +17,6 @@
 #define ENTITY_NAME "hwn_bucket"
 #define LIQUID_ENTITY_NAME "hwn_bucket_liquid"
 
-#define TASKID_SUM_BOIL_SOUND 1000
-#define TASKID_SUM_REMOVE_LID 2000
-
 #define TAKE_RANGE 256.0
 
 #define ACTION_POP_DURATION 0.33
