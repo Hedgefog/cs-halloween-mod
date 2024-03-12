@@ -29,8 +29,8 @@ enum Equipment {
 new g_fwEquipmentChanged;
 
 new g_szMenuTitle[32];
-new g_iEquipmentMenu;
-new Array:g_rgsEquipments;
+new g_iEquipmentMenu = -1;
+new Array:g_rgsEquipments = Invalid_Array;
 
 new g_rgiPlayerEquipment[MAX_PLAYERS + 1];
 
@@ -103,6 +103,20 @@ public Native_GiveAmmo(iPluginId, iArgc) {
     @Player_GiveAmmo(pPlayer, iAmount);
 }
 
+public client_connect(pPlayer) {
+    g_rgiPlayerEquipment[pPlayer] = -1;
+
+    new iEquipmentsNum = ArraySize(g_rgsEquipments);
+
+    if (!iEquipmentsNum) return;
+
+    if (is_user_bot(pPlayer)) {
+        g_rgiPlayerEquipment[pPlayer] = random(iEquipmentsNum);
+    } else {
+        g_rgiPlayerEquipment[pPlayer] = 0;
+    }
+}
+
 Struct:@Equipment_Create() {
     new Struct:this = StructCreate(Equipment);
 
@@ -124,8 +138,9 @@ Struct:@Equipment_Create() {
 
     strip_user_weapons(this);
 
-    new iEquipment = g_rgiPlayerEquipment[this];
-    new Struct:sEquipment = ArrayGetCell(g_rgsEquipments, iEquipment);
+    if (g_rgiPlayerEquipment[this] == -1) return;
+
+    new Struct:sEquipment = ArrayGetCell(g_rgsEquipments, g_rgiPlayerEquipment[this]);
 
     new Array:irgItems = StructGetCell(sEquipment, Equipment_Items);
     new iItemsNum = ArraySize(irgItems);
