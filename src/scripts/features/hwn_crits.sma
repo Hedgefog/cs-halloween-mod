@@ -16,8 +16,8 @@
 #define PLUGIN "[Hwn] Crits"
 #define AUTHOR "Hedgehog Fog"
 
-#define TASKID_SUM_PENALTY 1000
-#define TASKID_SUM_HIT_BONUS 2000
+#define TASKID_PENALTY 1000
+#define TASKID_HIT_BONUS 2000
 
 #define CRIT_EFFECT_SPLASH_LENGTH 128.0
 #define CRIT_EFFECT_SPLASH_SPEEDNOISE 255
@@ -30,6 +30,12 @@
 #define CRIT_EFFECT_FLASH_DECAYRATE 80
 
 #define EFFECT_COLOR_BYTE HWN_COLOR_PRIMARY_PALETTE2
+
+enum _:EffectMode {
+    EffectMode_Off = 0,
+    EffectMode_On,
+    EffectMode_HitsOnly
+}
 
 new g_pCvarCritsDmgMultiplier;
 new g_pCvarCritsEffectTrace;
@@ -136,7 +142,7 @@ public Command_CritsToggle(pPlayer, iLevel, iCId) {
     new bool:bValue = !@Player_GetCrits(pTarget);
     @Player_SetCrits(pTarget, bValue);
 
-    log_amx("Set crits for %d to %s", pTarget, bValue ? "true" : "false");
+    console_print(pPlayer, "Set crits for %d to %s", pTarget, bValue ? "true" : "false");
 
     return PLUGIN_HANDLED;
 }
@@ -148,9 +154,7 @@ public HamHook_Player_Spawn_Post(pPlayer) {
 }
 
 public HamHook_TraceAttack(pEntity, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
-    if (!IS_PLAYER(pAttacker)) {
-        return HAM_IGNORED;
-    }
+    if (!IS_PLAYER(pAttacker)) return HAM_IGNORED;
 
     static Float:flGameTime; flGameTime = get_gametime();
     static bool:bIsHit; bIsHit = (IS_PLAYER(pEntity) && rg_is_player_can_takedamage(pEntity, pAttacker)) || pev(pEntity, pev_flags) & FL_MONSTER;
@@ -232,13 +236,13 @@ bool:@Player_GetCrits(this) {
 
     if (bIsHit) {
         if (g_rgflPlayerLastHit[this] != flGameTime) { // Only new hit
-            set_task(0.0, "Task_HitBonus", this + TASKID_SUM_HIT_BONUS);
+            set_task(0.0, "Task_HitBonus", TASKID_HIT_BONUS + this);
         }
 
-        remove_task(this + TASKID_SUM_PENALTY); // Remove penalty task on hit
+        remove_task(TASKID_PENALTY + this); // Remove penalty task on hit
     } else {
         if (bIsNewShot) { // Only new shot
-            set_task(0.0, "Task_Penalty", this + TASKID_SUM_PENALTY);
+            set_task(0.0, "Task_Penalty", TASKID_PENALTY + this);
         }
     }
 
@@ -266,26 +270,20 @@ Float:@Player_GetCritChance(this) {
 /*--------------------------------[ Functions ]--------------------------------*/
 
 CritEffect(const Float:vecOrigin[3], const Float:vecAttackerOrigin[3], const Float:vecDirection[3], bool:bIsHit) {
-    new iColor = EFFECT_COLOR_BYTE;
+    static const iColor = EFFECT_COLOR_BYTE;
+    static iCritsEffectTrace; iCritsEffectTrace = get_pcvar_num(g_pCvarCritsEffectTrace);
+    static iCritsEffectSplash; iCritsEffectSplash = get_pcvar_num(g_pCvarCritsEffectSplash);
+    static iCritsEffectFlash; iCritsEffectFlash = get_pcvar_num(g_pCvarCritsEffectFlash);
 
-    if (
-        get_pcvar_num(g_pCvarCritsEffectTrace) > 0 &&
-        (get_pcvar_num(g_pCvarCritsEffectTrace) != 2 || bIsHit)
-    ) {
+    if (iCritsEffectTrace > 0 && (iCritsEffectTrace != EffectMode_HitsOnly || bIsHit) ) {
         TraceEffect(vecAttackerOrigin, vecOrigin, iColor);
     }
 
-    if (
-        get_pcvar_num(g_pCvarCritsEffectSplash) > 0 &&
-        (get_pcvar_num(g_pCvarCritsEffectSplash) != 2 || bIsHit)
-    ) {
+    if (iCritsEffectSplash > 0 && (iCritsEffectSplash != EffectMode_HitsOnly || bIsHit) ) {
         SplashEffect(vecOrigin, vecDirection, iColor);
     }
 
-    if (
-        get_pcvar_num(g_pCvarCritsEffectFlash) > 0 &&
-        (get_pcvar_num(g_pCvarCritsEffectFlash) != 2 || bIsHit)
-    ) {
+    if (iCritsEffectFlash > 0 && (iCritsEffectFlash != EffectMode_HitsOnly || bIsHit)) {
         FlashEffect(vecOrigin);
     }
 }
@@ -310,7 +308,7 @@ FlashEffect(const Float:vecOrigin[3]) {
 /*--------------------------------[ Tasks ]--------------------------------*/
 
 public Task_HitBonus(iTaskId) {
-    new pPlayer = iTaskId - TASKID_SUM_HIT_BONUS;
+    new pPlayer = iTaskId - TASKID_HIT_BONUS;
 
     new Float:flCitChance = @Player_GetCritChance(pPlayer);
     new Float:flHitBonus = get_pcvar_float(g_pCvarCritsRandomChanceBonus);
@@ -319,7 +317,7 @@ public Task_HitBonus(iTaskId) {
 }
 
 public Task_Penalty(iTaskId) {
-    new pPlayer = iTaskId - TASKID_SUM_PENALTY;
+    new pPlayer = iTaskId - TASKID_PENALTY;
 
     new Float:flCitChance = @Player_GetCritChance(pPlayer);
     new Float:flMissPenalty = get_pcvar_float(g_pCvarCritsRandomChancePenalty);

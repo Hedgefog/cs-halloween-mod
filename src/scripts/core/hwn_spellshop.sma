@@ -186,39 +186,38 @@ CreateShopMenu(pPlayer) {
 }
 
 GetSpellPrice(iSpell) {
-    new iPrice = get_pcvar_num(g_pCvarPrice);
+    static iPrice; iPrice = get_pcvar_num(g_pCvarPrice);
+    static Hwn_SpellFlags:iSpellFlags; iSpellFlags = Hwn_Spell_GetFlags(iSpell);
 
-    new Hwn_SpellFlags:spellFlags = Hwn_Spell_GetFlags(iSpell);
-
-    if (spellFlags & Hwn_SpellFlag_Throwable) {
+    if (iSpellFlags & Hwn_SpellFlag_Throwable) {
         iPrice += get_pcvar_num(g_pCvarPriceThrowable);
     }
 
-    if (spellFlags & Hwn_SpellFlag_Applicable) {
+    if (iSpellFlags & Hwn_SpellFlag_Applicable) {
         iPrice += get_pcvar_num(g_pCvarPriceApplicable);
     }
 
-    if (spellFlags & Hwn_SpellFlag_Ability) {
+    if (iSpellFlags & Hwn_SpellFlag_Ability) {
         iPrice += get_pcvar_num(g_pCvarPriceAbility);
     }
 
-    if (spellFlags & Hwn_SpellFlag_Heal) {
+    if (iSpellFlags & Hwn_SpellFlag_Heal) {
         iPrice += get_pcvar_num(g_pCvarPriceHeal);
     }
 
-    if (spellFlags & Hwn_SpellFlag_Damage) {
+    if (iSpellFlags & Hwn_SpellFlag_Damage) {
         iPrice += get_pcvar_num(g_pCvarPriceDamage);
     }
 
-    if (spellFlags & Hwn_SpellFlag_Radius) {
+    if (iSpellFlags & Hwn_SpellFlag_Radius) {
         iPrice += get_pcvar_num(g_pCvarPriceRadius);
     }
 
-    if (spellFlags & Hwn_SpellFlag_Protection) {
+    if (iSpellFlags & Hwn_SpellFlag_Protection) {
         iPrice += get_pcvar_num(g_pCvarPriceProtection);
     }
 
-    if (spellFlags & Hwn_SpellFlag_Rare) {
+    if (iSpellFlags & Hwn_SpellFlag_Rare) {
         iPrice = floatround(iPrice * get_pcvar_float(g_pCvarPriceMultRare));
     }
 

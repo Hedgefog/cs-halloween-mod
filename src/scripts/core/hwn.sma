@@ -53,6 +53,8 @@ public plugin_natives() {
     register_native("Hwn_GetNpcUpdateRate", "Native_GetNpcUpdateRate");
 }
 
+/*--------------------------------[ Natives ]--------------------------------*/
+
 public Float:Native_GetUpdateRate(iPluginId, iArgc) {
     return g_flUpdateRate;
 }
@@ -60,6 +62,8 @@ public Float:Native_GetUpdateRate(iPluginId, iArgc) {
 public Float:Native_GetNpcUpdateRate(iPluginId, iArgc) {
     return g_flNpcUpdateRate;
 }
+
+/*--------------------------------[ Hooks ]--------------------------------*/
 
 public FMHook_GetGameDescription() {
     static szGameName[32];
@@ -79,6 +83,8 @@ public CvarHook_Fps(pCvar) {
 public CvarHook_NpcFps(pCvar) {
     g_flNpcUpdateRate = UTIL_FpsToDelay(get_pcvar_num(pCvar));
 }
+
+/*--------------------------------[ Functions ]--------------------------------*/
 
 LoadConfig() {
     new szConfigDir[32];

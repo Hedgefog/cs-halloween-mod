@@ -103,6 +103,8 @@ public Native_GiveAmmo(iPluginId, iArgc) {
     @Player_GiveAmmo(pPlayer, iAmount);
 }
 
+/*--------------------------------[ Forwards ]--------------------------------*/
+
 public client_connect(pPlayer) {
     g_rgiPlayerEquipment[pPlayer] = -1;
 
@@ -116,6 +118,8 @@ public client_connect(pPlayer) {
         g_rgiPlayerEquipment[pPlayer] = 0;
     }
 }
+
+/*--------------------------------[ Methods ]--------------------------------*/
 
 Struct:@Equipment_Create() {
     new Struct:this = StructCreate(Equipment);
@@ -140,19 +144,19 @@ Struct:@Equipment_Create() {
 
     if (g_rgiPlayerEquipment[this] == -1) return;
 
-    new Struct:sEquipment = ArrayGetCell(g_rgsEquipments, g_rgiPlayerEquipment[this]);
+    static Struct:sEquipment; sEquipment = ArrayGetCell(g_rgsEquipments, g_rgiPlayerEquipment[this]);
 
-    new Array:irgItems = StructGetCell(sEquipment, Equipment_Items);
-    new iItemsNum = ArraySize(irgItems);
+    static Array:irgItems; irgItems = StructGetCell(sEquipment, Equipment_Items);
+    static iItemsNum; iItemsNum = ArraySize(irgItems);
 
     for (new i = 0; i < iItemsNum; ++i) {
         static szItem[32];
         ArrayGetString(irgItems, i, szItem, charsmax(szItem));
         give_item(this, szItem);
 
-        new iWeaponId = get_weaponid(szItem);
+        static iWeaponId; iWeaponId = get_weaponid(szItem);
         if (iWeaponId) {
-            new iMaxRounds = cs_get_weapon_info(iWeaponId, CS_WEAPONINFO_MAX_ROUNDS);
+            static iMaxRounds; iMaxRounds = cs_get_weapon_info(iWeaponId, CS_WEAPONINFO_MAX_ROUNDS);
             if (iMaxRounds) cs_set_user_bpammo(this, iWeaponId, iMaxRounds);
         }
     }
@@ -184,18 +188,18 @@ Struct:@Equipment_Create() {
 }
 
 @Player_GiveAmmo(this, iAmount) {
-    new rgiWeapons[32];
-    new iWeaponsNum = 0;
+    static rgiWeapons[32];
+    static iWeaponsNum; iWeaponsNum = 0;
     get_user_weapons(this, rgiWeapons, iWeaponsNum);
 
     for (new i = 0; i < iWeaponsNum; ++i) {
-        new iWeaponId = rgiWeapons[i];
-        new iMaxRounds = cs_get_weapon_info(iWeaponId, CS_WEAPONINFO_MAX_ROUNDS);
-        new iClipSize = cs_get_weapon_info(iWeaponId, CS_WEAPONINFO_BUY_CLIP_SIZE);
+        static iWeaponId; iWeaponId = rgiWeapons[i];
+        static iMaxRounds; iMaxRounds = cs_get_weapon_info(iWeaponId, CS_WEAPONINFO_MAX_ROUNDS);
+        static iClipSize; iClipSize = cs_get_weapon_info(iWeaponId, CS_WEAPONINFO_BUY_CLIP_SIZE);
         
         if (!iMaxRounds) continue;
 
-        new iAmount = cs_get_user_bpammo(this, iWeaponId);
+        static iAmount; iAmount = cs_get_user_bpammo(this, iWeaponId);
         iAmount = min(iAmount + iClipSize, iMaxRounds);
         cs_set_user_bpammo(this, iWeaponId, iAmount);
     }
@@ -204,6 +208,8 @@ Struct:@Equipment_Create() {
 @Player_OpenEquipmentMenu(this) {
     menu_display(this, g_iEquipmentMenu);
 }
+
+/*--------------------------------[ Functions ]--------------------------------*/
 
 LoadEquipment() {
     new szConfigsDir[MAX_RESOURCE_PATH_LENGTH];
@@ -264,6 +270,8 @@ CreateMenu() {
     
     return iMenu;
 }
+
+/*--------------------------------[ Callbacks ]--------------------------------*/
 
 public MenuHandler_Equipment(pPlayer, iMenu, iItem) {
     if (iItem != MENU_EXIT) {
