@@ -85,6 +85,7 @@ public plugin_end() {
 
 @Entity_Spawned(this) {
     // set_pev(this, pev_rendercolor, DetonateColor);
+    set_pev(this, pev_gravity, 0.0);
     CE_CallMethod(this, "SpawnEffect", g_szEffectModel, ProjectileColorF, 255.0, 0.75, 10.0);
 }
 
