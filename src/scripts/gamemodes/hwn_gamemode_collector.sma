@@ -17,8 +17,6 @@
 
 #define BIT(%0) (1<<(%0))
 
-#define SIGNAL_BUY BIT(0)
-
 #define BUCKET_ENTITY_CLASSNAME "hwn_bucket"
 #define LOOT_ENTITY_CLASSNAME "hwn_item_pumpkin"
 #define SPELLBOOK_ENTITY_CLASSNAME "hwn_item_spellbook"
@@ -72,8 +70,6 @@ public plugin_init() {
     RegisterHamPlayer(Ham_Killed, "HamHook_Player_Killed_Post", .Post = 1);
 
     RegisterHam(Ham_Killed, CE_BASE_CLASSNAME, "HamHook_Base_Killed_Post", .Post = 1);
-
-    register_message(get_user_msgid("StatusIcon"), "Message_StatusIcon");
 
     g_pCvarTeamPointsLimit = register_cvar("hwn_collector_teampoints_limit", "50");
     g_pCvarRoundTime = register_cvar("hwn_collector_roundtime", "10.0");
@@ -181,18 +177,6 @@ public @Backpack_Pickup(this, pPlayer) {
 
 /*--------------------------------[ Hooks ]--------------------------------*/
 
-public Message_StatusIcon(iMsgId, iDest, pPlayer) {
-    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return PLUGIN_CONTINUE;
-
-    static szIcon[8]; get_msg_arg_string(2, szIcon, 7);
-    if (equal(szIcon, "buyzone") && get_msg_arg_int(1)) {
-        set_ent_data(pPlayer, "CBasePlayer", "m_signals", get_ent_data(pPlayer, "CBasePlayer", "m_signals") & ~SIGNAL_BUY);
-        return PLUGIN_HANDLED;
-    }
-
-    return PLUGIN_CONTINUE;
-}
-
 public HamHook_Player_Killed_Post(pPlayer, pKiller) {
     if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
 
@@ -222,6 +206,13 @@ public HamHook_Base_Killed_Post(pEntity) {
 }
 
 /*--------------------------------[ Forwards ]--------------------------------*/
+
+public Hwn_Gamemode_Fw_Activated() {
+    if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
+
+    set_member_game(m_bCTCantBuy, 1);
+    set_member_game(m_bTCantBuy, 1);
+}
 
 public Round_Fw_NewRound() {
     if (Hwn_Gamemode_GetCurrent() != g_iGamemode) return;
