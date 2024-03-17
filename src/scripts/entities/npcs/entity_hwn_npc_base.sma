@@ -197,10 +197,6 @@ public plugin_end() {
 
     engfunc(EngFunc_DropToFloor, this);
 
-    static Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
-    static Float:vecMaxs[3]; CE_GetMemberVec(this, CE_MEMBER_MAXS, vecMaxs);
-    UTIL_Message_Dlight(vecOrigin, floatround(floatmax(vecMaxs[0], vecMaxs[1])), {HWN_COLOR_SECONDARY}, 20, 8);
-
     set_pev(this, pev_nextthink, flGameTime + 0.1);
 }
 
@@ -315,7 +311,6 @@ public plugin_end() {
 
     static Float:flReleaseAttack; flReleaseAttack = CE_GetMember(this, m_flReleaseAttack);
     if (!flReleaseAttack) {
-        static Float:flGameTime; flGameTime = get_gametime();
         static Float:flNextAttack; flNextAttack = CE_GetMember(this, m_flNextAttack);
         if (flNextAttack <= flGameTime) {
             if (pEnemy && CE_CallMethod(this, CanAttack, pEnemy, flAttackRange, vecHitOffset)) {
@@ -583,8 +578,7 @@ bool:@Entity_ProcessPath(this) {
 
         for (new i = 0; i < ArraySize(irgSegments); ++i) {
             static NavPathSegment:pSegment; pSegment = ArrayGetCell(irgSegments, i);
-            static Float:vecPos[3];
-            Nav_Path_Segment_GetPos(pSegment, vecPos);
+            static Float:vecPos[3]; Nav_Path_Segment_GetPos(pSegment, vecPos);
             ArrayPushArray(irgPath, vecPos, sizeof(vecPos));
         }
     } else {

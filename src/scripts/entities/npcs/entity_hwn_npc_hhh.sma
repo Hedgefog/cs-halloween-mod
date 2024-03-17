@@ -154,7 +154,6 @@ public plugin_precache() {
     CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Remove, "@Entity_Remove");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Killed, "@Entity_Killed");
-    CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
 
     CE_RegisterMethod(ENTITY_NAME, Laugh, "@Entity_Laugh");
     CE_RegisterMethod(ENTITY_NAME, AIThink, "@Entity_AIThink");
@@ -264,18 +263,6 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     }
 }
 
-@Entity_Think(this) {
-    static Float:flGameTime; flGameTime = get_gametime();
-    static Float:flNextAIThink; flNextAIThink = CE_GetMember(this, m_flNextAIThink);
-    static bool:bShouldUpdateAI; bShouldUpdateAI = flNextAIThink <= flGameTime;
-
-    // animations update based on NPC activity
-    if (bShouldUpdateAI) {
-        new Action:iAction = @Entity_GetAction(this);
-        CE_CallMethod(this, PlayAction, iAction, false);
-    }
-}
-
 @Entity_AIThink(this) {
     CE_CallBaseMethod();
 
@@ -337,9 +324,6 @@ Action:@Entity_GetAction(this) {
             if (xs_vec_len_2d(vecVelocity) > 10.0) {
                 iAction = iAction == Action_Attack ? Action_RunAttack : Action_Run;
             }
-        }
-        case DEAD_DYING: {
-            iAction = Action_Shake;
         }
     }
 

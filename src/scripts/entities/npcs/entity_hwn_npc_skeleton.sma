@@ -115,7 +115,6 @@ public plugin_precache() {
     CE_RegisterHook(ENTITY_NAME, CEFunction_Init, "@Entity_Init");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Killed, "@Entity_Killed");
-    CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
 
     CE_RegisterMethod(ENTITY_NAME, PlayAction, "@Entity_PlayAction", CE_MP_Cell, CE_MP_Cell);
     CE_RegisterMethod(ENTITY_NAME, SpawnEggs, "@Entity_SpawnEggs");
@@ -169,18 +168,6 @@ public plugin_init() {
     CE_CallMethod(this, SpawnEggs);
 
     @Entity_DisappearEffect(this);
-}
-
-@Entity_Think(this) {
-    static Float:flGameTime; flGameTime = get_gametime();
-    static Float:flNextAIThink; flNextAIThink = CE_GetMember(this, m_flNextAIThink);
-    static bool:bShouldUpdateAI; bShouldUpdateAI = flNextAIThink <= flGameTime;
-
-    // animations update based on NPC activity
-    if (bShouldUpdateAI) {
-        new Action:iAction = @Entity_GetAction(this);
-        CE_CallMethod(this, PlayAction, iAction, false);
-    }
 }
 
 @Entity_AIThink(this) {
