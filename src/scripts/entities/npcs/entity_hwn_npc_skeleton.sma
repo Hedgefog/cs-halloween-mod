@@ -117,7 +117,7 @@ public plugin_precache() {
     CE_RegisterHook(ENTITY_NAME, CEFunction_Killed, "@Entity_Killed");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
 
-    CE_RegisterMethod(ENTITY_NAME, PlayAction, "@Entity_PlayAction", CE_MP_Cell, CE_MP_Cell, CE_MP_Cell);
+    CE_RegisterMethod(ENTITY_NAME, PlayAction, "@Entity_PlayAction", CE_MP_Cell, CE_MP_Cell);
     CE_RegisterMethod(ENTITY_NAME, SpawnEggs, "@Entity_SpawnEggs");
     CE_RegisterMethod(ENTITY_NAME, Laugh, "@Entity_Laugh");
     CE_RegisterMethod(ENTITY_NAME, AIThink, "@Entity_AIThink");

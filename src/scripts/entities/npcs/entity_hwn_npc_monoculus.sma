@@ -197,6 +197,7 @@ public plugin_precache() {
     CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
 
     CE_RegisterMethod(ENTITY_NAME, TakeDamage, "@Entity_TakeDamage", CE_MP_Cell, CE_MP_Cell, CE_MP_Float, CE_MP_Cell);
+    CE_RegisterMethod(ENTITY_NAME, PlayAction, "@Entity_PlayAction", CE_MP_Cell, CE_MP_Cell);
     CE_RegisterMethod(ENTITY_NAME, AIThink, "@Entity_AIThink");
     CE_RegisterMethod(ENTITY_NAME, AttackThink, "@Entity_AttackThink");
     CE_RegisterMethod(ENTITY_NAME, StartAttack, "@Entity_StartAttack", CE_MP_Float, CE_MP_Float, CE_MP_FloatArray, 3, CE_MP_Float, CE_MP_Cell);
