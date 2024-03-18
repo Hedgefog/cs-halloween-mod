@@ -31,6 +31,7 @@
 #define m_vecHitOffset "vecHitOffset"
 #define m_flAttackRate "flAttackRate"
 #define m_flDieDuration "flDieDuration"
+#define m_vecInput "vecInput"
 
 #define Laugh "Laugh"
 #define PlayAction "PlayAction"
@@ -319,9 +320,7 @@ Action:@Entity_GetAction(this) {
                 iAction = Action_Attack;
             }
 
-            static Float:vecVelocity[3]; pev(this, pev_velocity, vecVelocity);
-
-            if (xs_vec_len_2d(vecVelocity) > 10.0) {
+            if (CE_HasMember(this, m_vecInput)) {
                 iAction = iAction == Action_Attack ? Action_RunAttack : Action_Run;
             }
         }

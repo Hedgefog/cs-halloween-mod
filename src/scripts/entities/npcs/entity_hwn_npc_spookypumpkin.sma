@@ -39,6 +39,7 @@
 #define m_flFindRange "flFindRange"
 #define m_flViewRange "flViewRange"
 #define m_flAttackRate "flAttackRate"
+#define m_vecInput "vecInput"
 
 #define PlayAction "PlayAction"
 #define Laugh "Laugh"
@@ -46,6 +47,7 @@
 #define MoveTo "MoveTo"
 #define EmitVoice "EmitVoice"
 #define IsInViewCone "IsInViewCone"
+#define MovementThink "MovementThink"
 
 enum _:Sequence {
     Sequence_Idle = 0,
@@ -112,6 +114,7 @@ public plugin_precache() {
     CE_RegisterMethod(ENTITY_NAME, Laugh, "@Entity_Laugh");
     CE_RegisterMethod(ENTITY_NAME, AIThink, "@Entity_AIThink");
     CE_RegisterMethod(ENTITY_NAME, MoveTo, "@Entity_MoveTo", CE_MP_FloatArray, 3);
+    CE_RegisterMethod(ENTITY_NAME, MovementThink, "@Entity_MovementThink");
 }
 
 public plugin_init() {
@@ -184,16 +187,19 @@ public plugin_init() {
     CE_CallMethod(this, PlayAction, iAction, false);
 }
 
+@Entity_MovementThink(this) {}
+
 @Entity_MoveTo(this, const Float:vecTarget[3]) {
-    static Float:flGameTime; flGameTime = get_gametime();
-    static Float:flLastThink; pev(this, pev_ltime, flLastThink);
-    static Float:flDelta; flDelta = flGameTime - flLastThink;
-    static Float:flMaxAngle; flMaxAngle = 180.0 * floatmin(flDelta, 0.1);
+    CE_CallBaseMethod(vecTarget);
 
-    UTIL_TurnTo(this, vecTarget, bool:{true, false, true}, flMaxAngle);
+    static Float:vecAngles[3]; pev(this, pev_angles, vecAngles);
+    vecAngles[1] += 10.0;
+    set_pev(this, pev_angles, vecAngles);
 
-    if (CE_CallMethod(this, IsInViewCone, vecTarget)) {
-        @Entity_StartJump(this);
+    if (CE_HasMember(this, m_vecInput)) {
+        if (CE_CallMethod(this, IsInViewCone, vecTarget)) {
+            @Entity_StartJump(this);
+        }
     }
 }
 

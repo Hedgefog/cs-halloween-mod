@@ -36,6 +36,7 @@
 #define m_flFindRange "flFindRange"
 #define m_flViewRange "flViewRange"
 #define m_flAttackRate "flAttackRate"
+#define m_vecInput "vecInput"
 
 #define EmitVoice "EmitVoice"
 #define SpawnEggs "SpawnEggs"
@@ -116,10 +117,11 @@ public plugin_precache() {
     CE_RegisterHook(ENTITY_NAME, CEFunction_Spawned, "@Entity_Spawned");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Killed, "@Entity_Killed");
 
-    CE_RegisterMethod(ENTITY_NAME, PlayAction, "@Entity_PlayAction", CE_MP_Cell, CE_MP_Cell);
-    CE_RegisterMethod(ENTITY_NAME, SpawnEggs, "@Entity_SpawnEggs");
-    CE_RegisterMethod(ENTITY_NAME, Laugh, "@Entity_Laugh");
     CE_RegisterMethod(ENTITY_NAME, AIThink, "@Entity_AIThink");
+
+    CE_RegisterVirtualMethod(ENTITY_NAME, PlayAction, "@Entity_PlayAction", CE_MP_Cell, CE_MP_Cell);
+    CE_RegisterVirtualMethod(ENTITY_NAME, SpawnEggs, "@Entity_SpawnEggs");
+    CE_RegisterVirtualMethod(ENTITY_NAME, Laugh, "@Entity_Laugh");
 }
 
 public plugin_init() {
@@ -202,9 +204,7 @@ Action:@Entity_GetAction(this) {
                 iAction = Action_Attack;
             }
 
-            static Float:vecVelocity[3]; pev(this, pev_velocity, vecVelocity);
-
-            if (xs_vec_len_2d(vecVelocity) > 10.0) {
+            if (CE_HasMember(this, m_vecInput)) {
                 iAction = iAction == Action_Attack ? Action_RunAttack : Action_Run;
             }
         }
