@@ -28,6 +28,7 @@
           "api/player-model/**",
           "api/player-cosmetics/**",
           "entities/entity_fire.sma",
+          "entities/entity_base_npc.sma",
           "entities/entity_custom_events_handler.sma"
         ]
       }

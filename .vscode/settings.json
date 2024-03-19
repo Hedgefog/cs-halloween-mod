@@ -17,6 +17,7 @@
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/advanced-pushing/include",
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/waypoint-markers/include",
     "${workspaceRoot}/.thirdparty/cs-modding-kit/api/custom-events/include",
+    "${workspaceRoot}/.thirdparty/cs-modding-kit/entities/include",
     "${workspaceRoot}/src/include"
   ]
 }
