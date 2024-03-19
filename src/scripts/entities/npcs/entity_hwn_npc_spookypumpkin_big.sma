@@ -7,14 +7,12 @@
 
 #include <hwn>
 
+#include <entity_base_npc_const>
+
 #define PLUGIN "[Custom Entity] Hwn NPC Spooky Pumpkin Big"
 #define AUTHOR "Hedgehog Fog"
 
 #define ENTITY_NAME "hwn_npc_spookypumpkin_big"
-
-#define m_flDamage "flDamage"
-#define m_flAttackRange "flAttackRange"
-#define m_flAttackDelay "flAttackDelay"
 
 const Float:NPC_Health = 200.0;
 const Float:NPC_Speed = 250.0;

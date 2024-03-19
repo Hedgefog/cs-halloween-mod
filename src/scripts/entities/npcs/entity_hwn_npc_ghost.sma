@@ -14,39 +14,15 @@
 #include <hwn_stun>
 #include <hwn_utils>
 
+#include <entity_base_npc_const>
+
 #define PLUGIN "[Custom Entity] Hwn NPC Ghost"
 #define AUTHOR "Hedgehog Fog"
 
 #define ENTITY_NAME "hwn_npc_ghost"
 
-#define m_flDamage "flDamage"
-#define m_vecGoal "vecGoal"
-#define m_vecTarget "vecTarget"
-#define m_flReleaseAttack "flReleaseAttack"
-#define m_flTargetArrivalTime "flTargetArrivalTime"
-#define m_flNextAIThink "flNextAIThink"
-#define m_flNextAttack "flNextAttack"
 #define m_flNextMoan "flNextMoan"
-#define m_pKiller "pKiller"
 #define m_pParticlesSystem "pParticlesSystem"
-#define m_flAttackRange "flAttackRange"
-#define m_flAttackDelay "flAttackDelay"
-#define m_flViewRange "flViewRange"
-#define m_flDamage "flDamage"
-#define m_flAttackRate "flAttackRate"
-
-#define SetTarget "SetTarget"
-#define StartAttack "StartAttack"
-#define ReleaseAttack "ReleaseAttack"
-#define AIThink "AIThink"
-#define UpdateEnemy "UpdateEnemy"
-#define UpdateTarget "UpdateTarget"
-#define Hit "Hit"
-#define ProcessGoal "ProcessGoal"
-#define UpdateGoal "UpdateGoal"
-#define GetEnemy "GetEnemy"
-#define IsValidEnemy "IsValidEnemy"
-#define EmitVoice "EmitVoice"
 
 enum _:Sequence {
     Sequence_Idle = 0

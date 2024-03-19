@@ -11,6 +11,8 @@
 #include <hwn>
 #include <hwn_utils>
 
+#include <entity_base_npc_const>
+
 #define PLUGIN "[Custom Entity] Hwn NPC Skeleton"
 #define AUTHOR "Hedgehog Fog"
 
@@ -19,30 +21,11 @@
 #define SKELETON_EGG_ENTITY_NAME "hwn_skeleton_egg"
 #define SKELETON_EGG_COUNT 2
 
-#define m_flDamage "flDamage"
-#define m_irgPath "irgPath"
-#define m_vecGoal "vecGoal"
-#define m_vecTarget "vecTarget"
-#define m_pBuildPathTask "pBuildPathTask"
-#define m_flReleaseAttack "flReleaseAttack"
-#define m_flTargetArrivalTime "flTargetArrivalTime"
-#define m_flNextAIThink "flNextAIThink"
-#define m_flNextAction "flNextAction"
-#define m_flNextPathSearch "flNextPathSearch"
 #define m_flNextLaugh "flNextLaugh"
-#define m_pKiller "pKiller"
-#define m_flAttackRange "flAttackRange"
-#define m_flAttackDelay "flAttackDelay"
-#define m_flFindRange "flFindRange"
-#define m_flViewRange "flViewRange"
-#define m_flAttackRate "flAttackRate"
-#define m_vecInput "vecInput"
 
 #define EmitVoice "EmitVoice"
 #define SpawnEggs "SpawnEggs"
 #define Laugh "Laugh"
-#define AIThink "AIThink"
-#define PlayAction "PlayAction"
 
 enum _:Sequence {
     Sequence_Idle = 0,

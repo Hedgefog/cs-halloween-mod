@@ -7,16 +7,12 @@
 
 #include <hwn>
 
+#include <entity_base_npc_const>
+
 #define PLUGIN "[Custom Entity] Hwn NPC Skeleton Small"
 #define AUTHOR "Hedgehog Fog"
 
 #define ENTITY_NAME "hwn_npc_skeleton_small"
-
-#define m_flDamage "flDamage"
-#define m_flAttackRange "flAttackRange"
-#define m_flAttackDelay "flAttackDelay"
-
-#define EmitVoice "EmitVoice"
 
 const Float:NPC_Health = 50.0;
 const Float:NPC_Speed = 250.0;

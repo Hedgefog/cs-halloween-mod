@@ -12,42 +12,17 @@
 #include <hwn>
 #include <hwn_utils>
 
+#include <entity_base_npc_const>
+
 #define PLUGIN "[Custom Entity] Hwn NPC Spooky Pumpkin"
 #define AUTHOR "Hedgehog Fog"
 
 #define ENTITY_NAME "hwn_npc_spookypumpkin"
 
-#define m_flDamage "flDamage"
-#define m_irgPath "irgPath"
-#define m_vecGoal "vecGoal"
-#define m_vecTarget "vecTarget"
-#define m_pBuildPathTask "pBuildPathTask"
-#define m_flReleaseAttack "flReleaseAttack"
-#define m_flTargetArrivalTime "flTargetArrivalTime"
-#define m_flNextAIThink "flNextAIThink"
-#define m_flNextAction "flNextAction"
-#define m_flNextAttack "flNextAttack"
-#define m_flNextPathSearch "flNextPathSearch"
 #define m_flNextLaugh "flNextLaugh"
-#define m_pKiller "pKiller"
 #define m_flReleaseJump "flReleaseJump"
-#define m_bBig "bBig"
-#define m_iType "iType"
-// #define m_iSize "iSize"
-#define m_flAttackRange "flAttackRange"
-#define m_flAttackDelay "flAttackDelay"
-#define m_flFindRange "flFindRange"
-#define m_flViewRange "flViewRange"
-#define m_flAttackRate "flAttackRate"
-#define m_vecInput "vecInput"
 
-#define PlayAction "PlayAction"
 #define Laugh "Laugh"
-#define AIThink "AIThink"
-#define MoveTo "MoveTo"
-#define EmitVoice "EmitVoice"
-#define IsInViewCone "IsInViewCone"
-#define MovementThink "MovementThink"
 
 enum _:Sequence {
     Sequence_Idle = 0,

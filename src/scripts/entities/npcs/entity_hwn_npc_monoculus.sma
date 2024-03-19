@@ -11,6 +11,8 @@
 #include <hwn>
 #include <hwn_utils>
 
+#include <entity_base_npc_const>
+
 #define PLUGIN "[Custom Entity] Hwn NPC Monoculus"
 #define AUTHOR "Hedgehog Fog"
 
@@ -18,15 +20,10 @@
 #define PORTAL_ENTITY_NAME "hwn_monoculus_portal"
 #define ROCKET_ENTITY_NAME "hwn_projectile_rocket"
 
-#define m_flReleaseAttack "flReleaseAttack"
-#define m_flTargetArrivalTime "flTargetArrivalTime"
-#define m_flNextAIThink "flNextAIThink"
 #define m_flDamageToStun "flDamageToStun"
-#define m_flNextAction "flNextAction"
 #define m_flNextSmokeEmit "flNextSmokeEmit"
 #define m_iNextPortal "iNextPortal"
 #define m_flNextHeightUpdate "flNextHeightUpdate"
-#define m_flNextAttack "flNextAttack"
 #define m_flReleaseAngry "flReleaseAngry"
 #define m_flReleaseStun "flReleaseStun"
 #define m_flLastDamage "flLastDamage"
@@ -34,38 +31,8 @@
 #define m_flNextTeleportation "flNextTeleportation"
 #define m_flReleaseTeleportion "flReleaseTeleportion"
 #define m_iCharge "iCharge"
-#define m_vecTarget "vecTarget"
-#define m_vecGoal "vecGoal"
-#define m_pKiller "pKiller"
 #define m_flHeight "flHeight"
-#define m_vecHitOffset "vecHitOffset"
-#define m_flDamage "flDamage"
-#define m_flDieDuration "flDieDuration"
 #define m_flNextLookAround "flNextLookAround"
-
-#define m_flAttackRange "flAttackRange"
-#define m_flAttackDelay "flAttackDelay"
-#define m_flFindRange "flFindRange"
-#define m_flViewRange "flViewRange"
-#define m_flAttackRate "flAttackRate"
-
-#define ProcessGoal "ProcessGoal"
-#define AIThink "AIThink"
-#define TakeDamage "TakeDamage"
-#define SetTarget "SetTarget"
-#define Hit "Hit"
-#define ReleaseAttack "ReleaseAttack"
-#define GetEnemy "GetEnemy"
-#define EmitVoice "EmitVoice"
-#define PlayAction "PlayAction"
-#define ResetPath "ResetPath"
-#define IsValidEnemy "IsValidEnemy"
-#define CanAttack "CanAttack"
-#define IsVisible "IsVisible"
-#define IsReachable "IsReachable"
-#define StartAttack "StartAttack"
-#define Dying "Dying"
-#define StopMovement "StopMovement"
 
 enum _:Sequence {
     Sequence_Idle = 0,

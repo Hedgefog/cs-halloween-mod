@@ -12,34 +12,19 @@
 #include <hwn>
 #include <hwn_utils>
 
+#include <entity_base_npc_const>
+
 #define PLUGIN "[Custom Entity] Hwn NPC HHH"
 #define AUTHOR "Hedgehog Fog"
 
 #define ENTITY_NAME "hwn_npc_hhh"
 
-#define m_flDamage "flDamage"
-#define m_flReleaseAttack "flReleaseAttack"
-#define m_flNextAIThink "flNextAIThink"
 #define m_flNextLightEmit "flNextLightEmit"
 #define m_flNextSmokeEmit "flNextSmokeEmit"
 #define m_flNextLaugh "flNextLaugh"
 #define m_flNextFootStep "flNextFootStep"
-#define m_flAttackRange "flAttackRange"
-#define m_flAttackDelay "flAttackDelay"
-#define m_flFindRange "flFindRange"
-#define m_flViewRange "flViewRange"
-#define m_vecHitOffset "vecHitOffset"
-#define m_flAttackRate "flAttackRate"
-#define m_flDieDuration "flDieDuration"
-#define m_vecInput "vecInput"
 
 #define Laugh "Laugh"
-#define PlayAction "PlayAction"
-#define EmitVoice "EmitVoice"
-#define AIThink "AIThink"
-#define TakeDamage "TakeDamage"
-#define ResetPath "ResetPath"
-#define Dying "Dying"
 
 enum _:Sequence {
     Sequence_Idle = 0,
