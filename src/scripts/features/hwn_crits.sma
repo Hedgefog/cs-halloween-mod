@@ -167,8 +167,7 @@ public HamHook_TraceAttack(pEntity, pAttacker, Float:flDamage, Float:vecDirectio
             emit_sound(pAttacker, CHAN_STATIC, g_szSndCritShot, flVolume, ATTN_NORM, 0, PITCH_NORM);
         }
 
-        static Float:vecViewOrigin[3];
-        UTIL_GetViewOrigin(pAttacker, vecViewOrigin);
+        static Float:vecViewOrigin[3]; ExecuteHamB(Ham_EyePosition, pAttacker, vecViewOrigin);
 
         static Float:vecHitOrigin[3];
         get_tr2(pTrace, TR_vecEndPos, vecHitOrigin);

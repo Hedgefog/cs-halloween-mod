@@ -74,7 +74,7 @@ public plugin_precache() {
     static Float:flGameTime; flGameTime = get_gametime();
 
     static Float:flNextSmokeEmit; flNextSmokeEmit = CE_GetMember(this, m_flNextSmokeEmit); 
-    if (flNextSmokeEmit < flGameTime) {
+    if (flNextSmokeEmit <= flGameTime) {
         static Float:flLocalDensity; flLocalDensity = @Entity_EmitSmoke(this);
         static Float:flDelayRatio; flDelayRatio = 1.0 / floatclamp(flLocalDensity, SMOKE_EMIT_FREQUENCY, 1.0);
         static Float:flDelay; flDelay = SMOKE_EMIT_FREQUENCY * flDelayRatio;

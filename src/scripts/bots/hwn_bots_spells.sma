@@ -1,5 +1,6 @@
 #include <amxmodx>
 #include <fakemeta>
+#include <hamsandwich>
 #include <xs>
 
 #include <api_rounds>
@@ -88,8 +89,7 @@ bool:@Bot_ShouldCastSpell(this) {
 }
 
 bool:@Bot_IsLookingAtEnemy(this) {
-    static Float:vecOrigin[3];
-    UTIL_GetViewOrigin(this, vecOrigin);
+    static Float:vecOrigin[3]; ExecuteHamB(Ham_EyePosition, this, vecOrigin);
 
     static Float:vecTarget[3];
     velocity_by_aim(this, floatround(SPELL_CHECK_DISTANCE), vecTarget);

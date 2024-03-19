@@ -45,21 +45,6 @@ stock Float:UTIL_CalculateRadiusDamage(
     return flDamage;
 }
 
-stock bool:UTIL_IsInvisible(pEntity) {
-    if (!pev_valid(pEntity)) {
-        return false;
-    }
-
-    if (pev(pEntity, pev_rendermode) == kRenderNormal) {
-        return false;
-    }
-
-    new Float:flRenderAmt;
-    pev(pEntity, pev_renderamt, flRenderAmt);
-
-    return (flRenderAmt < 50.0);
-}
-
 stock bool:UTIL_IsMonster(pEntity) {
     return !!(pev(pEntity, pev_flags) & FL_MONSTER);
 }
@@ -70,30 +55,20 @@ stock bool:UTIL_IsTeammate(pEntity, iTeam) {
 }
 
 stock bool:UTIL_CanTakeDamage(pEntity, pAttacker) {
-    if (!IS_PLAYER(pAttacker)) {
-        return true;
-    }
+    if (!IS_PLAYER(pAttacker)) return true;
 
     new iAttackerTeam = get_ent_data(pAttacker, "CBasePlayer", "m_iTeam");
 
     if (IS_PLAYER(pEntity)) {
-        if (!rg_is_player_can_takedamage(pEntity, pAttacker)) {
-            return false;
-        }
+        if (!rg_is_player_can_takedamage(pEntity, pAttacker)) return false;
     } else {
         new pOwner = pev(pEntity, pev_owner);
-        if (pOwner == pAttacker) {
-            return false;
-        }
+        if (pOwner == pAttacker) return false;
 
         if (IS_PLAYER(pOwner)) {
-            if (!rg_is_player_can_takedamage(pOwner, pAttacker)) {
-                return false;
-            }
+            if (!rg_is_player_can_takedamage(pOwner, pAttacker)) return false;
         } else {
-            if (pev(pEntity, pev_team) == iAttackerTeam) {
-                return false;
-            }
+            if (pev(pEntity, pev_team) == iAttackerTeam) return false;
         }
     }
 
@@ -103,22 +78,17 @@ stock bool:UTIL_CanTakeDamage(pEntity, pAttacker) {
 stock Float:UTIL_GetDistanceToFloor(pEntity, const Float:vecOrigin[3]) {
     static Float:vecTarget[3];
     xs_vec_copy(vecOrigin, vecTarget);
-    vecTarget[2] -= 8192.0;
+    vecTarget[2] = -8192.0;
 
-    new pTrace = create_tr2();
+    static pTrace; pTrace = create_tr2();
     engfunc(EngFunc_TraceMonsterHull, pEntity, vecOrigin, vecTarget, IGNORE_MONSTERS, pEntity, pTrace);
 
-    static Float:flFraction;
-    get_tr2(pTrace, TR_flFraction, flFraction);
-    
-    if (flFraction == 1.0) {
-        return -1.0;
-    }
-
-    static Float:vecEnd[3];
-    get_tr2(pTrace, TR_vecEndPos, vecEnd);
+    static Float:flFraction; get_tr2(pTrace, TR_flFraction, flFraction);
+    static Float:vecEnd[3]; get_tr2(pTrace, TR_vecEndPos, vecEnd);
 
     free_tr2(pTrace);
+
+    if (flFraction == 1.0) return -1.0;
 
     return vecOrigin[2] - vecEnd[2];
 }
@@ -136,9 +106,7 @@ stock bool:UTIL_IsPointVisible(const Float:vecOrigin1[3], const Float:vecOrigin2
 }
 
 stock bool:UTIL_SetSequence(pEntity, iSequence) {
-    if (pev(pEntity, pev_sequence) == iSequence) {
-        return false;
-    }
+    if (pev(pEntity, pev_sequence) == iSequence) return false;
 
     set_pev(pEntity, pev_frame, 0);
     set_pev(pEntity, pev_framerate, 1.0);
@@ -163,63 +131,161 @@ stock UTIL_GetDirectionVector(pEntity, Float:vecOut[3], Float:flLength = 1.0) {
     xs_vec_mul_scalar(vecOut, flLength, vecOut);
 }
 
-stock bool:UTIL_IsTraceOpen(pTrace) {   
-    if (get_tr2(pTrace, TR_AllSolid)) {
-        return false;
-    }
-
-    if (get_tr2(pTrace, TR_StartSolid)) {
-        return false;
-    }
-
-    new Float:flFraction;
-    get_tr2(pTrace, TR_flFraction, flFraction);
-
-    if (flFraction < 1.0) {
-        return false;
-    }
-
-    return true;
-}
-
-stock bool:UTIL_IsOpen(const Float:vecOrigin1[3], const Float:vecOrigin2[3], pEntity = 0, iIgnoreFlags = IGNORE_MONSTERS) {
-    new pTrace = create_tr2();
-    engfunc(EngFunc_TraceLine, vecOrigin1, vecOrigin2, iIgnoreFlags, pEntity, pTrace);
-    new bool:isOpen = UTIL_IsTraceOpen(pTrace);
-    free_tr2(pTrace);
-
-    return isOpen;
-}
-
-stock UTIL_TurnTo(pEntity, const Float:vecTarget[3], const bool:rgbLockAxis[3] = {true, false, false}, const Float:flSpeed = -1.0) {
-    new Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
-
-    new Float:vecAngles[3];
-    pev(pEntity, pev_angles, vecAngles);
-
-    static Float:vecTargetAngles[3];
-    xs_vec_sub(vecTarget, vecOrigin, vecTargetAngles);
-    engfunc(EngFunc_VecToAngles, vecTargetAngles, vecTargetAngles);
-
-    static Float:vecNewAngles[3];
+stock UTIL_RandomVector(Float:flMin, Float:flMax, Float:vecOut[3]) {
     for (new i = 0; i < 3; ++i) {
-        if (rgbLockAxis[i]) {
-            vecNewAngles[i] = vecAngles[i];
-        } else if (flSpeed >= 0.0) {
-            vecNewAngles[i] = ApproachAngle(vecTargetAngles[i], vecAngles[i], flSpeed);
-        } else {
-            vecNewAngles[i] = vecTargetAngles[i];
+        vecOut[i] = random_float(flMin, flMax);
+    }
+}
+
+stock UTIL_FindUsersNearby(pStartPlayer = 0, Float:vecOrigin[3], Float:flDistance, iTeam = 0, bool:bAlive = true) {
+    for (new pPlayer = pStartPlayer + 1; pPlayer <= MaxClients; ++pPlayer) {
+        if (!is_user_connected(pPlayer)) continue;
+        if (bAlive && !is_user_alive(pPlayer)) continue;
+        if (iTeam && iTeam != get_ent_data(pPlayer, "CBasePlayer", "m_iTeam")) continue;
+
+        static Float:vecUserOrigin[3]; pev(pPlayer, pev_origin, vecUserOrigin);
+        if (get_distance_f(vecOrigin, vecUserOrigin) > flDistance) continue;
+
+        return pPlayer;
+    }
+
+    return 0;
+}
+
+stock UTIL_FixedUnsigned16(const Float:flValue, const iScale) {
+    return clamp(floatround(flValue * iScale), 0, 0xFFFF);
+}
+
+stock UTIL_FindEntityNearby(iStartIndex = 0, const Float:vecOrigin[3], const Float:flRadius) {
+    new pTarget = engfunc(EngFunc_FindEntityInSphere, iStartIndex, vecOrigin, flRadius);
+
+    if (pTarget <= iStartIndex) return 0; // infinite loop fix
+    if (!pev_valid(pTarget)) return 0;
+
+    return pTarget;
+}
+
+stock bool:UTIL_FindPlaceToTeleport(pEntity, const Float:vecTarget[3], Float:vecOut[3], iHull = HULL_POINT, iIgnoreFlags = DONT_IGNORE_MONSTERS) {
+    static Float:vecMins[3];
+    pev(pEntity, pev_mins, vecMins);
+
+    static Float:vecMaxs[3];
+    pev(pEntity, pev_maxs, vecMaxs);
+
+    if (UTIL_IsOpenHull(vecTarget, iHull, pEntity, iIgnoreFlags)) {
+        xs_vec_copy(vecTarget, vecOut);
+        return true;
+    }
+
+    static const Float:vecDirections[][3] = {
+        { 1.0, 0.0, 0.0 },
+        { 0.0, 1.0, 0.0 },
+        { 0.0, 0.0, 1.0 },
+        { 1.0, 1.0, 0.0 },
+        { 0.0, 1.0, 1.0 },
+        { 1.0, 0.0, 1.0 },
+        { 1.0, 1.0, 1.0 }
+    };
+    
+    new iDirectionsNum = sizeof(vecDirections);
+
+    for (new i = 0; i < iDirectionsNum; ++i) {
+        static Float:vecNewTarget[3];
+        xs_vec_copy(vecTarget, vecNewTarget);
+
+        for (new j = 0; j < 3; ++j) {
+            vecNewTarget[j] = vecTarget[j] + (vecMins[j] * vecDirections[i][j]);
+        }
+
+        if (UTIL_IsOpenHull(vecNewTarget, iHull, pEntity, iIgnoreFlags)) {
+            xs_vec_copy(vecNewTarget, vecOut);
+            return true;
+        }
+
+        for (new j = 0; j < 3; ++j) {
+            vecNewTarget[j] = vecTarget[j] + (vecMaxs[j] * vecDirections[i][j]);
+        }
+
+        if (UTIL_IsOpenHull(vecNewTarget, iHull, pEntity, iIgnoreFlags)) {
+            xs_vec_copy(vecNewTarget, vecOut);
+            return true;
         }
     }
 
-    static Float:vecViewAngles[3];
-    xs_vec_copy(vecNewAngles, vecViewAngles);
-    vecViewAngles[0] = -vecViewAngles[0];
+    return false;
+}
 
-    set_pev(pEntity, pev_angles, vecNewAngles);
-    set_pev(pEntity, pev_v_angle, vecViewAngles);
-    set_pev(pEntity, pev_ideal_yaw, vecNewAngles[1]);
+stock bool:UTIL_IsOpenHull(const Float:vecOrigin[3], iHull, pIgnoreEnt = 0, iIgnoreFlags = DONT_IGNORE_MONSTERS) {
+    new pTrace = create_tr2();
+    engfunc(EngFunc_TraceHull, vecOrigin, vecOrigin, iIgnoreFlags, iHull, pIgnoreEnt, pTrace);
+    new bool:bIsVacant = !!get_tr2(pTrace, TR_InOpen);
+    free_tr2(pTrace);
+
+    return bIsVacant;
+}
+
+stock bool:UTIL_IsStuck(pEntity) {
+    static Float:vecOrigin[3]; pev(pEntity, pev_origin, vecOrigin);
+
+    new pTrace = create_tr2();
+    engfunc(EngFunc_TraceMonsterHull, pEntity, vecOrigin, vecOrigin, DONT_IGNORE_MONSTERS, pEntity, pTrace);
+    new bool:bIsStuck = !get_tr2(pTrace, TR_InOpen);
+    free_tr2(pTrace);
+
+    return bIsStuck;
+}
+
+stock Float:anglemod(Float:a) {
+  return (360.0/65536) * (floatround(a * (65536.0/360.0), floatround_floor) & 65535);
+}
+
+stock Float:UTIL_GetWeight(pEntity) {
+    static Float:vecMins[3]; pev(pEntity, pev_mins, vecMins);
+    static Float:vecMaxs[3]; pev(pEntity, pev_maxs, vecMaxs);
+    static Float:vecDiff[3]; xs_vec_sub(vecMaxs, vecMins, vecDiff);
+
+    return xs_vec_len(vecDiff) / 86.0;
+}
+
+stock UTIL_CreateDictKey(const szName[], const szPrefix[] = "", szOut[], iLen) {
+    copy(szOut, iLen, szName);
+    strtoupper(szOut);
+    replace_all(szOut, iLen, " ", "_");
+    format(szOut, iLen, "%s%s", szPrefix, szOut);
+}
+
+stock bool:UTIL_IsLocalizationExists(const szKey[]) {
+    new szBuffer[16];
+    format(szBuffer, charsmax(szBuffer), "%L", LANG_SERVER, szKey);
+
+    new szNotFound[] = "ML_NOTFOUND:";
+
+    return !equali(szBuffer, szNotFound, sizeof(szNotFound) - 1);
+}
+
+stock UTIL_DrawArrow(pPlayer, const Float:vecSrc[3], const Float:vecTarget[3], const irgColor[3] = {255, 255, 255}, iBrightness = 255, iLifeTime = 10, iWidth = 64) {
+    new iModelIndex = engfunc(EngFunc_ModelIndex, "sprites/arrow1.spr");
+    
+    engfunc(EngFunc_MessageBegin, pPlayer ? MSG_ONE : MSG_ALL, SVC_TEMPENTITY, vecSrc, pPlayer);
+    write_byte(TE_BEAMPOINTS);
+    engfunc(EngFunc_WriteCoord, vecTarget[0]);
+    engfunc(EngFunc_WriteCoord, vecTarget[1]);
+    engfunc(EngFunc_WriteCoord, vecTarget[2]);
+    engfunc(EngFunc_WriteCoord, vecSrc[0]);
+    engfunc(EngFunc_WriteCoord, vecSrc[1]);
+    engfunc(EngFunc_WriteCoord, vecSrc[2]);
+    write_short(iModelIndex);
+    write_byte(0);
+    write_byte(0);
+    write_byte(iLifeTime);
+    write_byte(iWidth);
+    write_byte(0);
+    write_byte(irgColor[0]);
+    write_byte(irgColor[1]);
+    write_byte(irgColor[2]);
+    write_byte(iBrightness);
+    write_byte(0);
+    message_end();
 }
 
 stock UTIL_Message_BloodSprite(const Float:vecOrigin[3], iBloodSprayModelIndex, iBloodModelIndex, iColor, iScale) {
@@ -316,135 +382,6 @@ stock UTIL_Message_FireField(const Float:vecOrigin[3], iRadius, iModelIndex, iCo
     write_byte(iFlags);
     write_byte(iLifeTime);
     message_end();
-}
-
-stock UTIL_RandomVector(Float:flMin, Float:flMax, Float:vecOut[3]) {
-    for (new i = 0; i < 3; ++i) {
-        vecOut[i] = random_float(flMin, flMax);
-    }
-}
-
-stock UTIL_FindUsersNearby(pStartPlayer = 0, Float:vecOrigin[3], Float:flDistance, iTeam = 0, bool:bAlive = true) {
-    for (new pPlayer = pStartPlayer + 1; pPlayer <= MaxClients; ++pPlayer)
-    {
-        if (!is_user_connected(pPlayer)) {
-            continue;
-        }
-
-        if (bAlive && !is_user_alive(pPlayer)) {
-            continue;
-        }
-
-        if (iTeam && iTeam != get_ent_data(pPlayer, "CBasePlayer", "m_iTeam")) {
-            continue;
-        }
-
-        static Float:vecUserOrigin[3];
-        pev(pPlayer, pev_origin, vecUserOrigin);
-
-        if (get_distance_f(vecOrigin, vecUserOrigin) > flDistance) {
-            continue;
-        }
-
-        return pPlayer;
-    }
-
-    return 0;
-}
-
-stock UTIL_FixedUnsigned16(const Float:flValue, const iScale) {
-    return clamp(floatround(flValue * iScale), 0, 0xFFFF);
-}
-
-stock UTIL_FindEntityNearby(iStartIndex = 0, const Float:vecOrigin[3], const Float:flRadius) {
-    new pTarget = engfunc(EngFunc_FindEntityInSphere, iStartIndex, vecOrigin, flRadius);
-
-    if (pTarget <= iStartIndex) return 0; // infinite loop fix
-    if (!pev_valid(pTarget)) return 0;
-
-    return pTarget;
-}
-
-stock bool:UTIL_FindPlaceToTeleport(pEntity, const Float:vecTarget[3], Float:vecOut[3], iHull = HULL_POINT, iIgnoreFlags = DONT_IGNORE_MONSTERS) {
-    static Float:vecMins[3];
-    pev(pEntity, pev_mins, vecMins);
-
-    static Float:vecMaxs[3];
-    pev(pEntity, pev_maxs, vecMaxs);
-
-    if (UTIL_IsOpenHull(vecTarget, iHull, pEntity, iIgnoreFlags)) {
-        xs_vec_copy(vecTarget, vecOut);
-        return true;
-    }
-
-    static const Float:vecDirections[][3] = {
-        { 1.0, 0.0, 0.0 },
-        { 0.0, 1.0, 0.0 },
-        { 0.0, 0.0, 1.0 },
-        { 1.0, 1.0, 0.0 },
-        { 0.0, 1.0, 1.0 },
-        { 1.0, 0.0, 1.0 },
-        { 1.0, 1.0, 1.0 }
-    };
-    
-    new iDirectionsNum = sizeof(vecDirections);
-
-    for (new i = 0; i < iDirectionsNum; ++i) {
-        static Float:vecNewTarget[3];
-        xs_vec_copy(vecTarget, vecNewTarget);
-
-        for (new j = 0; j < 3; ++j) {
-            vecNewTarget[j] = vecTarget[j] + (vecMins[j] * vecDirections[i][j]);
-        }
-
-        if (UTIL_IsOpenHull(vecNewTarget, iHull, pEntity, iIgnoreFlags)) {
-            xs_vec_copy(vecNewTarget, vecOut);
-            return true;
-        }
-
-        for (new j = 0; j < 3; ++j) {
-            vecNewTarget[j] = vecTarget[j] + (vecMaxs[j] * vecDirections[i][j]);
-        }
-
-        if (UTIL_IsOpenHull(vecNewTarget, iHull, pEntity, iIgnoreFlags)) {
-            xs_vec_copy(vecNewTarget, vecOut);
-            return true;
-        }
-    }
-
-    return false;
-}
-
-stock bool:UTIL_IsOpenHull(const Float:vecOrigin[3], iHull, pIgnoreEnt = 0, iIgnoreFlags = DONT_IGNORE_MONSTERS) {
-    new pTrace = create_tr2();
-    engfunc(EngFunc_TraceHull, vecOrigin, vecOrigin, iIgnoreFlags, iHull, pIgnoreEnt, pTrace);
-    new bool:bIsVacant = !!get_tr2(pTrace, TR_InOpen);
-    free_tr2(pTrace);
-
-    return bIsVacant;
-}
-
-stock UTIL_GetViewOrigin(pPlayer, Float:vecOut[3]) {
-    static Float:vecStart[3];
-    pev(pPlayer, pev_origin, vecStart);
-
-    static Float:vecViewOfs[3];
-    pev(pPlayer, pev_view_ofs, vecViewOfs);
-
-    xs_vec_copy(vecStart, vecOut);
-    vecOut[2] += vecViewOfs[2];
-}
-
-stock bool:UTIL_IsStuck(pEntity) {
-    static Float:vecOrigin[3];
-    pev(pEntity, pev_origin, vecOrigin);
-
-    new pTrace = create_tr2();
-    engfunc(EngFunc_TraceMonsterHull, pEntity, vecOrigin, vecOrigin, DONT_IGNORE_MONSTERS, pEntity, pTrace);
-    new bool:bIsStuck = !get_tr2(pTrace, TR_InOpen);
-    free_tr2(pTrace);
-
-    return bIsStuck;
 }
 
 stock UTIL_Message_StatusIcon(pPlayer, iStatus = 0, const szIcon[], const iColor[3]) {
@@ -740,80 +677,3 @@ stock UTILS_Message_Projectile(const Float:vecOrigin[3], const Float:vecVelocity
     message_end();
 }
 
-stock UTIL_CreateDictKey(const szName[], const szPrefix[] = "", szOut[], iLen) {
-    copy(szOut, iLen, szName);
-    strtoupper(szOut);
-    replace_all(szOut, iLen, " ", "_");
-    format(szOut, iLen, "%s%s", szPrefix, szOut);
-}
-
-stock bool:UTIL_IsLocalizationExists(const szKey[]) {
-    new szBuffer[16];
-    format(szBuffer, charsmax(szBuffer), "%L", LANG_SERVER, szKey);
-
-    new szNotFound[] = "ML_NOTFOUND:";
-
-    return !equali(szBuffer, szNotFound, sizeof(szNotFound) - 1);
-}
-
-stock UTIL_DrawArrow(pPlayer, const Float:vecSrc[3], const Float:vecTarget[3], const irgColor[3] = {255, 255, 255}, iBrightness = 255, iLifeTime = 10, iWidth = 64) {
-    new iModelIndex = engfunc(EngFunc_ModelIndex, "sprites/arrow1.spr");
-    
-    engfunc(EngFunc_MessageBegin, pPlayer ? MSG_ONE : MSG_ALL, SVC_TEMPENTITY, vecSrc, pPlayer);
-    write_byte(TE_BEAMPOINTS);
-    engfunc(EngFunc_WriteCoord, vecTarget[0]);
-    engfunc(EngFunc_WriteCoord, vecTarget[1]);
-    engfunc(EngFunc_WriteCoord, vecTarget[2]);
-    engfunc(EngFunc_WriteCoord, vecSrc[0]);
-    engfunc(EngFunc_WriteCoord, vecSrc[1]);
-    engfunc(EngFunc_WriteCoord, vecSrc[2]);
-    write_short(iModelIndex);
-    write_byte(0);
-    write_byte(0);
-    write_byte(iLifeTime);
-    write_byte(iWidth);
-    write_byte(0);
-    write_byte(irgColor[0]);
-    write_byte(irgColor[1]);
-    write_byte(irgColor[2]);
-    write_byte(iBrightness);
-    write_byte(0);
-    message_end();
-}
-
-stock Float:ApproachAngle(Float:target, Float:value, Float:speed) {
-  target = anglemod( target );
-  value = anglemod( value );
-
-  new Float:delta = target - value;
-
-  // Speed is assumed to be positive
-  if ( speed < 0 )
-    speed = -speed;
-
-  if ( delta < -180 )
-    delta += 360;
-  else if ( delta > 180 )
-    delta -= 360;
-
-  if ( delta > speed )
-    value += speed;
-  else if ( delta < -speed )
-    value -= speed;
-  else 
-    value = target;
-
-  return value;
-}
-
-stock Float:anglemod(Float:a) {
-  return (360.0/65536) * (floatround(a * (65536.0/360.0), floatround_floor) & 65535);
-}
-
-stock Float:UTIL_GetWeight(pEntity) {
-    static Float:vecMins[3]; pev(pEntity, pev_mins, vecMins);
-    static Float:vecMaxs[3]; pev(pEntity, pev_maxs, vecMaxs);
-    static Float:vecDiff[3]; xs_vec_sub(vecMaxs, vecMins, vecDiff);
-
-    return xs_vec_len(vecDiff) / 86.0;
-}

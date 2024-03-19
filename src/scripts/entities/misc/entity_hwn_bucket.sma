@@ -518,7 +518,7 @@ bool:@Entity_DropEntity(this, pEntity) {
 public HamHook_Base_TraceAttack(pEntity, pAttacker, Float:flDamage, Float:vecDirection[3], pTrace, iDamageBits) {
     if (g_iCeHandler != CE_GetHandlerByEntity(pEntity)) return HAM_IGNORED;
 
-    static Float:vecStart[3]; UTIL_GetViewOrigin(pAttacker, vecStart);
+    static Float:vecStart[3]; ExecuteHamB(Ham_EyePosition, pAttacker, vecStart);
     static Float:vecEnd[3]; get_tr2(pTrace, TR_vecEndPos, vecEnd);
 
     // Ignore wallbang damage
