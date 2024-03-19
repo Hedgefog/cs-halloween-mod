@@ -36,7 +36,8 @@ enum _:Sequence {
 };
 
 enum Action {
-    Action_Idle = 0,
+    Action_Invalid = -1,
+    Action_Idle,
     Action_Run,
     Action_Attack,
     Action_RunAttack,
@@ -85,17 +86,9 @@ new const g_rgActions[Action][NPC_Action] = {
     { Sequence_Spawn, Sequence_Spawn, 6.0 }
 };
 
-const Float:NPC_Health = 4000.0;
+new const Action:g_rgiRelatedActions[Action] = { _:Action_Invalid, _:Action_Invalid, _:Action_RunAttack, _:Action_Attack, _:Action_Invalid };
+
 const Float:NPC_HealthBonusPerPlayer = 300.0;
-const Float:NPC_Speed = 300.0;
-const Float:NPC_Damage = 160.0;
-const Float:NPC_AttackRange = 96.0;
-const Float:NPC_AttackDelay = 0.75;
-const Float:NPC_PathSearchDelay = 5.0;
-const Float:NPC_TargetUpdateRate = 1.0;
-const Float:NPC_ViewRange = 512.0;
-const Float:NPC_FindRange = 4096.0;
-new const Float:NPC_TargetHitOffset[3] = {0.0, 0.0, 16.0};
 
 new gmsgScreenShake;
 
@@ -104,7 +97,7 @@ new g_iGibsModelIndex;
 
 new g_iBossHandler;
 
-new Float:g_flStartHealth = NPC_Health;
+new Float:g_flStartHealth = 4000.0;
 
 public plugin_precache() {
     Nav_Precache();
@@ -141,10 +134,12 @@ public plugin_precache() {
     CE_RegisterHook(ENTITY_NAME, CEFunction_Remove, "@Entity_Remove");
     CE_RegisterHook(ENTITY_NAME, CEFunction_Killed, "@Entity_Killed");
 
+    CE_RegisterMethod(ENTITY_NAME, Hit, "@Entity_Hit");
+    CE_RegisterMethod(ENTITY_NAME, StartAttack, "@Entity_StartAttack");
     CE_RegisterMethod(ENTITY_NAME, Laugh, "@Entity_Laugh");
     CE_RegisterMethod(ENTITY_NAME, AIThink, "@Entity_AIThink");
     CE_RegisterMethod(ENTITY_NAME, PlayAction, "@Entity_PlayAction", CE_MP_Cell, CE_MP_Cell, CE_MP_Cell);
-    CE_RegisterMethod(ENTITY_NAME, TakeDamage, "@Entity_TakeDamage", CE_MP_Cell, CE_MP_Cell, CE_MP_Float, CE_MP_Cell);
+    CE_RegisterMethod(ENTITY_NAME, Pain, "@Entity_Pain");
     CE_RegisterMethod(ENTITY_NAME, Dying, "@Entity_Dying");
 
     g_iBossHandler = Hwn_Bosses_Register(ENTITY_NAME, "Horseless Headless Horsemann");
@@ -179,13 +174,17 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-16.0, -16.0, -48.0});
     CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{16.0, 16.0, 48.0});
     CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel, false);
-    CE_SetMemberVec(this, m_vecHitOffset, NPC_TargetHitOffset);
-    CE_SetMember(this, m_flAttackRange, NPC_AttackRange);
-    CE_SetMember(this, m_flAttackDelay, NPC_AttackDelay);
-    CE_SetMember(this, m_flFindRange, NPC_FindRange);
-    CE_SetMember(this, m_flViewRange, NPC_ViewRange);
-    CE_SetMember(this, m_flDamage, NPC_Damage);
-    CE_SetMember(this, m_flAttackRate, 0.5);
+    CE_SetMemberVec(this, m_vecWeaponOffset, Float:{0.0, 0.0, 12.0});
+    CE_SetMemberVec(this, m_vecHitAngle, Float:{-20.0, 0.0, 0.0});
+    CE_SetMember(this, m_flAttackRange, 80.0);
+    CE_SetMember(this, m_flHitRange, 96.0);
+    CE_SetMember(this, m_flAttackDuration, 0.75);
+    CE_SetMember(this, m_flAttackDuration, 0.75);
+    CE_SetMember(this, m_flHitDelay, 0.5);
+    CE_SetMember(this, m_flFindRange, 4096.0);
+    CE_SetMember(this, m_flViewRange, 512.0);
+    CE_SetMember(this, m_flDamage, 160.0);
+    CE_SetMember(this, m_flAttackRate, 1.0);
     CE_SetMember(this, m_flDieDuration, 2.0);
 }
 
@@ -210,7 +209,8 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     set_pev(this, pev_health, g_flStartHealth);
     set_pev(this, pev_takedamage, DAMAGE_NO);
     set_pev(this, pev_view_ofs, Flaot:{0.0, 0.0, 32.0});
-    set_pev(this, pev_maxspeed, NPC_Speed);
+    set_pev(this, pev_maxspeed, 300.0);
+    set_pev(this, pev_friction, 0.0);
 
     CE_CallMethod(this, EmitVoice, g_szSndSpawn, 1.0);
 
@@ -241,12 +241,8 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
     UTIL_Message_Dlight(vecOrigin, 32, {HWN_COLOR_PRIMARY}, 10, 32);
 }
 
-@Entity_TakeDamage(this, pInflictor, pAttacker, Float:flDamage, iDamageBits) {
-    CE_CallBaseMethod(pInflictor, pAttacker, Float:flDamage, iDamageBits);
-
-    if (random(100) < 50) {
-        CE_CallMethod(this, EmitVoice, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
-    }
+@Entity_Pain(this) {
+    CE_CallMethod(this, EmitVoice, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
 }
 
 @Entity_AIThink(this) {
@@ -258,8 +254,7 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
         set_pev(this, pev_takedamage, DAMAGE_AIM);
     }
 
-    static Float:vecVelocity[3]; pev(this, pev_velocity, vecVelocity);
-    if (xs_vec_len(vecVelocity) > 50.0) {
+    if (CE_HasMember(this, m_vecInput)) {
         static Float:flNextLaugh; flNextLaugh = CE_GetMember(this, m_flNextLaugh);
         if (flNextLaugh <= flGameTime) {
             CE_CallMethod(this, Laugh);
@@ -291,7 +286,23 @@ public Hwn_Bosses_Fw_BossTeleport(pEntity, iBoss) {
 }
 
 bool:@Entity_PlayAction(this, Action:iAction, bool:bSupercede) {
+    if (@Entity_IsRelatedAction(this, iAction)) {
+        set_pev(this, pev_sequence, g_rgActions[iAction][NPC_Action_StartSequence]);
+        return true;
+    }
+
     return CE_CallBaseMethod(g_rgActions[iAction][NPC_Action_StartSequence], g_rgActions[iAction][NPC_Action_EndSequence], g_rgActions[iAction][NPC_Action_Time], bSupercede);
+}
+
+@Entity_IsRelatedAction(this, Action:iAction) {
+    new Action:iRelatedAction = g_rgiRelatedActions[iAction];
+    if (iRelatedAction == Action_Invalid) return false;
+
+    new iSequence = pev(this, pev_sequence);
+    if (iSequence < g_rgActions[iRelatedAction][NPC_Action_StartSequence]) return false;
+    if (iSequence > g_rgActions[iRelatedAction][NPC_Action_EndSequence]) return false;
+
+    return true;
 }
 
 Action:@Entity_GetAction(this) {
@@ -312,6 +323,20 @@ Action:@Entity_GetAction(this) {
     }
 
     return iAction;
+}
+
+@Entity_StartAttack(this) {
+    CE_CallBaseMethod();
+
+    CE_CallMethod(this, EmitVoice, g_szSndAttack[random(sizeof(g_szSndAttack))], 2.0);
+}
+
+@Entity_Hit(this) {
+    new pHit = CE_CallBaseMethod();
+
+    if (pHit) {
+        emit_sound(this, CHAN_ITEM, g_szSndHit, VOL_NORM, ATTN_NORM, 0, PITCH_NORM);
+    }
 }
 
 @Entity_Laugh(this) {

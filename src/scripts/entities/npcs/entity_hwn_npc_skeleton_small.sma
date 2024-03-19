@@ -14,12 +14,6 @@
 
 #define ENTITY_NAME "hwn_npc_skeleton_small"
 
-const Float:NPC_Health = 50.0;
-const Float:NPC_Speed = 250.0;
-const Float:NPC_Damage = 12.0;
-const Float:NPC_AttackRange = 48.0;
-const Float:NPC_AttackDelay = 0.35;
-
 new const g_szSndLaugh[][] = {
     "hwn/npc/skeleton/skelly_small_01.wav",
     "hwn/npc/skeleton/skelly_small_02.wav",
@@ -56,15 +50,15 @@ public plugin_init() {
     CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-8.0, -8.0, -16.0});
     CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{8.0, 8.0, 16.0});
     CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel, true);
-    CE_SetMember(this, m_flAttackRange, NPC_AttackRange);
-    CE_SetMember(this, m_flAttackDelay, NPC_AttackDelay);
+    CE_SetMember(this, m_flAttackRange, 32.0);
+    CE_SetMember(this, m_flHitRange, 48.0);
+    CE_SetMember(this, m_flDamage, 12.0);
 }
 
 @Entity_Spawned(this) {
-    CE_SetMember(this, m_flDamage, NPC_Damage);
 
-    set_pev(this, pev_health, NPC_Health);
-    set_pev(this, pev_maxspeed, NPC_Speed);
+    set_pev(this, pev_health, 50.0);
+    set_pev(this, pev_maxspeed, 250.0);
 }
 
 @Entity_Laugh(this) {

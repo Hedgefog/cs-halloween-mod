@@ -97,7 +97,7 @@ new const g_rgActions[Action][NPC_Action] = {
     { Sequence_Idle, Sequence_Idle, 0.0 },
     { Sequence_Stunned, Sequence_Stunned, 4.5 },
     { Sequence_Attack1, Sequence_Attack1, 1.0 },
-    { Sequence_Attack2, Sequence_Attack3, 2.0 },
+    { Sequence_Attack2, Sequence_Attack3, 1.7 },
     { Sequence_Spawn, Sequence_Spawn, 4.5 },
     { Sequence_Laugh, Sequence_Laugh, 1.3 },
     { Sequence_TeleportIn, Sequence_TeleportIn, 1.0 },
@@ -106,15 +106,6 @@ new const g_rgActions[Action][NPC_Action] = {
     { Sequence_LookAround1, Sequence_LookAround3, 1.0}
 };
 
-const Float:NPC_Health = 8000.0;
-const Float:NPC_HealthPerLevel = 3000.0;
-const Float:NPC_Speed = 16.0;
-const Float:NPC_ViewRange = 512.0;
-const Float:NPC_FindRange = 2048.0;
-const Float:NPC_AttackRange = 3072.0;
-const Float:NPC_AttackDelay = 0.33;
-const Float:NPC_RocketSpeed = 720.0;
-const Float:NPC_PushBackSpeed = 64.0;
 const Float:NPC_MinFloatHeight = 128.0;
 const Float:NPC_MaxFloatHeight = 256.0;
 const Float:NPC_SpawnRocketDistance = 80.0;
@@ -164,10 +155,12 @@ public plugin_precache() {
     CE_RegisterHook(ENTITY_NAME, CEFunction_Think, "@Entity_Think");
 
     CE_RegisterMethod(ENTITY_NAME, TakeDamage, "@Entity_TakeDamage", CE_MP_Cell, CE_MP_Cell, CE_MP_Float, CE_MP_Cell);
+    CE_RegisterMethod(ENTITY_NAME, Pain, "@Entity_Pain");
     CE_RegisterMethod(ENTITY_NAME, PlayAction, "@Entity_PlayAction", CE_MP_Cell, CE_MP_Cell);
     CE_RegisterMethod(ENTITY_NAME, AIThink, "@Entity_AIThink");
-    CE_RegisterMethod(ENTITY_NAME, StartAttack, "@Entity_StartAttack", CE_MP_Float, CE_MP_Float, CE_MP_FloatArray, 3, CE_MP_Float, CE_MP_Cell);
-    CE_RegisterMethod(ENTITY_NAME, ReleaseAttack, "@Entity_ReleaseAttack", CE_MP_Float, CE_MP_Float, CE_MP_FloatArray, 3, CE_MP_Float, CE_MP_Cell);
+    CE_RegisterMethod(ENTITY_NAME, StartAttack, "@Entity_StartAttack");
+    CE_RegisterMethod(ENTITY_NAME, ReleaseAttack, "@Entity_ReleaseAttack");
+    CE_RegisterMethod(ENTITY_NAME, Hit, "@Entity_Hit");
     CE_RegisterMethod(ENTITY_NAME, ProcessGoal, "@Entity_ProcessGoal");
     CE_RegisterMethod(ENTITY_NAME, Dying, "@Entity_Dying");
 
@@ -218,11 +211,11 @@ public plugin_end() {
     CE_SetMemberVec(this, CE_MEMBER_MINS, Float:{-48.0, -48.0, -48.0});
     CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{48.0, 48.0, 48.0});
     CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel, false);
-    CE_SetMember(this, m_flAttackRange, NPC_AttackRange);
-    CE_SetMember(this, m_flAttackDelay, NPC_AttackDelay);
-    CE_SetMember(this, m_flFindRange, NPC_FindRange);
-    CE_SetMember(this, m_flViewRange, NPC_ViewRange);
+    CE_SetMember(this, m_flAttackDuration, 0.33);
     CE_SetMember(this, m_flAttackRate, 0.8);
+    CE_SetMember(this, m_flAttackRange, 3072.0);
+    CE_SetMember(this, m_flFindRange, 2048.0);
+    CE_SetMember(this, m_flViewRange, 512.0);
 }
 
 @Entity_Spawned(this) {
@@ -249,9 +242,9 @@ public plugin_end() {
     set_pev(this, pev_rendermode, kRenderNormal);
     set_pev(this, pev_renderfx, kRenderFxGlowShell);
     set_pev(this, pev_renderamt, 4.0);
-    set_pev(this, pev_health, NPC_Health + (g_iLevel * NPC_HealthPerLevel));
+    set_pev(this, pev_health, 8000.0 + (g_iLevel * 3000.0));
     set_pev(this, pev_view_ofs, Float:{0.0, 0.0, 32.0});
-    set_pev(this, pev_maxspeed, NPC_Speed);
+    set_pev(this, pev_maxspeed, 32.0);
     set_pev(this, pev_rendercolor, flRenderColor);
     set_pev(this, pev_takedamage, DAMAGE_NO);
 
@@ -321,25 +314,13 @@ public plugin_end() {
         }
     }
 
-    if (IS_PLAYER(pAttacker) && CE_CallMethod(this, IsValidEnemy, pAttacker)) {
-        static Float:vecOrigin[3];
-        pev(this, pev_origin, vecOrigin);
-
-        static Float:vecTarget[3];
-        pev(pAttacker, pev_origin, vecTarget);
-
-        if (get_distance_f(vecOrigin, vecTarget) <= NPC_ViewRange && CE_CallMethod(this, IsVisible, vecTarget, 0)) {
-            if (random(100) < 10) {
-                set_pev(this, pev_enemy, pAttacker);
-            }
-        }
-    }
-
-    if (random(100) < 10) {
-        CE_CallMethod(this, EmitVoice, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
-    }
+    CE_CallBaseMethod(pInflictor, pAttacker, flDamage, iDamageBits);
 
     CE_SetMember(this, m_flLastDamage, flGameTime);
+}
+
+@Entity_Pain(this) {
+    CE_CallMethod(this, EmitVoice, g_szSndPain[random(sizeof(g_szSndPain))], 0.5);
 }
 
 @Entity_Think(this) {
@@ -407,10 +388,12 @@ public plugin_end() {
     static Float:flNextTeleportation; flNextTeleportation = CE_GetMember(this, m_flNextTeleportation);
     if (flNextTeleportation <= flGameTime) {
         if (flNextTeleportation > 0.0) {
-            CE_SetMember(this, m_iNextPortal, @Entity_FindPortal(this));
-            CE_SetMember(this, m_flReleaseTeleportion, flGameTime + g_rgActions[Action_TeleportIn][NPC_Action_Time]);
-
-            CE_CallMethod(this, PlayAction, Action_TeleportIn, true);
+            new iNextPortal = @Entity_FindPortal(this);
+            if (iNextPortal != -1) {
+                CE_SetMember(this, m_iNextPortal, iNextPortal);
+                CE_SetMember(this, m_flReleaseTeleportion, flGameTime + g_rgActions[Action_TeleportIn][NPC_Action_Time]);
+                CE_CallMethod(this, PlayAction, Action_TeleportIn, true);
+            }
         }
 
         new Float:flMinTime = get_pcvar_float(g_pCvarJumpTimeMin);
@@ -428,35 +411,38 @@ public plugin_end() {
         }
     }
     
-    new Action:iAction = @Entity_GetAction(this);
-    CE_CallMethod(this, PlayAction, iAction, false);
+    CE_CallMethod(this, PlayAction, Action_Idle, false);
 }
 
-@Entity_StartAttack(this, Float:flDamage, Float:flAttackRange, Float:vecHitOffset[3], Float:flAttackDelay, pEnemy) {
+@Entity_StartAttack(this) {
     static Float:flGameTime; flGameTime = get_gametime();
+    static Float:flAttackDelay; flAttackDelay = CE_GetMember(this, m_flAttackDuration);
+    static Float:flReleaseAngry; flReleaseAngry = CE_GetMember(this, m_flReleaseAngry);
 
-    static Float:vecTarget[3]; pev(pEnemy, pev_origin, vecTarget);
-
-    CE_SetMember(this, m_iCharge, Float:CE_GetMember(this, m_flReleaseAngry) ? 3 : 1);
+    CE_SetMember(this, m_iCharge, flReleaseAngry ? 3 : 1);
     CE_SetMember(this, m_flReleaseAttack, flGameTime + flAttackDelay);
+
+    CE_CallMethod(this, PlayAction, flReleaseAngry ? Action_AngryAttack : Action_Attack, false);
 }
 
-@Entity_ReleaseAttack(this, Float:flDamage, Float:flAttackRange, Float:vecHitOffset[3], Float:flAttackDelay, pEnemy) {
+@Entity_ReleaseAttack(this) {
     static Float:flGameTime; flGameTime = get_gametime();
+    static Float:flAttackDelay; flAttackDelay = CE_GetMember(this, m_flAttackDuration);
 
     if (CE_GetMember(this, m_iCharge) > 0) {
         @Entity_Shot(this);
         CE_SetMember(this, m_flReleaseAttack, flGameTime + flAttackDelay);
     } else {
-        CE_CallBaseMethod(flDamage, flAttackRange, vecHitOffset, flAttackDelay, pEnemy);
+        CE_CallBaseMethod();
         CE_CallMethod(this, StopMovement);
     }
 }
 
+@Entity_Hit(this) {}
+
 @Entity_ProcessGoal(this) {
     if (CE_HasMember(this, m_vecGoal)) {
-        static Float:vecGoal[3];
-        CE_GetMemberVec(this, m_vecGoal, vecGoal);
+        static Float:vecGoal[3]; CE_GetMemberVec(this, m_vecGoal, vecGoal);
 
         if (!CE_CallMethod(this, IsReachable, vecGoal, pev(this, pev_enemy), 0.0)) {
             CE_DeleteMember(this, m_vecGoal);
@@ -472,29 +458,14 @@ bool:@Entity_PlayAction(this, Action:iAction, bool:bSupercede) {
     return CE_CallBaseMethod(g_rgActions[iAction][NPC_Action_StartSequence], g_rgActions[iAction][NPC_Action_EndSequence], g_rgActions[iAction][NPC_Action_Time], bSupercede);
 }
 
-Action:@Entity_GetAction(this) {
-    new Action:iAction = Action_Idle;
-
-    new iDeadFlag = pev(this, pev_deadflag);
-
-    switch (iDeadFlag) {
-        case DEAD_NO: {
-            if (CE_GetMember(this, m_flReleaseStun) > 0.0) {
-                iAction = Action_Stunned;
-            } else if (CE_GetMember(this, m_flReleaseAttack) > 0.0) {
-                iAction = Float:CE_GetMember(this, m_flReleaseAngry) ? Action_AngryAttack : Action_Attack;
-            }
-        }
-    }
-
-    return iAction;
-}
-
 @Entity_DisappearEffect(this) {
     @Entity_TeleportEffect(this);
 }
 
 @Entity_Laugh(this) {
+    static Float:flReleaseAttack; flReleaseAttack = CE_GetMember(this, m_flReleaseAttack);
+    if (flReleaseAttack) return;
+
     CE_CallMethod(this, StopMovement);
     CE_CallMethod(this, PlayAction, Action_Laugh, true);
     CE_CallMethod(this, EmitVoice, g_szSndLaugh[random(sizeof(g_szSndLaugh))], 2.0);
@@ -505,6 +476,7 @@ Action:@Entity_GetAction(this) {
     CE_CallMethod(this, ResetPath);
     CE_CallMethod(this, EmitVoice, g_szSndStunned[random(sizeof(g_szSndStunned))], 1.0);
     CE_SetMember(this, m_flReleaseStun, get_gametime() + g_rgActions[Action_Stunned][NPC_Action_Time]);
+    CE_CallMethod(this, PlayAction, Action_Stunned, true);
 }
 
 @Entity_MakeAngry(this) {
@@ -523,9 +495,11 @@ Action:@Entity_GetAction(this) {
     static Float:flHeight; flHeight = CE_GetMember(this, m_flHeight);
     static iDirection; iDirection = (flDistanceToFloor > flHeight) ? -1 : 1;
 
+    static Float:flSpeed; pev(this, pev_maxspeed, flSpeed);
+
     static Float:vecVelocity[3];
     pev(this, pev_velocity, vecVelocity);
-    vecVelocity[2] = NPC_Speed * iDirection;
+    vecVelocity[2] = flSpeed * iDirection;
     set_pev(this, pev_velocity, vecVelocity);
 }
 
@@ -565,7 +539,7 @@ Action:@Entity_GetAction(this) {
 }
 
 @Entity_PushBack(this) {
-    static Float:vecForce[3]; UTIL_GetDirectionVector(this, vecForce, -NPC_PushBackSpeed);
+    static Float:vecForce[3]; UTIL_GetDirectionVector(this, vecForce, -32.0);
 
     static Float:vecVelocity[3]; pev(this, pev_velocity, vecVelocity);
     xs_vec_add(vecVelocity, vecForce, vecVelocity);
@@ -631,7 +605,7 @@ Action:@Entity_GetAction(this) {
 
     dllfunc(DLLFunc_Spawn, pRocket);
 
-    static Float:vecVelocity[3]; xs_vec_mul_scalar(vecDirection, NPC_RocketSpeed, vecVelocity);
+    static Float:vecVelocity[3]; xs_vec_mul_scalar(vecDirection, 720.0, vecVelocity);
     CE_CallMethod(pRocket, "Launch", vecVelocity);
 }
 

@@ -21,6 +21,7 @@
 
 #define m_flNextLaugh "flNextLaugh"
 #define m_flReleaseJump "flReleaseJump"
+#define m_flJumpVelocity "flJumpVelocity"
 
 #define Laugh "Laugh"
 
@@ -37,18 +38,9 @@ enum Action {
     Action_JumpStart,
     Action_JumpFloat,
     Action_Why,
-    Action_Attack,
+    Action_Attack
 };
 
-const Float:NPC_Health = 100.0;
-const Float:NPC_Speed = 200.0; // for jump velocity
-const Float:NPC_Damage = 20.0;
-const Float:NPC_AttackRange = 48.0;
-const Float:NPC_AttackDelay = 0.5;
-const Float:NPC_ViewRange = 512.0;
-const Float:NPC_FindRange = 2048.0;
-const Float:NPC_PathSearchDelay = 5.0;
-const Float:NPC_TargetUpdateRate = 1.0;
 const Float:NPC_JumpVelocity = 160.0;
 const Float:NPC_AttackJumpVelocity = 256.0;
 
@@ -63,7 +55,7 @@ new const g_szSndLaugh[][] = {
 
 new const g_rgActions[Action][NPC_Action] = {
     { Sequence_Idle, Sequence_Idle, 0.0 },
-    { Sequence_JumpStart, Sequence_JumpStart, 0.6 },
+    { Sequence_JumpStart, Sequence_JumpStart, 0.5 },
     { Sequence_JumpFloat, Sequence_JumpFloat, 0.0 },
     { Sequence_Why, Sequence_Why, 0.0 },
     { Sequence_Attack, Sequence_Attack, 1.2 }
@@ -86,9 +78,11 @@ public plugin_precache() {
     CE_RegisterHook(ENTITY_NAME, CEFunction_Killed, "@Entity_Killed");
 
     CE_RegisterMethod(ENTITY_NAME, PlayAction, "@Entity_PlayAction", CE_MP_Cell, CE_MP_Cell, CE_MP_Cell);
+    CE_RegisterMethod(ENTITY_NAME, CanAttack, "@Entity_CanAttack", CE_MP_Cell);
     CE_RegisterMethod(ENTITY_NAME, Laugh, "@Entity_Laugh");
+    CE_RegisterMethod(ENTITY_NAME, MoveForward, "@Entity_MoveForward");
+    CE_RegisterMethod(ENTITY_NAME, StartAttack, "@Entity_StartAttack");
     CE_RegisterMethod(ENTITY_NAME, AIThink, "@Entity_AIThink");
-    CE_RegisterMethod(ENTITY_NAME, MoveTo, "@Entity_MoveTo", CE_MP_FloatArray, 3);
     CE_RegisterMethod(ENTITY_NAME, MovementThink, "@Entity_MovementThink");
 }
 
@@ -103,12 +97,14 @@ public plugin_init() {
     CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{12.0, 12.0, 24.0});
     CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel, false);
     CE_SetMember(this, CE_MEMBER_BLOODCOLOR, 103);
-    CE_SetMember(this, m_flAttackRange, NPC_AttackRange);
-    CE_SetMember(this, m_flAttackDelay, NPC_AttackDelay);
-    CE_SetMember(this, m_flFindRange, NPC_FindRange);
-    CE_SetMember(this, m_flViewRange, NPC_ViewRange);
-    CE_SetMember(this, m_flDamage, NPC_Damage);
-    CE_SetMember(this, m_flAttackRate, 0.5);
+    CE_SetMember(this, m_flAttackRange, 64.0);
+    CE_SetMember(this, m_flHitRange, 52.0);
+    CE_SetMember(this, m_flAttackRate, 1.0);
+    CE_SetMember(this, m_flAttackDuration, 1.5);
+    CE_SetMember(this, m_flHitDelay, 0.5);
+    CE_SetMember(this, m_flFindRange, 2048.0);
+    CE_SetMember(this, m_flViewRange, 512.0);
+    CE_SetMember(this, m_flDamage, 20.0);
 }
 
 @Entity_Spawned(this) {
@@ -122,8 +118,8 @@ public plugin_init() {
     set_pev(this, pev_renderamt, 4.0);
     set_pev(this, pev_rendercolor, HWN_COLOR_ORANGE_DIRTY_F);
     set_pev(this, pev_view_ofs, Float:{0.0, 0.0, 12.0});
-    set_pev(this, pev_health, NPC_Health);
-    set_pev(this, pev_maxspeed, NPC_Speed);
+    set_pev(this, pev_health, 100.0);
+    set_pev(this, pev_maxspeed, 200.0);
     set_pev(this, pev_fov, 30.0);
 
     static Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
@@ -158,24 +154,24 @@ public plugin_init() {
         }
     }
 
-    static Action:iAction; iAction = @Entity_GetAction(this);
-    CE_CallMethod(this, PlayAction, iAction, false);
+    CE_CallMethod(this, PlayAction, @Entity_GetAction(this), false);
+}
+
+@Entity_StartAttack(this) {
+    CE_CallBaseMethod();
+    CE_CallMethod(this, MoveForward);
 }
 
 @Entity_MovementThink(this) {}
 
-@Entity_MoveTo(this, const Float:vecTarget[3]) {
-    CE_CallBaseMethod(vecTarget);
+@Entity_MoveForward(this) {
+    @Entity_StartJump(this);
+}
 
-    static Float:vecAngles[3]; pev(this, pev_angles, vecAngles);
-    vecAngles[1] += 10.0;
-    set_pev(this, pev_angles, vecAngles);
+bool:@Entity_CanAttack(this, pEnemy) {
+    if (~pev(this, pev_flags) & FL_ONGROUND) return false;
 
-    if (CE_HasMember(this, m_vecInput)) {
-        if (CE_CallMethod(this, IsInViewCone, vecTarget)) {
-            @Entity_StartJump(this);
-        }
-    }
+    return CE_CallBaseMethod(pEnemy);
 }
 
 bool:@Entity_StartJump(this) {
@@ -184,9 +180,13 @@ bool:@Entity_StartJump(this) {
     static Float:flReleaseJump; flReleaseJump = CE_GetMember(this, m_flReleaseJump);
     if (flReleaseJump) return false;
 
+
     static Float:flGameTime; flGameTime = get_gametime();
-    CE_SetMember(this, m_flReleaseJump, flGameTime + g_rgActions[Action_JumpStart][NPC_Action_Time]);
-    CE_CallMethod(this, PlayAction, Action_JumpStart, false);
+    static Float:flReleaseAttack; flReleaseAttack = CE_GetMember(this, m_flReleaseAttack);
+
+    CE_SetMember(this, m_flReleaseJump, flGameTime + 0.5);
+    CE_SetMember(this, m_flJumpVelocity, flReleaseAttack ? NPC_AttackJumpVelocity : NPC_JumpVelocity);
+    CE_CallMethod(this, PlayAction, Action_JumpStart, true);
 
     return true;
 }
@@ -194,16 +194,13 @@ bool:@Entity_StartJump(this) {
 bool:@Entity_Jump(this) {
     if (~pev(this, pev_flags) & FL_ONGROUND) return;
 
-    static Float:flReleaseAttack; flReleaseAttack = CE_GetMember(this, m_flReleaseAttack);
     static Float:flMaxSpeed; pev(this, pev_maxspeed, flMaxSpeed);
 
     static Float:vecVelocity[3];
     UTIL_GetDirectionVector(this, vecVelocity, flMaxSpeed);
-    vecVelocity[2] = flReleaseAttack ? NPC_AttackJumpVelocity : NPC_JumpVelocity;
+    vecVelocity[2] = Float:CE_GetMember(this, m_flJumpVelocity);
 
     set_pev(this, pev_velocity, vecVelocity);
-
-    CE_CallMethod(this, PlayAction, Action_JumpFloat, false);
 }
 
 bool:@Entity_PlayAction(this, Action:iAction, bool:bSupercede) {
@@ -217,10 +214,8 @@ Action:@Entity_GetAction(this) {
 
     switch (iDeadFlag) {
         case DEAD_NO: {
-            if (CE_GetMember(this, m_flReleaseAttack) > 0.0) {
-                iAction = Action_Attack;
-            } if (~pev(this, pev_flags) & FL_ONGROUND) {
-                iAction = Action_JumpFloat;
+            if (~pev(this, pev_flags) & FL_ONGROUND) {
+                iAction = CE_GetMember(this, m_flReleaseAttack) ? Action_Attack : Action_JumpFloat;
             }
         }
     }

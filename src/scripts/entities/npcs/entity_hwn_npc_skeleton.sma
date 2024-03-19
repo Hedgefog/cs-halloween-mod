@@ -45,22 +45,13 @@ enum _:Sequence {
 };
 
 enum Action {
-    Action_Idle = 0,
+    Action_Invalid = -1,
+    Action_Idle,
     Action_Run,
     Action_Attack,
     Action_RunAttack,
     Action_Spawn
 };
-
-const Float:NPC_Health = 100.0;
-const Float:NPC_Speed = 230.0;
-const Float:NPC_Damage = 24.0;
-const Float:NPC_AttackRange = 48.0;
-const Float:NPC_AttackDelay = 0.35;
-const Float:NPC_ViewRange = 512.0;
-const Float:NPC_FindRange = 2048.0;
-const Float:NPC_PathSearchDelay = 5.0;
-const Float:NPC_TargetUpdateRate = 1.0;
 
 new const g_rgActions[Action][NPC_Action] = {
     {    Sequence_Idle,         Sequence_Idle,          0.0    },
@@ -69,6 +60,8 @@ new const g_rgActions[Action][NPC_Action] = {
     {    Sequence_RunAttack,    Sequence_RunAttack,     1.0    },
     {    Sequence_Spawn1,       Sequence_Spawn7,        2.0    }
 };
+
+new const Action:g_rgiRelatedActions[Action] = { _:Action_Invalid, _:Action_Invalid, _:Action_RunAttack, _:Action_Attack, _:Action_Invalid };
 
 new const g_szSndLaugh[][] = {
     "hwn/npc/skeleton/skelly_medium_01.wav",
@@ -118,12 +111,14 @@ public plugin_init() {
     CE_SetMemberVec(this, CE_MEMBER_MAXS, Float:{12.0, 12.0, 32.0});
     CE_SetMemberString(this, CE_MEMBER_MODEL, g_szModel, false);
     CE_SetMember(this, CE_MEMBER_BLOODCOLOR, 242);
-    CE_SetMember(this, m_flAttackRange, NPC_AttackRange);
-    CE_SetMember(this, m_flAttackDelay, NPC_AttackDelay);
-    CE_SetMember(this, m_flFindRange, NPC_FindRange);
-    CE_SetMember(this, m_flViewRange, NPC_ViewRange);
-    CE_SetMember(this, m_flDamage, NPC_Damage);
-    CE_SetMember(this, m_flAttackRate, 0.5);
+    CE_SetMember(this, m_flAttackRange, 48.0);
+    CE_SetMember(this, m_flHitRange, 52.0);
+    CE_SetMember(this, m_flAttackDuration, 1.0);
+    CE_SetMember(this, m_flHitDelay, 0.5);
+    CE_SetMember(this, m_flFindRange, 2048.0);
+    CE_SetMember(this, m_flViewRange, 512.0);
+    CE_SetMember(this, m_flDamage, 24.0);
+    CE_SetMember(this, m_flAttackRate, 1.0);
 }
 
 @Entity_Spawned(this) {
@@ -136,8 +131,8 @@ public plugin_init() {
     set_pev(this, pev_renderfx, kRenderFxGlowShell);
     set_pev(this, pev_renderamt, 4.0);
     set_pev(this, pev_rendercolor, Float:{0.0, 0.0, 0.0});
-    set_pev(this, pev_health, NPC_Health);
-    set_pev(this, pev_maxspeed, NPC_Speed);
+    set_pev(this, pev_health, 100.0);
+    set_pev(this, pev_maxspeed, 230.0);
 
     static Float:vecOrigin[3]; pev(this, pev_origin, vecOrigin);
     static Float:vecMaxs[3]; CE_GetMemberVec(this, CE_MEMBER_MAXS, vecMaxs);
@@ -174,7 +169,23 @@ public plugin_init() {
 }
 
 bool:@Entity_PlayAction(this, Action:iAction, bool:bSupercede) {
+    if (@Entity_IsRelatedAction(this, iAction)) {
+        set_pev(this, pev_sequence, g_rgActions[iAction][NPC_Action_StartSequence]);
+        return true;
+    }
+
     return CE_CallBaseMethod(g_rgActions[iAction][NPC_Action_StartSequence], g_rgActions[iAction][NPC_Action_EndSequence], g_rgActions[iAction][NPC_Action_Time], bSupercede);
+}
+
+@Entity_IsRelatedAction(this, Action:iAction) {
+    new Action:iRelatedAction = g_rgiRelatedActions[iAction];
+    if (iRelatedAction == Action_Invalid) return false;
+
+    new iSequence = pev(this, pev_sequence);
+    if (iSequence < g_rgActions[iRelatedAction][NPC_Action_StartSequence]) return false;
+    if (iSequence > g_rgActions[iRelatedAction][NPC_Action_EndSequence]) return false;
+
+    return true;
 }
 
 Action:@Entity_GetAction(this) {
